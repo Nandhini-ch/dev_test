@@ -2,6 +2,7 @@ defmodule Inconn2Service.Account.ContactEmbed do
   import Ecto.Changeset
   use Ecto.Schema
 
+  @primary_key false
   embedded_schema do
     field :first_name, :string
     field :last_name, :string

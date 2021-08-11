@@ -146,9 +146,25 @@ defmodule Inconn2Service.Account do
 
   """
   def create_licensee(attrs \\ %{}) do
-    %Licensee{}
-    |> Licensee.changeset(attrs)
-    |> Repo.insert()
+    licensee_changeset =
+      %Licensee{}
+      |> Licensee.changeset(attrs)
+
+    Repo.transaction(fn ->
+      Repo.insert(licensee_changeset)
+      |> create_tenant()
+    end)
+  end
+
+  defp create_tenant({:ok, licensee}) do
+    case Triplex.create(licensee.sub_domain) do
+      {:ok, _} -> {:ok, licensee}
+      {:error, reason} -> Repo.rollback({:triplex, reason})
+    end
+  end
+
+  defp create_tenant({:error, cs}) do
+    Repo.rollback(cs)
   end
 
   @doc """

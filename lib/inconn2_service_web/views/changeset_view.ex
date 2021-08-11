@@ -16,4 +16,8 @@ defmodule Inconn2ServiceWeb.ChangesetView do
     # as a JSON object. So we just pass it forward.
     %{errors: translate_errors(changeset)}
   end
+
+  def render("error.json", %{triplex: error_message}) do
+    %{errors: %{tenant: [error_message]}}
+  end
 end

@@ -2,6 +2,7 @@ defmodule Inconn2Service.Account.AddressEmbed do
   import Ecto.Changeset
   use Ecto.Schema
 
+  @primary_key false
   embedded_schema do
     field :address_line1, :string
     field :address_line2, :string

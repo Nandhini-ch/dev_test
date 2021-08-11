@@ -14,6 +14,14 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render("error.json", changeset: changeset)
   end
 
+  # Called when Triplex create failed
+  def call(conn, {:error, {:triplex, err_msg}}) when is_binary(err_msg) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(Inconn2ServiceWeb.ChangesetView)
+    |> render("error.json", triplex: err_msg)
+  end
+
   # This clause is an example of how to handle resources that cannot be found.
   def call(conn, {:error, :not_found}) do
     conn
