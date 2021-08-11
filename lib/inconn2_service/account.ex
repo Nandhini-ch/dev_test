@@ -133,6 +133,10 @@ defmodule Inconn2Service.Account do
   """
   def get_licensee!(id), do: Repo.get!(Licensee, id)
 
+  def get_licensee_by_sub_domain(sub_domain) do
+    Repo.get_by(Licensee, sub_domain: sub_domain) |> Repo.preload(BusinessType)
+  end
+
   @doc """
   Creates a licensee.
 

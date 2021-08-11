@@ -3,6 +3,7 @@ defmodule Inconn2ServiceWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug Inconn2ServiceWeb.Plugs.MatchTenantPlug
   end
 
   scope "/api", Inconn2ServiceWeb do

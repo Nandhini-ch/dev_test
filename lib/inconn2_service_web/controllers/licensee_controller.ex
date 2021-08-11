@@ -27,16 +27,26 @@ defmodule Inconn2ServiceWeb.LicenseeController do
 
   def update(conn, %{"id" => id, "licensee" => licensee_params}) do
     licensee = Account.get_licensee!(id)
+    existing_sub_domain = licensee.sub_domain
 
     with {:ok, %Licensee{} = licensee} <- Account.update_licensee(licensee, licensee_params) do
+      if existing_sub_domain != licensee.sub_domain do
+        Triplex.rename(existing_sub_domain, licensee.sub_domain)
+      end
+
       render(conn, "show.json", licensee: licensee)
     end
   end
 
   def delete(conn, %{"id" => id}) do
     licensee = Account.get_licensee!(id)
+    existing_sub_domain = licensee.sub_domain
 
     with {:ok, %Licensee{}} <- Account.delete_licensee(licensee) do
+      if existing_sub_domain do
+        Triplex.drop(existing_sub_domain)
+      end
+
       send_resp(conn, :no_content, "")
     end
   end
