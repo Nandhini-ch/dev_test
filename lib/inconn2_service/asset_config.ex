@@ -1,12 +1,12 @@
-defmodule Inconn2Service.AssetManagement do
+defmodule Inconn2Service.AssetConfig do
   @moduledoc """
-  The AssetManagement context.
+  The AssetConfig context.
   """
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
-  alias Inconn2Service.AssetManagement.Site
+  alias Inconn2Service.AssetConfig.Site
 
   @doc """
   Returns the list of sites.

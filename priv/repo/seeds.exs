@@ -1,4 +1,4 @@
-alias Inconn2Service.{Account, AssetManagement}
+alias Inconn2Service.{Account, AssetConfig}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -36,7 +36,7 @@ site = %{
   "site_code" => "BRCHN_MNTRD"
 }
 
-case AssetManagement.create_site(site, "inc_bata") do
+case AssetConfig.create_site(site, "inc_bata") do
   {:ok, site_created} -> IO.inspect(site_created)
   {:error, cs} -> IO.inspect(cs)
 end

@@ -1,8 +1,8 @@
 defmodule Inconn2ServiceWeb.SiteControllerTest do
   use Inconn2ServiceWeb.ConnCase
 
-  alias Inconn2Service.AssetManagement
-  alias Inconn2Service.AssetManagement.Site
+  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.AssetConfig.Site
 
   @create_attrs %{
     area: 120.5,
@@ -22,10 +22,18 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     name: "some updated name",
     radius: 456.7
   }
-  @invalid_attrs %{area: nil, branch: nil, description: nil, lattitude: nil, longitiude: nil, name: nil, radius: nil}
+  @invalid_attrs %{
+    area: nil,
+    branch: nil,
+    description: nil,
+    lattitude: nil,
+    longitiude: nil,
+    name: nil,
+    radius: nil
+  }
 
   def fixture(:site) do
-    {:ok, site} = AssetManagement.create_site(@create_attrs)
+    {:ok, site} = AssetConfig.create_site(@create_attrs)
     site
   end
 

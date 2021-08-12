@@ -9,7 +9,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateSites do
       add :area, :float
       add :lattitude, :float
       add :longitiude, :float
-      add :radius, :float
+      add :fencing_radius, :float
       add :site_code, :string
       add :address, :jsonb
       add :contact, :jsonb

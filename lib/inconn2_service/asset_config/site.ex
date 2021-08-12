@@ -1,6 +1,7 @@
-defmodule Inconn2Service.AssetManagement.Site do
+defmodule Inconn2Service.AssetConfig.Site do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.Common.{AddressEmbed, ContactEmbed}
 
   schema "sites" do
     field :area, :float
@@ -9,7 +10,7 @@ defmodule Inconn2Service.AssetManagement.Site do
     field :lattitude, :float
     field :longitiude, :float
     field :name, :string
-    field :radius, :float
+    field :fencing_radius, :float
     field :site_code, :string
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
@@ -27,7 +28,7 @@ defmodule Inconn2Service.AssetManagement.Site do
       :area,
       :lattitude,
       :longitiude,
-      :radius,
+      :fencing_radius,
       :site_code
     ])
     |> validate_required([:name, :description, :site_code])
