@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Account.AddressEmbed do
+defmodule Inconn2Service.Common.AddressEmbed do
   import Ecto.Changeset
   use Ecto.Schema
 

@@ -11,6 +11,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateSites do
       add :longitiude, :float
       add :radius, :float
       add :site_code, :string
+      add :address, :jsonb
+      add :contact, :jsonb
 
       timestamps()
     end

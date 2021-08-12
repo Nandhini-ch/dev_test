@@ -11,6 +11,8 @@ defmodule Inconn2Service.AssetManagement.Site do
     field :name, :string
     field :radius, :float
     field :site_code, :string
+    embeds_one :address, AddressEmbed, on_replace: :delete
+    embeds_one :contact, ContactEmbed, on_replace: :delete
 
     timestamps()
   end
@@ -29,5 +31,7 @@ defmodule Inconn2Service.AssetManagement.Site do
       :site_code
     ])
     |> validate_required([:name, :description, :site_code])
+    |> cast_embed(:address)
+    |> cast_embed(:contact)
   end
 end

@@ -2,7 +2,8 @@ defmodule Inconn2Service.Account.Licensee do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Inconn2Service.Account.{AddressEmbed, ContactEmbed, BusinessType}
+  alias Inconn2Service.Account.BusinessType
+  alias Inconn2Service.Common.{AddressEmbed, ContactEmbed}
 
   schema "licensees" do
     field :company_name, :string
