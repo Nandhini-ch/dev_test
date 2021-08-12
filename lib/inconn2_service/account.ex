@@ -150,25 +150,26 @@ defmodule Inconn2Service.Account do
 
   """
   def create_licensee(attrs \\ %{}) do
-    licensee_changeset =
+    result =
       %Licensee{}
       |> Licensee.changeset(attrs)
+      |> Repo.insert()
 
-    Repo.transaction(fn ->
-      Repo.insert(licensee_changeset)
-      |> create_tenant()
-    end)
-  end
-
-  defp create_tenant({:ok, licensee}) do
-    case Triplex.create(licensee.sub_domain) do
-      {:ok, _} -> {:ok, licensee}
-      {:error, reason} -> Repo.rollback({:triplex, reason})
+    case result do
+      {:ok, licensee} -> create_tenant(licensee)
+      _ -> result
     end
   end
 
-  defp create_tenant({:error, cs}) do
-    Repo.rollback(cs)
+  defp create_tenant(licensee) do
+    case Triplex.create(licensee.sub_domain) do
+      {:ok, _workspace} ->
+        {:ok, licensee}
+
+      _ ->
+        delete_licensee(licensee)
+        {:error, {:triplex, "Not able to create tenant schema"}}
+    end
   end
 
   @doc """

@@ -1,4 +1,4 @@
-alias Inconn2Service.Account
+alias Inconn2Service.{Account, AssetManagement}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -27,5 +27,16 @@ client = %{
 
 case Account.create_licensee(client) do
   {:ok, lic} -> IO.inspect(lic)
+  {:error, cs} -> IO.inspect(cs)
+end
+
+site = %{
+  "name" => "Mountroad",
+  "description" => "Main branch at Mount road",
+  "site_code" => "BRCHN_MNTRD"
+}
+
+case AssetManagement.create_site(site, "inc_bata") do
+  {:ok, site_created} -> IO.inspect(site_created)
   {:error, cs} -> IO.inspect(cs)
 end
