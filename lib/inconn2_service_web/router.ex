@@ -11,5 +11,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/business_types", BusinessTypeController, except: [:new, :edit]
     resources "/licensees", LicenseeController, except: [:new, :edit]
     resources "/sites", SiteController, except: [:new, :edit]
+    resources "/locations", LocationController, except: [:new, :edit, :index]
   end
 end

@@ -97,4 +97,67 @@ defmodule Inconn2Service.AssetConfigTest do
       assert %Ecto.Changeset{} = AssetConfig.change_site(site)
     end
   end
+
+  describe "locations" do
+    alias Inconn2Service.AssetConfig.Location
+
+    @valid_attrs %{code: "some code", description: "some description", name: "some name"}
+    @update_attrs %{code: "some updated code", description: "some updated description", name: "some updated name"}
+    @invalid_attrs %{code: nil, description: nil, name: nil}
+
+    def location_fixture(attrs \\ %{}) do
+      {:ok, location} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_location()
+
+      location
+    end
+
+    test "list_locations/0 returns all locations" do
+      location = location_fixture()
+      assert AssetConfig.list_locations() == [location]
+    end
+
+    test "get_location!/1 returns the location with given id" do
+      location = location_fixture()
+      assert AssetConfig.get_location!(location.id) == location
+    end
+
+    test "create_location/1 with valid data creates a location" do
+      assert {:ok, %Location{} = location} = AssetConfig.create_location(@valid_attrs)
+      assert location.code == "some code"
+      assert location.description == "some description"
+      assert location.name == "some name"
+    end
+
+    test "create_location/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_location(@invalid_attrs)
+    end
+
+    test "update_location/2 with valid data updates the location" do
+      location = location_fixture()
+      assert {:ok, %Location{} = location} = AssetConfig.update_location(location, @update_attrs)
+      assert location.code == "some updated code"
+      assert location.description == "some updated description"
+      assert location.name == "some updated name"
+    end
+
+    test "update_location/2 with invalid data returns error changeset" do
+      location = location_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_location(location, @invalid_attrs)
+      assert location == AssetConfig.get_location!(location.id)
+    end
+
+    test "delete_location/1 deletes the location" do
+      location = location_fixture()
+      assert {:ok, %Location{}} = AssetConfig.delete_location(location)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_location!(location.id) end
+    end
+
+    test "change_location/1 returns a location changeset" do
+      location = location_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_location(location)
+    end
+  end
 end
