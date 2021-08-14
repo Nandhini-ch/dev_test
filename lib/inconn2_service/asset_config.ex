@@ -115,8 +115,10 @@ defmodule Inconn2Service.AssetConfig do
       [%Location{}, ...]
 
   """
-  def list_locations(prefix) do
-    Repo.all(Location, prefix: prefix)
+  def list_locations(site_id, prefix) do
+    Location
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -148,11 +150,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_parent_of_location(location_id, prefix) do
     loc = get_location!(location_id, prefix)
-    # parent_id = List.last(loc.path)
-    # # Location.parent(loc)
-    # from(l in Location, where: l.id in [^parent_id])
-    # |> Repo.all(prefix: prefix)
-    HierarchyManager.parent(Location, loc) |> Repo.one(prefix: prefix)
+    HierarchyManager.parent(loc) |> Repo.one(prefix: prefix)
   end
 
   @doc """

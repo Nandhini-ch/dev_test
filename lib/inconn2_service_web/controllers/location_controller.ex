@@ -6,8 +6,8 @@ defmodule Inconn2ServiceWeb.LocationController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    locations = AssetConfig.list_locations(conn.assigns.sub_domain_prefix)
+  def index(conn, %{"site_id" => site_id}) do
+    locations = AssetConfig.list_locations(site_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", locations: locations)
   end
 
