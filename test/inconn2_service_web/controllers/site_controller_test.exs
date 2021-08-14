@@ -11,7 +11,7 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     lattitude: 120.5,
     longitiude: 120.5,
     name: "some name",
-    radius: 120.5
+    fencing_radius: 120.5
   }
   @update_attrs %{
     area: 456.7,
@@ -20,7 +20,7 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     lattitude: 456.7,
     longitiude: 456.7,
     name: "some updated name",
-    radius: 456.7
+    fencing_radius: 456.7
   }
   @invalid_attrs %{
     area: nil,
@@ -29,7 +29,7 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     lattitude: nil,
     longitiude: nil,
     name: nil,
-    radius: nil
+    fencing_radius: nil
   }
 
   def fixture(:site) do
@@ -63,7 +63,7 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
                "lattitude" => 120.5,
                "longitiude" => 120.5,
                "name" => "some name",
-               "radius" => 120.5
+               "fencing_radius" => 120.5
              } = json_response(conn, 200)["data"]
     end
 
@@ -90,7 +90,7 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
                "lattitude" => 456.7,
                "longitiude" => 456.7,
                "name" => "some updated name",
-               "radius" => 456.7
+               "fencing_radius" => 456.7
              } = json_response(conn, 200)["data"]
     end
 

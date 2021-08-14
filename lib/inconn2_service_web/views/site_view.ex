@@ -11,13 +11,15 @@ defmodule Inconn2ServiceWeb.SiteView do
   end
 
   def render("site.json", %{site: site}) do
-    %{id: site.id,
+    %{
+      id: site.id,
       name: site.name,
       description: site.description,
       branch: site.branch,
       area: site.area,
       lattitude: site.lattitude,
       longitiude: site.longitiude,
-      radius: site.radius}
+      fencing_radius: site.fencing_radius
+    }
   end
 end

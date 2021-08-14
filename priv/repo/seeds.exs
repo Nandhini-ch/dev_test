@@ -69,7 +69,7 @@ b2 = %{"name" => "Building2", "location_code" => "LOC_BUILD2", "site_id" => sc.i
   %{
     "parent_id" => b2c.id,
     "name" => "B2 Floor1",
-    "location_code" => "LOC_B1F1",
+    "location_code" => "LOC_B2F1",
     "site_id" => sc.id
   }
   |> AssetConfig.create_location("inc_bata")
@@ -78,7 +78,7 @@ b2 = %{"name" => "Building2", "location_code" => "LOC_BUILD2", "site_id" => sc.i
   %{
     "parent_id" => b2c.id,
     "name" => "B2 Floor2",
-    "location_code" => "LOC_B1F2",
+    "location_code" => "LOC_B2F2",
     "site_id" => sc.id
   }
   |> AssetConfig.create_location("inc_bata")

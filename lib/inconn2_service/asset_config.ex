@@ -121,6 +121,11 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_locations_tree(site_id, prefix) do
+    list_locations(site_id, prefix)
+    |> HierarchyManager.build_tree()
+  end
+
   @doc """
   Gets a single location.
 

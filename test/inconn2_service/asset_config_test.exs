@@ -13,7 +13,7 @@ defmodule Inconn2Service.AssetConfigTest do
       lattitude: 120.5,
       longitiude: 120.5,
       name: "some name",
-      radius: 120.5
+      fencing_radius: 120.5
     }
     @update_attrs %{
       area: 456.7,
@@ -22,7 +22,7 @@ defmodule Inconn2Service.AssetConfigTest do
       lattitude: 456.7,
       longitiude: 456.7,
       name: "some updated name",
-      radius: 456.7
+      fencing_radius: 456.7
     }
     @invalid_attrs %{
       area: nil,
@@ -31,7 +31,7 @@ defmodule Inconn2Service.AssetConfigTest do
       lattitude: nil,
       longitiude: nil,
       name: nil,
-      radius: nil
+      fencing_radius: nil
     }
 
     def site_fixture(attrs \\ %{}) do
@@ -102,7 +102,11 @@ defmodule Inconn2Service.AssetConfigTest do
     alias Inconn2Service.AssetConfig.Location
 
     @valid_attrs %{code: "some code", description: "some description", name: "some name"}
-    @update_attrs %{code: "some updated code", description: "some updated description", name: "some updated name"}
+    @update_attrs %{
+      code: "some updated code",
+      description: "some updated description",
+      name: "some updated name"
+    }
     @invalid_attrs %{code: nil, description: nil, name: nil}
 
     def location_fixture(attrs \\ %{}) do
