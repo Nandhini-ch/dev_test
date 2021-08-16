@@ -5,6 +5,7 @@ defmodule Inconn2Service.AssetConfig do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  alias Ecto.Multi
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetConfig.Site
@@ -209,9 +210,66 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def update_location(%Location{} = location, attrs, prefix) do
+    existing_parent_id = HierarchyManager.parent_id(location)
+
+    cond do
+      Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+        new_parent_id = attrs["parent_id"]
+        loc_cs = update_location_default_changeset_pipe(location, attrs, prefix)
+        update_location_in_tree(new_parent_id, loc_cs, location, prefix)
+
+      true ->
+        update_location_default_changeset_pipe(location, attrs, prefix)
+        |> Repo.update(prefix: prefix)
+    end
+  end
+
+  defp update_location_in_tree(nil, loc_cs, location, prefix) do
+    descendents = HierarchyManager.descendants(location) |> Repo.all(prefix: prefix)
+    # adjust the path (from old path to ne path )for all descendents
+    loc_cs = change(loc_cs, %{path: []})
+    make_locations_changeset_and_update(loc_cs, location, descendents, [], prefix)
+  end
+
+  defp update_location_in_tree(new_parent_id, loc_cs, location, prefix) do
+    # Get the new parent and check
+    case Repo.get(Location, new_parent_id, prefix: prefix) do
+      nil ->
+        add_error(loc_cs, :parent_id, "New parent object does not exist")
+
+      parent ->
+        # Get the descendents
+        descendents = HierarchyManager.descendants(location) |> Repo.all(prefix: prefix)
+        new_path = parent.path ++ [parent.id]
+        # make this node child of new parent
+        head_cs = HierarchyManager.make_child_of(loc_cs, parent)
+        make_locations_changeset_and_update(head_cs, location, descendents, new_path, prefix)
+    end
+  end
+
+  defp make_locations_changeset_and_update(head_cs, location, descendents, new_path, prefix) do
+    # adjust the path (from old path to ne path )for all descendents
+    multi =
+      [
+        {location.id, head_cs}
+        | Enum.map(descendents, fn d ->
+            {_, rest} = Enum.split_while(d.path, fn e -> e != location.id end)
+            {d.id, Location.changeset(d, %{}) |> change(%{path: new_path ++ rest})}
+          end)
+      ]
+      |> Enum.reduce(Multi.new(), fn {indx, cs}, multi ->
+        Multi.update(multi, :"location#{indx}", cs, prefix: prefix)
+      end)
+
+    case Repo.transaction(multi, prefix: prefix) do
+      {:ok, loc} -> {:ok, Map.get(loc, :"location#{location.id}")}
+      _ -> {:error, head_cs}
+    end
+  end
+
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs, _prefix) do
     location
     |> Location.changeset(attrs)
-    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -227,7 +285,11 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def delete_location(%Location{} = location, prefix) do
-    Repo.delete(location, prefix: prefix)
+    # Deletes the location and children forcibly
+    # TBD: do not allow delete if this location is linked to some other record(s)
+    # Add that validation here....
+    subtree = HierarchyManager.subtree(location)
+    Repo.delete_all(subtree, prefix: prefix)
   end
 
   @doc """

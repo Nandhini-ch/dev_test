@@ -54,6 +54,11 @@ defmodule Inconn2Service.Util.HierarchyManager do
     from(n in schema, where: fragment("? @> ?", field(n, :path), ^pids))
   end
 
+  def subtree(node = %{__struct__: schema, id: id}) do
+    pids = path_ids(node)
+    from(n in schema, where: fragment("? @> ?", field(n, :path), ^pids) or n.id == ^id)
+  end
+
   def depth(%{path: path}) when is_list(path), do: length(path)
 
   def build_tree(node_list) do
