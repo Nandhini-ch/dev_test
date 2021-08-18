@@ -88,4 +88,16 @@ defmodule Inconn2Service.Util.HierarchyManager do
     new_node = Map.put(parent_node, :children, node_children)
     built_list ++ [new_node]
   end
+
+  def leaf_nodes(node_list) when is_list(node_list) do
+    {node_ids, parent_ids} =
+      Enum.reduce(node_list, {MapSet.new(), MapSet.new()}, fn node, {ms_id, ms_pid} ->
+        {
+          MapSet.put(ms_id, node.id),
+          Enum.reduce(node.path, ms_pid, fn np, mspid -> MapSet.put(mspid, np) end)
+        }
+      end)
+
+    MapSet.difference(node_ids, parent_ids)
+  end
 end
