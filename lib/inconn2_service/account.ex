@@ -114,7 +114,7 @@ defmodule Inconn2Service.Account do
 
   """
   def list_licensees do
-    Repo.all(Licensee)
+    Repo.all(Licensee) |> Repo.preload(:business_type)
   end
 
   @doc """
@@ -131,7 +131,7 @@ defmodule Inconn2Service.Account do
       ** (Ecto.NoResultsError)
 
   """
-  def get_licensee!(id), do: Repo.get!(Licensee, id)
+  def get_licensee!(id), do: Repo.get!(Licensee, id) |> Repo.preload(:business_type)
 
   def get_licensee_by_sub_domain(sub_domain) do
     Repo.get_by(Licensee, sub_domain: sub_domain)
@@ -170,6 +170,7 @@ defmodule Inconn2Service.Account do
         delete_licensee(licensee)
         {:error, {:triplex, "Not able to create tenant schema"}}
     end
+    {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
   end
 
   @doc """
