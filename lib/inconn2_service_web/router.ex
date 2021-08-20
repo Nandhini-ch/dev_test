@@ -14,5 +14,11 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/locations", LocationController, except: [:new, :edit, :index]
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
+    get "/sites/:site_id/locations/leaves", LocationController, :leaves
+    resources "/asset_categories", AssetCategoryController, except: [:new, :edit, :index]
+    get "/sites/:site_id/asset_categories", AssetCategoryController, :index
+    get "/sites/:site_id/asset_categories_tree", AssetCategoryController, :tree
+    get "/sites/:site_id/asset_categories/leaves", AssetCategoryController, :leaves
+
   end
 end

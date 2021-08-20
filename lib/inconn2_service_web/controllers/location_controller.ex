@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.LocationController do
     render(conn, "tree.json", locations: locations)
   end
 
+  def leaves(conn, %{"site_id" => site_id}) do
+    locations = AssetConfig.list_locations_leaves(site_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", locations: locations)
+  end
+
   def create(conn, %{"location" => location_params}) do
     with {:ok, %Location{} = location} <-
            AssetConfig.create_location(location_params, conn.assigns.sub_domain_prefix) do

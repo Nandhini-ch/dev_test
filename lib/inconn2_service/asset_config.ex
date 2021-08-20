@@ -127,6 +127,12 @@ defmodule Inconn2Service.AssetConfig do
     |> HierarchyManager.build_tree()
   end
 
+  def list_locations_leaves(site_id, prefix) do
+    ids = list_locations(site_id, prefix)
+          |> HierarchyManager.leaf_nodes()
+          |> MapSet.to_list()
+    from(a in Location, where: a.id in ^ids ) |> Repo.all(prefix: prefix)
+  end
   @doc """
   Gets a single location.
 
@@ -303,5 +309,230 @@ defmodule Inconn2Service.AssetConfig do
   """
   def change_location(%Location{} = location, attrs \\ %{}) do
     Location.changeset(location, attrs)
+  end
+
+
+  alias Inconn2Service.AssetConfig.AssetCategory
+
+  @doc """
+  Returns the list of asset_categories.
+
+  ## Examples
+
+      iex> list_asset_categories()
+      [%AssetCategory{}, ...]
+
+  """
+  def list_asset_categories(site_id, prefix) do
+    AssetCategory
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_asset_categories_tree(site_id, prefix) do
+    list_asset_categories(site_id, prefix)
+    |> HierarchyManager.build_tree()
+  end
+
+  def list_asset_categories_leaves(site_id, prefix) do
+    ids = list_asset_categories(site_id, prefix)
+          |> HierarchyManager.leaf_nodes()
+          |> MapSet.to_list()
+    from(a in AssetCategory, where: a.id in ^ids ) |> Repo.all(prefix: prefix)
+  end
+
+  @doc """
+  Gets a single asset_category.
+
+  Raises `Ecto.NoResultsError` if the AssetCategory does not exist.
+
+  ## Examples
+
+      iex> get_asset_category!(123)
+      %AssetCategory{}
+
+      iex> get_asset_category!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
+
+  def get_root_asset_categories(prefix) do
+    root_path = []
+
+    query =
+      from(a in AssetCategory,
+        where: fragment("(?) = ?", field(a, :path), ^root_path)
+      )
+
+    Repo.all(query, prefix: prefix)
+  end
+
+  def get_parent_of_asset_category(asset_category_id, prefix) do
+    ac = get_asset_category!(asset_category_id, prefix)
+    HierarchyManager.parent(ac) |> Repo.one(prefix: prefix)
+  end
+
+  @doc """
+  Creates a asset_category.
+
+  ## Examples
+
+      iex> create_asset_category(%{field: value})
+      {:ok, %AssetCategory{}}
+
+      iex> create_asset_category(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_asset_category(attrs \\ %{}, prefix) do
+    parent_id = Map.get(attrs, "parent_id", nil)
+    if parent_id != nil do
+      attrs = add_or_change_asset_type(attrs, parent_id, prefix)
+      create_asset_category_with_asset_type(attrs, parent_id,prefix)
+    else
+      create_asset_category_with_asset_type(attrs, parent_id,prefix)
+    end
+  end
+
+  defp create_asset_category_with_asset_type(attrs, parent_id,prefix) do
+    ac_cs =
+      %AssetCategory{}
+      |> AssetCategory.changeset(attrs)
+    create_asset_category_in_tree(parent_id, ac_cs, prefix)
+  end
+
+
+  defp create_asset_category_in_tree(nil, ac_cs, prefix) do
+    Repo.insert(ac_cs, prefix: prefix)
+  end
+
+  defp create_asset_category_in_tree(parent_id, ac_cs, prefix) do
+    case Repo.get(AssetCategory, parent_id, prefix: prefix) do
+      nil ->
+        add_error(ac_cs, :parent_id, "Parent object does not exist")
+
+      parent ->
+        Repo
+        ac_cs
+        |> HierarchyManager.make_child_of(parent)
+        |> Repo.insert(prefix: prefix)
+    end
+  end
+
+  @doc """
+  Updates a asset_category.
+
+  ## Examples
+
+      iex> update_asset_category(asset_category, %{field: new_value})
+      {:ok, %AssetCategory{}}
+
+      iex> update_asset_category(asset_category, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_asset_category(%AssetCategory{} = asset_category, attrs, prefix) do
+    existing_parent_id = HierarchyManager.parent_id(asset_category)
+
+    cond do
+      Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+        new_parent_id = attrs["parent_id"]
+        attrs = add_or_change_asset_type(attrs, new_parent_id, prefix)
+        ac_cs = update_asset_category_default_changeset_pipe(asset_category, attrs, prefix)
+        update_asset_category_in_tree(new_parent_id, ac_cs, asset_category, prefix)
+
+      true ->
+        attrs = add_or_change_asset_type(attrs, existing_parent_id, prefix)
+        update_asset_category_default_changeset_pipe(asset_category, attrs, prefix)
+        |> Repo.update(prefix: prefix)
+
+    end
+  end
+
+  defp add_or_change_asset_type(attrs, parent_id, prefix) do
+    parent = get_asset_category!(parent_id, prefix)
+    Map.put(attrs, "asset_type", parent.asset_type)
+  end
+
+  defp update_asset_category_in_tree(nil, ac_cs, asset_category, prefix) do
+    descendents = HierarchyManager.descendants(asset_category) |> Repo.all(prefix: prefix)
+    # adjust the path (from old path to ne path )for all descendents
+    ac_cs = change(ac_cs, %{path: []})
+    make_asset_categories_changeset_and_update(ac_cs, asset_category, descendents, [], prefix)
+  end
+
+  defp update_asset_category_in_tree(new_parent_id, ac_cs, asset_category, prefix) do
+    # Get the new parent and check
+    case Repo.get(AssetCategory, new_parent_id, prefix: prefix) do
+      nil ->
+        add_error(ac_cs, :parent_id, "New parent object does not exist")
+
+      parent ->
+        # Get the descendents
+        descendents = HierarchyManager.descendants(asset_category) |> Repo.all(prefix: prefix)
+        new_path = parent.path ++ [parent.id]
+        # make this node child of new parent
+        head_cs = HierarchyManager.make_child_of(ac_cs, parent)
+        make_asset_categories_changeset_and_update(head_cs, asset_category, descendents, new_path, prefix)
+    end
+  end
+
+  defp make_asset_categories_changeset_and_update(head_cs, asset_category, descendents, new_path, prefix) do
+    # adjust the path (from old path to ne path )for all descendents
+    multi =
+      [
+        {asset_category.id, head_cs}
+        | Enum.map(descendents, fn d ->
+            {_, rest} = Enum.split_while(d.path, fn e -> e != asset_category.id end)
+            {d.id, AssetCategory.changeset(d, %{}) |> change(%{path: new_path ++ rest})}
+          end)
+      ]
+      |> Enum.reduce(Multi.new(), fn {indx, cs}, multi ->
+        Multi.update(multi, :"asset_category#{indx}", cs, prefix: prefix)
+      end)
+
+    case Repo.transaction(multi, prefix: prefix) do
+      {:ok, ac} -> {:ok, Map.get(ac, :"asset_category#{asset_category.id}")}
+      _ -> {:error, head_cs}
+    end
+  end
+
+  defp update_asset_category_default_changeset_pipe(%AssetCategory{} = asset_category, attrs, _prefix) do
+    asset_category
+    |> AssetCategory.changeset(attrs)
+  end
+
+  @doc """
+  Deletes a asset_category.
+
+  ## Examples
+
+      iex> delete_asset_category(asset_category)
+      {:ok, %AssetCategory{}}
+
+      iex> delete_asset_category(asset_category)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+    # Deletes the asset_category and children forcibly
+    # TBD: do not allow delete if this asset_category is linked to some other record(s)
+    # Add that validation here....
+    subtree = HierarchyManager.subtree(asset_category)
+    Repo.delete_all(subtree, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking asset_category changes.
+
+  ## Examples
+
+      iex> change_asset_category(asset_category)
+      %Ecto.Changeset{data: %AssetCategory{}}
+
+  """
+  def change_asset_category(%AssetCategory{} = asset_category, attrs \\ %{}) do
+    AssetCategory.changeset(asset_category, attrs)
   end
 end
