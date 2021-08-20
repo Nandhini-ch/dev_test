@@ -12,6 +12,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/licensees", LicenseeController, except: [:new, :edit]
     resources "/sites", SiteController, except: [:new, :edit]
     resources "/locations", LocationController, except: [:new, :edit, :index]
+    resources "/shifts", ShiftController, except: [:new, :edit]
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
   end

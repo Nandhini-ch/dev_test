@@ -1,0 +1,150 @@
+defmodule Inconn2Service.Settings do
+  @moduledoc """
+  The Settings context.
+  """
+
+  import Ecto.Query, warn: false
+  alias Inconn2Service.Repo
+
+  alias Inconn2Service.Settings.Shift
+
+  @doc """
+  Returns the list of shifts.
+
+  ## Examples
+
+      iex> list_shifts()
+      [%Shift{}, ...]
+
+  """
+
+  def list_shifts(site_id, prefix) do
+    Shift
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_shifts_for_a_day(site_id, shiftdate, prefix) do
+    query =
+      from(s in Shift,
+        where:
+          s.site_id == ^site_id and
+            fragment("? BETWEEN ? AND ?", ^shiftdate, s.start_date, s.end_date)
+      )
+
+    IO.inspect(query)
+    Repo.all(query, prefix: prefix)
+  end
+
+  def list_shifts_between_dates(site_id, start_shiftdate, end_shiftdate, prefix) do
+    # constructing a query like below
+    # SELECT s0."id", s0."applicable_days", s0."end_date",
+    # s0."end_time", s0."name", s0."start_date", s0."start_time",
+    # s0."site_id", s0."inserted_at", s0."updated_at"
+    # FROM "inc_bata"."shifts" AS s0
+    # WHERE ((s0."site_id" = 1) AND '2021-08-19' >= s0."start_date"
+    # AND '2021-08-21'  >= s0."start_date" OR s0."end_date" >= '2021-08-19'
+    # AND s0."end_date" <= '2021-08-21')
+
+    query =
+      from(s in Shift,
+        where:
+          s.site_id == ^site_id and
+            fragment(
+              "(? >= ? AND ?  >= ?) OR (? >= ? AND ? <= ? )",
+              ^start_shiftdate,
+              s.start_date,
+              ^end_shiftdate,
+              s.start_date,
+              s.end_date,
+              ^start_shiftdate,
+              s.end_date,
+              ^end_shiftdate
+            )
+      )
+
+    IO.inspect(query)
+    Repo.all(query, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single shift.
+
+  Raises `Ecto.NoResultsError` if the Shift does not exist.
+
+  ## Examples
+
+      iex> get_shift!(123)
+      %Shift{}
+
+      iex> get_shift!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_shift!(id, prefix), do: Repo.get!(Shift, id, prefix: prefix)
+
+  @doc """
+  Creates a shift.
+
+  ## Examples
+
+      iex> create_shift(%{field: value})
+      {:ok, %Shift{}}
+
+      iex> create_shift(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_shift(attrs \\ %{}, prefix) do
+    %Shift{}
+    |> Shift.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a shift.
+
+  ## Examples
+
+      iex> update_shift(shift, %{field: new_value})
+      {:ok, %Shift{}}
+
+      iex> update_shift(shift, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_shift(%Shift{} = shift, attrs, prefix) do
+    shift
+    |> Shift.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a shift.
+
+  ## Examples
+
+      iex> delete_shift(shift)
+      {:ok, %Shift{}}
+
+      iex> delete_shift(shift)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_shift(%Shift{} = shift, prefix) do
+    Repo.delete(shift, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking shift changes.
+
+  ## Examples
+
+      iex> change_shift(shift)
+      %Ecto.Changeset{data: %Shift{}}
+
+  """
+  def change_shift(%Shift{} = shift, attrs \\ %{}) do
+    Shift.changeset(shift, attrs)
+  end
+end

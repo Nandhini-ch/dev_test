@@ -27,6 +27,7 @@ defmodule Inconn2ServiceWeb.LocationController do
   end
 
   def show(conn, %{"id" => id}) do
+    IO.puts("inside show of the controller @@@@@")
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", location: location)
   end
