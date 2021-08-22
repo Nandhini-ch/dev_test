@@ -11,9 +11,22 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/business_types", BusinessTypeController, except: [:new, :edit]
     resources "/licensees", LicenseeController, except: [:new, :edit]
     resources "/sites", SiteController, except: [:new, :edit]
+
+    resources "/asset_categories", AssetCategoryController, except: [:new, :edit, :index]
+    get "/sites/:site_id/asset_categories", AssetCategoryController, :index
+    get "/sites/:site_id/asset_categories_tree", AssetCategoryController, :tree
+    get "/sites/:site_id/asset_categories/leaves", AssetCategoryController, :leaves
+
     resources "/locations", LocationController, except: [:new, :edit, :index]
     resources "/shifts", ShiftController, except: [:new, :edit]
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
+    get "/sites/:site_id/locations/leaves", LocationController, :leaves
+
+    resources "/equipments", EquipmentController, except: [:new, :edit, :index]
+    get "/sites/:site_id/equipments", EquipmentController, :index
+    get "/sites/:site_id/equipments_tree", EquipmentController, :tree
+    get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
+
   end
 end

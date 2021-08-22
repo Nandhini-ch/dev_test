@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.LocationController do
     render(conn, "tree.json", locations: locations)
   end
 
+  def leaves(conn, %{"site_id" => site_id}) do
+    locations = AssetConfig.list_locations_leaves(site_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", locations: locations)
+  end
+
   def create(conn, %{"location" => location_params}) do
     with {:ok, %Location{} = location} <-
            AssetConfig.create_location(location_params, conn.assigns.sub_domain_prefix) do
@@ -44,7 +49,7 @@ defmodule Inconn2ServiceWeb.LocationController do
   def delete(conn, %{"id" => id}) do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Location{}} <-
+    with {_, nil} <-
            AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
