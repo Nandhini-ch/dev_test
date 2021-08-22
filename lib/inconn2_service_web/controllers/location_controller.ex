@@ -48,7 +48,7 @@ defmodule Inconn2ServiceWeb.LocationController do
   def delete(conn, %{"id" => id}) do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Location{}} <-
+    with {_, nil} <-
            AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end

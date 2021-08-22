@@ -47,7 +47,7 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
 
   def delete(conn, %{"id" => id}) do
     asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-    with {:ok, %AssetCategory{}} <-
+    with {_, nil} <-
            AssetConfig.delete_asset_category(asset_category, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end

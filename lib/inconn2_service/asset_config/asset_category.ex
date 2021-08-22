@@ -20,9 +20,10 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
     |> cast(attrs, [:name, :asset_type, :site_id, :parent_id])
     |> validate_required([:name, :site_id])
     |> validate_inclusion(:asset_type, ["L", "E"] )
+    |> assoc_constraint(:site)
     |> validate_asset_type()
   end
-  
+
   def validate_asset_type(changeset) do
     pid = get_field(changeset, :parent_id)
     if pid == 0 do
