@@ -54,6 +54,7 @@ defmodule Inconn2ServiceWeb.LocationController do
       send_resp(conn, :no_content, "")
       # =======
       case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
+        {:ok, %Location{}} ->
           send_resp(conn, :no_content, "")
 
         {_, nil} ->
