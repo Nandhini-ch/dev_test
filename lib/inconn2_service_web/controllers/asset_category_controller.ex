@@ -6,18 +6,18 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, %{"site_id" => site_id}) do
-    asset_categories = AssetConfig.list_asset_categories(site_id, conn.assigns.sub_domain_prefix)
+  def index(conn, _params) do
+    asset_categories = AssetConfig.list_asset_categories(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", asset_categories: asset_categories)
   end
 
-  def tree(conn, %{"site_id" => site_id}) do
-    asset_categories = AssetConfig.list_asset_categories_tree(site_id, conn.assigns.sub_domain_prefix)
+  def tree(conn, _params) do
+    asset_categories = AssetConfig.list_asset_categories_tree(conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", asset_categories: asset_categories)
   end
 
-  def leaves(conn, %{"site_id" => site_id}) do
-    asset_categories = AssetConfig.list_asset_categories_leaves(site_id, conn.assigns.sub_domain_prefix)
+  def leaves(conn, _params) do
+    asset_categories = AssetConfig.list_asset_categories_leaves(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", asset_categories: asset_categories)
   end
 

@@ -1,6 +1,5 @@
 defmodule Inconn2Service.AssetConfig.AssetCategory do
   use Ecto.Schema
-  alias Inconn2Service.AssetConfig.Site
 
   import Ecto.Changeset
 
@@ -9,7 +8,6 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
     field :asset_type, :string
     field :parent_id, :integer, virtual: true ,default: 0
     field :path, {:array, :integer}, default: []
-    belongs_to :site, Site
 
     timestamps()
   end
@@ -17,10 +15,9 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
   @doc false
   def changeset(asset_category, attrs) do
     asset_category
-    |> cast(attrs, [:name, :asset_type, :site_id, :parent_id])
-    |> validate_required([:name, :site_id])
+    |> cast(attrs, [:name, :asset_type, :parent_id])
+    |> validate_required([:name])
     |> validate_inclusion(:asset_type, ["L", "E"] )
-    |> assoc_constraint(:site)
     |> validate_asset_type()
   end
 

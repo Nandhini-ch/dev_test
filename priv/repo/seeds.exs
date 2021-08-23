@@ -1,4 +1,4 @@
-alias Inconn2Service.{Account, AssetConfig}
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -42,8 +42,8 @@ sc =
     {:error, cs} -> IO.inspect(cs)
   end
 
-a1 = %{"name" => "Open floor", "asset_type" => "L", "site_id" => sc.id}
-a2 = %{"name" => "Electrical", "asset_type" => "E", "site_id" => sc.id}
+a1 = %{"name" => "Open floor", "asset_type" => "L"}
+a2 = %{"name" => "Electrical", "asset_type" => "E"}
 {:ok, a1c} = AssetConfig.create_asset_category(a1, "inc_bata")
 {:ok, a2c} = AssetConfig.create_asset_category(a2, "inc_bata")
 
@@ -186,3 +186,19 @@ b2 = %{"name" => "Building2", "location_code" => "LOC_BUILD2", "site_id" => sc.i
       "asset_category_id" => a2c.id
     }
     |> AssetConfig.create_equipment("inc_bata")
+
+  tsk1 = %{"label" => "Task 1", "task_type" => "Inspection_one", "estimated_time" => 60, "config" => %{"label" => "abc", "value" => 30}}
+  tsk2 = %{"label" => "Task 2", "task_type" => "Inspection_many", "estimated_time" => 120, "config" => %{"label" => "cde", "value" => 100}}
+  tsk3 = %{"label" => "Task 3", "task_type" => "Metering", "estimated_time" => 15, "config" => %{"UOM" => "ampere", "type" => "A"}}
+  tsk4 = %{"label" => "Task 4", "task_type" => "Observation", "estimated_time" => 90, "config" => %{"Observation" => "Observered certain things"}}
+  {:ok, tsk1c} = WorkOrderConfig.create_task(tsk1, "inc_bata")
+  {:ok, tsk2c} = WorkOrderConfig.create_task(tsk2, "inc_bata")
+  {:ok, tsk3c} = WorkOrderConfig.create_task(tsk3, "inc_bata")
+  {:ok, tsk4c} = WorkOrderConfig.create_task(tsk4, "inc_bata")
+
+  tsk_lst1 = %{"name" => "Daily maintenance", "task_ids" => [1,2], "asset_category_id" => 2}
+  tsk_lst2 = %{"name" => "Weakly maintenance", "task_ids" => [1,2,3], "asset_category_id" => 2}
+  tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1,3,4], "asset_category_id" => 2}
+    {:ok, tsk_lst1c} = WorkOrderConfig.create_task_list(tsk_lst1, "inc_bata")
+    {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
+    {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")

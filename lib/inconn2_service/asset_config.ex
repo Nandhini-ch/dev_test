@@ -116,19 +116,18 @@ defmodule Inconn2Service.AssetConfig do
       [%AssetCategory{}, ...]
 
   """
-  def list_asset_categories(site_id, prefix) do
+  def list_asset_categories(prefix) do
     AssetCategory
-    |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
 
-  def list_asset_categories_tree(site_id, prefix) do
-    list_asset_categories(site_id, prefix)
+  def list_asset_categories_tree(prefix) do
+    list_asset_categories(prefix)
     |> HierarchyManager.build_tree()
   end
 
-  def list_asset_categories_leaves(site_id, prefix) do
-    ids = list_asset_categories(site_id, prefix)
+  def list_asset_categories_leaves(prefix) do
+    ids = list_asset_categories(prefix)
           |> HierarchyManager.leaf_nodes()
           |> MapSet.to_list()
     from(a in AssetCategory, where: a.id in ^ids ) |> Repo.all(prefix: prefix)
@@ -484,7 +483,7 @@ defmodule Inconn2Service.AssetConfig do
         loc_cs = update_location_default_changeset_pipe(location, attrs, prefix)
                 |> check_asset_category_type_loc(prefix)
         Repo.update(loc_cs, prefix: prefix)
-        
+
     end
   end
 
