@@ -19,7 +19,8 @@ alias Inconn2Service.Settings
 {:ok, shiftstartdate3} = Date.new(2021, 08, 23)
 {:ok, shiftenddate3} = Date.new(2021, 08, 24)
 
-{:ok, shiftstartdate4} = Date.new(2021, 08, 01)
+{:ok, shiftstartdate4} = Date.new(2021, 08, 01)clear
+
 {:ok, shiftenddate4} = Date.new(2021, 08, 30)
 
 

@@ -27,9 +27,9 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
 
     resources "/shifts", ShiftController, except: [:new, :edit]
+    resources "/bankholidays", HolidayController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
-
   end
 end

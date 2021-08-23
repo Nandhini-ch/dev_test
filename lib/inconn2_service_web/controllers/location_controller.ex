@@ -32,7 +32,6 @@ defmodule Inconn2ServiceWeb.LocationController do
   end
 
   def show(conn, %{"id" => id}) do
-    IO.puts("inside show of the controller @@@@@")
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", location: location)
   end
@@ -49,9 +48,18 @@ defmodule Inconn2ServiceWeb.LocationController do
   def delete(conn, %{"id" => id}) do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
+    # <<<<<<< Updated upstream
     with {_, nil} <-
            AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+      # =======
+      case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
+          send_resp(conn, :no_content, "")
+
+        {_, nil} ->
+          send_resp(conn, :no_content, "")
+          # >>>>>>> Stashed changes
+      end
     end
   end
 end

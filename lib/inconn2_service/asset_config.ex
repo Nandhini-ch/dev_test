@@ -553,7 +553,7 @@ defmodule Inconn2Service.AssetConfig do
     # TBD: do not allow delete if this location is linked to some other record(s)
     # Add that validation here....
     subtree = HierarchyManager.subtree(location)
-    Repo.delete_all(subtree, prefix: prefix)
+    IO.inspect(Repo.delete_all(subtree, prefix: prefix))
   end
 
   @doc """
