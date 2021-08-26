@@ -5,6 +5,7 @@ defmodule Inconn2Service.Account do
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  alias Inconn2Service.AssetConfig
 
   alias Inconn2Service.Account.BusinessType
 
@@ -155,16 +156,37 @@ defmodule Inconn2Service.Account do
       |> Licensee.changeset(attrs)
       |> Repo.insert()
 
+    IO.puts("checking in create licensee @@@@@@@@@@@@@")
+    IO.inspect(result)
+
     case result do
-      {:ok, licensee} -> create_tenant(licensee)
-      _ -> result
+      {:ok, licensee} ->
+        create_tenant(licensee)
+        IO.puts("outside create tenant")
+        IO.inspect(licensee)
+        party_type = licensee.party_type
+        IO.inspect(party_type)
+
+        return_party =
+          IO.inspect(
+            AssetConfig.create_default_party(licensee, Triplex.to_prefix(licensee.sub_domain))
+          )
+
+        IO.inspect(return_party)
+
+      _ ->
+        result
     end
   end
 
   defp create_tenant(licensee) do
-    case Triplex.create(licensee.sub_domain) do
-      {:ok, _workspace} ->
+    case IO.inspect(Triplex.create(licensee.sub_domain)) do
+      {:ok, workspace} ->
+        IO.puts("inside create tenant")
+        IO.inspect(workspace)
         {:ok, licensee}
+        IO.puts("inside create tenant 22222222")
+        IO.inspect(workspace)
 
       _ ->
         delete_licensee(licensee)

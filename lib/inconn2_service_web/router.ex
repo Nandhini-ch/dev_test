@@ -28,6 +28,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
+    resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]

@@ -7,6 +7,8 @@ client = %{
   "company_name" => "Bata Shoe Company",
   "business_type_id" => btrec.id,
   "sub_domain" => "bata",
+  "party_type" => ["AO", "SELF"],
+  "other_party_type" => nil,
   "address" => %{
     "address_line1" => "18, First Street",
     "address_line2" => "Anna Nagar",
@@ -25,19 +27,35 @@ client = %{
   }
 }
 
-case Account.create_licensee(client) do
-  {:ok, lic} -> IO.inspect(lic)
-  {:error, cs} -> IO.inspect(cs)
-end
+# case IO.inspect(Account.create_licensee(client)) do
+# {:ok, lic} -> IO.inspect(lic)
+# {:error, cs} -> IO.inspect(cs)
+# _ -> IO.inspect()
+# end
+IO.inspect(Account.create_licensee(client))
 
 site = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
-  "site_code" => "BRCHN_MNTRD"
+  "site_code" => "BRCHN_MNTRD",
+  "party_id" => 1
 }
 
 sc =
-  case AssetConfig.create_site(site, "inc_bata") do
+  case IO.inspect(AssetConfig.create_site(site, "inc_bata")) do
+    {:ok, site_created} -> IO.inspect(site_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
+
+site = %{
+  "name" => "GANDHINAGAR",
+  "description" => "Main branch at GANDHINAGAR road",
+  "site_code" => "BRCHN_MNTRDLTD"
+}
+
+sc =
+  case IO.inspect(AssetConfig.create_site(site, "inc_bata")) do
     {:ok, site_created} -> IO.inspect(site_created)
     {:error, cs} -> IO.inspect(cs)
   end
@@ -47,8 +65,20 @@ a2 = %{"name" => "Electrical", "asset_type" => "E"}
 {:ok, a1c} = AssetConfig.create_asset_category(a1, "inc_bata")
 {:ok, a2c} = AssetConfig.create_asset_category(a2, "inc_bata")
 
-b1 = %{"name" => "Building1", "location_code" => "LOC_BUILD1", "site_id" => sc.id, "asset_category_id" => a1c.id}
-b2 = %{"name" => "Building2", "location_code" => "LOC_BUILD2", "site_id" => sc.id, "asset_category_id" => a1c.id}
+b1 = %{
+  "name" => "Building1",
+  "location_code" => "LOC_BUILD1",
+  "site_id" => sc.id,
+  "asset_category_id" => a1c.id
+}
+
+b2 = %{
+  "name" => "Building2",
+  "location_code" => "LOC_BUILD2",
+  "site_id" => sc.id,
+  "asset_category_id" => a1c.id
+}
+
 {:ok, b1c} = AssetConfig.create_location(b1, "inc_bata")
 {:ok, b2c} = AssetConfig.create_location(b2, "inc_bata")
 
@@ -142,63 +172,99 @@ b2 = %{"name" => "Building2", "location_code" => "LOC_BUILD2", "site_id" => sc.i
   }
   |> AssetConfig.create_location("inc_bata")
 
-  dg1 = %{"name" => "Diesel Generator 1", "equipment_code" => "EQ_DG1", "site_id" => sc.id, "asset_category_id" => a2c.id}
-  dg2 = %{"name" => "Diesel Generator 2", "equipment_code" => "EQ_DG2", "site_id" => sc.id, "asset_category_id" => a2c.id}
-  {:ok, dg1c} = AssetConfig.create_equipment(dg1, "inc_bata")
-  {:ok, dg2c} = AssetConfig.create_equipment(dg2, "inc_bata")
+dg1 = %{
+  "name" => "Diesel Generator 1",
+  "equipment_code" => "EQ_DG1",
+  "site_id" => sc.id,
+  "asset_category_id" => a2c.id
+}
 
-  {:ok, dg1_ic} =
-    %{
-      "parent_id" => dg1c.id,
-      "name" => "IC Engine",
-      "equipment_code" => "EQ_DG1_IC",
-      "site_id" => sc.id,
-      "asset_category_id" => a2c.id
-    }
-    |> AssetConfig.create_equipment("inc_bata")
+dg2 = %{
+  "name" => "Diesel Generator 2",
+  "equipment_code" => "EQ_DG2",
+  "site_id" => sc.id,
+  "asset_category_id" => a2c.id
+}
 
-  {:ok, dg1_al} =
-    %{
-      "parent_id" => dg1c.id,
-      "name" => "Alternator",
-      "equipment_code" => "EQ_DG1_AL",
-      "site_id" => sc.id,
-      "asset_category_id" => a2c.id
-    }
-    |> AssetConfig.create_equipment("inc_bata")
+{:ok, dg1c} = AssetConfig.create_equipment(dg1, "inc_bata")
+{:ok, dg2c} = AssetConfig.create_equipment(dg2, "inc_bata")
 
-  {:ok, dg2_ic} =
-    %{
-      "parent_id" => dg2c.id,
-      "name" => "IC Engine",
-      "equipment_code" => "EQ_DG2_IC",
-      "site_id" => sc.id,
-      "asset_category_id" => a2c.id
-    }
-    |> AssetConfig.create_equipment("inc_bata")
+{:ok, dg1_ic} =
+  %{
+    "parent_id" => dg1c.id,
+    "name" => "IC Engine",
+    "equipment_code" => "EQ_DG1_IC",
+    "site_id" => sc.id,
+    "asset_category_id" => a2c.id
+  }
+  |> AssetConfig.create_equipment("inc_bata")
 
-  {:ok, dg2_al} =
-    %{
-      "parent_id" => dg2c.id,
-      "name" => "Alternator",
-      "equipment_code" => "EQ_DG2_AL",
-      "site_id" => sc.id,
-      "asset_category_id" => a2c.id
-    }
-    |> AssetConfig.create_equipment("inc_bata")
+{:ok, dg1_al} =
+  %{
+    "parent_id" => dg1c.id,
+    "name" => "Alternator",
+    "equipment_code" => "EQ_DG1_AL",
+    "site_id" => sc.id,
+    "asset_category_id" => a2c.id
+  }
+  |> AssetConfig.create_equipment("inc_bata")
 
-  tsk1 = %{"label" => "Task 1", "task_type" => "Inspection_one", "estimated_time" => 60, "config" => %{"label" => "abc", "value" => 30}}
-  tsk2 = %{"label" => "Task 2", "task_type" => "Inspection_many", "estimated_time" => 120, "config" => %{"label" => "cde", "value" => 100}}
-  tsk3 = %{"label" => "Task 3", "task_type" => "Metering", "estimated_time" => 15, "config" => %{"UOM" => "ampere", "type" => "A"}}
-  tsk4 = %{"label" => "Task 4", "task_type" => "Observation", "estimated_time" => 90, "config" => %{"Observation" => "Observered certain things"}}
-  {:ok, tsk1c} = WorkOrderConfig.create_task(tsk1, "inc_bata")
-  {:ok, tsk2c} = WorkOrderConfig.create_task(tsk2, "inc_bata")
-  {:ok, tsk3c} = WorkOrderConfig.create_task(tsk3, "inc_bata")
-  {:ok, tsk4c} = WorkOrderConfig.create_task(tsk4, "inc_bata")
+{:ok, dg2_ic} =
+  %{
+    "parent_id" => dg2c.id,
+    "name" => "IC Engine",
+    "equipment_code" => "EQ_DG2_IC",
+    "site_id" => sc.id,
+    "asset_category_id" => a2c.id
+  }
+  |> AssetConfig.create_equipment("inc_bata")
 
-  tsk_lst1 = %{"name" => "Daily maintenance", "task_ids" => [1,2], "asset_category_id" => 2}
-  tsk_lst2 = %{"name" => "Weakly maintenance", "task_ids" => [1,2,3], "asset_category_id" => 2}
-  tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1,3,4], "asset_category_id" => 2}
-    {:ok, tsk_lst1c} = WorkOrderConfig.create_task_list(tsk_lst1, "inc_bata")
-    {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
-    {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")
+{:ok, dg2_al} =
+  %{
+    "parent_id" => dg2c.id,
+    "name" => "Alternator",
+    "equipment_code" => "EQ_DG2_AL",
+    "site_id" => sc.id,
+    "asset_category_id" => a2c.id
+  }
+  |> AssetConfig.create_equipment("inc_bata")
+
+tsk1 = %{
+  "label" => "Task 1",
+  "task_type" => "Inspection_one",
+  "estimated_time" => 60,
+  "config" => %{"label" => "abc", "value" => 30}
+}
+
+tsk2 = %{
+  "label" => "Task 2",
+  "task_type" => "Inspection_many",
+  "estimated_time" => 120,
+  "config" => %{"label" => "cde", "value" => 100}
+}
+
+tsk3 = %{
+  "label" => "Task 3",
+  "task_type" => "Metering",
+  "estimated_time" => 15,
+  "config" => %{"UOM" => "ampere", "type" => "A"}
+}
+
+tsk4 = %{
+  "label" => "Task 4",
+  "task_type" => "Observation",
+  "estimated_time" => 90,
+  "config" => %{"Observation" => "Observered certain things"}
+}
+
+{:ok, tsk1c} = WorkOrderConfig.create_task(tsk1, "inc_bata")
+{:ok, tsk2c} = WorkOrderConfig.create_task(tsk2, "inc_bata")
+{:ok, tsk3c} = WorkOrderConfig.create_task(tsk3, "inc_bata")
+{:ok, tsk4c} = WorkOrderConfig.create_task(tsk4, "inc_bata")
+
+tsk_lst1 = %{"name" => "Daily maintenance", "task_ids" => [1, 2], "asset_category_id" => 2}
+tsk_lst2 = %{"name" => "Weakly maintenance", "task_ids" => [1, 2, 3], "asset_category_id" => 2}
+tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1, 3, 4], "asset_category_id" => 2}
+{:ok, tsk_lst1c} = WorkOrderConfig.create_task_list(tsk_lst1, "inc_bata")
+{:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
+{:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")
