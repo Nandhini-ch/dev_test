@@ -10,6 +10,7 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.Util.HierarchyManager
+  Inconn2Service.Account.Licensee
 
   @doc """
   Returns the list of sites.
@@ -53,9 +54,53 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def create_site(attrs \\ %{}, prefix) do
-    %Site{}
-    |> Site.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    # When create site is called with a party id then we
+    # need to check if the licensee is a Assset Owner with Licensee Y
+    IO.inspect(attrs)
+    party_id = Map.get(attrs, "party_id", nil)
+    IO.inspect(party_id)
+
+    if party_id == nil do
+      site =
+        %Site{}
+        |> Site.changeset(attrs)
+        |> Repo.insert(prefix: prefix)
+
+      IO.inspect(site)
+    else
+      result = IO.inspect(get_party_AO(party_id, prefix))
+      IO.inspect(result)
+
+      case !result do
+        change_set1 ->
+          IO.inspect(change_set1)
+
+          site =
+            %Site{}
+            |> Site.changeset(attrs)
+            |> Repo.insert(prefix: prefix)
+
+          IO.inspect(site)
+
+          case site do
+            {:error, changet_set} ->
+              add_error(changet_set, :party_id, "Cannot create site, Error in Party table")
+              changet_set
+
+            {:ok, changet_set} ->
+              IO.inspect(changet_set)
+
+            nil ->
+              add_error(result, :party_id, "nil value created ")
+              result
+          end
+      end
+
+      if result == nil do
+        add_error(result, :party_id, "Cannot create site, Error in Party table")
+        result
+      end
+    end
   end
 
   @doc """
@@ -127,10 +172,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def list_asset_categories_leaves(prefix) do
-    ids = list_asset_categories(prefix)
-          |> HierarchyManager.leaf_nodes()
-          |> MapSet.to_list()
-    from(a in AssetCategory, where: a.id in ^ids ) |> Repo.all(prefix: prefix)
+    ids =
+      list_asset_categories(prefix)
+      |> HierarchyManager.leaf_nodes()
+      |> MapSet.to_list()
+
+    from(a in AssetCategory, where: a.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -179,21 +226,22 @@ defmodule Inconn2Service.AssetConfig do
   """
   def create_asset_category(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
+
     if parent_id != nil do
       attrs = add_or_change_asset_type_new_parent(attrs, parent_id, prefix)
-      create_asset_category_with_asset_type(attrs, parent_id,prefix)
+      create_asset_category_with_asset_type(attrs, parent_id, prefix)
     else
-      create_asset_category_with_asset_type(attrs, parent_id,prefix)
+      create_asset_category_with_asset_type(attrs, parent_id, prefix)
     end
   end
 
-  defp create_asset_category_with_asset_type(attrs, parent_id,prefix) do
+  defp create_asset_category_with_asset_type(attrs, parent_id, prefix) do
     ac_cs =
       %AssetCategory{}
       |> AssetCategory.changeset(attrs)
+
     create_asset_category_in_tree(parent_id, ac_cs, prefix)
   end
-
 
   defp create_asset_category_in_tree(nil, ac_cs, prefix) do
     Repo.insert(ac_cs, prefix: prefix)
@@ -236,22 +284,25 @@ defmodule Inconn2Service.AssetConfig do
 
       true ->
         attrs = add_or_change_asset_type(attrs, asset_category, prefix)
+
         update_asset_category_default_changeset_pipe(asset_category, attrs, prefix)
         |> Repo.update(prefix: prefix)
-
     end
   end
 
   defp add_or_change_asset_type_new_parent(attrs, new_parent_id, prefix) do
     parent = Repo.get(AssetCategory, new_parent_id, prefix: prefix)
+
     if parent != nil do
       Map.put(attrs, "asset_type", parent.asset_type)
     else
       attrs
     end
   end
+
   defp add_or_change_asset_type(attrs, asset_category, _prefix) do
     parent = HierarchyManager.parent(asset_category)
+
     if parent != nil do
       Map.put(attrs, "asset_type", parent.asset_type)
     else
@@ -279,11 +330,24 @@ defmodule Inconn2Service.AssetConfig do
         new_path = parent.path ++ [parent.id]
         # make this node child of new parent
         head_cs = HierarchyManager.make_child_of(ac_cs, parent)
-        make_asset_categories_changeset_and_update(head_cs, asset_category, descendents, new_path, prefix)
+
+        make_asset_categories_changeset_and_update(
+          head_cs,
+          asset_category,
+          descendents,
+          new_path,
+          prefix
+        )
     end
   end
 
-  defp make_asset_categories_changeset_and_update(head_cs, asset_category, descendents, new_path, prefix) do
+  defp make_asset_categories_changeset_and_update(
+         head_cs,
+         asset_category,
+         descendents,
+         new_path,
+         prefix
+       ) do
     # adjust the path (from old path to ne path )for all descendents
     multi =
       [
@@ -303,7 +367,11 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_asset_category_default_changeset_pipe(%AssetCategory{} = asset_category, attrs, _prefix) do
+  defp update_asset_category_default_changeset_pipe(
+         %AssetCategory{} = asset_category,
+         attrs,
+         _prefix
+       ) do
     asset_category
     |> AssetCategory.changeset(attrs)
   end
@@ -342,6 +410,7 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   alias Inconn2Service.AssetConfig.Location
+
   @doc """
   Returns the list of locations.
 
@@ -363,11 +432,14 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def list_locations_leaves(site_id, prefix) do
-    ids = list_locations(site_id, prefix)
-          |> HierarchyManager.leaf_nodes()
-          |> MapSet.to_list()
-    from(l in Location, where: l.id in ^ids ) |> Repo.all(prefix: prefix)
+    ids =
+      list_locations(site_id, prefix)
+      |> HierarchyManager.leaf_nodes()
+      |> MapSet.to_list()
+
+    from(l in Location, where: l.id in ^ids) |> Repo.all(prefix: prefix)
   end
+
   @doc """
   Gets a single location.
 
@@ -421,7 +493,6 @@ defmodule Inconn2Service.AssetConfig do
       |> check_asset_category_type_loc(prefix)
 
     create_location_in_tree(parent_id, loc_cs, prefix)
-
   end
 
   defp create_location_in_tree(nil, loc_cs, prefix) do
@@ -442,14 +513,17 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp check_asset_category_type_loc(loc_cs, prefix) do
-  ac_id = get_change(loc_cs, :asset_category_id, nil)
+    ac_id = get_change(loc_cs, :asset_category_id, nil)
+
     if ac_id != nil do
       asset_category = Repo.get(AssetCategory, ac_id, prefix: prefix)
+
       case asset_category.asset_type != "L" do
         true ->
-                add_error(loc_cs, :asset_category_id, "Asset category should be location")
+          add_error(loc_cs, :asset_category_id, "Asset category should be location")
 
-        false -> loc_cs
+        false ->
+          loc_cs
       end
     else
       loc_cs
@@ -474,16 +548,19 @@ defmodule Inconn2Service.AssetConfig do
     cond do
       Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
         new_parent_id = attrs["parent_id"]
-        loc_cs = update_location_default_changeset_pipe(location, attrs, prefix)
-                |> check_asset_category_type_loc(prefix)
+
+        loc_cs =
+          update_location_default_changeset_pipe(location, attrs, prefix)
+          |> check_asset_category_type_loc(prefix)
+
         update_location_in_tree(new_parent_id, loc_cs, location, prefix)
 
-
       true ->
-        loc_cs = update_location_default_changeset_pipe(location, attrs, prefix)
-                |> check_asset_category_type_loc(prefix)
-        Repo.update(loc_cs, prefix: prefix)
+        loc_cs =
+          update_location_default_changeset_pipe(location, attrs, prefix)
+          |> check_asset_category_type_loc(prefix)
 
+        Repo.update(loc_cs, prefix: prefix)
     end
   end
 
@@ -569,7 +646,6 @@ defmodule Inconn2Service.AssetConfig do
     Location.changeset(location, attrs)
   end
 
-
   alias Inconn2Service.AssetConfig.Equipment
 
   @doc """
@@ -593,11 +669,14 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def list_equipments_leaves(site_id, prefix) do
-    ids = list_equipments(site_id, prefix)
-          |> HierarchyManager.leaf_nodes()
-          |> MapSet.to_list()
-    from(e in Equipment, where: e.id in ^ids ) |> Repo.all(prefix: prefix)
+    ids =
+      list_equipments(site_id, prefix)
+      |> HierarchyManager.leaf_nodes()
+      |> MapSet.to_list()
+
+    from(e in Equipment, where: e.id in ^ids) |> Repo.all(prefix: prefix)
   end
+
   @doc """
   Gets a single equipment.
 
@@ -651,7 +730,6 @@ defmodule Inconn2Service.AssetConfig do
       |> check_asset_category_type_eq(prefix)
 
     create_equipment_in_tree(parent_id, eq_cs, prefix)
-
   end
 
   defp create_equipment_in_tree(nil, eq_cs, prefix) do
@@ -672,21 +750,23 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp check_asset_category_type_eq(eq_cs, prefix) do
-      ac_id = get_change(eq_cs, :asset_category_id, nil)
-      if ac_id != nil do
-        asset_category = Repo.get(AssetCategory, ac_id, prefix: prefix)
-        case asset_category.asset_type != "E" do
-          true ->
-            add_error(eq_cs, :asset_category_id, "Asset category should be equipment")
+    ac_id = get_change(eq_cs, :asset_category_id, nil)
 
-          false ->
-            eq_cs
-        end
-      else
-        eq_cs
+    if ac_id != nil do
+      asset_category = Repo.get(AssetCategory, ac_id, prefix: prefix)
+
+      case asset_category.asset_type != "E" do
+        true ->
+          add_error(eq_cs, :asset_category_id, "Asset category should be equipment")
+
+        false ->
+          eq_cs
       end
-
+    else
+      eq_cs
+    end
   end
+
   @doc """
   Updates a equipment.
 
@@ -705,17 +785,19 @@ defmodule Inconn2Service.AssetConfig do
     cond do
       Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
         new_parent_id = attrs["parent_id"]
-        eq_cs = update_equipment_default_changeset_pipe(equipment, attrs, prefix)
-                |> check_asset_category_type_eq(prefix)
+
+        eq_cs =
+          update_equipment_default_changeset_pipe(equipment, attrs, prefix)
+          |> check_asset_category_type_eq(prefix)
+
         update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
-
       true ->
-        eq_cs = update_equipment_default_changeset_pipe(equipment, attrs, prefix)
-                |> check_asset_category_type_eq(prefix)
+        eq_cs =
+          update_equipment_default_changeset_pipe(equipment, attrs, prefix)
+          |> check_asset_category_type_eq(prefix)
+
         Repo.update(eq_cs, prefix: prefix)
-
-
     end
   end
 
@@ -801,4 +883,260 @@ defmodule Inconn2Service.AssetConfig do
     Equipment.changeset(equipment, attrs)
   end
 
+  alias Inconn2Service.AssetConfig.Party
+
+  @doc """
+  Returns the list of parties.
+
+  ## Examples
+
+      iex> list_parties()
+      [%Party{}, ...]
+
+  """
+  def list_parties(prefix) do
+    Repo.all(Party, prefix: prefix)
+  end
+
+  def list_SP(service_id, prefix) do
+    query =
+      from(p in Party,
+        where:
+          p.org_type ==
+            "SP" and
+            p.service_id == ^service_id and p.allowed_party_type != "SELF"
+      )
+
+    Repo.all(query, prefix: prefix)
+  end
+
+  def list_AO(service_id, prefix) do
+    query =
+      from(p in Party,
+        where:
+          p.org_type ==
+            "AO" and
+            p.service_id == ^service_id and p.allowed_party_type != "SELF"
+      )
+
+    Repo.all(query, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single party.
+
+  Raises `Ecto.NoResultsError` if the Party does not exist.
+
+  ## Examples
+
+      iex> get_party!(123)
+      %Party{}
+
+      iex> get_party!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_party!(id, prefix), do: Repo.get!(Party, id, prefix: prefix)
+
+  def get_party_AO(id, prefix) do
+    org_type_AO = "AO"
+    licensee = "Y"
+    # checking in party table for Asset Owner with licensee Y given party id to create a site
+    query =
+      from(p in Party,
+        where: p.id == ^id and p.org_type == ^org_type_AO and p.licensee == ^licensee
+      )
+
+    IO.inspect(Repo.one(query, prefix: prefix))
+  end
+
+  def check_party_with_licensee(id, prefix) do
+    licensee = "Y"
+
+    query =
+      from(p in Party,
+        where:
+          p.id == ^id and
+            p.licensee == ^licensee
+      )
+
+    Repo.one(query, prefix: prefix)
+  end
+
+  def get_party_licensee(service_id, prefix) do
+    # If if there exisit one record that was created automatically
+    # with licensee id, Asset owner and self servicing. More than one record should not be allowed to be created
+    query =
+      from(p in Party,
+        where:
+          p.service_id == ^service_id and
+            p.org_type == "AO" and
+            p.licensee == "Y" and
+            p.allowed_party_type == "SELF"
+      )
+
+    Repo.one(query, prefix: prefix)
+  end
+
+  @doc """
+  Creates a party.
+
+  ## Examples
+
+      iex> create_party(%{field: value})
+      {:ok, %Party{}}
+
+      iex> create_party(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_default_party(licensee_set, prefix) do
+    IO.puts("inside create_default_party $$$$$$$$$")
+    company_name = IO.inspect(licensee_set.company_name)
+    party_type = IO.inspect(licensee_set.party_type)
+    service_id = IO.inspect(licensee_set.id)
+    _address = IO.inspect(licensee_set.address)
+    _contact = IO.inspect(licensee_set.contact)
+    IO.inspect(party_type)
+
+    org_type = Enum.at(party_type, 0)
+    can_create_party = Enum.at(party_type, 1)
+    IO.inspect(org_type)
+    IO.inspect(can_create_party)
+    IO.puts("before  check_party $$$$$$$$$")
+    party = check_party(can_create_party)
+    IO.inspect(party)
+    IO.puts("before  check_licensee $$$$$$$$$")
+    licensee = check_licensee(org_type)
+    IO.inspect(licensee)
+    # check_licensee(party_type)
+
+    returnMap = %{
+      "company_name" => company_name,
+      "org_type" => org_type,
+      "allowed_party_type" => can_create_party,
+      "create_party" => party,
+      "licensee" => licensee,
+      "service_id" => service_id,
+      "preferred_service" => "Y",
+      "type_of_maintenance" => ["PLANM", "PREVM"]
+      # "address" => address,
+      # "contact" => contact
+    }
+
+    %Party{}
+    |> Party.changeset(returnMap)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp check_party(can_create_party) do
+    cond do
+      can_create_party == "SELF" ->
+        "N"
+
+      can_create_party == "SP" ->
+        "Y"
+
+      can_create_party == "AO" ->
+        "Y"
+    end
+  end
+
+  defp check_licensee(org_type) do
+    cond do
+      org_type == "AO" ->
+        "Y"
+
+      org_type == "SP" ->
+        "N"
+    end
+  end
+
+  def create_party(attrs \\ %{}, prefix: prefix) do
+    # licensee id
+    service_id = Map.get(attrs, "service_id")
+    # party_type = Map.get(attrs, "org_type")
+    # allowed_party_type = Map.get(attrs, "allowed_party_type")
+    # create_party = Map.get(attrs, "create_party")
+    # licensee = Map.get(attrs, "licensee")
+
+    # If if there exisit one record that was created automatically
+    # with licensee id, Asset owner and self servicing. More than one record
+    # should not be allowed to be created
+
+    if service_id != nil do
+      party = get_party_licensee(service_id, prefix)
+
+      case party do
+        nil ->
+          # Get the descendents
+          %Party{}
+          |> Party.changeset(attrs)
+          |> change(%{licensee: "N"})
+          |> Repo.insert(prefix: prefix)
+
+        {:ok, change_set} ->
+          add_error(
+            change_set,
+            :service_id,
+            "Cannot create more parties for Asset Owner servicing SELF"
+          )
+      end
+    else
+      party =
+        %Party{}
+        |> Party.changeset(attrs)
+        |> change(%{licensee: "N"})
+        |> Repo.insert(prefix: prefix)
+
+      IO.inspect(party)
+    end
+  end
+
+  @doc """
+  Updates a party.
+
+  ## Examples
+
+      iex> update_party(party, %{field: new_value})
+      {:ok, %Party{}}
+
+      iex> update_party(party, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_party(%Party{} = party, attrs, prefix: prefix) do
+    party
+    |> Party.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a party.
+
+  ## Examples
+
+      iex> delete_party(party)
+      {:ok, %Party{}}
+
+      iex> delete_party(party)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_party(%Party{} = party, prefix: prefix) do
+    Repo.delete(party, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking party changes.
+
+  ## Examples
+
+      iex> change_party(party)
+      %Ecto.Changeset{data: %Party{}}
+
+  """
+  def change_party(%Party{} = party, attrs \\ %{}) do
+    Party.changeset(party, attrs)
+  end
 end

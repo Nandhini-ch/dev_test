@@ -164,4 +164,83 @@ defmodule Inconn2Service.AssetConfigTest do
       assert %Ecto.Changeset{} = AssetConfig.change_location(location)
     end
   end
+
+  describe "parties" do
+    alias Inconn2Service.AssetConfig.Party
+
+    @valid_attrs %{contract_end_date: ~D[2010-04-17], contract_start_date: ~D[2010-04-17], license_no: "some license_no", licensee: "some licensee", org_name: "some org_name", party_type: [], preferred_service: "some preferred_service", rates_per_hour: 120.5, service_id: "some service_id", service_type: "some service_type", type_of_maintenance: []}
+    @update_attrs %{contract_end_date: ~D[2011-05-18], contract_start_date: ~D[2011-05-18], license_no: "some updated license_no", licensee: "some updated licensee", org_name: "some updated org_name", party_type: [], preferred_service: "some updated preferred_service", rates_per_hour: 456.7, service_id: "some updated service_id", service_type: "some updated service_type", type_of_maintenance: []}
+    @invalid_attrs %{contract_end_date: nil, contract_start_date: nil, license_no: nil, licensee: nil, org_name: nil, party_type: nil, preferred_service: nil, rates_per_hour: nil, service_id: nil, service_type: nil, type_of_maintenance: nil}
+
+    def party_fixture(attrs \\ %{}) do
+      {:ok, party} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_party()
+
+      party
+    end
+
+    test "list_parties/0 returns all parties" do
+      party = party_fixture()
+      assert AssetConfig.list_parties() == [party]
+    end
+
+    test "get_party!/1 returns the party with given id" do
+      party = party_fixture()
+      assert AssetConfig.get_party!(party.id) == party
+    end
+
+    test "create_party/1 with valid data creates a party" do
+      assert {:ok, %Party{} = party} = AssetConfig.create_party(@valid_attrs)
+      assert party.contract_end_date == ~D[2010-04-17]
+      assert party.contract_start_date == ~D[2010-04-17]
+      assert party.license_no == "some license_no"
+      assert party.licensee == "some licensee"
+      assert party.org_name == "some org_name"
+      assert party.party_type == []
+      assert party.preferred_service == "some preferred_service"
+      assert party.rates_per_hour == 120.5
+      assert party.service_id == "some service_id"
+      assert party.service_type == "some service_type"
+      assert party.type_of_maintenance == []
+    end
+
+    test "create_party/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_party(@invalid_attrs)
+    end
+
+    test "update_party/2 with valid data updates the party" do
+      party = party_fixture()
+      assert {:ok, %Party{} = party} = AssetConfig.update_party(party, @update_attrs)
+      assert party.contract_end_date == ~D[2011-05-18]
+      assert party.contract_start_date == ~D[2011-05-18]
+      assert party.license_no == "some updated license_no"
+      assert party.licensee == "some updated licensee"
+      assert party.org_name == "some updated org_name"
+      assert party.party_type == []
+      assert party.preferred_service == "some updated preferred_service"
+      assert party.rates_per_hour == 456.7
+      assert party.service_id == "some updated service_id"
+      assert party.service_type == "some updated service_type"
+      assert party.type_of_maintenance == []
+    end
+
+    test "update_party/2 with invalid data returns error changeset" do
+      party = party_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_party(party, @invalid_attrs)
+      assert party == AssetConfig.get_party!(party.id)
+    end
+
+    test "delete_party/1 deletes the party" do
+      party = party_fixture()
+      assert {:ok, %Party{}} = AssetConfig.delete_party(party)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_party!(party.id) end
+    end
+
+    test "change_party/1 returns a party changeset" do
+      party = party_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_party(party)
+    end
+  end
 end
