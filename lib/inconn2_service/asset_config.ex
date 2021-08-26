@@ -64,41 +64,33 @@ defmodule Inconn2Service.AssetConfig do
       site =
         %Site{}
         |> Site.changeset(attrs)
-        |> Repo.insert(prefix: prefix)
+        |> add_error(:party_id, "Cannot create site, without a Party")
 
       IO.inspect(site)
     else
+      #  result = IO.inspect(get_party_AO(party_id, prefix))
+      #  IO.inspect(result) checking for AO, SELF
       result = IO.inspect(get_party_AO(party_id, prefix))
-      IO.inspect(result)
 
-      case !result do
-        change_set1 ->
-          IO.inspect(change_set1)
+      case result do
+        nil ->
+          site =
+            %Site{}
+            |> Site.changeset(attrs)
+            |> add_error(
+              :party_id,
+              "Cannot create site, There is no Party - Asset owner for this site"
+            )
 
+          IO.inspect(site)
+
+        _change_set ->
           site =
             %Site{}
             |> Site.changeset(attrs)
             |> Repo.insert(prefix: prefix)
 
           IO.inspect(site)
-
-          case site do
-            {:error, changet_set} ->
-              add_error(changet_set, :party_id, "Cannot create site, Error in Party table")
-              changet_set
-
-            {:ok, changet_set} ->
-              IO.inspect(changet_set)
-
-            nil ->
-              add_error(result, :party_id, "nil value created ")
-              result
-          end
-      end
-
-      if result == nil do
-        add_error(result, :party_id, "Cannot create site, Error in Party table")
-        result
       end
     end
   end
@@ -904,7 +896,7 @@ defmodule Inconn2Service.AssetConfig do
         where:
           p.org_type ==
             "SP" and
-            p.service_id == ^service_id and p.allowed_party_type != "SELF"
+            p.service_id == ^service_id
       )
 
     Repo.all(query, prefix: prefix)
@@ -914,9 +906,9 @@ defmodule Inconn2Service.AssetConfig do
     query =
       from(p in Party,
         where:
-          p.org_type ==
+          p.allowed_party_type ==
             "AO" and
-            p.service_id == ^service_id and p.allowed_party_type != "SELF"
+            p.service_id == ^service_id
       )
 
     Repo.all(query, prefix: prefix)
@@ -938,13 +930,25 @@ defmodule Inconn2Service.AssetConfig do
   """
   def get_party!(id, prefix), do: Repo.get!(Party, id, prefix: prefix)
 
-  def get_party_AO(id, prefix) do
+  def get_party_AO_self(id, prefix) do
     org_type_AO = "AO"
     licensee = "Y"
     # checking in party table for Asset Owner with licensee Y given party id to create a site
     query =
       from(p in Party,
         where: p.id == ^id and p.org_type == ^org_type_AO and p.licensee == ^licensee
+      )
+
+    IO.inspect(Repo.one(query, prefix: prefix))
+  end
+
+  def get_party_AO(id, prefix) do
+    org_type_AO = "AO"
+    # checking in party table for Asset Owner with licensee Y given party id to create a site
+    query =
+      from(p in Party,
+        where:
+          p.id == ^id and (p.org_type == ^org_type_AO or p.allowed_party_type == ^org_type_AO)
       )
 
     IO.inspect(Repo.one(query, prefix: prefix))
@@ -963,7 +967,7 @@ defmodule Inconn2Service.AssetConfig do
     Repo.one(query, prefix: prefix)
   end
 
-  def get_party_licensee(service_id, prefix) do
+  def get_party_licensee_self(service_id, prefix) do
     # If if there exisit one record that was created automatically
     # with licensee id, Asset owner and self servicing. More than one record should not be allowed to be created
     query =
@@ -991,7 +995,6 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def create_default_party(licensee_set, prefix) do
-    IO.puts("inside create_default_party $$$$$$$$$")
     company_name = IO.inspect(licensee_set.company_name)
     party_type = IO.inspect(licensee_set.party_type)
     service_id = IO.inspect(licensee_set.id)
@@ -999,14 +1002,15 @@ defmodule Inconn2Service.AssetConfig do
     _contact = IO.inspect(licensee_set.contact)
     IO.inspect(party_type)
 
+    # possible values are AO, SP
     org_type = Enum.at(party_type, 0)
+    # possible values are SELF, AO, SP
     can_create_party = Enum.at(party_type, 1)
     IO.inspect(org_type)
     IO.inspect(can_create_party)
-    IO.puts("before  check_party $$$$$$$$$")
+
     party = check_party(can_create_party)
     IO.inspect(party)
-    IO.puts("before  check_licensee $$$$$$$$$")
     licensee = check_licensee(org_type)
     IO.inspect(licensee)
     # check_licensee(party_type)
@@ -1065,11 +1069,12 @@ defmodule Inconn2Service.AssetConfig do
     # should not be allowed to be created
 
     if service_id != nil do
-      party = get_party_licensee(service_id, prefix)
+      party = get_party_licensee_self(service_id, prefix)
 
       case party do
         nil ->
           # Get the descendents
+
           %Party{}
           |> Party.changeset(attrs)
           |> change(%{licensee: "N"})

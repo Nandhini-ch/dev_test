@@ -34,7 +34,7 @@ defmodule Inconn2Service.AssetConfig.Site do
       :site_code,
       :party_id
     ])
-    |> validate_required([:name, :description, :site_code])
+    |> validate_required([:name, :description, :site_code, :party_id])
     |> cast_embed(:address)
     |> cast_embed(:contact)
     |> assoc_constraint(:party)

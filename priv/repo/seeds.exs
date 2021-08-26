@@ -48,18 +48,6 @@ sc =
     nil -> IO.puts("null value returned")
   end
 
-site = %{
-  "name" => "GANDHINAGAR",
-  "description" => "Main branch at GANDHINAGAR road",
-  "site_code" => "BRCHN_MNTRDLTD"
-}
-
-sc =
-  case IO.inspect(AssetConfig.create_site(site, "inc_bata")) do
-    {:ok, site_created} -> IO.inspect(site_created)
-    {:error, cs} -> IO.inspect(cs)
-  end
-
 a1 = %{"name" => "Open floor", "asset_type" => "L"}
 a2 = %{"name" => "Electrical", "asset_type" => "E"}
 {:ok, a1c} = AssetConfig.create_asset_category(a1, "inc_bata")
