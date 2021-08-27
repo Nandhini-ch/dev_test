@@ -1,4 +1,4 @@
-alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig}
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, Workorder}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -256,3 +256,23 @@ tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1, 3, 4], "asset_ca
 {:ok, tsk_lst1c} = WorkOrderConfig.create_task_list(tsk_lst1, "inc_bata")
 {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
 {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")
+
+
+wkord_tp1 = %{
+  "asset_category_id" => 2,
+  "name" => "Daily maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order"=> 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => "Y",
+  "repeat_every" => 4,
+  "repeat_unit" => "H",
+  "applicable_start" => "2021-08-27",
+  "applicable_end" => "2021-08-29",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "on completion",
+  "max_times" => 5,
+  "workorder_prior_time" => 180 }
+
+{:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")

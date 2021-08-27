@@ -15,6 +15,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
+    get "/asset_categories/:id/assets", AssetCategoryController, :assets
 
     resources "/locations", LocationController, except: [:new, :edit, :index]
     get "/sites/:site_id/locations", LocationController, :index
@@ -32,5 +33,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
+
+    resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
+    resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
   end
 end
