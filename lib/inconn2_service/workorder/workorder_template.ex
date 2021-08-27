@@ -30,7 +30,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_inclusion(:scheduled, ["Y", "N"])
     |> validate_scheduled()
-    |> validate_inclusion(:repeat_unit, ["H", "D", "M", "Y"])
+    |> validate_inclusion(:repeat_unit, ["H", "D", "W", "M", "Y"])
     |> validate_date_order()
     |> validate_time_order()
     |> validate_inclusion(:create_new, ["auto", "on completion"])

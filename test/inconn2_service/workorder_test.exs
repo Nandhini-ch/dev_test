@@ -89,4 +89,63 @@ defmodule Inconn2Service.WorkorderTest do
       assert %Ecto.Changeset{} = Workorder.change_workorder_template(workorder_template)
     end
   end
+
+  describe "workorder_schedules" do
+    alias Inconn2Service.Workorder.WorkorderSchedule
+
+    @valid_attrs %{config: "some config"}
+    @update_attrs %{config: "some updated config"}
+    @invalid_attrs %{config: nil}
+
+    def workorder_schedule_fixture(attrs \\ %{}) do
+      {:ok, workorder_schedule} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_schedule()
+
+      workorder_schedule
+    end
+
+    test "list_workorder_schedules/0 returns all workorder_schedules" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert Workorder.list_workorder_schedules() == [workorder_schedule]
+    end
+
+    test "get_workorder_schedule!/1 returns the workorder_schedule with given id" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert Workorder.get_workorder_schedule!(workorder_schedule.id) == workorder_schedule
+    end
+
+    test "create_workorder_schedule/1 with valid data creates a workorder_schedule" do
+      assert {:ok, %WorkorderSchedule{} = workorder_schedule} = Workorder.create_workorder_schedule(@valid_attrs)
+      assert workorder_schedule.config == "some config"
+    end
+
+    test "create_workorder_schedule/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_schedule(@invalid_attrs)
+    end
+
+    test "update_workorder_schedule/2 with valid data updates the workorder_schedule" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert {:ok, %WorkorderSchedule{} = workorder_schedule} = Workorder.update_workorder_schedule(workorder_schedule, @update_attrs)
+      assert workorder_schedule.config == "some updated config"
+    end
+
+    test "update_workorder_schedule/2 with invalid data returns error changeset" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_schedule(workorder_schedule, @invalid_attrs)
+      assert workorder_schedule == Workorder.get_workorder_schedule!(workorder_schedule.id)
+    end
+
+    test "delete_workorder_schedule/1 deletes the workorder_schedule" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert {:ok, %WorkorderSchedule{}} = Workorder.delete_workorder_schedule(workorder_schedule)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_schedule!(workorder_schedule.id) end
+    end
+
+    test "change_workorder_schedule/1 returns a workorder_schedule changeset" do
+      workorder_schedule = workorder_schedule_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_schedule(workorder_schedule)
+    end
+  end
 end

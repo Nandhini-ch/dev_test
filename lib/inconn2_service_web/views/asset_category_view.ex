@@ -30,4 +30,15 @@ defmodule Inconn2ServiceWeb.AssetCategoryView do
       children: render_many(asset_category.children, AssetCategoryView, "asset_category_node.json")
     }
   end
+
+  def render("assets.json", %{assets: assets}) do
+    %{data: render_many(assets, AssetCategoryView, "asset_node.json")}
+  end
+  def render("asset_node.json", %{asset_category: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      site_id: asset.site_id
+    }
+  end
 end
