@@ -43,7 +43,8 @@ defmodule Inconn2Service.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:cors_plug, "~> 2.0"},
-      {:triplex, "~> 1.3"}
+      {:triplex, "~> 1.3"},
+      {:tzdata, "~> 1.1"}
     ]
   end
 
