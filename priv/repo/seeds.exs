@@ -2,7 +2,7 @@
 alias Inconn2Service.Common
 Common.build_timezone_db()
 
-alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, Workorder}
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, Workorder, Staff}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -280,3 +280,13 @@ wkord_tp1 = %{
 }
 
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
+
+org_ut1 = %{ "name" => "Electrical", "party_id" => 1}
+org_ut2 = %{ "name" => "Mechanical", "party_id" => 1}
+org_ut3 = %{ "name" => "AHU", "party_id" => 1, "parent_id" => 2}
+org_ut4 = %{ "name" => "Controllers", "party_id" => 1, "parent_id" => 3}
+
+{:ok, org_ut1c} = Staff.create_org_unit(org_ut1, "inc_bata")
+{:ok, org_ut2c} = Staff.create_org_unit(org_ut2, "inc_bata")
+{:ok, org_ut3c} = Staff.create_org_unit(org_ut3, "inc_bata")
+{:ok, org_ut4c} = Staff.create_org_unit(org_ut4, "inc_bata")

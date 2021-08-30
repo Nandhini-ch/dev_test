@@ -37,6 +37,9 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
 
-    resources "/org_units", OrgUnitController, except: [:new, :edit]
+    resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
+    get "/parties/:party_id/org_units", OrgUnitController, :index
+    get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
+    get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
   end
 end

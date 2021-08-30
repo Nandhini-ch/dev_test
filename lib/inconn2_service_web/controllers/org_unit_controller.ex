@@ -6,8 +6,18 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    org_units = Staff.list_org_units(conn.assigns.sub_domain_prefix)
+  def index(conn, %{"party_id" => party_id}) do
+    org_units = Staff.list_org_units(party_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", org_units: org_units)
+  end
+
+  def tree(conn, %{"party_id" => party_id}) do
+    org_units = Staff.list_org_units_tree(party_id, conn.assigns.sub_domain_prefix)
+    render(conn, "tree.json", org_units: org_units)
+  end
+
+  def leaves(conn, %{"party_id" => party_id}) do
+    org_units = Staff.list_org_units_leaves(party_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", org_units: org_units)
   end
 
@@ -36,7 +46,7 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
   def delete(conn, %{"id" => id}) do
     org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %OrgUnit{}} <- Staff.delete_org_unit(org_unit, conn.assigns.sub_domain_prefix) do
+    with {_, nil} <- Staff.delete_org_unit(org_unit, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
