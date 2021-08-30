@@ -36,5 +36,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
+
+    resources "/org_units", OrgUnitController, except: [:new, :edit]
   end
 end
