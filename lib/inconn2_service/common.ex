@@ -19,7 +19,7 @@ defmodule Inconn2Service.Common do
   """
   def list_timezones do
     Repo.all(Timezone)
-    #sort by utc_offset_seconds
+    # sort by utc_offset_seconds
   end
 
   def search_timezones(city_text) do
@@ -123,6 +123,7 @@ defmodule Inconn2Service.Common do
   def shift_to_utc(date, time, zone, before_seconds) do
     {:ok, ndt} = NaiveDateTime.new(date, time)
     {:ok, dt} = DateTime.from_naive(ndt, zone)
+
     DateTime.add(dt, -1 * before_seconds, Tzdata.TimeZoneDatabase)
     |> DateTime.shift_zone("Etc/UTC", Tzdata.TimeZoneDatabase)
   end

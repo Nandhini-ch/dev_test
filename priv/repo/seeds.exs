@@ -11,8 +11,7 @@ client = %{
   "company_name" => "Bata Shoe Company",
   "business_type_id" => btrec.id,
   "sub_domain" => "bata",
-  "party_type" => ["AO", "SELF"],
-  "other_party_type" => nil,
+  "party_type" => "AO",
   "address" => %{
     "address_line1" => "18, First Street",
     "address_line2" => "Anna Nagar",
@@ -281,10 +280,10 @@ wkord_tp1 = %{
 
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
 
-org_ut1 = %{ "name" => "Electrical", "party_id" => 1}
-org_ut2 = %{ "name" => "Mechanical", "party_id" => 1}
-org_ut3 = %{ "name" => "AHU", "party_id" => 1, "parent_id" => 2}
-org_ut4 = %{ "name" => "Controllers", "party_id" => 1, "parent_id" => 3}
+org_ut1 = %{"name" => "Electrical", "party_id" => 1}
+org_ut2 = %{"name" => "Mechanical", "party_id" => 1}
+org_ut3 = %{"name" => "AHU", "party_id" => 1, "parent_id" => 2}
+org_ut4 = %{"name" => "Controllers", "party_id" => 1, "parent_id" => 3}
 
 {:ok, org_ut1c} = Staff.create_org_unit(org_ut1, "inc_bata")
 {:ok, org_ut2c} = Staff.create_org_unit(org_ut2, "inc_bata")

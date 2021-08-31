@@ -40,7 +40,6 @@ defmodule Inconn2Service.Staff do
     from(o in OrgUnit, where: o.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-
   @doc """
   Gets a single org_unit.
 
@@ -72,6 +71,7 @@ defmodule Inconn2Service.Staff do
     ou = get_org_unit!(org_unit_id, prefix)
     HierarchyManager.parent(ou) |> Repo.one(prefix: prefix)
   end
+
   @doc """
   Creates a org_unit.
 
@@ -90,6 +90,7 @@ defmodule Inconn2Service.Staff do
     ou_cs =
       %OrgUnit{}
       |> OrgUnit.changeset(attrs)
+
     if parent_id != nil do
       ou_cs = check_parent_party(ou_cs, parent_id, prefix)
       create_org_unit_in_tree(parent_id, ou_cs, prefix)
@@ -115,33 +116,41 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  defp check_parent_party(ou_cs, parent_id, prefix) do
-    party_id = get_field(ou_cs, :party_id)
-    case Repo.get(OrgUnit, parent_id, prefix: prefix) do
-      nil -> ou_cs
-      parent ->
-          if parent.party_id == party_id do
-            ou_cs
-          else
-            add_error(ou_cs, :parent_id, "Party id of parent is different")
-          end
+  defp check_parent_party(ou_cs, nil, prefix) do
+    parent_id = get_field(ou_cs, :parent_id, nil)
+
+    case parent_id do
+      nil ->
+        ou_cs
+
+      _ ->
+        parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
+        party_id = get_field(ou_cs, :party_id)
+
+        if parent.party_id == party_id do
+          ou_cs
+        else
+          add_error(ou_cs, :parent_id, "Party id of parent is different")
+        end
     end
   end
 
-  defp check_parent_party(ou_cs, nil, prefix) do
-    parent_id = get_field(ou_cs, :parent_id, nil)
-    case parent_id do
-      _ ->
-            parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
-            party_id = get_field(ou_cs, :party_id)
-            if parent.party_id == party_id do
-              ou_cs
-            else
-              add_error(ou_cs, :parent_id, "Party id of parent is different")
-            end
-      nil -> ou_cs
+  defp check_parent_party(ou_cs, parent_id, prefix) do
+    party_id = get_field(ou_cs, :party_id)
+
+    case Repo.get(OrgUnit, parent_id, prefix: prefix) do
+      nil ->
+        ou_cs
+
+      parent ->
+        if parent.party_id == party_id do
+          ou_cs
+        else
+          add_error(ou_cs, :parent_id, "Party id of parent is different")
+        end
     end
   end
+
   @doc """
   Updates a org_unit.
 
@@ -240,6 +249,7 @@ defmodule Inconn2Service.Staff do
     subtree = HierarchyManager.subtree(org_unit)
     Repo.delete_all(subtree, prefix: prefix)
   end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking org_unit changes.
 

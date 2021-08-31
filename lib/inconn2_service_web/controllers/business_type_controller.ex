@@ -12,7 +12,8 @@ defmodule Inconn2ServiceWeb.BusinessTypeController do
   end
 
   def create(conn, %{"business_type" => business_type_params}) do
-    with {:ok, %BusinessType{} = business_type} <- Account.create_business_type(business_type_params) do
+    with {:ok, %BusinessType{} = business_type} <-
+           Account.create_business_type(business_type_params) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.business_type_path(conn, :show, business_type))
@@ -28,7 +29,8 @@ defmodule Inconn2ServiceWeb.BusinessTypeController do
   def update(conn, %{"id" => id, "business_type" => business_type_params}) do
     business_type = Account.get_business_type!(id)
 
-    with {:ok, %BusinessType{} = business_type} <- Account.update_business_type(business_type, business_type_params) do
+    with {:ok, %BusinessType{} = business_type} <-
+           Account.update_business_type(business_type, business_type_params) do
       render(conn, "show.json", business_type: business_type)
     end
   end

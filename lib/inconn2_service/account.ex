@@ -162,7 +162,6 @@ defmodule Inconn2Service.Account do
     case result do
       {:ok, licensee} ->
         create_tenant(licensee)
-        IO.puts("outside create tenant")
         IO.inspect(licensee)
         party_type = licensee.party_type
         IO.inspect(party_type)
@@ -182,10 +181,8 @@ defmodule Inconn2Service.Account do
   defp create_tenant(licensee) do
     case IO.inspect(Triplex.create(licensee.sub_domain)) do
       {:ok, workspace} ->
-        IO.puts("inside create tenant")
         IO.inspect(workspace)
         {:ok, licensee}
-        IO.puts("inside create tenant 22222222")
         IO.inspect(workspace)
 
       _ ->

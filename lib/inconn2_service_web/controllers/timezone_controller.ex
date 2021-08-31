@@ -15,7 +15,7 @@ defmodule Inconn2ServiceWeb.TimezoneController do
     with {:ok, %Timezone{} = timezone} <- Common.create_timezone(timezone_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.timezone_path(conn, :show, timezone))
+      |> put_resp_header("timezone", Routes.timezone_path(conn, :show, timezone))
       |> render("show.json", timezone: timezone)
     end
   end
