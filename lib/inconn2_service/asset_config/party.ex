@@ -9,7 +9,7 @@ defmodule Inconn2Service.AssetConfig.Party do
     field :contract_end_date, :date
     field :contract_start_date, :date
     field :license_no, :string
-    field :licensee, :string, default: "N"
+    field :licensee, :boolean, default: false
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
 

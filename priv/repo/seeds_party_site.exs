@@ -26,6 +26,21 @@ client2 = %{
 
 IO.inspect(Account.create_licensee(client2))
 
+party = %{
+  "company_name" => "addidas",
+  # Org type is either asset owner or service provider
+  "party_type" => "AO",
+  "licensee" => true
+}
+
+pc =
+  case IO.inspect(AssetConfig.create_party(party, "inc_addidas")) do
+    {:ok, party_created} -> IO.inspect(party_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
+
+
 site = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
@@ -49,19 +64,8 @@ site = %{
 
 sc =
   case IO.inspect(AssetConfig.create_site(site, "inc_addidas")) do
+    nil -> IO.puts("Site not created")
+    site_created -> IO.inspect(site_created)
     {:ok, site_created} -> IO.inspect(site_created)
     {:error, cs} -> IO.inspect(cs)
-  end
-
-site = %{
-  "name" => "Mountroad",
-  "description" => "Main branch at Mount road",
-  "site_code" => "BRCHN_MNTRD",
-  "party_id" => 1
-}
-
-sc =
-  case IO.inspect(AssetConfig.create_site(site, "inc_nokia")) do
-    {:ok, site_created} -> IO.inspect(site_created)
-    {:error,cs -> IO.inspect(cs)
   end

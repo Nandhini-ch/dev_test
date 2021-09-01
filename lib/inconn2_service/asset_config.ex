@@ -71,6 +71,7 @@ defmodule Inconn2Service.AssetConfig do
       #  result = IO.inspect(get_party_AO(party_id, prefix))
       #  IO.inspect(result) checking for AO, SELF
       result = IO.inspect(get_party_AO(party_id, prefix))
+      IO.inspect(result)
 
       case result do
         nil ->
@@ -83,6 +84,10 @@ defmodule Inconn2Service.AssetConfig do
             )
 
           IO.inspect(site)
+
+        {:error, change_set} ->
+          IO.inspect(change_set)
+          change_set
 
         _change_set ->
           site =
@@ -945,7 +950,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_party_AO_self(id, prefix) do
     party_type_AO = "AO"
-    licensee = "Y"
+    licensee = true
     # checking in party table for Asset Owner with licensee Y given party id to create a site
     query =
       from(p in Party,
@@ -957,7 +962,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_party_AO(id, prefix) do
     org_type_AO = "AO"
-    licensee = "Y"
+    licensee = true
     # checking in party table for Asset Owner with licensee Y given party id to create a site
     query =
       from(p in Party,
@@ -968,7 +973,7 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def check_party_with_licensee(id, prefix) do
-    licensee = "Y"
+    licensee = true
 
     query =
       from(p in Party,
@@ -987,7 +992,7 @@ defmodule Inconn2Service.AssetConfig do
       from(p in Party,
         where:
           p.party_type == "AO" and
-            p.licensee == "Y"
+            p.licensee == true
       )
 
     Repo.one(query, prefix: prefix)
@@ -1000,7 +1005,7 @@ defmodule Inconn2Service.AssetConfig do
       from(p in Party,
         where:
           p.party_type == "SP" and
-            p.licensee == "Y"
+            p.licensee == true
       )
 
     Repo.one(query, prefix: prefix)
@@ -1044,14 +1049,14 @@ defmodule Inconn2Service.AssetConfig do
   defp check_licensee(party_type) do
     cond do
       party_type == "AO" ->
-        "Y"
+        true
 
       party_type == "SP" ->
-        "Y"
+        true
     end
   end
 
-  def create_party(attrs \\ %{}, prefix: prefix) do
+  def create_party(attrs \\ %{}, prefix) do
     # licensee id
     # service_id = Map.get(attrs, "service_id")
     party_type = Map.get(attrs, "party_type")
@@ -1071,10 +1076,20 @@ defmodule Inconn2Service.AssetConfig do
           # if no record for SP and licensee Y then create new record
           %Party{}
           |> Party.changeset(attrs)
-          |> change(%{licensee: "N"})
+          |> change(%{licensee: false})
           |> Repo.insert(prefix: prefix)
 
         {:ok, change_set} ->
+          add_error(
+            change_set,
+            :party_id,
+            "Cannot create more parties for Service Providers"
+          )
+
+        {:error, change_set} ->
+          change_set
+
+        change_set ->
           add_error(
             change_set,
             :party_id,
@@ -1091,10 +1106,20 @@ defmodule Inconn2Service.AssetConfig do
           # if no record for AO and licensee Y then check if it is an SP with license
           %Party{}
           |> Party.changeset(attrs)
-          |> change(%{licensee: "N"})
+          |> change(%{licensee: false})
           |> Repo.insert(prefix: prefix)
 
         {:ok, change_set} ->
+          add_error(
+            change_set,
+            :party_id,
+            "Cannot create more parties for Asset Owner"
+          )
+
+        {:error, change_set} ->
+          change_set
+
+        change_set ->
           add_error(
             change_set,
             :party_id,
@@ -1116,7 +1141,7 @@ defmodule Inconn2Service.AssetConfig do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_party(%Party{} = party, attrs, prefix: prefix) do
+  def update_party(%Party{} = party, attrs, prefix) do
     party
     |> Party.changeset(attrs)
     |> Repo.update(prefix: prefix)
@@ -1134,7 +1159,7 @@ defmodule Inconn2Service.AssetConfig do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_party(%Party{} = party, prefix: prefix) do
+  def delete_party(%Party{} = party, prefix) do
     Repo.delete(party, prefix: prefix)
   end
 

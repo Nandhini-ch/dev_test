@@ -8,7 +8,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateParties do
       add :contract_start_date, :date
       add :contract_end_date, :date
       add :license_no, :string
-      add :licensee, :string
+      add :licensee, :boolean
       add :address, :jsonb
       add :contact, :jsonb
 
