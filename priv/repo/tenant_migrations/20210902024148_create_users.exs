@@ -4,7 +4,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
   def change do
     create table(:users) do
       add :username, :string
-      add :password, :string
+      add :password_hash, :string
       add :role_id, {:array, :integer}
 
       timestamps()

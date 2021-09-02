@@ -45,7 +45,9 @@ defmodule Inconn2Service.MixProject do
       {:cors_plug, "~> 2.0"},
       {:triplex, "~> 1.3"},
       {:tzdata, "~> 1.1"},
-      {:ecto_commons, "~> 0.3.3"}
+      {:ecto_commons, "~> 0.3.3"},
+      {:comeonin, "~> 5.1.2"},
+      {:argon2_elixir, "~> 2.0"}
     ]
   end
 

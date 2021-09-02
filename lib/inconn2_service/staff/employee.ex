@@ -48,7 +48,7 @@ defmodule Inconn2Service.Staff.Employee do
       :has_login_credentials,
       :org_unit_id
     ])
-    |> validate_email(:username, checks: [:html_input, :pow])
+    |> validate_email(:email, checks: [:html_input, :pow])
     |> assoc_constraint(:org_unit)
   end
 end

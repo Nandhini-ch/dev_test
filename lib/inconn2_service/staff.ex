@@ -10,6 +10,7 @@ defmodule Inconn2Service.Staff do
 
   alias Inconn2Service.Staff.OrgUnit
   alias Inconn2Service.Util.HierarchyManager
+  import Comeonin
 
   @doc """
   Returns the list of org_units.
@@ -118,29 +119,36 @@ defmodule Inconn2Service.Staff do
 
   defp check_parent_party(nil, ou_cs, prefix) do
     parent_id = get_field(ou_cs, :parent_id, nil)
+
     case parent_id do
+      nil ->
+        ou_cs
+
       _ ->
-            parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
-            party_id = get_field(ou_cs, :party_id)
-            if parent.party_id == party_id do
-              ou_cs
-            else
-              add_error(ou_cs, :parent_id, "Party id of parent is different")
-            end
-      nil -> ou_cs
+        parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
+        party_id = get_field(ou_cs, :party_id)
+
+        if parent.party_id == party_id do
+          ou_cs
+        else
+          add_error(ou_cs, :parent_id, "Party id of parent is different")
+        end
     end
   end
 
   defp check_parent_party(parent_id, ou_cs, prefix) do
     party_id = get_field(ou_cs, :party_id)
+
     case Repo.get(OrgUnit, parent_id, prefix: prefix) do
-      nil -> ou_cs
+      nil ->
+        ou_cs
+
       parent ->
-          if parent.party_id == party_id do
-            ou_cs
-          else
-            add_error(ou_cs, :parent_id, "Party id of parent is different")
-          end
+        if parent.party_id == party_id do
+          ou_cs
+        else
+          add_error(ou_cs, :parent_id, "Party id of parent is different")
+        end
     end
   end
 
@@ -285,7 +293,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee!(id), do: Repo.get!(Employee, id)
+  def get_employee!(id, prefix), do: Repo.get!(Employee, id, prefix: prefix)
 
   @doc """
   Creates a employee.
@@ -299,23 +307,30 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_employee(attrs \\ %{}) do
+  def create_employee(attrs \\ %{}, prefix) do
     has_login_credentials = Map.get(attrs, "has_login_credentials", false)
 
     if has_login_credentials == true do
       employee_set =
         %Employee{}
         |> Employee.changeset(attrs)
-        |> Repo.insert()
-
-      IO.inspect(employee_set)
+        |> Repo.insert(prefix: prefix)
 
       case employee_set do
-        {:ok, employee_set} ->
-          case create_user(attrs) do
-            {:ok, _change_set} -> employee_set
-            {:error, change_set} -> add_error(employee_set, :employee_id, change_set.error)
+        {:ok, emp_set} ->
+          case create_user(attrs, prefix) do
+            {:ok, _change_set} ->
+              IO.inspect(emp_set)
+
+            {:error, change_set} ->
+              IO.inspect(change_set)
+
+            changeset ->
+              IO.inspect(changeset)
           end
+
+        {:error, change_set} ->
+          IO.inspect(change_set)
       end
     end
 
@@ -323,9 +338,15 @@ defmodule Inconn2Service.Staff do
       employee_set =
         %Employee{}
         |> Employee.changeset(attrs)
-        |> Repo.insert()
+        |> Repo.insert(prefix: prefix)
 
-      IO.inspect(employee_set)
+      case employee_set do
+        {:ok, emp_set} ->
+          IO.inspect(emp_set)
+
+        {:error, change_set} ->
+          IO.inspect(change_set)
+      end
     end
   end
 
@@ -341,10 +362,10 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_employee(%Employee{} = employee, attrs) do
+  def update_employee(%Employee{} = employee, attrs, prefix) do
     employee
     |> Employee.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -359,8 +380,8 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_employee(%Employee{} = employee) do
-    Repo.delete(employee)
+  def delete_employee(%Employee{} = employee, prefix) do
+    Repo.delete(employee, prefix: prefix)
   end
 
   @doc """
@@ -387,8 +408,8 @@ defmodule Inconn2Service.Staff do
       [%User{}, ...]
 
   """
-  def list_users do
-    Repo.all(User)
+  def list_users(prefix) do
+    Repo.all(User, prefix: prefix)
   end
 
   @doc """
@@ -405,7 +426,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix)
 
   @doc """
   Creates a user.
@@ -419,22 +440,30 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_user(attrs \\ %{}) do
+  def create_user(attrs \\ %{}, prefix) do
     # Check to see if create_employee has called this method or directly create_user is called
     # If the call is from employee then email from employee is set as username here
+    # The password is defaulted to password#1234
     has_email = Map.get(attrs, "email", nil)
+    IO.inspect(has_email)
+    # check_licensee(party_type)
+
+    returnMap = %{
+      "username" => has_email,
+      "password" => "password#1234",
+      "role_id" => [1]
+    }
 
     if(has_email != nil) do
       %User{}
-      |> User.changeset(attrs)
-      |> change(%{username: has_email})
-      |> Repo.insert()
+      |> User.changeset(returnMap)
+      |> Repo.insert(prefix: prefix)
     end
 
     if has_email == nil do
       %User{}
       |> User.changeset(attrs)
-      |> Repo.insert()
+      |> Repo.insert(prefix: prefix)
     end
   end
 
@@ -450,10 +479,10 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user(%User{} = user, attrs) do
+  def update_user(%User{} = user, attrs, prefix) do
     user
     |> User.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -468,8 +497,8 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
+  def delete_user(%User{} = user, prefix) do
+    Repo.delete(user, prefix: prefix)
   end
 
   @doc """
@@ -482,6 +511,13 @@ defmodule Inconn2Service.Staff do
 
   """
   def change_user(%User{} = user, attrs \\ %{}) do
+    # passwd = Map.get(attrs, "password", nil)
+
     User.changeset(user, attrs)
+    # |> check_password(passwd)
   end
+
+  # defp check_password(user, password) do
+  # Argon2.check_pass(password, user.password_hash)
+  # end
 end
