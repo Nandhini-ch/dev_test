@@ -92,7 +92,7 @@ defmodule Inconn2Service.Staff do
       |> OrgUnit.changeset(attrs)
 
     if parent_id != nil do
-      ou_cs = check_parent_party(ou_cs, parent_id, prefix)
+      ou_cs = check_parent_party(parent_id, ou_cs, prefix)
       create_org_unit_in_tree(parent_id, ou_cs, prefix)
     else
       create_org_unit_in_tree(parent_id, ou_cs, prefix)
@@ -116,38 +116,31 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  defp check_parent_party(ou_cs, nil, prefix) do
+  defp check_parent_party(nil, ou_cs, prefix) do
     parent_id = get_field(ou_cs, :parent_id, nil)
-
     case parent_id do
-      nil ->
-        ou_cs
-
       _ ->
-        parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
-        party_id = get_field(ou_cs, :party_id)
-
-        if parent.party_id == party_id do
-          ou_cs
-        else
-          add_error(ou_cs, :parent_id, "Party id of parent is different")
-        end
+            parent = Repo.get(OrgUnit, parent_id, prefix: prefix)
+            party_id = get_field(ou_cs, :party_id)
+            if parent.party_id == party_id do
+              ou_cs
+            else
+              add_error(ou_cs, :parent_id, "Party id of parent is different")
+            end
+      nil -> ou_cs
     end
   end
 
-  defp check_parent_party(ou_cs, parent_id, prefix) do
+  defp check_parent_party(parent_id, ou_cs, prefix) do
     party_id = get_field(ou_cs, :party_id)
-
     case Repo.get(OrgUnit, parent_id, prefix: prefix) do
-      nil ->
-        ou_cs
-
+      nil -> ou_cs
       parent ->
-        if parent.party_id == party_id do
-          ou_cs
-        else
-          add_error(ou_cs, :parent_id, "Party id of parent is different")
-        end
+          if parent.party_id == party_id do
+            ou_cs
+          else
+            add_error(ou_cs, :parent_id, "Party id of parent is different")
+          end
     end
   end
 
@@ -171,12 +164,12 @@ defmodule Inconn2Service.Staff do
         new_parent_id = attrs["parent_id"]
 
         ou_cs = update_org_unit_default_changeset_pipe(org_unit, attrs, prefix)
-        ou_cs = check_parent_party(ou_cs, new_parent_id, prefix)
+        ou_cs = check_parent_party(new_parent_id, ou_cs, prefix)
         update_org_unit_in_tree(new_parent_id, ou_cs, org_unit, prefix)
 
       true ->
         ou_cs = update_org_unit_default_changeset_pipe(org_unit, attrs, prefix)
-        ou_cs = check_parent_party(ou_cs, existing_parent_id, prefix)
+        ou_cs = check_parent_party(existing_parent_id, ou_cs, prefix)
         Repo.update(ou_cs, prefix: prefix)
     end
   end

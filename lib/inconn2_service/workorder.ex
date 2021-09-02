@@ -171,7 +171,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   alias Inconn2Service.Workorder.WorkorderSchedule
-
+  alias Inconn2Service.Common
   @doc """
   Returns the list of workorder_schedules.
 
@@ -213,14 +213,15 @@ defmodule Inconn2Service.Workorder do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_workorder_schedule(attrs \\ %{}, prefix) do
+  def create_workorder_schedule(attrs \\ %{}, zone, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_config(prefix)
-              #|> calculate_next_occurance(prefix)
+              |> calculate_next_occurance(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
+          Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
           {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
       _ ->
         result
@@ -257,7 +258,7 @@ defmodule Inconn2Service.Workorder do
           add_error(cs, :config, "Config is invalid")
         end
       "Y" ->
-        if Map.keys(config) == ["month", "day", "time"] do
+        if Map.keys(config) == ["day", "month", "time"] do
           cs
         else
           add_error(cs, :config, "Config is invalid")
@@ -265,47 +266,61 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-#  defp calculate_next_occurance(cs, prefix) do
-#    workorder_template_id = get_field(cs, :workorder_template_id)
-#    config = get_field(cs, :config)
-#    workorder_template = get_workorder_template!(workorder_template_id, prefix)
-#    applicable_start = workorder_template.applicable_start
-#    applicable_end = workorder_template.applicable_end
-#    time_start = workorder_template.time_start
-#    time_end = workorder_template.time_end
-#    repeat_every = workorder_template.repeat_every
-#    repeat_unit = workorder_template.repeat_unit
-#    case repeat_unit do
-#      "H" ->
-#        time = config["time"]
-#        first_time = Time.new!(time, 0, 0)
-#        first_occurance = DateTime.new!(applicable_start, first_time)
-#                          |> get_previous_occurance(workorder_template_id, prefix)
-#        next_occurance = DateTime.add(first_occurance, (repeat_every*3600))
-#        date = Date.new!(first_occurance.year, first_occurance.month, first_occurance.day)
-#        time = Time.new!(next_occurance.hour, next_occurance.minute, next_occurance.second)
-#        if date <= applicable_end do
-#          if time >= time_start and time <= time_end do
-#              change(cs, %{next_occurance: next_occurance})
-#          else
-#              applicable_start = Date.add(applicable_start, +1)
-#              next_occurance = DateTime.new!(applicable_start, first_time)
-#              change(cs, %{next_occurance: next_occurance})
-#          end
-#        else
-#          add_error(cs, :config, "Exceeds the applicable end date")
-#        end
-#    end
-#  end
+  defp calculate_next_occurance(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id)
+    config = get_field(cs, :config)
+    workorder_template = get_workorder_template!(workorder_template_id, prefix)
+    applicable_start = workorder_template.applicable_start
+    repeat_unit = workorder_template.repeat_unit
+    case repeat_unit do
+      "H" ->
+        time = Time.new!(config["time"], 0, 0)
+        date = applicable_start
+        change(cs, %{next_occurance_date: date, next_occurance_time: time})
+      "D" ->
+        time = Time.new!(config["time"], 0, 0)
+        date = Enum.map(String.split(config["date"], "-"), fn x -> String.to_integer(x) end)
+        date = Date.new!(Enum.at(date,0), Enum.at(date,1), Enum.at(date,2))
+        change(cs, %{next_occurance_date: date, next_occurance_time: time})
+      "W" ->
+        time = Time.new!(config["time"], 0, 0)
+        day = Date.day_of_week(applicable_start)
+        if config["day"] >= day do
+          day_add = config["day"] - day
+          date = Date.add(applicable_start, day_add)
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+        else
+          day_add = 7 + config["day"] - day
+          date = Date.add(applicable_start,day_add)
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+        end
+      "M" ->
+        time = Time.new!(config["time"], 0, 0)
+        if config["day"] >= applicable_start.day do
+          date = Date.new!(applicable_start.year, applicable_start.month, config["day"])
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+        else
+          case applicable_start.month do
+            12 ->
+              date = Date.new!(applicable_start.year + 1, 1, config["day"])
+              change(cs, %{next_occurance_date: date, next_occurance_time: time})
+            _ ->
+              date = Date.new!(applicable_start.year, applicable_start.month + 1, config["day"])
+              change(cs, %{next_occurance_date: date, next_occurance_time: time})
+          end
+        end
+      "Y" ->
+        time = Time.new!(config["time"], 0, 0)
+        date = Date.new!(applicable_start.year, config["month"], config["day"])
+        if Date.compare(date, applicable_start) == :lt do
+            date = Date.new!(applicable_start.year + 1, config["month"], config["day"])
+            change(cs, %{next_occurance_date: date, next_occurance_time: time})
+        else
+            change(cs, %{next_occurance_date: date, next_occurance_time: time})
+        end
 
-#  defp get_previous_occurance(first_occurance, workorder_template_id, prefix) do
-#    workorder_schedule = from(w in WorkorderSchedule, where: w.workorder_template_id == ^workorder_template_id)
-#                          |> Repo.all(prefix: prefix)
-#    case workorder_schedule do
-#      [] -> first_occurance
-#      _ -> List.last(workorder_schedule).next_occurance
-#    end
-#  end
+    end
+  end
 
   @doc """
   Updates a workorder_schedule.
@@ -326,6 +341,81 @@ defmodule Inconn2Service.Workorder do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_workorder_schedule_and_scheduler(%WorkorderSchedule{} = workorder_schedule, prefix) do
+        {:ok, workorder_schedule} = workorder_schedule
+                                    |> WorkorderSchedule.changeset(%{})
+                                    |> update_next_occurance(prefix)
+                                    |> Repo.update(prefix: prefix)
+        if workorder_schedule.next_occurance_date != nil do
+            Common.update_work_scheduler(workorder_schedule.id, %{})
+            {:ok, workorder_schedule}
+        else
+            Common.delete_work_scheduler(workorder_schedule.id)
+            delete_workorder_schedule(workorder_schedule, prefix)
+            {:ok, nil}
+        end
+  end
+
+  defp update_next_occurance(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id)
+    config = get_field(cs, :config)
+    workorder_template = get_workorder_template!(workorder_template_id, prefix)
+    applicable_end = workorder_template.applicable_end
+    time_start = workorder_template.time_start
+    time_end = workorder_template.time_end
+    repeat_every = workorder_template.repeat_every
+    repeat_unit = workorder_template.repeat_unit
+    next_occurance_date = get_field(cs, :next_occurance_date)
+    next_occurance_time = get_field(cs, :next_occurance_time)
+    case repeat_unit do
+      "H" ->
+        time = Time.add(next_occurance_time, repeat_every*3600) |> Time.truncate(:second)
+        date = next_occurance_date
+        if time >= time_start and time <= time_end do
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+           |> check_before_applicable_date(applicable_end)
+        else
+          time = Time.new!(config["time"], 0, 0)
+          date = Date.add(next_occurance_date, 1)
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+           |> check_before_applicable_date(applicable_end)
+        end
+      "D" ->
+        time = Time.new!(config["time"], 0, 0)
+        date = Date.add(next_occurance_date, repeat_every)
+        change(cs, %{next_occurance_date: date, next_occurance_time: time})
+         |> check_before_applicable_date(applicable_end)
+      "W" ->
+        time = Time.new!(config["time"], 0, 0)
+        date = Date.add(next_occurance_date, repeat_every*7)
+        change(cs, %{next_occurance_date: date, next_occurance_time: time})
+         |> check_before_applicable_date(applicable_end)
+      "M" ->
+        time = Time.new!(config["time"], 0, 0)
+        month = next_occurance_date.month + repeat_every
+        if month > 12 do
+          date = Date.new!(next_occurance_date.year + 1, month - 12, config["day"])
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+           |> check_before_applicable_date(applicable_end)
+        else
+          date = Date.new!(next_occurance_date.year, month, config["day"])
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+           |> check_before_applicable_date(applicable_end)
+        end
+      "Y" ->
+          time = Time.new!(config["time"], 0, 0)
+          date = Date.new!(next_occurance_date.year + repeat_every, config["month"], config["day"])
+          change(cs, %{next_occurance_date: date, next_occurance_time: time})
+           |> check_before_applicable_date(applicable_end)
+    end
+  end
+  defp check_before_applicable_date(cs, applicable_end) do
+    next_occurance_date = get_field(cs, :next_occurance_date)
+    case Date.compare(next_occurance_date, applicable_end) == :gt do
+      false -> cs
+      true -> change(cs, %{next_occurance_date: nil, next_occurance_time: nil})
+    end
+  end
   @doc """
   Deletes a workorder_schedule.
 

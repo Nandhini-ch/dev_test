@@ -71,6 +71,7 @@ defmodule Inconn2Service.AssetConfig do
       #  result = IO.inspect(get_party_AO(party_id, prefix))
       #  IO.inspect(result) checking for AO, SELF
       result = IO.inspect(get_party_AO(party_id, prefix))
+      IO.puts("im here inside create site&&&&&&&&&&&&")
       IO.inspect(result)
 
       case result do

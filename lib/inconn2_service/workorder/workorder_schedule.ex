@@ -8,7 +8,8 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
     belongs_to :workorder_template, WorkorderTemplate
     field :asset_id, :integer
     field :config, :map
-    field :next_occurance, :utc_datetime
+    field :next_occurance_date, :date
+    field :next_occurance_time, :time
 
     timestamps()
   end
