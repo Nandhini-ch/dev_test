@@ -49,6 +49,9 @@ defmodule Inconn2Service.Staff.Employee do
       :org_unit_id
     ])
     |> validate_email(:email, checks: [:html_input, :pow])
+    |> unique_constraint(:employee_id)
+    #  |> unique_constraint(:name, name: :index_holidays_dates)
+    # unique_constraint(:name, name: :index_shifts_dates)
     |> assoc_constraint(:org_unit)
   end
 end

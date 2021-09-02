@@ -20,5 +20,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
     end
 
     create index(:employees, [:org_unit_id])
+    create unique_index(:employees, [:employee_id])
   end
 end
