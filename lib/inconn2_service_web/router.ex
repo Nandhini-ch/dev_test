@@ -26,6 +26,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/equipments", EquipmentController, :index
     get "/sites/:site_id/equipments_tree", EquipmentController, :tree
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
+    get "/locations/:location_id/equipments", EquipmentController, :loc_equipments
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
@@ -39,7 +40,6 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
-    get "/workorder_schedules/:id/next_schedule", WorkorderScheduleController, :next_schedule
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index

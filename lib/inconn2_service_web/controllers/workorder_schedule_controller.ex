@@ -33,24 +33,6 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     end
   end
 
-  def next_schedule(conn, %{"id" => id}) do
-    workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
-
-  #  with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.update_workorder_schedule_and_scheduler(workorder_schedule, conn.assigns.sub_domain_prefix) do
-  #    render(conn, "show.json", workorder_schedule: workorder_schedule)
-  #  end
-  #  with {_, nil} <- Workorder.update_workorder_schedule_and_scheduler(workorder_schedule, conn.assigns.sub_domain_prefix) do
-  #    send_resp(conn, :no_content, "")
-  #  end
-    case IO.inspect(Workorder.update_workorder_schedule_and_scheduler(workorder_schedule, conn.assigns.sub_domain_prefix)) do
-      {:ok, %WorkorderSchedule{} = workorder_schedule} ->
-        render(conn, "show.json", workorder_schedule: workorder_schedule)
-
-      {_, nil} ->
-        send_resp(conn, :no_content, "")
-    end
-  end
-
   def delete(conn, %{"id" => id}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 

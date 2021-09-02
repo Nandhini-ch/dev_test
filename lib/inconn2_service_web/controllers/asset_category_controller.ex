@@ -7,8 +7,14 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    asset_categories = AssetConfig.list_asset_categories(conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", asset_categories: asset_categories)
+    case Map.get(conn.query_params, "type", nil) do
+      nil ->
+        asset_categories = AssetConfig.list_asset_categories(conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", asset_categories: asset_categories)
+      type ->
+        asset_categories = AssetConfig.list_asset_categories_by_type(type, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", asset_categories: asset_categories)
+    end
   end
 
   def tree(conn, _params) do

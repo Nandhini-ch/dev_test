@@ -8,8 +8,8 @@ defmodule Inconn2Service.AssetConfig.Site do
     field :area, :float
     field :branch, :string
     field :description, :string
-    field :lattitude, :float
-    field :longitiude, :float
+    field :latitude, :float
+    field :longitude, :float
     field :name, :string
     field :fencing_radius, :float
     field :site_code, :string
@@ -28,8 +28,8 @@ defmodule Inconn2Service.AssetConfig.Site do
       :description,
       :branch,
       :area,
-      :lattitude,
-      :longitiude,
+      :latitude,
+      :longitude,
       :fencing_radius,
       :site_code,
       :party_id

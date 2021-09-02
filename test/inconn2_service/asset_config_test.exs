@@ -10,8 +10,8 @@ defmodule Inconn2Service.AssetConfigTest do
       area: 120.5,
       branch: "some branch",
       description: "some description",
-      lattitude: 120.5,
-      longitiude: 120.5,
+      latitude: 120.5,
+      longitude: 120.5,
       name: "some name",
       fencing_radius: 120.5
     }
@@ -19,8 +19,8 @@ defmodule Inconn2Service.AssetConfigTest do
       area: 456.7,
       branch: "some updated branch",
       description: "some updated description",
-      lattitude: 456.7,
-      longitiude: 456.7,
+      latitude: 456.7,
+      longitude: 456.7,
       name: "some updated name",
       fencing_radius: 456.7
     }
@@ -28,8 +28,8 @@ defmodule Inconn2Service.AssetConfigTest do
       area: nil,
       branch: nil,
       description: nil,
-      lattitude: nil,
-      longitiude: nil,
+      latitude: nil,
+      longitude: nil,
       name: nil,
       fencing_radius: nil
     }
@@ -58,8 +58,8 @@ defmodule Inconn2Service.AssetConfigTest do
       assert site.area == 120.5
       assert site.branch == "some branch"
       assert site.description == "some description"
-      assert site.lattitude == 120.5
-      assert site.longitiude == 120.5
+      assert site.latitude == 120.5
+      assert site.longitude == 120.5
       assert site.name == "some name"
       assert site.radius == 120.5
     end
@@ -74,8 +74,8 @@ defmodule Inconn2Service.AssetConfigTest do
       assert site.area == 456.7
       assert site.branch == "some updated branch"
       assert site.description == "some updated description"
-      assert site.lattitude == 456.7
-      assert site.longitiude == 456.7
+      assert site.latitude == 456.7
+      assert site.longitude == 456.7
       assert site.name == "some updated name"
       assert site.radius == 456.7
     end

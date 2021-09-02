@@ -341,18 +341,15 @@ defmodule Inconn2Service.Workorder do
     |> Repo.update(prefix: prefix)
   end
 
-  def update_workorder_schedule_and_scheduler(%WorkorderSchedule{} = workorder_schedule, prefix) do
+  def update_workorder_schedule_and_scheduler(id, prefix, zone) do
+        workorder_schedule = get_workorder_schedule!(id, prefix)
         {:ok, workorder_schedule} = workorder_schedule
                                     |> WorkorderSchedule.changeset(%{})
                                     |> update_next_occurance(prefix)
                                     |> Repo.update(prefix: prefix)
+        Common.delete_work_scheduler(workorder_schedule.id)
         if workorder_schedule.next_occurance_date != nil do
-            Common.update_work_scheduler(workorder_schedule.id, %{})
-            {:ok, workorder_schedule}
-        else
-            Common.delete_work_scheduler(workorder_schedule.id)
-            delete_workorder_schedule(workorder_schedule, prefix)
-            {:ok, nil}
+          Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
         end
   end
 
