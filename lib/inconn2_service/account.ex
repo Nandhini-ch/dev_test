@@ -156,7 +156,6 @@ defmodule Inconn2Service.Account do
       |> Licensee.changeset(attrs)
       |> Repo.insert()
 
-    IO.puts("checking in create licensee @@@@@@@@@@@@@")
     IO.inspect(result)
 
     case result do

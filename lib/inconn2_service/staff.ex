@@ -262,4 +262,233 @@ defmodule Inconn2Service.Staff do
   def change_org_unit(%OrgUnit{} = org_unit, attrs \\ %{}) do
     OrgUnit.changeset(org_unit, attrs)
   end
+
+  alias Inconn2Service.Staff.Employee
+
+  @doc """
+  Returns the list of employees.
+
+  ## Examples
+
+      iex> list_employees()
+      [%Employee{}, ...]
+
+  """
+  def list_employees do
+    Repo.all(Employee)
+  end
+
+  @doc """
+  Gets a single employee.
+
+  Raises `Ecto.NoResultsError` if the Employee does not exist.
+
+  ## Examples
+
+      iex> get_employee!(123)
+      %Employee{}
+
+      iex> get_employee!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_employee!(id), do: Repo.get!(Employee, id)
+
+  @doc """
+  Creates a employee.
+
+  ## Examples
+
+      iex> create_employee(%{field: value})
+      {:ok, %Employee{}}
+
+      iex> create_employee(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_employee(attrs \\ %{}) do
+    has_login_credentials = Map.get(attrs, "has_login_credentials", false)
+
+    if has_login_credentials == true do
+      employee_set =
+        %Employee{}
+        |> Employee.changeset(attrs)
+        |> Repo.insert()
+
+      IO.inspect(employee_set)
+
+      case employee_set do
+        {:ok, employee_set} ->
+          case create_user(attrs) do
+            {:ok, _change_set} -> employee_set
+            {:error, change_set} -> add_error(employee_set, :employee_id, change_set.error)
+          end
+      end
+    end
+
+    if has_login_credentials == false do
+      employee_set =
+        %Employee{}
+        |> Employee.changeset(attrs)
+        |> Repo.insert()
+
+      IO.inspect(employee_set)
+    end
+  end
+
+  @doc """
+  Updates a employee.
+
+  ## Examples
+
+      iex> update_employee(employee, %{field: new_value})
+      {:ok, %Employee{}}
+
+      iex> update_employee(employee, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_employee(%Employee{} = employee, attrs) do
+    employee
+    |> Employee.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a employee.
+
+  ## Examples
+
+      iex> delete_employee(employee)
+      {:ok, %Employee{}}
+
+      iex> delete_employee(employee)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_employee(%Employee{} = employee) do
+    Repo.delete(employee)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking employee changes.
+
+  ## Examples
+
+      iex> change_employee(employee)
+      %Ecto.Changeset{data: %Employee{}}
+
+  """
+  def change_employee(%Employee{} = employee, attrs \\ %{}) do
+    Employee.changeset(employee, attrs)
+  end
+
+  alias Inconn2Service.Staff.User
+
+  @doc """
+  Returns the list of users.
+
+  ## Examples
+
+      iex> list_users()
+      [%User{}, ...]
+
+  """
+  def list_users do
+    Repo.all(User)
+  end
+
+  @doc """
+  Gets a single user.
+
+  Raises `Ecto.NoResultsError` if the User does not exist.
+
+  ## Examples
+
+      iex> get_user!(123)
+      %User{}
+
+      iex> get_user!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_user!(id), do: Repo.get!(User, id)
+
+  @doc """
+  Creates a user.
+
+  ## Examples
+
+      iex> create_user(%{field: value})
+      {:ok, %User{}}
+
+      iex> create_user(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_user(attrs \\ %{}) do
+    # Check to see if create_employee has called this method or directly create_user is called
+    # If the call is from employee then email from employee is set as username here
+    has_email = Map.get(attrs, "email", nil)
+
+    if(has_email != nil) do
+      %User{}
+      |> User.changeset(attrs)
+      |> change(%{username: has_email})
+      |> Repo.insert()
+    end
+
+    if has_email == nil do
+      %User{}
+      |> User.changeset(attrs)
+      |> Repo.insert()
+    end
+  end
+
+  @doc """
+  Updates a user.
+
+  ## Examples
+
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
+
+      iex> update_user(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a user.
+
+  ## Examples
+
+      iex> delete_user(user)
+      {:ok, %User{}}
+
+      iex> delete_user(user)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user changes.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
+  end
 end

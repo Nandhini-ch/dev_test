@@ -43,5 +43,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/parties/:party_id/org_units", OrgUnitController, :index
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
+
+    resources "/employees", EmployeeController, except: [:new, :edit]
+    resources "/users", UserController, except: [:new, :edit]
   end
 end
