@@ -4,8 +4,8 @@ defmodule Inconn2Service.Common do
   """
 
   import Ecto.Query, warn: false
+  import Ecto.Changeset
   alias Inconn2Service.Repo
-
   alias Inconn2Service.Common.Timezone
 
   @doc """
@@ -18,8 +18,8 @@ defmodule Inconn2Service.Common do
 
   """
   def list_timezones do
-    Repo.all(Timezone)
-    #sort by utc_offset_seconds
+    from(t in Timezone, order_by: [asc: t.utc_offset_seconds])
+    |> Repo.all()
   end
 
   def search_timezones(city_text) do
@@ -123,8 +123,8 @@ defmodule Inconn2Service.Common do
   def shift_to_utc(date, time, zone, before_seconds) do
     {:ok, ndt} = NaiveDateTime.new(date, time)
     {:ok, dt} = DateTime.from_naive(ndt, zone)
-    DateTime.add(dt, -1 * before_seconds, Tzdata.TimeZoneDatabase)
-    |> DateTime.shift_zone("Etc/UTC", Tzdata.TimeZoneDatabase)
+    DateTime.add(dt, -1 * before_seconds, :second, Tzdata.TimeZoneDatabase)
+    |> DateTime.shift_zone!("Etc/UTC", Tzdata.TimeZoneDatabase)
   end
 
   def build_timezone_db() do
@@ -197,4 +197,49 @@ defmodule Inconn2Service.Common do
 
     "UTC" <> sign <> to_string(hours) <> ":" <> str_mins
   end
+
+  alias Inconn2Service.Common.WorkScheduler
+  alias Inconn2Service.Workorder.WorkorderSchedule
+
+  def list_works_chedulers do
+    Repo.all(WorkScheduler)
+  end
+
+  def get_work_scheduler!(id), do: Repo.get!(WorkScheduler, id)
+
+  def calculate_utc_datetime(cs) do
+    workorder_schedule_id = get_field(cs, :workorder_schedule_id)
+    prefix = get_field(cs, :prefix)
+    zone = get_field(cs, :zone)
+    workorder_schedule = Repo.get!(WorkorderSchedule, workorder_schedule_id, prefix: prefix) |> Repo.preload(:workorder_template)
+    before_seconds = workorder_schedule.workorder_template.workorder_prior_time * 60
+    date = workorder_schedule.next_occurance_date
+    time = workorder_schedule.next_occurance_time
+    utc = shift_to_utc(date, time, zone, before_seconds)
+    change(cs, %{utc_date_time: utc})
+  end
+  def create_work_scheduler(attrs \\ %{}) do
+    %WorkScheduler{}
+    |> WorkScheduler.changeset(attrs)
+    |> calculate_utc_datetime
+    |> Repo.insert()
+  end
+
+  def update_work_scheduler(workorder_schedule_id, attrs \\ %{}) do
+    work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
+    work_scheduler
+    |> WorkScheduler.changeset(attrs)
+    |> calculate_utc_datetime
+    |> Repo.update()
+  end
+
+  def delete_work_scheduler(workorder_schedule_id) do
+    work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
+    Repo.delete(work_scheduler)
+  end
+
+  def change_work_scheduler(%WorkScheduler{} = work_scheduler, attrs \\ %{}) do
+    WorkScheduler.changeset(work_scheduler, attrs)
+  end
+
 end

@@ -27,6 +27,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         time_start: workorder_schedule.workorder_template.time_start,
         time_end: workorder_schedule.workorder_template.time_end,
       config: workorder_schedule.config,
-      next_occurance: workorder_schedule.next_occurance}
+      next_occurance_date: workorder_schedule.next_occurance_date,
+      next_occurance_time: workorder_schedule.next_occurance_time}
   end
 end

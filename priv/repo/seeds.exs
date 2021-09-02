@@ -11,8 +11,7 @@ client = %{
   "company_name" => "Bata Shoe Company",
   "business_type_id" => btrec.id,
   "sub_domain" => "bata",
-  "party_type" => ["AO", "SELF"],
-  "other_party_type" => nil,
+  "party_type" => "AO",
   "address" => %{
     "address_line1" => "18, First Street",
     "address_line2" => "Anna Nagar",
@@ -261,9 +260,10 @@ tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1, 3, 4], "asset_ca
 {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
 {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")
 
+
 wkord_tp1 = %{
   "asset_category_id" => 2,
-  "name" => "Daily maintenance",
+  "name" => "Hourly maintenance",
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
@@ -279,12 +279,100 @@ wkord_tp1 = %{
   "workorder_prior_time" => 180
 }
 
-{:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
+wkord_tp2 = %{
+  "asset_category_id" => 2,
+  "name" => "Daily maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => "Y",
+  "repeat_every" => 2,
+  "repeat_unit" => "D",
+  "applicable_start" => "2021-08-27",
+  "applicable_end" => "2021-09-30",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "on completion",
+  "max_times" => 5,
+  "workorder_prior_time" => 180
+}
 
-org_ut1 = %{ "name" => "Electrical", "party_id" => 1}
-org_ut2 = %{ "name" => "Mechanical", "party_id" => 1}
-org_ut3 = %{ "name" => "AHU", "party_id" => 1, "parent_id" => 2}
-org_ut4 = %{ "name" => "Controllers", "party_id" => 1, "parent_id" => 3}
+wkord_tp3 = %{
+  "asset_category_id" => 2,
+  "name" => "Weekly maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => "Y",
+  "repeat_every" => 2,
+  "repeat_unit" => "W",
+  "applicable_start" => "2021-08-27",
+  "applicable_end" => "2021-12-31",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "on completion",
+  "max_times" => 5,
+  "workorder_prior_time" => 180
+}
+
+wkord_tp4 = %{
+  "asset_category_id" => 2,
+  "name" => "Monthly maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => "Y",
+  "repeat_every" => 2,
+  "repeat_unit" => "M",
+  "applicable_start" => "2021-08-27",
+  "applicable_end" => "2022-08-27",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "on completion",
+  "max_times" => 5,
+  "workorder_prior_time" => 180
+}
+
+wkord_tp5 = %{
+  "asset_category_id" => 2,
+  "name" => "Yearly maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => "Y",
+  "repeat_every" => 2,
+  "repeat_unit" => "Y",
+  "applicable_start" => "2021-08-27",
+  "applicable_end" => "2025-08-27",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "on completion",
+  "max_times" => 5,
+  "workorder_prior_time" => 180
+}
+
+{:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
+{:ok, wkord_tp2c} = Workorder.create_workorder_template(wkord_tp2, "inc_bata")
+{:ok, wkord_tp3c} = Workorder.create_workorder_template(wkord_tp3, "inc_bata")
+{:ok, wkord_tp4c} = Workorder.create_workorder_template(wkord_tp4, "inc_bata")
+{:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
+
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "config" => %{"time" => 9}}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "config" => %{"date" => "2021-09-01", "time" => 9}}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day" => 4, "time" => 9}}
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => 9}}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => 9}}
+
+{:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "Europe/Berlin", "inc_bata")
+{:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "Indian/Maldives", "inc_bata")
+{:ok, wkord_sc3c} = Workorder.create_workorder_schedule(wkord_sc3, "Australia/Melbourne", "inc_bata")
+{:ok, wkord_sc4c} = Workorder.create_workorder_schedule(wkord_sc4, "Asia/Tokyo", "inc_bata")
+{:ok, wkord_sc5c} = Workorder.create_workorder_schedule(wkord_sc5, "America/New_York", "inc_bata")
+
+org_ut1 = %{"name" => "Electrical", "party_id" => 1}
+org_ut2 = %{"name" => "Mechanical", "party_id" => 1}
+org_ut3 = %{"name" => "AHU", "party_id" => 1, "parent_id" => 2}
+org_ut4 = %{"name" => "Controllers", "party_id" => 1, "parent_id" => 3}
 
 {:ok, org_ut1c} = Staff.create_org_unit(org_ut1, "inc_bata")
 {:ok, org_ut2c} = Staff.create_org_unit(org_ut2, "inc_bata")

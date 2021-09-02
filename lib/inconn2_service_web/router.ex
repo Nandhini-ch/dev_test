@@ -34,8 +34,12 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
 
+    resources "/timezones", TimezoneController, only: [:index, :create]
+    get "/timezones_search", TimezoneController, :search
+
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
+    get "/workorder_schedules/:id/next_schedule", WorkorderScheduleController, :next_schedule
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
