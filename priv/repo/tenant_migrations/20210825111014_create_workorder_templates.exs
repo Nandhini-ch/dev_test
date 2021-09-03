@@ -8,7 +8,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTemplates do
       add :task_list_id, :integer
       add :tasks, {:array, :map}
       add :estimated_time, :integer
-      add :scheduled, :string
+      add :scheduled, :boolean
       add :repeat_every, :integer
       add :repeat_unit, :string
       add :applicable_start, :date
@@ -18,6 +18,12 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTemplates do
       add :create_new, :string
       add :max_times, :integer
       add :workorder_prior_time, :integer
+      add :workpermit_required, :boolean
+      add :workpermit_check_list_id, :integer
+      add :loto_required, :boolean
+      add :loto_lock_check_list_id, :integer
+      add :loto_release_check_list_id, :integer
+      add :status, :string
 
       timestamps()
     end

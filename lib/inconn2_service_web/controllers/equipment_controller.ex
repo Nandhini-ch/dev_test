@@ -21,6 +21,11 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     render(conn, "index.json", equipments: equipments)
   end
 
+  def loc_equipments(conn, %{"location_id" => location_id}) do
+    equipments = AssetConfig.list_equipments_of_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json",equipments: equipments)
+  end
+
   def create(conn, %{"equipment" => equipment_params}) do
     with {:ok, %Equipment{} = equipment} <-
            AssetConfig.create_equipment(equipment_params, conn.assigns.sub_domain_prefix) do

@@ -40,4 +40,60 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def work_permitted(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_work_permitted(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def loto_locked(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_loto_locked(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def in_progress(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_in_progress(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def completed(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_completed(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def loto_released(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_loto_released(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def cancelled(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_cancelled(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
+
+  def hold(conn, %{"id" => id}) do
+    workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.status_hold(workorder_template, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workorder_template: workorder_template)
+    end
+  end
 end

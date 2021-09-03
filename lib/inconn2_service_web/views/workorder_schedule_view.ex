@@ -26,6 +26,12 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         applicable_end: workorder_schedule.workorder_template.applicable_end,
         time_start: workorder_schedule.workorder_template.time_start,
         time_end: workorder_schedule.workorder_template.time_end,
+        workpermit_required: workorder_schedule.workorder_template.workpermit_required,
+        workpermit_check_list_id: workorder_schedule.workorder_template.workpermit_check_list_id,
+        loto_required: workorder_schedule.workorder_template.loto_required,
+        loto_lock_check_list_id: workorder_schedule.workorder_template.loto_lock_check_list_id,
+        loto_release_check_list_id: workorder_schedule.workorder_template.loto_release_check_list_id,
+        status: workorder_schedule.workorder_template.status,
       config: workorder_schedule.config,
       next_occurance_date: workorder_schedule.next_occurance_date,
       next_occurance_time: workorder_schedule.next_occurance_time}
