@@ -27,7 +27,7 @@ defmodule Inconn2ServiceWeb.TimezoneController do
   end
 
   def show(conn, %{"id" => id}) do
-    timezone = Common.get_timezone!(id, conn.assigns.sub_domain_prefix)
+    timezone = Common.get_timezone!(id)
     render(conn, "show.json", timezone: timezone)
   end
 
