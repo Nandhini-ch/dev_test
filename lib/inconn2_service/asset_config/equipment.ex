@@ -24,7 +24,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
   def changeset(equipment, attrs) do
     equipment
     |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :site_id, :location_id, :connections_in, :connections_out])
-    |> validate_required([:name, :equipment_code, :asset_category_id, :site_id])
+    |> validate_required([:name, :equipment_code, :asset_category_id, :site_id, :location_id])
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
     |> assoc_constraint(:location)

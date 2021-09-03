@@ -32,11 +32,13 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/bankholidays", HolidayController, except: [:new, :edit]
     resources "/parties", PartyController, except: [:new, :edit]
 
+    resources "/timezones", TimezoneController, only: [:index, :create, :show]
+
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
 
-    resources "/timezones", TimezoneController, only: [:index, :create]
-    get "/timezones_search", TimezoneController, :search
+    resources "/checks", CheckController, except: [:new, :edit]
+    resources "/check_lists", CheckListController, except: [:new, :edit]
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
@@ -47,10 +49,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/workorder_templates/:id/completed", WorkorderTemplateController, :completed
     get "/workorder_templates/:id/loto_released", WorkorderTemplateController, :loto_released
     get "/workorder_templates/:id/cancelled", WorkorderTemplateController, :cancelled
-    get "/workorder_templates/:id/hold", WorkorderTemplateController, :hold    
-
-    resources "/checks", CheckController, except: [:new, :edit]
-    resources "/check_lists", CheckListController, except: [:new, :edit]
+    get "/workorder_templates/:id/hold", WorkorderTemplateController, :hold
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index

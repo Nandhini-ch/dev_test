@@ -795,10 +795,14 @@ defmodule Inconn2Service.AssetConfig do
   defp check_site_id_of_location(eq_cs, prefix) do
     loc_id = get_field(eq_cs, :location_id, nil)
     site_id = get_field(eq_cs, :site_id, nil)
-    location = Repo.get(Location, loc_id, prefix: prefix)
-    case site_id != location.site_id do
-      true -> add_error(eq_cs, :location_id, "Site ID of location doesn't match Site ID of equipment")
-      false -> eq_cs
+    if loc_id != nil and site_id != nil do
+      location = Repo.get(Location, loc_id, prefix: prefix)
+      case site_id != location.site_id do
+        true -> add_error(eq_cs, :location_id, "Site ID of location doesn't match Site ID of equipment")
+        false -> eq_cs
+      end
+    else
+      eq_cs
     end
   end
   @doc """
