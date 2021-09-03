@@ -11,7 +11,8 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
   end
 
   def render("workorder_template.json", %{workorder_template: workorder_template}) do
-    %{id: workorder_template.id,
+    %{
+      id: workorder_template.id,
       asset_category_id: workorder_template.asset_category_id,
       name: workorder_template.name,
       task_list_id: workorder_template.task_list_id,
@@ -26,6 +27,13 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       time_end: workorder_template.time_end,
       create_new: workorder_template.create_new,
       max_times: workorder_template.max_times,
-      workorder_prior_time: workorder_template.workorder_prior_time}
+      workorder_prior_time: workorder_template.workorder_prior_time,
+      workpermit_required: workorder_template.workpermit_required,
+      workpermit_check_list_id: workorder_template.workpermit_check_list_id,
+      loto_required: workorder_template.loto_required,
+      loto_lock_check_list_id: workorder_template.loto_lock_check_list_id,
+      loto_release_check_list_id: workorder_template.loto_release_check_list_id,
+      status: workorder_template.status
+    }
   end
 end

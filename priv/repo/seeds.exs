@@ -2,7 +2,7 @@
 alias Inconn2Service.Common
 Common.build_timezone_db()
 
-alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, Workorder, Staff}
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Workorder, Staff}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
@@ -266,6 +266,21 @@ tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1, 3, 4], "asset_ca
 {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
 {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")
 
+chk1 = %{"label" => "check 1", "type" => "WP"}
+chk2 = %{"label" => "check 2", "type" => "WP"}
+chk3 = %{"label" => "check 3", "type" => "LOTO"}
+chk4 = %{"label" => "check 4", "type" => "LOTO"}
+
+{:ok, chk1c} = CheckListConfig.create_check(chk1, "inc_bata")
+{:ok, chk2c} = CheckListConfig.create_check(chk2, "inc_bata")
+{:ok, chk3c} = CheckListConfig.create_check(chk3, "inc_bata")
+{:ok, chk4c} = CheckListConfig.create_check(chk4, "inc_bata")
+
+chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
+chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}
+
+{:ok, chk_lst1c} = CheckListConfig.create_check_list(chk_lst1, "inc_bata")
+{:ok, chk_lst2c} = CheckListConfig.create_check_list(chk_lst2, "inc_bata")
 
 wkord_tp1 = %{
   "asset_category_id" => 2,
@@ -273,16 +288,18 @@ wkord_tp1 = %{
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
-  "scheduled" => "Y",
+  "scheduled" => true,
   "repeat_every" => 4,
   "repeat_unit" => "H",
   "applicable_start" => "2021-08-27",
   "applicable_end" => "2021-08-29",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
-  "create_new" => "on completion",
+  "create_new" => "oc",
   "max_times" => 5,
-  "workorder_prior_time" => 180
+  "workorder_prior_time" => 180,
+  "workpermit_required" => false,
+  "loto_required" => false
 }
 
 wkord_tp2 = %{
@@ -291,16 +308,18 @@ wkord_tp2 = %{
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
-  "scheduled" => "Y",
+  "scheduled" => true,
   "repeat_every" => 2,
   "repeat_unit" => "D",
   "applicable_start" => "2021-08-27",
   "applicable_end" => "2021-09-30",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
-  "create_new" => "on completion",
+  "create_new" => "oc",
   "max_times" => 5,
-  "workorder_prior_time" => 180
+  "workorder_prior_time" => 180,
+  "workpermit_required" => false,
+  "loto_required" => false
 }
 
 wkord_tp3 = %{
@@ -309,16 +328,19 @@ wkord_tp3 = %{
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
-  "scheduled" => "Y",
+  "scheduled" => true,
   "repeat_every" => 2,
   "repeat_unit" => "W",
   "applicable_start" => "2021-08-27",
   "applicable_end" => "2021-12-31",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
-  "create_new" => "on completion",
+  "create_new" => "oc",
   "max_times" => 5,
-  "workorder_prior_time" => 180
+  "workorder_prior_time" => 180,
+  "workpermit_required" => true,
+  "workpermit_check_list_id" => chk_lst1c.id,
+  "loto_required" => false
 }
 
 wkord_tp4 = %{
@@ -327,16 +349,20 @@ wkord_tp4 = %{
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
-  "scheduled" => "Y",
+  "scheduled" => true,
   "repeat_every" => 2,
   "repeat_unit" => "M",
   "applicable_start" => "2021-08-27",
   "applicable_end" => "2022-08-27",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
-  "create_new" => "on completion",
+  "create_new" => "oc",
   "max_times" => 5,
-  "workorder_prior_time" => 180
+  "workorder_prior_time" => 180,
+  "workpermit_required" => false,
+  "loto_required" => true,
+  "loto_lock_check_list_id" => chk_lst2c.id,
+  "loto_release_check_list_id" => chk_lst2c.id
 }
 
 wkord_tp5 = %{
@@ -345,16 +371,21 @@ wkord_tp5 = %{
   "task_list_id" => 1,
   "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
   "estimated_time" => 286,
-  "scheduled" => "Y",
+  "scheduled" => true,
   "repeat_every" => 2,
   "repeat_unit" => "Y",
   "applicable_start" => "2021-08-27",
   "applicable_end" => "2025-08-27",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
-  "create_new" => "on completion",
+  "create_new" => "oc",
   "max_times" => 5,
-  "workorder_prior_time" => 180
+  "workorder_prior_time" => 180,
+  "workpermit_required" => true,
+  "workpermit_check_list_id" => chk_lst1c.id,
+  "loto_required" => true,
+  "loto_lock_check_list_id" => chk_lst2c.id,
+  "loto_release_check_list_id" => chk_lst2c.id
 }
 
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
