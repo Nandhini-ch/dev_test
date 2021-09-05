@@ -14,6 +14,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
       add :mobile_no, :string
       add :salary, :float
       add :has_login_credentials, :boolean, default: false, null: false
+      add :reports_to, :string
       add :org_unit_id, references(:org_units, on_delete: :nothing)
 
       timestamps()
@@ -21,5 +22,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
 
     create index(:employees, [:org_unit_id])
     create unique_index(:employees, [:employee_id])
+    create unique_index(:employees, [:email])
   end
 end

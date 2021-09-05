@@ -295,6 +295,15 @@ defmodule Inconn2Service.Staff do
   """
   def get_employee!(id, prefix), do: Repo.get!(Employee, id, prefix: prefix)
 
+  def get_employee_email!(email, prefix) do
+    query =
+      from(e in Employee,
+        where: e.email == ^email
+      )
+
+    IO.inspect(Repo.one(query, prefix: prefix))
+  end
+
   @doc """
   Creates a employee.
 
@@ -508,6 +517,20 @@ defmodule Inconn2Service.Staff do
       )
 
     IO.inspect(Repo.one(query, prefix: prefix))
+
+    # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
+  end
+
+  def change_user_password(email, password, prefix) do
+    query =
+      from(u in User,
+        where: u.username == ^email
+      )
+
+    user = Repo.one(query, prefix: prefix)
+    role_id = user.get_role_id
+    usr = Map.new(password: password, role_id: role_id, username: email)
+    update_user(user, usr, prefix)
 
     # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
   end

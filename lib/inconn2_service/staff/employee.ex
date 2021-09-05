@@ -16,6 +16,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :first_name, :string
     field :has_login_credentials, :boolean, default: false
     field :last_name, :string
+    field :reports_to, :string
     belongs_to :org_unit, OrgUnit
 
     timestamps()
@@ -36,6 +37,7 @@ defmodule Inconn2Service.Staff.Employee do
       :mobile_no,
       :salary,
       :has_login_credentials,
+      :reports_to,
       :org_unit_id
     ])
     |> validate_required([
@@ -50,6 +52,7 @@ defmodule Inconn2Service.Staff.Employee do
     ])
     |> validate_email(:email, checks: [:html_input, :pow])
     |> unique_constraint(:employee_id)
+    |> unique_constraint(:email)
     #  |> unique_constraint(:name, name: :index_holidays_dates)
     # unique_constraint(:name, name: :index_shifts_dates)
     |> assoc_constraint(:org_unit)
