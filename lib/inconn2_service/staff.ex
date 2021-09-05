@@ -501,6 +501,17 @@ defmodule Inconn2Service.Staff do
     Repo.delete(user, prefix: prefix)
   end
 
+  def get_user_by_email(email, prefix) do
+    query =
+      from(u in User,
+        where: u.username == ^email
+      )
+
+    IO.inspect(Repo.one(query, prefix: prefix))
+
+    # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
 

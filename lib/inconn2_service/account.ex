@@ -157,12 +157,15 @@ defmodule Inconn2Service.Account do
       |> Repo.insert()
 
     IO.inspect(result)
+    IO.puts("creating licensee")
 
     case result do
       {:ok, licensee} ->
+        IO.puts("creating create_tenant")
         create_tenant(licensee)
         IO.inspect(licensee)
         party_type = licensee.party_type
+        IO.puts("creating party_type")
         IO.inspect(party_type)
 
         return_party =

@@ -7,7 +7,9 @@
 # General application configuration
 use Mix.Config
 
-config :inconn2_service,
+config :inconn2_service, Inconn2Service.Guardian,
+  issuer: "inconn2_service",
+  secret_key: "OkNc+EnFCB1BvEdM1OHOFItlvhcrx2IObsGBQGRu74xET6V9AGdAhCq7VeTK7NZT",
   ecto_repos: [Inconn2Service.Repo]
 
 # Configures the endpoint

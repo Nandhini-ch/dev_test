@@ -6,10 +6,21 @@ defmodule Inconn2ServiceWeb.Router do
     plug Inconn2ServiceWeb.Plugs.MatchTenantPlug
   end
 
+  pipeline :authenticate do
+    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    plug(Inconn2ServiceWeb.Plugs.AssignUser)
+  end
+
   scope "/api", Inconn2ServiceWeb do
     pipe_through :api
     resources "/business_types", BusinessTypeController, except: [:new, :edit]
     resources "/licensees", LicenseeController, except: [:new, :edit]
+
+    post "/sessions/login", SessionController, :login
+  end
+
+  scope "/api", Inconn2ServiceWeb do
+    pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]

@@ -47,7 +47,9 @@ defmodule Inconn2Service.MixProject do
       {:tzdata, "~> 1.1"},
       {:ecto_commons, "~> 0.3.3"},
       {:comeonin, "~> 5.1.2"},
-      {:argon2_elixir, "~> 2.0"}
+      {:argon2_elixir, "~> 2.0"},
+      {:guardian, "~> 1.0"},
+      {:poison, "~> 5.0"}
     ]
   end
 
