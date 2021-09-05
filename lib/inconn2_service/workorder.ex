@@ -11,6 +11,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.WorkOrderConfig.Task
+  alias Inconn2Service.CheckListConfig.CheckList
   @doc """
   Returns the list of workorder_templates.
 
@@ -55,10 +56,13 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_template(attrs \\ %{}, prefix) do
     %WorkorderTemplate{}
     |> WorkorderTemplate.changeset(attrs)
+    |> status_created()
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
     |> validate_estimated_time(prefix)
+    |> validate_workpermit_check_list_id(prefix)
+    |> validate_loto_check_list_id(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -119,6 +123,43 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp validate_workpermit_check_list_id(cs, prefix) do
+    id = get_field(cs, :workpermit_check_list_id, nil)
+    if id != nil do
+      workpermit_check_list = Repo.get(CheckList, id, prefix: prefix)
+      case workpermit_check_list != nil do
+        true ->
+                if workpermit_check_list.type == "WP" do
+                  cs
+                else
+                  add_error(cs, :workpermit_check_list_id, "Work permit check list type is invalid")
+                end
+        false -> add_error(cs, :workpermit_check_list_id, "Work permit check list ID is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_loto_check_list_id(cs, prefix) do
+    lock_id = get_field(cs, :loto_lock_check_list_id, nil)
+    release_id = get_field(cs, :loto_release_check_list_id, nil)
+    if lock_id != nil and release_id != nil do
+      lock_check_list = Repo.get(CheckList, lock_id, prefix: prefix)
+      release_check_list = Repo.get(CheckList, release_id, prefix: prefix)
+      case lock_check_list != nil and release_check_list != nil do
+        true ->
+                if lock_check_list.type == "LOTO" and release_check_list.type == "LOTO" do
+                  cs
+                else
+                  add_error(cs, :loto_check_list_ids, "Loto check list types are invalid")
+                end
+        false -> add_error(cs, :loto_check_list_ids, "Loto check list IDs are invalid")
+      end
+    else
+      cs
+    end
+  end
   @doc """
   Updates a workorder_template.
 
@@ -138,6 +179,8 @@ defmodule Inconn2Service.Workorder do
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
     |> validate_estimated_time(prefix)
+    |> validate_workpermit_check_list_id(prefix)
+    |> validate_loto_check_list_id(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -157,6 +200,51 @@ defmodule Inconn2Service.Workorder do
     Repo.delete(workorder_template, prefix: prefix)
   end
 
+  defp status_created(cs) do
+    change(cs, status: "cr")
+  end
+
+  def status_work_permitted(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "wp"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_loto_locked(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "ltl"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_in_progress(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "ip"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_completed(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "cp"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_loto_released(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "ltr"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_cancelled(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "cn"})
+    |> Repo.update(prefix: prefix)
+  end
+
+  def status_hold(%WorkorderTemplate{} = workorder_template, prefix) do
+    workorder_template
+    |> WorkorderTemplate.changeset(%{"status" => "hl"})
+    |> Repo.update(prefix: prefix)
+  end
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking workorder_template changes.
 
@@ -341,18 +429,15 @@ defmodule Inconn2Service.Workorder do
     |> Repo.update(prefix: prefix)
   end
 
-  def update_workorder_schedule_and_scheduler(%WorkorderSchedule{} = workorder_schedule, prefix) do
+  def update_workorder_schedule_and_scheduler(id, prefix, zone) do
+        workorder_schedule = get_workorder_schedule!(id, prefix)
         {:ok, workorder_schedule} = workorder_schedule
                                     |> WorkorderSchedule.changeset(%{})
                                     |> update_next_occurance(prefix)
                                     |> Repo.update(prefix: prefix)
+        Common.delete_work_scheduler(workorder_schedule.id)
         if workorder_schedule.next_occurance_date != nil do
-            Common.update_work_scheduler(workorder_schedule.id, %{})
-            {:ok, workorder_schedule}
-        else
-            Common.delete_work_scheduler(workorder_schedule.id)
-            delete_workorder_schedule(workorder_schedule, prefix)
-            {:ok, nil}
+          Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
         end
   end
 

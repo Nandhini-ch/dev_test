@@ -8,8 +8,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateSites do
       add :description, :string
       add :branch, :string
       add :area, :float
-      add :lattitude, :float
-      add :longitiude, :float
+      add :latitude, :float
+      add :longitude, :float
       add :fencing_radius, :float
       add :site_code, :string
       add :party_id, references(:parties, on_delete: :nothing)

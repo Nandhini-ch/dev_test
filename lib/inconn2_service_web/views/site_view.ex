@@ -17,8 +17,8 @@ defmodule Inconn2ServiceWeb.SiteView do
       description: site.description,
       branch: site.branch,
       area: site.area,
-      lattitude: site.lattitude,
-      longitiude: site.longitiude,
+      latitude: site.latitude,
+      longitude: site.longitude,
       fencing_radius: site.fencing_radius
     }
   end

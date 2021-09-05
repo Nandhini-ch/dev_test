@@ -4,6 +4,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
   import Ecto.Changeset
   alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.AssetConfig.Location
 
   schema "equipments" do
     field :name, :string
@@ -14,6 +15,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     field :connections_out, {:array, :integer}
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
+    belongs_to :location, Location
 
     timestamps()
   end
@@ -21,10 +23,11 @@ defmodule Inconn2Service.AssetConfig.Equipment do
   @doc false
   def changeset(equipment, attrs) do
     equipment
-    |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :site_id, :connections_in, :connections_out])
-    |> validate_required([:name, :equipment_code, :asset_category_id, :site_id])
+    |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :site_id, :location_id, :connections_in, :connections_out])
+    |> validate_required([:name, :equipment_code, :asset_category_id, :site_id, :location_id])
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
+    |> assoc_constraint(:location)
 
   end
 

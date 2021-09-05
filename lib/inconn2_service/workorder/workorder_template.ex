@@ -9,7 +9,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :task_list_id, :integer
     field :tasks, {:array, :map}
     field :estimated_time, :integer
-    field :scheduled, :string
+    field :scheduled, :boolean
     field :repeat_every, :integer
     field :repeat_unit, :string
     field :applicable_start, :date
@@ -19,6 +19,12 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :create_new, :string
     field :max_times, :integer
     field :workorder_prior_time, :integer
+    field :workpermit_required, :boolean
+    field :workpermit_check_list_id, :integer
+    field :loto_required, :boolean
+    field :loto_lock_check_list_id, :integer
+    field :loto_release_check_list_id, :integer
+    field :status, :string
 
     timestamps()
   end
@@ -26,20 +32,22 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   @doc false
   def changeset(workorder_template, attrs) do
     workorder_template
-    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time])
+    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :status])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
-    |> validate_inclusion(:scheduled, ["Y", "N"])
     |> validate_scheduled()
     |> validate_inclusion(:repeat_unit, ["H", "D", "W", "M", "Y"])
     |> validate_date_order()
     |> validate_time_order()
-    |> validate_inclusion(:create_new, ["auto", "on completion"])
+    |> validate_inclusion(:create_new, ["at", "oc"])
+    |> validate_workpermit_required()
+    |> validate_loto_required()
+    |> validate_inclusion(:status, ["cr", "wp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
   end
 
   defp validate_scheduled(cs) do
     case get_field(cs, :scheduled) do
-      "Y" -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time])
-      "N" -> cs
+      true -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :loto_required])
+      false -> cs
       _ -> cs
     end
   end
@@ -58,6 +66,22 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     end_time = get_field(cs, :time_end)
     case Time.compare(start_time, end_time) do
       :gt -> add_error(cs, :time_start, "cannot be later than 'time_end'")
+      _ -> cs
+    end
+  end
+
+  defp validate_workpermit_required(cs) do
+    case get_field(cs, :workpermit_required) do
+      true -> validate_required(cs, [:workpermit_check_list_id])
+      false -> cs
+      _ -> cs
+    end
+  end
+
+  defp validate_loto_required(cs) do
+    case get_field(cs, :loto_required) do
+      true -> validate_required(cs, [:loto_lock_check_list_id, :loto_release_check_list_id])
+      false -> cs
       _ -> cs
     end
   end

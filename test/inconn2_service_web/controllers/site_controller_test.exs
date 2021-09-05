@@ -8,8 +8,8 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     area: 120.5,
     branch: "some branch",
     description: "some description",
-    lattitude: 120.5,
-    longitiude: 120.5,
+    latitude: 120.5,
+    longitude: 120.5,
     name: "some name",
     fencing_radius: 120.5
   }
@@ -17,8 +17,8 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     area: 456.7,
     branch: "some updated branch",
     description: "some updated description",
-    lattitude: 456.7,
-    longitiude: 456.7,
+    latitude: 456.7,
+    longitude: 456.7,
     name: "some updated name",
     fencing_radius: 456.7
   }
@@ -26,8 +26,8 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
     area: nil,
     branch: nil,
     description: nil,
-    lattitude: nil,
-    longitiude: nil,
+    latitude: nil,
+    longitude: nil,
     name: nil,
     fencing_radius: nil
   }
@@ -60,8 +60,8 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
                "area" => 120.5,
                "branch" => "some branch",
                "description" => "some description",
-               "lattitude" => 120.5,
-               "longitiude" => 120.5,
+               "latitude" => 120.5,
+               "longitude" => 120.5,
                "name" => "some name",
                "fencing_radius" => 120.5
              } = json_response(conn, 200)["data"]
@@ -87,8 +87,8 @@ defmodule Inconn2ServiceWeb.SiteControllerTest do
                "area" => 456.7,
                "branch" => "some updated branch",
                "description" => "some updated description",
-               "lattitude" => 456.7,
-               "longitiude" => 456.7,
+               "latitude" => 456.7,
+               "longitude" => 456.7,
                "name" => "some updated name",
                "fencing_radius" => 456.7
              } = json_response(conn, 200)["data"]

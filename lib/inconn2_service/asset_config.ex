@@ -164,6 +164,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_asset_categories_by_type(type, prefix) do
+    AssetCategory
+    |> where(asset_type: ^type)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_asset_categories_tree(prefix) do
     list_asset_categories(prefix)
     |> HierarchyManager.build_tree()
@@ -690,6 +696,11 @@ defmodule Inconn2Service.AssetConfig do
     from(e in Equipment, where: e.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments_of_location(location_id, prefix) do
+    Equipment
+    |> where(location_id: ^location_id)
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Gets a single equipment.
 
@@ -741,6 +752,7 @@ defmodule Inconn2Service.AssetConfig do
       %Equipment{}
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
+      |> check_site_id_of_location(prefix)
 
     create_equipment_in_tree(parent_id, eq_cs, prefix)
   end
@@ -780,6 +792,19 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  defp check_site_id_of_location(eq_cs, prefix) do
+    loc_id = get_field(eq_cs, :location_id, nil)
+    site_id = get_field(eq_cs, :site_id, nil)
+    if loc_id != nil and site_id != nil do
+      location = Repo.get(Location, loc_id, prefix: prefix)
+      case site_id != location.site_id do
+        true -> add_error(eq_cs, :location_id, "Site ID of location doesn't match Site ID of equipment")
+        false -> eq_cs
+      end
+    else
+      eq_cs
+    end
+  end
   @doc """
   Updates a equipment.
 
@@ -802,6 +827,7 @@ defmodule Inconn2Service.AssetConfig do
         eq_cs =
           update_equipment_default_changeset_pipe(equipment, attrs, prefix)
           |> check_asset_category_type_eq(prefix)
+          |> check_site_id_of_location(prefix)
 
         update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
@@ -809,6 +835,7 @@ defmodule Inconn2Service.AssetConfig do
         eq_cs =
           update_equipment_default_changeset_pipe(equipment, attrs, prefix)
           |> check_asset_category_type_eq(prefix)
+          |> check_site_id_of_location(prefix)
 
         Repo.update(eq_cs, prefix: prefix)
     end

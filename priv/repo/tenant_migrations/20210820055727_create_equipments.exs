@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
       add :equipment_code, :string
       add :asset_category_id, references(:asset_categories, on_delete: :nothing)
       add :site_id, references(:sites, on_delete: :nothing)
+      add :location_id, references(:locations, on_delete: :nothing)
       add :connections_in, {:array, :integer}
       add :connections_out, {:array, :integer}
 
@@ -16,5 +17,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
 
     create index(:equipments, [:site_id])
     create index(:equipments, [:asset_category_id])
+    create index(:equipments, [:location_id])
   end
 end
