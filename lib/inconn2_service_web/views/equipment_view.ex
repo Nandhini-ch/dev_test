@@ -20,7 +20,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       name: equipment.name,
       code: equipment.equipment_code,
       connections_in: equipment.connections_in,
-      connections_out: equipment.connections_out
+      connections_out: equipment.connections_out,
+      parent_id: equipment.parent_id
     }
   end
 
@@ -31,6 +32,7 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       code: equipment.equipment_code,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
+      parent_id: List.last(equipment.path),
       children: render_many(equipment.children, EquipmentView, "equipment_node.json")
     }
   end

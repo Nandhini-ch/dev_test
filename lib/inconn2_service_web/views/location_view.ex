@@ -19,7 +19,8 @@ defmodule Inconn2ServiceWeb.LocationView do
       id: location.id,
       name: location.name,
       description: location.description,
-      code: location.location_code
+      code: location.location_code,
+      parent_id: location.parent_id
     }
   end
 
@@ -29,6 +30,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       name: location.name,
       description: location.description,
       code: location.location_code,
+      parent_id: List.last(location.path),
       children: render_many(location.children, LocationView, "location_node.json")
     }
   end
