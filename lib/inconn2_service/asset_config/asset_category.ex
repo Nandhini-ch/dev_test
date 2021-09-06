@@ -6,7 +6,7 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
   schema "asset_categories" do
     field :name, :string
     field :asset_type, :string
-    field :parent_id, :integer, virtual: true ,default: 0
+    field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
 
     timestamps()

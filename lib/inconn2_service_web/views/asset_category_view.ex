@@ -18,7 +18,8 @@ defmodule Inconn2ServiceWeb.AssetCategoryView do
     %{
       id: asset_category.id,
       name: asset_category.name,
-      asset_type: asset_category.asset_type
+      asset_type: asset_category.asset_type,
+      parent_id: asset_category.parent_id
     }
   end
 
@@ -27,6 +28,7 @@ defmodule Inconn2ServiceWeb.AssetCategoryView do
       id: asset_category.id,
       name: asset_category.name,
       asset_type: asset_category.asset_type,
+      parent_id: List.last(asset_category.path),
       children: render_many(asset_category.children, AssetCategoryView, "asset_category_node.json")
     }
   end
