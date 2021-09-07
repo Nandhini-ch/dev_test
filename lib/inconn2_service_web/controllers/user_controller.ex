@@ -29,7 +29,8 @@ defmodule Inconn2ServiceWeb.UserController do
       user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", user: user)
     else
-      send_resp(conn, :no_content, "")
+      render(conn, "failure.json", %{})
+      # send_resp(conn, :no_content, "")
     end
   end
 
