@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         loto_release_check_list_id: workorder_schedule.workorder_template.loto_release_check_list_id,
         status: workorder_schedule.workorder_template.status,
       config: workorder_schedule.config,
-      next_occurance_date: workorder_schedule.next_occurance_date,
-      next_occurance_time: workorder_schedule.next_occurance_time}
+      next_occurrence_date: workorder_schedule.next_occurrence_date,
+      next_occurrence_time: workorder_schedule.next_occurrence_time}
   end
 end

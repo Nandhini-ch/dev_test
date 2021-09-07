@@ -8,8 +8,8 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
     belongs_to :workorder_template, WorkorderTemplate
     field :asset_id, :integer
     field :config, :map
-    field :next_occurance_date, :date
-    field :next_occurance_time, :time
+    field :next_occurrence_date, :date
+    field :next_occurrence_time, :time
 
     timestamps()
   end
@@ -19,5 +19,6 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
     workorder_schedule
     |> cast(attrs, [:workorder_template_id, :asset_id, :config])
     |> validate_required([:workorder_template_id, :asset_id, :config])
+    |> assoc_constraint(:workorder_template)
   end
 end

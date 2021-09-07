@@ -15,6 +15,7 @@ defmodule Inconn2ServiceWeb.Router do
     pipe_through :api
     resources "/business_types", BusinessTypeController, except: [:new, :edit]
     resources "/licensees", LicenseeController, except: [:new, :edit]
+    resources "/timezones", TimezoneController, only: [:index, :create, :show]
 
     post "/sessions/login", SessionController, :login
   end
@@ -42,8 +43,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
     resources "/parties", PartyController, except: [:new, :edit]
-
-    resources "/timezones", TimezoneController, only: [:index, :create, :show]
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]

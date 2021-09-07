@@ -213,8 +213,8 @@ defmodule Inconn2Service.Common do
     zone = get_field(cs, :zone)
     workorder_schedule = Repo.get!(WorkorderSchedule, workorder_schedule_id, prefix: prefix) |> Repo.preload(:workorder_template)
     before_seconds = workorder_schedule.workorder_template.workorder_prior_time * 60
-    date = workorder_schedule.next_occurance_date
-    time = workorder_schedule.next_occurance_time
+    date = workorder_schedule.next_occurrence_date
+    time = workorder_schedule.next_occurrence_time
     utc = shift_to_utc(date, time, zone, before_seconds)
     change(cs, %{utc_date_time: utc})
   end
