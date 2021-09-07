@@ -394,11 +394,11 @@ wkord_tp5 = %{
 {:ok, wkord_tp4c} = Workorder.create_workorder_template(wkord_tp4, "inc_bata")
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
 
-wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "config" => %{"time" => 9}}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "config" => %{"date" => "2021-09-01", "time" => 9}}
-wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day" => 4, "time" => 9}}
-wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => 9}}
-wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => 9}}
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "config" => %{"time" => "09:00:00"}}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "config" => %{"date" => "2021-09-01", "time" => "09:00:00"}}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day" => 4, "time" => "09:00:00"}}
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => "09:00:00"}}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => "09:00:00"}}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "Europe/Berlin", "inc_bata")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "Indian/Maldives", "inc_bata")
