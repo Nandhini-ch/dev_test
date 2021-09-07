@@ -41,7 +41,8 @@ site = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
   "site_code" => "BRCHN_MNTRD",
-  "party_id" => 1
+  "party_id" => 1,
+  "time_zone" => "Europe/Berlin"
 }
 
 sc =
@@ -400,11 +401,11 @@ wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day"
 wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => "09:00:00"}}
 wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => "09:00:00"}}
 
-{:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "Europe/Berlin", "inc_bata")
-{:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "Indian/Maldives", "inc_bata")
-{:ok, wkord_sc3c} = Workorder.create_workorder_schedule(wkord_sc3, "Australia/Melbourne", "inc_bata")
-{:ok, wkord_sc4c} = Workorder.create_workorder_schedule(wkord_sc4, "Asia/Tokyo", "inc_bata")
-{:ok, wkord_sc5c} = Workorder.create_workorder_schedule(wkord_sc5, "America/New_York", "inc_bata")
+{:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_bata")
+{:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_bata")
+{:ok, wkord_sc3c} = Workorder.create_workorder_schedule(wkord_sc3, "inc_bata")
+{:ok, wkord_sc4c} = Workorder.create_workorder_schedule(wkord_sc4, "inc_bata")
+{:ok, wkord_sc5c} = Workorder.create_workorder_schedule(wkord_sc5, "inc_bata")
 
 org_ut1 = %{"name" => "Electrical", "party_id" => 1}
 org_ut2 = %{"name" => "Mechanical", "party_id" => 1}

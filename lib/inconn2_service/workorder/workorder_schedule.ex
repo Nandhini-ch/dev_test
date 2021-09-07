@@ -7,6 +7,7 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
   schema "workorder_schedules" do
     belongs_to :workorder_template, WorkorderTemplate
     field :asset_id, :integer
+    field :asset_type, :string
     field :config, :map
     field :next_occurrence_date, :date
     field :next_occurrence_time, :time

@@ -7,8 +7,9 @@ defmodule Inconn2Service.Workorder do
   import Ecto.Changeset
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
-  alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.WorkOrderConfig.Task
   alias Inconn2Service.CheckListConfig.CheckList
@@ -56,6 +57,7 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_template(attrs \\ %{}, prefix) do
     %WorkorderTemplate{}
     |> WorkorderTemplate.changeset(attrs)
+    |> update_asset_type(prefix)
     |> status_created()
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
@@ -66,6 +68,19 @@ defmodule Inconn2Service.Workorder do
     |> Repo.insert(prefix: prefix)
   end
 
+  defp update_asset_type(cs, prefix) do
+    asset_category_id = get_field(cs, :asset_category_id)
+    asset_category = Repo.get(AssetCategory, asset_category_id, prefix: prefix)
+    if asset_category != nil do
+      asset_type = asset_category.asset_type
+      case asset_type do
+        "L" -> change(cs, asset_type: "L")
+        "E" -> change(cs, asset_type: "E")
+      end
+    else
+      cs
+    end
+  end
 
   defp validate_asset_category_id(cs, prefix) do
     ac_id = get_change(cs, :asset_category_id, nil)
@@ -175,6 +190,7 @@ defmodule Inconn2Service.Workorder do
   def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix) do
     workorder_template
     |> WorkorderTemplate.changeset(attrs)
+    |> update_asset_type(prefix)
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
@@ -301,14 +317,16 @@ defmodule Inconn2Service.Workorder do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_workorder_schedule(attrs \\ %{}, zone, prefix) do
+  def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
+              |> validate_asset_id(prefix)
               |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
+          zone = get_time_zone(workorder_schedule, prefix)
           Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
           {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
       _ ->
@@ -316,103 +334,146 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp get_time_zone(workorder_schedule, prefix) do
+    asset_id = workorder_schedule.asset_id
+    asset_type = workorder_schedule.asset_type
+    case asset_type do
+      "L" -> site_id = Repo.get(Location, asset_id, prefix: prefix).site_id
+             Repo.get(Site, site_id, prefix: prefix).time_zone
+      "E" -> site_id = Repo.get(Equipment, asset_id, prefix: prefix).site_id
+             Repo.get(Site, site_id, prefix: prefix).time_zone
+    end
+  end
+
+  defp validate_asset_id(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id)
+    asset_id = get_field(cs, :asset_id)
+    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+    if workorder_template != nil and asset_id != nil do
+      asset_category = Repo.get(AssetCategory, workorder_template.asset_category_id, prefix: prefix)
+      asset_type = asset_category.asset_type
+      case asset_type do
+        "L" ->
+          case Repo.get(Location, asset_id, prefix: prefix) != nil do
+            true -> change(cs, asset_type: "L")
+            false -> add_error(cs, :asset_id, "Asset ID is invalid")
+          end
+        "E" ->
+          case Repo.get(Equipment, asset_id, prefix: prefix) != nil do
+            true -> change(cs, asset_type: "E")
+            false -> add_error(cs, :asset_id, "Asset ID is invalid")
+          end
+        end
+      else
+        cs
+      end
+  end
+
   defp validate_config(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
     config = get_field(cs, :config)
-    repeat_unit = get_workorder_template!(workorder_template_id, prefix).repeat_unit
-    case repeat_unit do
-      "H" ->
-        if Map.keys(config) == ["time"] do
-          cs
-        else
-          add_error(cs, :config, "Config is invalid")
+    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+    if workorder_template != nil do
+      repeat_unit = workorder_template.repeat_unit
+      case repeat_unit do
+        "H" ->
+          if Map.keys(config) == ["time"] do
+            cs
+          else
+            add_error(cs, :config, "Config is invalid")
+          end
+        "D" ->
+          if Map.keys(config) == ["date", "time"] do
+            cs
+          else
+            add_error(cs, :config, "Config is invalid")
+          end
+        "W" ->
+          if Map.keys(config) == ["day", "time"] do
+            cs
+          else
+            add_error(cs, :config, "Config is invalid")
+          end
+        "M" ->
+          if Map.keys(config) == ["day", "time"] do
+            cs
+          else
+            add_error(cs, :config, "Config is invalid")
+          end
+        "Y" ->
+          if Map.keys(config) == ["day", "month", "time"] do
+            cs
+          else
+            add_error(cs, :config, "Config is invalid")
+          end
         end
-      "D" ->
-        if Map.keys(config) == ["date", "time"] do
-          cs
-        else
-          add_error(cs, :config, "Config is invalid")
-        end
-      "W" ->
-        if Map.keys(config) == ["day", "time"] do
-          cs
-        else
-          add_error(cs, :config, "Config is invalid")
-        end
-      "M" ->
-        if Map.keys(config) == ["day", "time"] do
-          cs
-        else
-          add_error(cs, :config, "Config is invalid")
-        end
-      "Y" ->
-        if Map.keys(config) == ["day", "month", "time"] do
-          cs
-        else
-          add_error(cs, :config, "Config is invalid")
-        end
-    end
+      else
+        cs
+      end
   end
 
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
     config = get_field(cs, :config)
-    workorder_template = get_workorder_template!(workorder_template_id, prefix)
-    applicable_start = workorder_template.applicable_start
-    repeat_unit = workorder_template.repeat_unit
-    case repeat_unit do
-      "H" ->
-        time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-        time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-        date = applicable_start
-        change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-      "D" ->
-        time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-        time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-        date = Enum.map(String.split(config["date"], "-"), fn x -> String.to_integer(x) end)
-        date = Date.new!(Enum.at(date,0), Enum.at(date,1), Enum.at(date,2))
-        change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-      "W" ->
-        time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-        time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-        day = Date.day_of_week(applicable_start)
-        if config["day"] >= day do
-          day_add = config["day"] - day
-          date = Date.add(applicable_start, day_add)
+    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+    if workorder_template != nil do
+      applicable_start = workorder_template.applicable_start
+      repeat_unit = workorder_template.repeat_unit
+      case repeat_unit do
+        "H" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          date = applicable_start
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        else
-          day_add = 7 + config["day"] - day
-          date = Date.add(applicable_start,day_add)
+        "D" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          date = Enum.map(String.split(config["date"], "-"), fn x -> String.to_integer(x) end)
+          date = Date.new!(Enum.at(date,0), Enum.at(date,1), Enum.at(date,2))
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        end
-      "M" ->
-        time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-        time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-        if config["day"] >= applicable_start.day do
-          date = Date.new!(applicable_start.year, applicable_start.month, config["day"])
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        else
-          case applicable_start.month do
-            12 ->
-              date = Date.new!(applicable_start.year + 1, 1, config["day"])
+        "W" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          day = Date.day_of_week(applicable_start)
+          if config["day"] >= day do
+            day_add = config["day"] - day
+            date = Date.add(applicable_start, day_add)
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+          else
+            day_add = 7 + config["day"] - day
+            date = Date.add(applicable_start,day_add)
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+          end
+        "M" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          if config["day"] >= applicable_start.day do
+            date = Date.new!(applicable_start.year, applicable_start.month, config["day"])
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+          else
+            case applicable_start.month do
+              12 ->
+                date = Date.new!(applicable_start.year + 1, 1, config["day"])
+                change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+              _ ->
+                date = Date.new!(applicable_start.year, applicable_start.month + 1, config["day"])
+                change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            end
+          end
+        "Y" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          date = Date.new!(applicable_start.year, config["month"], config["day"])
+          if Date.compare(date, applicable_start) == :lt do
+              date = Date.new!(applicable_start.year + 1, config["month"], config["day"])
               change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-            _ ->
-              date = Date.new!(applicable_start.year, applicable_start.month + 1, config["day"])
+          else
               change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
           end
         end
-      "Y" ->
-        time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-        time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-        date = Date.new!(applicable_start.year, config["month"], config["day"])
-        if Date.compare(date, applicable_start) == :lt do
-            date = Date.new!(applicable_start.year + 1, config["month"], config["day"])
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        else
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        end
-
-    end
+      else
+        cs
+      end
   end
 
   @doc """
@@ -428,10 +489,21 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, prefix) do
-    workorder_schedule
-    |> WorkorderSchedule.changeset(attrs)
-    |> validate_config(prefix)
-    |> Repo.update(prefix: prefix)
+    result = workorder_schedule
+              |> WorkorderSchedule.changeset(attrs)
+              |> validate_asset_id(prefix)
+              |> validate_config(prefix)
+              |> calculate_next_occurrence(prefix)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, workorder_schedule} ->
+          zone = get_time_zone(workorder_schedule, prefix)
+          work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule.id)
+          Common.update_work_scheduler(work_scheduler.id, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+          {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+      _ ->
+        result
+    end
   end
 
   def update_workorder_schedule_and_scheduler(id, prefix, zone) do

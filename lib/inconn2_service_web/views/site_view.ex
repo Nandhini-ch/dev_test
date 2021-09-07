@@ -19,6 +19,7 @@ defmodule Inconn2ServiceWeb.SiteView do
       area: site.area,
       latitude: site.latitude,
       longitude: site.longitude,
+      time_zone: site.time_zone,
       fencing_radius: site.fencing_radius
     }
   end

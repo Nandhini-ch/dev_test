@@ -13,6 +13,7 @@ defmodule Inconn2Service.AssetConfig.Site do
     field :name, :string
     field :fencing_radius, :float
     field :site_code, :string
+    field :time_zone, :string
     belongs_to :party, Party
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
@@ -32,9 +33,10 @@ defmodule Inconn2Service.AssetConfig.Site do
       :longitude,
       :fencing_radius,
       :site_code,
-      :party_id
+      :party_id,
+      :time_zone
     ])
-    |> validate_required([:name, :description, :site_code, :party_id])
+    |> validate_required([:name, :description, :site_code, :party_id, :time_zone])
     |> cast_embed(:address)
     |> cast_embed(:contact)
     |> assoc_constraint(:party)

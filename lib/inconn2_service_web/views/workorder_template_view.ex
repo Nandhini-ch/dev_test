@@ -14,6 +14,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
     %{
       id: workorder_template.id,
       asset_category_id: workorder_template.asset_category_id,
+      asset_type: workorder_template.asset_type,
       name: workorder_template.name,
       task_list_id: workorder_template.task_list_id,
       tasks: workorder_template.tasks,

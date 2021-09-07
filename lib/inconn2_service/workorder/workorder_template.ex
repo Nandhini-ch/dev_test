@@ -6,6 +6,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   schema "workorder_templates" do
     belongs_to :asset_category, AssetCategory
     field :name, :string
+    field :asset_type, :string
     field :task_list_id, :integer
     field :tasks, {:array, :map}
     field :estimated_time, :integer

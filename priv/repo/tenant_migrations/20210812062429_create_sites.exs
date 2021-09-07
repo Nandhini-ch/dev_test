@@ -12,6 +12,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateSites do
       add :longitude, :float
       add :fencing_radius, :float
       add :site_code, :string
+      add :time_zone, :string
       add :party_id, references(:parties, on_delete: :nothing)
       add :address, :jsonb
       add :contact, :jsonb

@@ -4,6 +4,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTemplates do
   def change do
     create table(:workorder_templates) do
       add :asset_category_id, references(:asset_categories, on_delete: :nothing)
+      add :asset_type, :string
       add :name, :string
       add :task_list_id, :integer
       add :tasks, {:array, :map}
