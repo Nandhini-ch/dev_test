@@ -11,6 +11,29 @@ defmodule Inconn2ServiceWeb.UserController do
     render(conn, "index.json", users: users)
   end
 
+  def show(conn, %{"username" => username}) do
+    # username = Map.get(user_params, "username", nil)
+
+    if username != nil do
+      user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", user: user)
+    else
+      send_resp(conn, :no_content, "")
+    end
+  end
+
+  def user_by_email(conn, %{"username" => username}) do
+    # username = Map.get(user_params, "username", nil)
+
+    if username != nil do
+      user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", user: user)
+    else
+      render(conn, "failure.json", %{})
+      # send_resp(conn, :no_content, "")
+    end
+  end
+
   def create(conn, %{"user" => user_params}) do
     with {:ok, %User{} = user} <- Staff.create_user(user_params) do
       conn
@@ -18,11 +41,6 @@ defmodule Inconn2ServiceWeb.UserController do
       |> put_resp_header("user", Routes.user_path(conn, :show, user))
       |> render("show.json", user: user)
     end
-  end
-
-  def show(conn, %{"id" => id}) do
-    user = Staff.get_user!(id, conn.assigns.sub_domain_prefix)
-    render(conn, "show.json", user: user)
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do
