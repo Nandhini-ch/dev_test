@@ -20,9 +20,15 @@ defmodule Inconn2ServiceWeb.UserController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    user = Staff.get_user!(id, conn.assigns.sub_domain_prefix)
-    render(conn, "show.json", user: user)
+  def show(conn, %{"user" => user_params}) do
+    username = Map.get(user_params, "username", nil)
+
+    if username != nil do
+      user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", user: user)
+    else
+      send_resp(conn, :no_content, "")
+    end
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do
