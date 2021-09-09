@@ -18,7 +18,8 @@ defmodule Inconn2ServiceWeb.OrgUnitView do
     %{
       id: org_unit.id,
       name: org_unit.name,
-      party_id: org_unit.party_id
+      party_id: org_unit.party_id,
+      parent_id: List.last(org_unit.path)
     }
   end
 
@@ -27,6 +28,7 @@ defmodule Inconn2ServiceWeb.OrgUnitView do
       id: org_unit.id,
       name: org_unit.name,
       party_id: org_unit.party_id,
+      parent_id: List.last(org_unit.path),
       children: render_many(org_unit.children, OrgUnitView, "org_unit_node.json")
     }
   end

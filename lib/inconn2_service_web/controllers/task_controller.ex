@@ -7,8 +7,14 @@ defmodule Inconn2ServiceWeb.TaskController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    tasks = WorkOrderConfig.list_tasks(conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", tasks: tasks)
+    case Map.get(conn.query_params, "label", nil) do
+      nil ->
+        tasks = WorkOrderConfig.list_tasks(conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", tasks: tasks)
+      label ->
+        tasks = WorkOrderConfig.search_tasks(label, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", tasks: tasks)
+    end
   end
 
   def create(conn, %{"task" => task_params}) do

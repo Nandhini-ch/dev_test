@@ -22,6 +22,16 @@ defmodule Inconn2Service.WorkOrderConfig do
     Repo.all(Task, prefix: prefix)
   end
 
+  def search_tasks(label, prefix) do
+    if String.length(label) < 3 do
+      []
+    else
+      search_text = label <> "%"
+
+      from(t in Task, where: ilike(t.label, ^search_text), order_by: t.label)
+      |> Repo.all(prefix: prefix)
+    end
+  end
   @doc """
   Gets a single task.
 

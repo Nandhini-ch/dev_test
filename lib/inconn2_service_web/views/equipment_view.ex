@@ -21,7 +21,7 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       code: equipment.equipment_code,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
-      parent_id: equipment.parent_id
+      parent_id: List.last(equipment.path)
     }
   end
 
