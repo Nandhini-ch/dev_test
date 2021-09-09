@@ -234,8 +234,23 @@ defmodule Inconn2Service.Common do
   end
 
   def delete_work_scheduler(workorder_schedule_id) do
-    work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
+    work_scheduler = Repo.get_by(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
     Repo.delete(work_scheduler)
+  end
+
+  def delete_work_scheduler_cs(workorder_schedule_id, attrs \\ %{}) do
+    work_scheduler = Repo.get_by(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
+    if work_scheduler != nil do
+      WorkScheduler.changeset(work_scheduler, attrs)
+    else
+      WorkScheduler.changeset(%WorkScheduler{}, attrs)
+    end
+  end
+
+  def insert_work_scheduler_cs(attrs \\ %{}) do
+    %WorkScheduler{}
+      |> WorkScheduler.changeset(attrs)
+      |> calculate_utc_datetime
   end
 
   def change_work_scheduler(%WorkScheduler{} = work_scheduler, attrs \\ %{}) do

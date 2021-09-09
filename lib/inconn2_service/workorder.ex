@@ -5,6 +5,7 @@ defmodule Inconn2Service.Workorder do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  alias Ecto.Multi
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Common.WorkScheduler
@@ -507,16 +508,25 @@ defmodule Inconn2Service.Workorder do
   end
 
   def update_workorder_schedule_and_scheduler(id, prefix, zone) do
-        workorder_schedule = get_workorder_schedule!(id, prefix)
-        {:ok, workorder_schedule} = workorder_schedule
-                                    |> WorkorderSchedule.changeset(%{})
-                                    |> update_next_occurrence(prefix)
-                                    |> Repo.update(prefix: prefix)
-        Common.delete_work_scheduler(workorder_schedule.id)
-        if workorder_schedule.next_occurrence_date != nil do
-          Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
-        end
+    workorder_schedule = get_workorder_schedule!(id, prefix)
+    workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
+    {:ok, workorder_schedule} = Multi.new()
+                                |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
+                                |> Repo.transaction(prefix: prefix)
+    multi = Multi.new()
+            |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id))
+
+    multi_insert(workorder_schedule, prefix, zone, multi)
+    |> Repo.transaction()
   end
+  defp multi_insert(workorder_schedule, prefix, zone, multi) do
+    if workorder_schedule.next_occurrence.next_occurrence_date != nil do
+      Multi.insert(multi, :create, Common.insert_work_scheduler_cs(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.next_occurrence.id, "zone" => zone}))
+    else
+      multi
+    end
+  end
+
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
@@ -529,48 +539,58 @@ defmodule Inconn2Service.Workorder do
     repeat_unit = workorder_template.repeat_unit
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     next_occurrence_time = get_field(cs, :next_occurrence_time)
-    case repeat_unit do
-      "H" ->
-        time = Time.add(next_occurrence_time, repeat_every*3600) |> Time.truncate(:second)
-        date = next_occurrence_date
-        if time >= time_start and time <= time_end do
+    if next_occurrence_date != nil and next_occurrence_time != nil do
+      case repeat_unit do
+        "H" ->
+          time = Time.add(next_occurrence_time, repeat_every*3600) |> Time.truncate(:second)
+          date = next_occurrence_date
+          if time >= time_start and time <= time_end do
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_before_applicable_date(applicable_end)
+          else
+            time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+            time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+            date = Date.add(next_occurrence_date, 1)
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_before_applicable_date(applicable_end)
+          end
+        "D" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          date = Date.add(next_occurrence_date, repeat_every)
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-           |> check_before_applicable_date(applicable_end)
-        else
-          time = Time.new!(config["time"], 0, 0)
-          date = Date.add(next_occurrence_date, 1)
+          |> check_before_applicable_date(applicable_end)
+        "W" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          date = Date.add(next_occurrence_date, repeat_every*7)
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-           |> check_before_applicable_date(applicable_end)
-        end
-      "D" ->
-        time = Time.new!(config["time"], 0, 0)
-        date = Date.add(next_occurrence_date, repeat_every)
-        change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-         |> check_before_applicable_date(applicable_end)
-      "W" ->
-        time = Time.new!(config["time"], 0, 0)
-        date = Date.add(next_occurrence_date, repeat_every*7)
-        change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-         |> check_before_applicable_date(applicable_end)
-      "M" ->
-        time = Time.new!(config["time"], 0, 0)
-        month = next_occurrence_date.month + repeat_every
-        if month > 12 do
-          date = Date.new!(next_occurrence_date.year + 1, month - 12, config["day"])
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-           |> check_before_applicable_date(applicable_end)
-        else
-          date = Date.new!(next_occurrence_date.year, month, config["day"])
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-           |> check_before_applicable_date(applicable_end)
-        end
-      "Y" ->
-          time = Time.new!(config["time"], 0, 0)
-          date = Date.new!(next_occurrence_date.year + repeat_every, config["month"], config["day"])
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-           |> check_before_applicable_date(applicable_end)
+          |> check_before_applicable_date(applicable_end)
+        "M" ->
+          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          month = next_occurrence_date.month + repeat_every
+          if month > 12 do
+            date = Date.new!(next_occurrence_date.year + 1, month - 12, config["day"])
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_before_applicable_date(applicable_end)
+          else
+            date = Date.new!(next_occurrence_date.year, month, config["day"])
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_before_applicable_date(applicable_end)
+          end
+        "Y" ->
+            time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
+            time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+            date = Date.new!(next_occurrence_date.year + repeat_every, config["month"], config["day"])
+            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_before_applicable_date(applicable_end)
+      end
+    else
+      cs
     end
   end
+
   defp check_before_applicable_date(cs, applicable_end) do
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     case Date.compare(next_occurrence_date, applicable_end) == :gt do
