@@ -6,8 +6,13 @@ defmodule Inconn2Service.Account.Auth do
     user = Staff.get_user_by_email(username, prefix)
 
     case IO.inspect(check_password(password, user)) do
-      {:error, _msg} -> {:error, :invalid_credentials}
-      {:ok, user} -> {:ok, user}
+      {:error, msg} ->
+        # IO.inspect(msg)
+        # {:error, :invalid_credentials}
+        {:error, msg}
+
+      {:ok, user} ->
+        {:ok, user}
     end
   end
 

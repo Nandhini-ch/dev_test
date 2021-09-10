@@ -8,11 +8,12 @@ defmodule Inconn2ServiceWeb.SessionController do
     case Auth.authenticate(username, password, prefix) do
       {:ok, user} ->
         conn = Inconn2Service.Guardian.Plug.sign_in(conn, user)
-        assign(conn, :user, user)
         render(conn, "success.json", %{token: Inconn2Service.Guardian.Plug.current_token(conn)})
 
-      {:error, _} ->
-        render(conn, "failure.json", %{})
+      {:error, msg} ->
+        # send_resp(conn, :no_content, "")
+        # render(conn, "failure.json", %{})
+        render(conn, "failure.json", %{error: msg})
     end
   end
 end

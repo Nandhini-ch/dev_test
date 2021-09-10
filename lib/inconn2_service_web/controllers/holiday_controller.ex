@@ -21,7 +21,7 @@ defmodule Inconn2ServiceWeb.HolidayController do
            Settings.create_holiday(holiday_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.holiday_path(conn, :show, holiday))
+      |> put_resp_header("holiday", Routes.holiday_path(conn, :show, holiday))
       |> render("show.json", holiday: holiday)
     end
   end

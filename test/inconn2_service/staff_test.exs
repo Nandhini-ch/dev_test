@@ -203,4 +203,65 @@ defmodule Inconn2Service.StaffTest do
       assert %Ecto.Changeset{} = Staff.change_user(user)
     end
   end
+
+  describe "roles" do
+    alias Inconn2Service.Staff.Role
+
+    @valid_attrs %{code: "some code", name: "some name"}
+    @update_attrs %{code: "some updated code", name: "some updated name"}
+    @invalid_attrs %{code: nil, name: nil}
+
+    def role_fixture(attrs \\ %{}) do
+      {:ok, role} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Staff.create_role()
+
+      role
+    end
+
+    test "list_roles/0 returns all roles" do
+      role = role_fixture()
+      assert Staff.list_roles() == [role]
+    end
+
+    test "get_role!/1 returns the role with given id" do
+      role = role_fixture()
+      assert Staff.get_role!(role.id) == role
+    end
+
+    test "create_role/1 with valid data creates a role" do
+      assert {:ok, %Role{} = role} = Staff.create_role(@valid_attrs)
+      assert role.code == "some code"
+      assert role.name == "some name"
+    end
+
+    test "create_role/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Staff.create_role(@invalid_attrs)
+    end
+
+    test "update_role/2 with valid data updates the role" do
+      role = role_fixture()
+      assert {:ok, %Role{} = role} = Staff.update_role(role, @update_attrs)
+      assert role.code == "some updated code"
+      assert role.name == "some updated name"
+    end
+
+    test "update_role/2 with invalid data returns error changeset" do
+      role = role_fixture()
+      assert {:error, %Ecto.Changeset{}} = Staff.update_role(role, @invalid_attrs)
+      assert role == Staff.get_role!(role.id)
+    end
+
+    test "delete_role/1 deletes the role" do
+      role = role_fixture()
+      assert {:ok, %Role{}} = Staff.delete_role(role)
+      assert_raise Ecto.NoResultsError, fn -> Staff.get_role!(role.id) end
+    end
+
+    test "change_role/1 returns a role changeset" do
+      role = role_fixture()
+      assert %Ecto.Changeset{} = Staff.change_role(role)
+    end
+  end
 end

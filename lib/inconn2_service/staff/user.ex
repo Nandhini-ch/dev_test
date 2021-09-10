@@ -3,30 +3,33 @@ defmodule Inconn2Service.Staff.User do
   import Ecto.Changeset
   import EctoCommons.EmailValidator
   import Comeonin
+  alias Inconn2Service.AssetConfig.Party
 
   schema "users" do
     field :password, :string, virtual: true
     field :role_id, {:array, :integer}
     field :username, :string
     field(:password_hash, :string)
-
+    belongs_to :party, Party
     timestamps()
   end
 
+  # belongs_to :role, Role
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :role_id])
-    |> validate_required([:username, :password, :role_id])
+    |> cast(attrs, [:username, :password, :role_id, :party_id])
+    |> validate_required([:username, :password, :role_id, :party_id])
     |> validate_email(:username, checks: [:html_input, :pow])
     # |> validate_length(:password, min: 6, max: 12)
     #  |> validate_confirmation(:password,
     #   message: "does not match password" )
     |> unique_constraint(:username)
     |> hash_password()
+    |> assoc_constraint(:party)
   end
 
-  defp hash_password(changeset) do
+  def hash_password(changeset) do
     if password = get_change(changeset, :password) do
       pass_hash_map = Argon2.add_hash(password)
       pass_hash = Map.get(pass_hash_map, :password_hash)

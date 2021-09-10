@@ -48,8 +48,7 @@ defmodule Inconn2Service.MixProject do
       {:ecto_commons, "~> 0.3.3"},
       {:comeonin, "~> 5.1.2"},
       {:argon2_elixir, "~> 2.0"},
-      {:guardian, "~> 1.0"},
-      {:poison, "~> 5.0"}
+      {:guardian, "~> 1.0"}
     ]
   end
 
@@ -62,7 +61,14 @@ defmodule Inconn2Service.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs", "run priv/repo/seeds_party_site.exs", "run priv/repo/seeds_holiday.exs", "run priv/repo/seed_create_employee_user.exs"],
+      "ecto.setup": [
+        "ecto.create",
+        "ecto.migrate",
+        "run priv/repo/seeds.exs",
+        "run priv/repo/seeds_party_site.exs",
+        "run priv/repo/seeds_holiday.exs",
+        "run priv/repo/seed_create_employee_user.exs"
+      ],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]

@@ -16,12 +16,13 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
       add :has_login_credentials, :boolean, default: false, null: false
       add :reports_to, :string
       add :org_unit_id, references(:org_units, on_delete: :nothing)
-
+      add :party_id, references(:parties, on_delete: :nothing)
       timestamps()
     end
 
     create index(:employees, [:org_unit_id])
     create unique_index(:employees, [:employee_id])
     create unique_index(:employees, [:email])
+    create index(:employees, [:party_id])
   end
 end

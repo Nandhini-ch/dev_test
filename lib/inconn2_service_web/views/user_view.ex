@@ -11,9 +11,12 @@ defmodule Inconn2ServiceWeb.UserView do
   end
 
   def render("user.json", %{user: user}) do
-    %{id: user.id,
+    %{
+      id: user.id,
       username: user.username,
       password: user.password,
-      role_id: user.role_id}
+      party_id: user.party_id,
+      role_id: user.role_id
+    }
   end
 end

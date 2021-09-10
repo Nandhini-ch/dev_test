@@ -68,6 +68,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/employees", EmployeeController, except: [:new, :edit]
     resources "/users", UserController, except: [:new, :edit]
-    get "/users/:username/user_by_email", UserController, :user_by_email
+    get "/users/:username/current_user", UserController, :current_user
+    resources "/roles", RoleController, except: [:new, :edit]
   end
 end

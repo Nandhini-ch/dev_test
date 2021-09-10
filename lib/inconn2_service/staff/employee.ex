@@ -3,6 +3,7 @@ defmodule Inconn2Service.Staff.Employee do
   import Ecto.Changeset
   alias Inconn2Service.Staff.OrgUnit
   import EctoCommons.EmailValidator
+  alias Inconn2Service.AssetConfig.Party
 
   schema "employees" do
     field :employee_id, :string
@@ -18,6 +19,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :last_name, :string
     field :reports_to, :string
     belongs_to :org_unit, OrgUnit
+    belongs_to :party, Party
 
     timestamps()
   end
@@ -38,7 +40,8 @@ defmodule Inconn2Service.Staff.Employee do
       :salary,
       :has_login_credentials,
       :reports_to,
-      :org_unit_id
+      :org_unit_id,
+      :party_id
     ])
     |> validate_required([
       :first_name,
@@ -48,7 +51,8 @@ defmodule Inconn2Service.Staff.Employee do
       :employee_id,
       :mobile_no,
       :has_login_credentials,
-      :org_unit_id
+      :org_unit_id,
+      :party_id
     ])
     |> validate_email(:email, checks: [:html_input, :pow])
     |> unique_constraint(:employee_id)
@@ -56,5 +60,6 @@ defmodule Inconn2Service.Staff.Employee do
     #  |> unique_constraint(:name, name: :index_holidays_dates)
     # unique_constraint(:name, name: :index_shifts_dates)
     |> assoc_constraint(:org_unit)
+    |> assoc_constraint(:party)
   end
 end

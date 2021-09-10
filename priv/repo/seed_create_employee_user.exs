@@ -9,7 +9,8 @@ employee1 = %{
   "first_name" => "Rama",
   "last_name" =>  "Janma boomi",
   "has_login_credentials" => true,
-  "org_unit_id" =>  1
+  "org_unit_id" =>  1,
+  "party_id" => 1
 }
 emp1 =
 case (IO.inspect(Staff.create_employee(employee1,"inc_bata"))) do
@@ -31,7 +32,8 @@ employee2 = %{
   "first_name" => "Rebecca",
   "last_name" =>  "Clerkman",
   "has_login_credentials" => true,
-  "org_unit_id" =>  1
+  "org_unit_id" =>  1,
+  "party_id" => 1
 }
 
 emp2 =
@@ -51,7 +53,8 @@ IO.puts("Second employee done $$$$$$$$$$$$$$$$$$$$")
     "first_name" => "Rama",
     "last_name" =>  "Janma boomi",
     "has_login_credentials" => true,
-    "org_unit_id" =>  1
+    "org_unit_id" =>  1,
+    "party_id" => 1
   }
 
 pc =

@@ -511,10 +511,16 @@ defmodule Inconn2Service.Staff do
   end
 
   def get_user_by_email(email, prefix) do
+    # pass_hash_map = Argon2.add_hash(password)
+    # pass_hash = Map.get(pass_hash_map, :password_hash)
+
     query =
       from(u in User,
         where: u.username == ^email
       )
+
+    #    and
+    #    u.password_hash == ^pass_hash
 
     IO.inspect(Repo.one(query, prefix: prefix))
 
@@ -554,4 +560,100 @@ defmodule Inconn2Service.Staff do
   # defp check_password(user, password) do
   # Argon2.check_pass(password, user.password_hash)
   # end
+
+  alias Inconn2Service.Staff.Role
+
+  @doc """
+  Returns the list of roles.
+
+  ## Examples
+
+      iex> list_roles()
+      [%Role{}, ...]
+
+  """
+  def list_roles do
+    Repo.all(Role)
+  end
+
+  @doc """
+  Gets a single role.
+
+  Raises `Ecto.NoResultsError` if the Role does not exist.
+
+  ## Examples
+
+      iex> get_role!(123)
+      %Role{}
+
+      iex> get_role!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_role!(id), do: Repo.get!(Role, id)
+
+  @doc """
+  Creates a role.
+
+  ## Examples
+
+      iex> create_role(%{field: value})
+      {:ok, %Role{}}
+
+      iex> create_role(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_role(attrs \\ %{}) do
+    %Role{}
+    |> Role.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a role.
+
+  ## Examples
+
+      iex> update_role(role, %{field: new_value})
+      {:ok, %Role{}}
+
+      iex> update_role(role, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_role(%Role{} = role, attrs) do
+    role
+    |> Role.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a role.
+
+  ## Examples
+
+      iex> delete_role(role)
+      {:ok, %Role{}}
+
+      iex> delete_role(role)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_role(%Role{} = role) do
+    Repo.delete(role)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking role changes.
+
+  ## Examples
+
+      iex> change_role(role)
+      %Ecto.Changeset{data: %Role{}}
+
+  """
+  def change_role(%Role{} = role, attrs \\ %{}) do
+    Role.changeset(role, attrs)
+  end
 end

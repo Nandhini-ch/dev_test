@@ -5,7 +5,7 @@ defmodule Inconn2ServiceWeb.SessionView do
     %{result: "success", token: token}
   end
 
-  def render("failure.json", _params) do
-    %{result: "failed"}
+  def render("failure.json", %{error: params}) do
+    %{result: params}
   end
 end
