@@ -19,4 +19,8 @@ defmodule Inconn2ServiceWeb.UserView do
       role_id: user.role_id
     }
   end
+
+  def render("error.json", %{error: error_message}) do
+    %{errors: %{detail: [error_message]}}
+  end
 end

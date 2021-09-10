@@ -22,14 +22,21 @@ defmodule Inconn2ServiceWeb.UserController do
     end
   end
 
-  def current_user(conn, %{"username" => username}) do
-    # username = Map.get(user_params, "username", nil)
+  def current_user(conn, %{"token" => token}) do
+    IO.inspect(token)
+    username = conn.assigns.current_user.username
+
+    IO.inspect(username)
 
     if username != nil do
+      IO.puts("inside not null")
       user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", user: user)
     else
-      render(conn, "failure.json", %{result: "username is blank"})
+      conn
+      |> put_status(401)
+
+      render(conn, "error.json", %{error: "username cannot be blank"})
       # send_resp(conn, :no_content, "")
     end
   end
