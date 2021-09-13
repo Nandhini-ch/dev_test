@@ -29,10 +29,7 @@ defmodule Inconn2ServiceWeb.UserController do
     IO.inspect(username)
 
     if username != nil do
-      IO.puts("inside not null get_user_assoc &&&&&&&&&")
-
       user = IO.inspect(Staff.get_user_assoc(username, conn.assigns.sub_domain_prefix))
-      IO.inspect(user)
       render(conn, "showassoc.json", user: user)
     else
       conn

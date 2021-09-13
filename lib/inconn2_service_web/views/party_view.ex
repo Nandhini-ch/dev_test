@@ -11,17 +11,14 @@ defmodule Inconn2ServiceWeb.PartyView do
   end
 
   def render("party.json", %{party: party}) do
-    %{id: party.id,
-      org_name: party.org_name,
+    %{
+      id: party.id,
+      company_name: party.company_name,
       party_type: party.party_type,
       contract_start_date: party.contract_start_date,
       contract_end_date: party.contract_end_date,
-      service_type: party.service_type,
       licensee: party.licensee,
-      service_id: party.service_id,
-      license_no: party.license_no,
-      preferred_service: party.preferred_service,
-      rates_per_hour: party.rates_per_hour,
-      type_of_maintenance: party.type_of_maintenance}
+      license_no: party.license_no
+    }
   end
 end

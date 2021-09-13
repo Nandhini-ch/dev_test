@@ -548,7 +548,15 @@ defmodule Inconn2Service.Staff do
         #  on: user.role_id in role.id,
         where: user.username == ^email,
         select: %{
-          current_party: %{party_type: party.party_type, licensee: party.licensee},
+          current_party: %{
+            id: party.id,
+            company_name: party.company_name,
+            party_type: party.party_type,
+            license_no: party.license_no,
+            licensee: party.licensee,
+            contract_start_date: party.contract_start_date,
+            contract_end_date: party.contract_end_date
+          },
           current_user: user
           #   current_role: role
         }
