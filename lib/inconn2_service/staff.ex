@@ -11,6 +11,8 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Staff.OrgUnit
   alias Inconn2Service.Util.HierarchyManager
   import Comeonin
+  alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.Staff.Role
 
   @doc """
   Returns the list of org_units.
@@ -527,6 +529,36 @@ defmodule Inconn2Service.Staff do
     # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
   end
 
+  def get_user_assoc(email, prefix) do
+    # pass_hash_map = Argon2.add_hash(password)
+    # pass_hash = Map.get(pass_hash_map, :password_hash)
+
+    # query =
+    # from(u in User,
+    #  where: u.username == ^email
+    # )
+
+    #    and
+    #    u.password_hash == ^pass_hash
+    query =
+      from(user in User,
+        join: party in Party,
+        on: user.party_id == party.id,
+        #  join: role in Role,
+        #  on: user.role_id in role.id,
+        where: user.username == ^email,
+        select: %{
+          current_party: %{party_type: party.party_type, licensee: party.licensee},
+          current_user: user
+          #   current_role: role
+        }
+      )
+
+    IO.inspect(query)
+
+    IO.inspect(Repo.one(query, prefix: prefix))
+  end
+
   def change_user_password(email, password, prefix) do
     query =
       from(u in User,
@@ -604,10 +636,10 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_role(attrs \\ %{}) do
+  def create_role(attrs \\ %{}, prefix) do
     %Role{}
     |> Role.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -622,10 +654,10 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_role(%Role{} = role, attrs) do
+  def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -640,8 +672,8 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_role(%Role{} = role) do
-    Repo.delete(role)
+  def delete_role(%Role{} = role, prefix) do
+    Repo.delete(role, prefix: prefix)
   end
 
   @doc """

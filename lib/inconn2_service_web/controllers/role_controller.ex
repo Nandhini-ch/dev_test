@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   end
 
   def create(conn, %{"role" => role_params}) do
-    with {:ok, %Role{} = role} <- Staff.create_role(role_params) do
+    with {:ok, %Role{} = role} <- Staff.create_role(role_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> put_resp_header("Role", Routes.role_path(conn, :show, role))
@@ -28,7 +28,8 @@ defmodule Inconn2ServiceWeb.RoleController do
   def update(conn, %{"id" => id, "role" => role_params}) do
     role = Staff.get_role!(id)
 
-    with {:ok, %Role{} = role} <- Staff.update_role(role, role_params) do
+    with {:ok, %Role{} = role} <-
+           Staff.update_role(role, role_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", role: role)
     end
   end
@@ -36,7 +37,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   def delete(conn, %{"id" => id}) do
     role = Staff.get_role!(id)
 
-    with {:ok, %Role{}} <- Staff.delete_role(role) do
+    with {:ok, %Role{}} <- Staff.delete_role(role, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

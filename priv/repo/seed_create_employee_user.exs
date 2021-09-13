@@ -46,6 +46,52 @@ emp2 =
 IO.inspect(emp2)
 IO.puts("Second employee done $$$$$$$$$$$$$$$$$$$$")
 
+roles1 = %{
+  "code" => "EMP",
+  "name" => "Employee"
+}
+
+roles2 = %{
+  "code" => "MGR",
+  "name" => "Manager"
+}
+
+roles3 = %{
+  "code" => "ADM",
+  "name" => "Admin"
+}
+
+rc1 =
+  case IO.inspect(Staff.create_role(roles1, "inc_bata")) do
+    {:ok, role_created} -> IO.inspect(role_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
+
+  IO.inspect(rc1)
+IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
+
+rc2 =
+  case IO.inspect(Staff.create_role(roles2, "inc_bata")) do
+    {:ok, role_created} -> IO.inspect(role_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
+
+  IO.inspect(rc2)
+IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
+
+rc3 =
+  case IO.inspect(Staff.create_role(roles3, "inc_bata")) do
+    {:ok, role_created} -> IO.inspect(role_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
+
+  IO.inspect(rc3)
+IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
+
+
   user1 = %{
     "password" => "hello123",
     "role_id" => [1,2],
