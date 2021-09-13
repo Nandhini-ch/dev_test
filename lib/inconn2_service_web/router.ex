@@ -22,6 +22,7 @@ defmodule Inconn2ServiceWeb.Router do
 
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
+    get "/sessions/current_user", SessionController, :current_user
     resources "/sites", SiteController, except: [:new, :edit]
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
