@@ -16,27 +16,9 @@ defmodule Inconn2ServiceWeb.UserController do
 
     if username != nil do
       user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
-      render(conn, "show.json", user: user) 
+      render(conn, "show.json", user: user)
     else
       send_resp(conn, :no_content, "")
-    end
-  end
-
-  def current_user(conn, %{"token" => token}) do
-    IO.inspect(token)
-    username = conn.assigns.current_user.username
-
-    IO.inspect(username)
-
-    if username != nil do
-      user = IO.inspect(Staff.get_user_assoc(username, conn.assigns.sub_domain_prefix))
-      render(conn, "showassoc.json", user: user)
-    else
-      conn
-      |> put_status(401)
-
-      render(conn, "error.json", %{error: "username cannot be blank"})
-      # send_resp(conn, :no_content, "")
     end
   end
 

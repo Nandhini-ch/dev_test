@@ -22,7 +22,6 @@ defmodule Inconn2ServiceWeb.Router do
 
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
-    get "/sessions/current_user", SessionController, :current_user
     resources "/sites", SiteController, except: [:new, :edit]
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
@@ -72,8 +71,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/employees", EmployeeController, except: [:new, :edit]
     resources "/users", UserController, except: [:new, :edit]
-    get "/current_user/:token", UserController, :current_user
-    # get "/users/:username/current_user", UserController, :current_user
     resources "/roles", RoleController, except: [:new, :edit]
+    get "/sessions/current_user", SessionController, :current_user
   end
 end

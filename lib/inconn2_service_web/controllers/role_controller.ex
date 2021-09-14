@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    roles = Staff.list_roles()
+    roles = Staff.list_roles(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", roles: roles)
   end
 
@@ -21,12 +21,12 @@ defmodule Inconn2ServiceWeb.RoleController do
   end
 
   def show(conn, %{"id" => id}) do
-    role = Staff.get_role!(id)
+    role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", role: role)
   end
 
   def update(conn, %{"id" => id, "role" => role_params}) do
-    role = Staff.get_role!(id)
+    role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Role{} = role} <-
            Staff.update_role(role, role_params, conn.assigns.sub_domain_prefix) do
@@ -35,7 +35,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   end
 
   def delete(conn, %{"id" => id}) do
-    role = Staff.get_role!(id)
+    role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Role{}} <- Staff.delete_role(role, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")

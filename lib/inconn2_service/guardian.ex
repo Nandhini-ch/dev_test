@@ -32,6 +32,7 @@ defmodule Inconn2Service.Guardian do
   def resource_from_claims(%{"sub" => "usr:" <> user_sub_domain}) do
     [user_id | [sub_domain_prefix]] = String.split(user_sub_domain, "@")
     user_id = Integer.parse(user_id)
+    user_id = List.first(Tuple.to_list(user_id))
     resource = Staff.get_user!(user_id, sub_domain_prefix)
     {:ok, resource}
   end

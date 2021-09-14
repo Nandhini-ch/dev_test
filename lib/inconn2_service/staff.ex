@@ -529,44 +529,6 @@ defmodule Inconn2Service.Staff do
     # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
   end
 
-  def get_user_assoc(email, prefix) do
-    # pass_hash_map = Argon2.add_hash(password)
-    # pass_hash = Map.get(pass_hash_map, :password_hash)
-
-    # query =
-    # from(u in User,
-    #  where: u.username == ^email
-    # )
-
-    #    and
-    #    u.password_hash == ^pass_hash
-    query =
-      from(user in User,
-        join: party in Party,
-        on: user.party_id == party.id,
-        #  join: role in Role,
-        #  on: user.role_id in role.id,
-        where: user.username == ^email,
-        select: %{
-          current_party: %{
-            id: party.id,
-            company_name: party.company_name,
-            party_type: party.party_type,
-            license_no: party.license_no,
-            licensee: party.licensee,
-            contract_start_date: party.contract_start_date,
-            contract_end_date: party.contract_end_date
-          },
-          current_user: user
-          #   current_role: role
-        }
-      )
-
-    IO.inspect(query)
-
-    IO.inspect(Repo.one(query, prefix: prefix))
-  end
-
   def change_user_password(email, password, prefix) do
     query =
       from(u in User,
@@ -612,8 +574,8 @@ defmodule Inconn2Service.Staff do
       [%Role{}, ...]
 
   """
-  def list_roles do
-    Repo.all(Role)
+  def list_roles(prefix) do
+    Repo.all(Role, prefix: prefix)
   end
 
   @doc """
@@ -630,7 +592,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_role!(id), do: Repo.get!(Role, id)
+  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix)
 
   @doc """
   Creates a role.

@@ -20,19 +20,4 @@ defmodule Inconn2ServiceWeb.UserView do
       role_id: user.role_id
     }
   end
-
-  def render("showassoc.json", %{user: user}) do
-    party = user.current_party
-    IO.inspect(party)
-    current_user = user.current_user
-    IO.inspect(current_user)
-
-    # %{data: render_one(party.get_field("current_party"), PartyView, "party.json")}
-    %{data: render_one(current_user, UserView, "user.json")}
-    IO.puts("object inside user view &&&&&&&&&&&&")
-  end
-
-  def render("error.json", %{error: error_message}) do
-    %{errors: %{detail: [error_message]}}
-  end
 end
