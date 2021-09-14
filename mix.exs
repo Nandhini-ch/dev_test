@@ -67,7 +67,8 @@ defmodule Inconn2Service.MixProject do
         "run priv/repo/seeds.exs",
         "run priv/repo/seeds_party_site.exs",
         "run priv/repo/seeds_holiday.exs",
-        "run priv/repo/seed_create_employee_user.exs"
+        "run priv/repo/seed_create_employee_user.exs",
+        "run priv/repo/seeds_work_order.exs"
       ],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]

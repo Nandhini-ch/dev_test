@@ -7,6 +7,7 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
   schema "workorder_schedules" do
     belongs_to :workorder_template, WorkorderTemplate
     field :asset_id, :integer
+    field :user_id, :integer
     field :asset_type, :string
     field :config, :map
     field :next_occurrence_date, :date
@@ -18,8 +19,8 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
   @doc false
   def changeset(workorder_schedule, attrs) do
     workorder_schedule
-    |> cast(attrs, [:workorder_template_id, :asset_id, :config])
-    |> validate_required([:workorder_template_id, :asset_id, :config])
+    |> cast(attrs, [:workorder_template_id, :asset_id, :user_id, :config])
+    |> validate_required([:workorder_template_id, :asset_id, :user_id, :config])
     |> assoc_constraint(:workorder_template)
   end
 end

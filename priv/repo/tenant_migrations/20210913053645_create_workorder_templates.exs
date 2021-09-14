@@ -24,7 +24,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTemplates do
       add :loto_required, :boolean
       add :loto_lock_check_list_id, :integer
       add :loto_release_check_list_id, :integer
-      add :status, :string
 
       timestamps()
     end

@@ -24,6 +24,6 @@ defmodule Inconn2Service.Batch.WorkorderScheduler do
   def get_workorder_schedulers() do
     dt = DateTime.add(DateTime.utc_now, 300, :second)
     w = from(w in WorkScheduler, where: w.utc_date_time <= ^dt) |> Repo.all
-    Enum.map(w, fn x -> Workorder.update_workorder_schedule_and_scheduler(x.workorder_schedule_id, x.prefix, x.zone) end)
+    Enum.map(w, fn x -> Workorder.work_order_creation(x.workorder_schedule_id, x.prefix, x.zone) end)
   end
 end

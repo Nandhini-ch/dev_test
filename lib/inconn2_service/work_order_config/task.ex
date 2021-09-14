@@ -44,12 +44,16 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
               add_error(changeset, :config, "Config is invalid")
             end
       "Observation" ->
-            length = String.length(config["Observation"])
-            if 10<length and length<100 do
-              changeset
-            else
-              add_error(changeset, :config, "Config and its length are invalid")
-            end
+        if Map.keys(config) == ["Observation"] do
+          length = String.length(config["Observation"])
+          if 10<length and length<100 do
+            changeset
+          else
+            add_error(changeset, :config, "config length is invalid")
+          end
+        else
+          add_error(changeset, :config, "config is invalid")
+        end
     end
   end
 

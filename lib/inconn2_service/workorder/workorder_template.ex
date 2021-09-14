@@ -25,7 +25,6 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :loto_required, :boolean
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
-    field :status, :string
 
     timestamps()
   end
@@ -33,7 +32,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   @doc false
   def changeset(workorder_template, attrs) do
     workorder_template
-    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :status])
+    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_scheduled()
     |> validate_inclusion(:repeat_unit, ["H", "D", "W", "M", "Y"])
@@ -42,7 +41,6 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     |> validate_inclusion(:create_new, ["at", "oc"])
     |> validate_workpermit_required()
     |> validate_loto_required()
-    |> validate_inclusion(:status, ["cr", "wp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
   end
 
   defp validate_scheduled(cs) do

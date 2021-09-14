@@ -33,8 +33,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       workpermit_check_list_id: workorder_template.workpermit_check_list_id,
       loto_required: workorder_template.loto_required,
       loto_lock_check_list_id: workorder_template.loto_lock_check_list_id,
-      loto_release_check_list_id: workorder_template.loto_release_check_list_id,
-      status: workorder_template.status
+      loto_release_check_list_id: workorder_template.loto_release_check_list_id
     }
   end
 end

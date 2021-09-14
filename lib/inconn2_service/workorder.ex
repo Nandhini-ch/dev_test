@@ -11,9 +11,9 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
-  alias Inconn2Service.WorkOrderConfig.TaskList
-  alias Inconn2Service.WorkOrderConfig.Task
+  alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
   alias Inconn2Service.CheckListConfig.CheckList
+  alias Inconn2Service.Staff.User
   @doc """
   Returns the list of workorder_templates.
 
@@ -59,7 +59,6 @@ defmodule Inconn2Service.Workorder do
     %WorkorderTemplate{}
     |> WorkorderTemplate.changeset(attrs)
     |> update_asset_type(prefix)
-    |> status_created()
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
@@ -217,51 +216,6 @@ defmodule Inconn2Service.Workorder do
     Repo.delete(workorder_template, prefix: prefix)
   end
 
-  defp status_created(cs) do
-    change(cs, status: "cr")
-  end
-
-  def status_work_permitted(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "wp"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_loto_locked(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "ltl"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_in_progress(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "ip"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_completed(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "cp"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_loto_released(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "ltr"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_cancelled(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "cn"})
-    |> Repo.update(prefix: prefix)
-  end
-
-  def status_hold(%WorkorderTemplate{} = workorder_template, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(%{"status" => "hl"})
-    |> Repo.update(prefix: prefix)
-  end
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking workorder_template changes.
 
@@ -322,6 +276,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_user_id(prefix)
               |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
@@ -493,6 +448,7 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_user_id(prefix)
               |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
@@ -506,27 +462,6 @@ defmodule Inconn2Service.Workorder do
         result
     end
   end
-
-  def update_workorder_schedule_and_scheduler(id, prefix, zone) do
-    workorder_schedule = get_workorder_schedule!(id, prefix)
-    workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
-    {:ok, workorder_schedule} = Multi.new()
-                                |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
-                                |> Repo.transaction(prefix: prefix)
-    multi = Multi.new()
-            |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id))
-
-    multi_insert(workorder_schedule, prefix, zone, multi)
-    |> Repo.transaction()
-  end
-  defp multi_insert(workorder_schedule, prefix, zone, multi) do
-    if workorder_schedule.next_occurrence.next_occurrence_date != nil do
-      Multi.insert(multi, :create, Common.insert_work_scheduler_cs(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.next_occurrence.id, "zone" => zone}))
-    else
-      multi
-    end
-  end
-
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
@@ -626,4 +561,599 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs \\ %{}) do
     WorkorderSchedule.changeset(workorder_schedule, attrs)
   end
+
+
+  alias Inconn2Service.Workorder.WorkOrder
+  @doc """
+  Returns the list of work_orders.
+
+  ## Examples
+
+      iex> list_work_orders()
+      [%WorkOrder{}, ...]
+
+  """
+  def list_work_orders(prefix) do
+    Repo.all(WorkOrder, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single work_order.
+
+  Raises `Ecto.NoResultsError` if the Work order does not exist.
+
+  ## Examples
+
+      iex> get_work_order!(123)
+      %WorkOrder{}
+
+      iex> get_work_order!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_work_order!(id, prefix), do: Repo.get!(WorkOrder, id, prefix: prefix)
+
+  @doc """
+  Creates a work_order.
+
+  ## Examples
+
+      iex> create_work_order(%{field: value})
+      {:ok, %WorkOrder{}}
+
+      iex> create_work_order(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
+    result = %WorkOrder{}
+              |> WorkOrder.changeset(attrs)
+              |> status_created()
+              |> validate_site_id(prefix)
+              |> validate_asset_id_workorder(prefix)
+              |> validate_user_id(prefix)
+              |> validate_workorder_template_id(prefix)
+              |> validate_workorder_schedule_id(prefix)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  defp validate_site_id(cs, prefix) do
+    site_id = get_field(cs, :site_id, nil)
+    if site_id != nil do
+      site = Repo.get(Site, site_id, prefix: prefix)
+      case site != nil do
+        true -> cs
+        false -> add_error(cs, :site_id, "site_id is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_asset_id_workorder(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id)
+    asset_id = get_field(cs, :asset_id)
+    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+    if workorder_template != nil and asset_id != nil do
+      asset_category = Repo.get(AssetCategory, workorder_template.asset_category_id, prefix: prefix)
+      asset_type = asset_category.asset_type
+      case asset_type do
+        "L" ->
+          location = Repo.get(Location, asset_id, prefix: prefix)
+          case location != nil do
+            true -> change(cs, site_id: location.site_id)
+            false -> add_error(cs, :asset_id, "Asset ID is invalid")
+          end
+        "E" ->
+          equipment = Repo.get(Equipment, asset_id, prefix: prefix)
+          case equipment != nil do
+            true -> change(cs,site_id: equipment.site_id)
+            false -> add_error(cs, :asset_id, "Asset ID is invalid")
+          end
+        end
+      else
+        cs
+      end
+  end
+
+  defp validate_user_id(cs, prefix) do
+    user_id = get_field(cs, :user_id, nil)
+    if user_id != nil do
+      user = Repo.get(User, user_id, prefix: prefix)
+      case user != nil do
+        true -> cs
+        false -> add_error(cs, :user_id, "user_id is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_workorder_template_id(cs, prefix) do
+    template_id = get_field(cs, :workorder_template_id, nil)
+    if template_id != nil do
+      template = Repo.get(WorkorderTemplate, template_id, prefix: prefix)
+      case template != nil do
+        true -> cs
+        false -> add_error(cs, :workorder_template_id, "workorder_template_id is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_workorder_schedule_id(cs, prefix) do
+    schedule_id = get_field(cs, :workorder_schedule_id, nil)
+    if schedule_id != nil do
+      schedule = Repo.get(WorkorderSchedule, schedule_id, prefix: prefix)
+      case schedule != nil do
+        true -> cs
+        false -> add_error(cs, :workorder_schedule_id, "workorder_schedule_id is invalid")
+      end
+    else
+      cs
+    end
+  end
+  @doc """
+  Updates a work_order.
+
+  ## Examples
+
+      iex> update_work_order(work_order, %{field: new_value})
+      {:ok, %WorkOrder{}}
+
+      iex> update_work_order(work_order, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_work_order(%WorkOrder{} = work_order, attrs, prefix) do
+    work_order
+    |> WorkOrder.changeset(attrs)
+    |> validate_site_id(prefix)
+    |> validate_asset_id_workorder(prefix)
+    |> validate_user_id(prefix)
+    |> validate_workorder_template_id(prefix)
+    |> validate_workorder_schedule_id(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a work_order.
+
+  ## Examples
+
+      iex> delete_work_order(work_order)
+      {:ok, %WorkOrder{}}
+
+      iex> delete_work_order(work_order)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_work_order(%WorkOrder{} = work_order, prefix) do
+    Repo.delete(work_order, prefix: prefix)
+  end
+
+  def create_status_track(work_order, user, prefix) do
+    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id}, prefix)
+    {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+  end
+
+  defp status_created(cs) do
+    change(cs, status: "cr")
+  end
+
+  def status_work_permitted(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "wp"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_loto_locked(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "ltl"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_in_progress(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "ip"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_completed(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "cp"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_loto_released(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "ltr"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_cancelled(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "cn"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+
+  def status_hold(%WorkOrder{} = work_order, prefix, user) do
+    result = work_order
+              |> WorkOrder.changeset(%{"status" => "hl"})
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, work_order} ->
+          create_status_track(work_order, user, prefix)
+      _ ->
+        result
+    end
+  end
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking work_order changes.
+
+  ## Examples
+
+      iex> change_work_order(work_order)
+      %Ecto.Changeset{data: %WorkOrder{}}
+
+  """
+  def change_work_order(%WorkOrder{} = work_order, attrs \\ %{}) do
+    WorkOrder.changeset(work_order, attrs)
+  end
+
+  alias Inconn2Service.Workorder.WorkorderTask
+
+  @doc """
+  Returns the list of workorder_tasks.
+
+  ## Examples
+
+      iex> list_workorder_tasks()
+      [%WorkorderTask{}, ...]
+
+  """
+  def list_workorder_tasks(prefix) do
+    Repo.all(WorkorderTask, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workorder_task.
+
+  Raises `Ecto.NoResultsError` if the Workorder task does not exist.
+
+  ## Examples
+
+      iex> get_workorder_task!(123)
+      %WorkorderTask{}
+
+      iex> get_workorder_task!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_task!(id, prefix), do: Repo.get!(WorkorderTask, id, prefix: prefix)
+
+  @doc """
+  Creates a workorder_task.
+
+  ## Examples
+
+      iex> create_workorder_task(%{field: value})
+      {:ok, %WorkorderTask{}}
+
+      iex> create_workorder_task(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_task(attrs \\ %{}, prefix) do
+    %WorkorderTask{}
+    |> WorkorderTask.changeset(attrs)
+    |> validate_task_id(prefix)
+    |> validate_response(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_task_id(cs, prefix) do
+    task_id = get_field(cs, :task_id, nil)
+    if task_id != nil do
+      task = Repo.get(Task, task_id, prefix: prefix)
+      case task != nil do
+        true -> cs
+        false -> add_error(cs, :task_id, "Task ID is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_response(cs, prefix) do
+    task_id = get_field(cs, :task_id)
+    response = get_field(cs, :response)
+    if response != nil and task_id != nil do
+      task = Repo.get(Task, task_id, prefix: prefix)
+      if task != nil do
+        case task.task_type do
+          "Inspection_one"  ->
+                if Map.keys(response) == ["label", "value"] do
+                  cs
+                else
+                  add_error(cs, :response, "Response is invalid")
+                end
+          "Inspection_many" ->
+                if Map.keys(response) == ["label", "value"] do
+                  cs
+                else
+                  add_error(cs, :response, "Response is invalid")
+                end
+          "Metering" ->
+                if Map.keys(response) == ["UOM", "type"] and response["type"] in ["C","A"] do
+                  cs
+                else
+                  add_error(cs, :response, "Response is invalid")
+                end
+          "Observation" ->
+                if Map.keys(response) == ["Observation"] do
+                  length = String.length(response["Observation"])
+                  if 10<length and length<100 do
+                    cs
+                  else
+                    add_error(cs, :response, "Response length is invalid")
+                  end
+                else
+                  add_error(cs, :response, "Response is invalid")
+                end
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+  @doc """
+  Updates a workorder_task.
+
+  ## Examples
+
+      iex> update_workorder_task(workorder_task, %{field: new_value})
+      {:ok, %WorkorderTask{}}
+
+      iex> update_workorder_task(workorder_task, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_task(%WorkorderTask{} = workorder_task, attrs, prefix) do
+    workorder_task
+    |> WorkorderTask.changeset(attrs)
+    |> validate_task_id(prefix)
+    |> validate_response(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_task.
+
+  ## Examples
+
+      iex> delete_workorder_task(workorder_task)
+      {:ok, %WorkorderTask{}}
+
+      iex> delete_workorder_task(workorder_task)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_task(%WorkorderTask{} = workorder_task, prefix) do
+    Repo.delete(workorder_task, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_task changes.
+
+  ## Examples
+
+      iex> change_workorder_task(workorder_task)
+      %Ecto.Changeset{data: %WorkorderTask{}}
+
+  """
+  def change_workorder_task(%WorkorderTask{} = workorder_task, attrs \\ %{}) do
+    WorkorderTask.changeset(workorder_task, attrs)
+  end
+
+  alias Inconn2Service.Workorder.WorkorderStatusTrack
+
+  @doc """
+  Returns the list of workorder_status_tracks.
+
+  ## Examples
+
+      iex> list_workorder_status_tracks()
+      [%WorkorderStatusTrack{}, ...]
+
+  """
+  def list_workorder_status_tracks(prefix) do
+    Repo.all(WorkorderStatusTrack, prefix: prefix)
+  end
+
+  def list_status_track_by_work_order_id(work_order_id ,prefix) do
+    from(s in WorkorderStatusTrack, where: s.work_order_id == ^work_order_id)
+    |> Repo.all(prefix: prefix)
+  end
+  @doc """
+  Gets a single workorder_status_track.
+
+  Raises `Ecto.NoResultsError` if the Workorder status track does not exist.
+
+  ## Examples
+
+      iex> get_workorder_status_track!(123)
+      %WorkorderStatusTrack{}
+
+      iex> get_workorder_status_track!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_status_track!(id, prefix), do: Repo.get!(WorkorderStatusTrack, id, prefix: prefix)
+
+
+  @doc """
+  Creates a workorder_status_track.
+
+  ## Examples
+
+      iex> create_workorder_status_track(%{field: value})
+      {:ok, %WorkorderStatusTrack{}}
+
+      iex> create_workorder_status_track(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_status_track(attrs \\ %{}, prefix) do
+    %WorkorderStatusTrack{}
+    |> WorkorderStatusTrack.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a workorder_status_track.
+
+  ## Examples
+
+      iex> update_workorder_status_track(workorder_status_track, %{field: new_value})
+      {:ok, %WorkorderStatusTrack{}}
+
+      iex> update_workorder_status_track(workorder_status_track, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs, prefix) do
+    workorder_status_track
+    |> WorkorderStatusTrack.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_status_track.
+
+  ## Examples
+
+      iex> delete_workorder_status_track(workorder_status_track)
+      {:ok, %WorkorderStatusTrack{}}
+
+      iex> delete_workorder_status_track(workorder_status_track)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, prefix) do
+    Repo.delete(workorder_status_track, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_status_track changes.
+
+  ## Examples
+
+      iex> change_workorder_status_track(workorder_status_track)
+      %Ecto.Changeset{data: %WorkorderStatusTrack{}}
+
+  """
+  def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
+    WorkorderStatusTrack.changeset(workorder_status_track, attrs)
+  end
+
+
+  def work_order_creation(workorder_schedule_id, prefix, zone) do
+    workorder_schedule = get_workorder_schedule!(workorder_schedule_id, prefix)
+    workorder_template = get_workorder_template!(workorder_schedule.workorder_template_id, prefix)
+    case workorder_template.create_new do
+      "at" ->
+          update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone)
+      "oc" ->
+          w = from(w in WorkOrder, where: w.workorder_schedule_id == ^workorder_schedule.id and (w.scheduled_date < ^workorder_schedule.next_occurrence_date) or
+                                                                                                (w.scheduled_date == ^workorder_schedule.next_occurrence_date and w.scheduled_time < ^workorder_schedule.next_occurrence_time))
+              |> Repo.all(prefix: prefix)
+          status = Enum.map(w, fn x ->
+                                  if x.status in ["cp", "ltr", "cn"] do
+                                    "done"
+                                  else
+                                     x.status
+                                  end
+                                end)
+          status = List.delete(Enum.uniq(status), "done")
+          if length(status) == 0 do
+            update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone)
+          else
+            nil
+          end
+    end
+  end
+  defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
+    create_work_order(%{"asset_id" => workorder_schedule.asset_id,
+                        "user_id" => workorder_schedule.user_id,
+                        "type" => "PRV",
+                        "scheduled_date" => workorder_schedule.next_occurrence_date,
+                        "scheduled_time" => workorder_schedule.next_occurrence_time,
+                        "workorder_template_id" => workorder_schedule.workorder_template_id,
+                        "workorder_schedule_id" => workorder_schedule.id
+                        }, prefix)
+
+    workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
+    {:ok, workorder_schedule} = Multi.new()
+                              |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
+                              |> Repo.transaction(prefix: prefix)
+    multi = Multi.new()
+            |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id))
+
+    multi_insert_work_scheduler(workorder_schedule, prefix, zone, multi)
+    |> Repo.transaction()
+  end
+  defp multi_insert_work_scheduler(workorder_schedule, prefix, zone, multi) do
+    if workorder_schedule.next_occurrence.next_occurrence_date != nil do
+      Multi.insert(multi, :create, Common.insert_work_scheduler_cs(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.next_occurrence.id, "zone" => zone}))
+    else
+      multi
+    end
+  end
+
 end

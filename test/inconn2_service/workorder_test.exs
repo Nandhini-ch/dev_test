@@ -148,4 +148,189 @@ defmodule Inconn2Service.WorkorderTest do
       assert %Ecto.Changeset{} = Workorder.change_workorder_schedule(workorder_schedule)
     end
   end
+
+  describe "work_orders" do
+    alias Inconn2Service.Workorder.WorkOrder
+
+    @valid_attrs %{asset_id: 42, site_id: 42, type: "some type"}
+    @update_attrs %{asset_id: 43, site_id: 43, type: "some updated type"}
+    @invalid_attrs %{asset_id: nil, site_id: nil, type: nil}
+
+    def work_order_fixture(attrs \\ %{}) do
+      {:ok, work_order} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_work_order()
+
+      work_order
+    end
+
+    test "list_work_orders/0 returns all work_orders" do
+      work_order = work_order_fixture()
+      assert Workorder.list_work_orders() == [work_order]
+    end
+
+    test "get_work_order!/1 returns the work_order with given id" do
+      work_order = work_order_fixture()
+      assert Workorder.get_work_order!(work_order.id) == work_order
+    end
+
+    test "create_work_order/1 with valid data creates a work_order" do
+      assert {:ok, %WorkOrder{} = work_order} = Workorder.create_work_order(@valid_attrs)
+      assert work_order.asset_id == 42
+      assert work_order.site_id == 42
+      assert work_order.type == "some type"
+    end
+
+    test "create_work_order/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_work_order(@invalid_attrs)
+    end
+
+    test "update_work_order/2 with valid data updates the work_order" do
+      work_order = work_order_fixture()
+      assert {:ok, %WorkOrder{} = work_order} = Workorder.update_work_order(work_order, @update_attrs)
+      assert work_order.asset_id == 43
+      assert work_order.site_id == 43
+      assert work_order.type == "some updated type"
+    end
+
+    test "update_work_order/2 with invalid data returns error changeset" do
+      work_order = work_order_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_work_order(work_order, @invalid_attrs)
+      assert work_order == Workorder.get_work_order!(work_order.id)
+    end
+
+    test "delete_work_order/1 deletes the work_order" do
+      work_order = work_order_fixture()
+      assert {:ok, %WorkOrder{}} = Workorder.delete_work_order(work_order)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_work_order!(work_order.id) end
+    end
+
+    test "change_work_order/1 returns a work_order changeset" do
+      work_order = work_order_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_work_order(work_order)
+    end
+  end
+
+  describe "workorder_tasks" do
+    alias Inconn2Service.Workorder.WorkorderTask
+
+    @valid_attrs %{sequence: 42, task_id: 42}
+    @update_attrs %{sequence: 43, task_id: 43}
+    @invalid_attrs %{sequence: nil, task_id: nil}
+
+    def workorder_task_fixture(attrs \\ %{}) do
+      {:ok, workorder_task} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_task()
+
+      workorder_task
+    end
+
+    test "list_workorder_tasks/0 returns all workorder_tasks" do
+      workorder_task = workorder_task_fixture()
+      assert Workorder.list_workorder_tasks() == [workorder_task]
+    end
+
+    test "get_workorder_task!/1 returns the workorder_task with given id" do
+      workorder_task = workorder_task_fixture()
+      assert Workorder.get_workorder_task!(workorder_task.id) == workorder_task
+    end
+
+    test "create_workorder_task/1 with valid data creates a workorder_task" do
+      assert {:ok, %WorkorderTask{} = workorder_task} = Workorder.create_workorder_task(@valid_attrs)
+      assert workorder_task.sequence == 42
+      assert workorder_task.task_id == 42
+    end
+
+    test "create_workorder_task/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_task(@invalid_attrs)
+    end
+
+    test "update_workorder_task/2 with valid data updates the workorder_task" do
+      workorder_task = workorder_task_fixture()
+      assert {:ok, %WorkorderTask{} = workorder_task} = Workorder.update_workorder_task(workorder_task, @update_attrs)
+      assert workorder_task.sequence == 43
+      assert workorder_task.task_id == 43
+    end
+
+    test "update_workorder_task/2 with invalid data returns error changeset" do
+      workorder_task = workorder_task_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_task(workorder_task, @invalid_attrs)
+      assert workorder_task == Workorder.get_workorder_task!(workorder_task.id)
+    end
+
+    test "delete_workorder_task/1 deletes the workorder_task" do
+      workorder_task = workorder_task_fixture()
+      assert {:ok, %WorkorderTask{}} = Workorder.delete_workorder_task(workorder_task)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_task!(workorder_task.id) end
+    end
+
+    test "change_workorder_task/1 returns a workorder_task changeset" do
+      workorder_task = workorder_task_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_task(workorder_task)
+    end
+  end
+
+  describe "workorder_status_tracks" do
+    alias Inconn2Service.Workorder.WorkorderStatusTrack
+
+    @valid_attrs %{status: "some status", work_order_id: 42}
+    @update_attrs %{status: "some updated status", work_order_id: 43}
+    @invalid_attrs %{status: nil, work_order_id: nil}
+
+    def workorder_status_track_fixture(attrs \\ %{}) do
+      {:ok, workorder_status_track} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_status_track()
+
+      workorder_status_track
+    end
+
+    test "list_workorder_status_tracks/0 returns all workorder_status_tracks" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert Workorder.list_workorder_status_tracks() == [workorder_status_track]
+    end
+
+    test "get_workorder_status_track!/1 returns the workorder_status_track with given id" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert Workorder.get_workorder_status_track!(workorder_status_track.id) == workorder_status_track
+    end
+
+    test "create_workorder_status_track/1 with valid data creates a workorder_status_track" do
+      assert {:ok, %WorkorderStatusTrack{} = workorder_status_track} = Workorder.create_workorder_status_track(@valid_attrs)
+      assert workorder_status_track.status == "some status"
+      assert workorder_status_track.work_order_id == 42
+    end
+
+    test "create_workorder_status_track/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_status_track(@invalid_attrs)
+    end
+
+    test "update_workorder_status_track/2 with valid data updates the workorder_status_track" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert {:ok, %WorkorderStatusTrack{} = workorder_status_track} = Workorder.update_workorder_status_track(workorder_status_track, @update_attrs)
+      assert workorder_status_track.status == "some updated status"
+      assert workorder_status_track.work_order_id == 43
+    end
+
+    test "update_workorder_status_track/2 with invalid data returns error changeset" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_status_track(workorder_status_track, @invalid_attrs)
+      assert workorder_status_track == Workorder.get_workorder_status_track!(workorder_status_track.id)
+    end
+
+    test "delete_workorder_status_track/1 deletes the workorder_status_track" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert {:ok, %WorkorderStatusTrack{}} = Workorder.delete_workorder_status_track(workorder_status_track)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_status_track!(workorder_status_track.id) end
+    end
+
+    test "change_workorder_status_track/1 returns a workorder_status_track changeset" do
+      workorder_status_track = workorder_status_track_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_status_track(workorder_status_track)
+    end
+  end
 end

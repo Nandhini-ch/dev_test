@@ -52,14 +52,17 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
+    resources "/work_orders", WorkOrderController, except: [:new, :edit]
+    resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
+    get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
 
-    get "/workorder_templates/:id/work_permitted", WorkorderTemplateController, :work_permitted
-    get "/workorder_templates/:id/loto_locked", WorkorderTemplateController, :loto_locked
-    get "/workorder_templates/:id/in_progress", WorkorderTemplateController, :in_progress
-    get "/workorder_templates/:id/completed", WorkorderTemplateController, :completed
-    get "/workorder_templates/:id/loto_released", WorkorderTemplateController, :loto_released
-    get "/workorder_templates/:id/cancelled", WorkorderTemplateController, :cancelled
-    get "/workorder_templates/:id/hold", WorkorderTemplateController, :hold
+    put "/work_orders/:id/work_permitted", WorkOrderController, :work_permitted
+    put "/work_orders/:id/loto_locked", WorkOrderController, :loto_locked
+    put "/work_orders/:id/in_progress", WorkOrderController, :in_progress
+    put "/work_orders/:id/completed", WorkOrderController, :completed
+    put "/work_orders/:id/loto_released", WorkOrderController, :loto_released
+    put "/work_orders/:id/cancelled", WorkOrderController, :cancelled
+    put "/work_orders/:id/hold", WorkOrderController, :hold
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
