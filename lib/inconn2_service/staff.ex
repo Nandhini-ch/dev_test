@@ -11,7 +11,6 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Staff.OrgUnit
   alias Inconn2Service.Util.HierarchyManager
   import Comeonin
-  alias Inconn2Service.AssetConfig.Party
   alias Inconn2Service.Staff.Role
 
   @doc """
