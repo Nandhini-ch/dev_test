@@ -1,6 +1,7 @@
 defmodule Inconn2ServiceWeb.UserView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.UserView
+  # alias Inconn2ServiceWeb.PartyView
 
   def render("index.json", %{users: users}) do
     %{data: render_many(users, UserView, "user.json")}
@@ -26,16 +27,8 @@ defmodule Inconn2ServiceWeb.UserView do
     current_user = user.current_user
     IO.inspect(current_user)
 
-    %{
-      party_type: Map.get(party, "party_type"),
-      Licensee: Map.get(party, "licensee"),
-      id: Map.get(current_user, "id"),
-      username: Map.get(current_user, "username"),
-      password: Map.get(current_user, "password"),
-      party_id: Map.get(current_user, "party_id"),
-      role_id: Map.get(current_user, "role_id")
-    }
-
+    # %{data: render_one(party.get_field("current_party"), PartyView, "party.json")}
+    %{data: render_one(current_user, UserView, "user.json")}
     IO.puts("object inside user view &&&&&&&&&&&&")
   end
 
