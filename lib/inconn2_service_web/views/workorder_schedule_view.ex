@@ -14,6 +14,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
     %{id: workorder_schedule.id,
       asset_id: workorder_schedule.asset_id,
       asset_type: workorder_schedule.asset_type,
+      user_id: workorder_schedule.user_id,
       workorder_template_id: workorder_schedule.workorder_template_id,
         asset_category_id: workorder_schedule.workorder_template.asset_category_id,
         name: workorder_schedule.workorder_template.name,
