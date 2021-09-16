@@ -18,7 +18,10 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{
       id: equipment.id,
       name: equipment.name,
-      code: equipment.equipment_code,
+      equipment_code: equipment.equipment_code,
+      location_id: equipment.location_id,
+      site_id: equipment.site_id,
+      asset_category_id: equipment.asset_category_id,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
       parent_id: List.last(equipment.path)
@@ -29,7 +32,10 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{
       id: equipment.id,
       name: equipment.name,
-      code: equipment.equipment_code,
+      equipment_code: equipment.equipment_code,
+      location_id: equipment.location_id,
+      site_id: equipment.site_id,
+      asset_category_id: equipment.asset_category_id,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
       parent_id: List.last(equipment.path),
