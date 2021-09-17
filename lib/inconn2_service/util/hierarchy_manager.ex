@@ -62,11 +62,15 @@ defmodule Inconn2Service.Util.HierarchyManager do
   def depth(%{path: path}) when is_list(path), do: length(path)
 
   def build_tree(node_list) do
-    depth_map = build_node_list_map_by_depth(node_list)
-    min_level = Map.keys(depth_map) |> Enum.min()
-    first_level_list = Map.get(depth_map, min_level, [])
-    first_level_family = Map.delete(depth_map, min_level)
-    Enum.reduce(first_level_list, [], &tree_from_family(&1, &2, first_level_family, min_level))
+    if node_list != [] do
+      depth_map = build_node_list_map_by_depth(node_list)
+      min_level = Map.keys(depth_map) |> Enum.min()
+      first_level_list = Map.get(depth_map, min_level, [])
+      first_level_family = Map.delete(depth_map, min_level)
+      Enum.reduce(first_level_list, [], &tree_from_family(&1, &2, first_level_family, min_level))
+    else
+      []
+    end
   end
 
   defp build_node_list_map_by_depth(node_list) do
