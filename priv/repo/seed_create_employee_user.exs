@@ -1,4 +1,4 @@
-alias Inconn2Service.Staff
+alias Inconn2Service.{Staff, Assignment}
 employee1 = %{
   "employee_id" => "Empid0001",
   "landline_no" => "12345",
@@ -9,6 +9,7 @@ employee1 = %{
   "first_name" => "Rama",
   "last_name" =>  "Janma boomi",
   "has_login_credentials" => true,
+  "skills" => [1,2],
   "org_unit_id" =>  1,
   "party_id" => 1
 }
@@ -28,10 +29,11 @@ employee2 = %{
   "mobile_no" => "0805830",
   "salary" =>  20000.00,
   "designation" => "Head of School",
-  "email" => "blab",
+  "email" => "blab@c.com",
   "first_name" => "Rebecca",
   "last_name" =>  "Clerkman",
   "has_login_credentials" => true,
+  "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1
 }
@@ -112,3 +114,21 @@ pc =
 
   IO.inspect(pc)
 IO.puts("User done $$$$$$$$$$$$$$$$$$$$")
+
+emp_rst1 = %{
+  "employee_id" => 1,
+  "site_id" => 1,
+  "shift_id" => 1,
+  "start_date" => "2021-08-17",
+  "end_date" => "2021-08-30"
+}
+emp_rst2 = %{
+  "employee_id" => 2,
+  "site_id" => 1,
+  "shift_id" => 2,
+  "start_date" => "2021-08-20",
+  "end_date" => "2021-08-21"
+}
+
+{:ok, emp_rst1c} = Assignment.create_employee_roster(emp_rst1, "inc_bata")
+{:ok, emp_rst2c} = Assignment.create_employee_roster(emp_rst2, "inc_bata")

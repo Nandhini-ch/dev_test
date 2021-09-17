@@ -7,12 +7,12 @@ defmodule Inconn2ServiceWeb.EmployeeController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    employees = Staff.list_employees()
+    employees = Staff.list_employees(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", employees: employees)
   end
 
   def create(conn, %{"employee" => employee_params}) do
-    with {:ok, %Employee{} = employee} <- Staff.create_employee(employee_params) do
+    with {:ok, %Employee{} = employee} <- Staff.create_employee(employee_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.employee_path(conn, :show, employee))

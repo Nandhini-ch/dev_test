@@ -66,6 +66,7 @@ defmodule Inconn2Service.MixProject do
         "ecto.migrate",
         "run priv/repo/seeds.exs",
         "run priv/repo/seeds_party_site.exs",
+        "run priv/repo/seeds_shifts.exs",
         "run priv/repo/seeds_holiday.exs",
         "run priv/repo/seed_create_employee_user.exs",
         "run priv/repo/seeds_work_order.exs"

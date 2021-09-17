@@ -23,8 +23,11 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       landline_no: employee.landline_no,
       mobile_no: employee.mobile_no,
       salary: employee.salary,
+      reports_to: employee.reports_to,
       has_login_credentials: employee.has_login_credentials,
-      org_unit_id: employee.org_unit_id
+      org_unit_id: employee.org_unit_id,
+      party_id: employee.party_id,
+      skills: employee.skills
     }
   end
 end

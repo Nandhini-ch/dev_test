@@ -18,6 +18,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :has_login_credentials, :boolean, default: false
     field :last_name, :string
     field :reports_to, :string
+    field :skills, {:array, :integer}
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
 
@@ -40,6 +41,7 @@ defmodule Inconn2Service.Staff.Employee do
       :salary,
       :has_login_credentials,
       :reports_to,
+      :skills,
       :org_unit_id,
       :party_id
     ])
@@ -51,6 +53,7 @@ defmodule Inconn2Service.Staff.Employee do
       :employee_id,
       :mobile_no,
       :has_login_credentials,
+      :skills,
       :org_unit_id,
       :party_id
     ])

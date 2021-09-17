@@ -266,6 +266,7 @@ defmodule Inconn2Service.Staff do
   end
 
   alias Inconn2Service.Staff.Employee
+  alias Inconn2Service.AssetConfig.AssetCategory
 
   @doc """
   Returns the list of employees.
@@ -276,8 +277,8 @@ defmodule Inconn2Service.Staff do
       [%Employee{}, ...]
 
   """
-  def list_employees do
-    Repo.all(Employee)
+  def list_employees(prefix) do
+    Repo.all(Employee, prefix: prefix)
   end
 
   @doc """
@@ -324,6 +325,7 @@ defmodule Inconn2Service.Staff do
       employee_set =
         %Employee{}
         |> Employee.changeset(attrs)
+        |> validate_skill_ids(prefix)
         |> Repo.insert(prefix: prefix)
 
       case employee_set do
@@ -348,6 +350,7 @@ defmodule Inconn2Service.Staff do
       employee_set =
         %Employee{}
         |> Employee.changeset(attrs)
+        |> validate_skill_ids(prefix)
         |> Repo.insert(prefix: prefix)
 
       case employee_set do
@@ -360,6 +363,19 @@ defmodule Inconn2Service.Staff do
     end
   end
 
+  defp validate_skill_ids(cs, prefix) do
+    ids = get_change(cs, :skills, nil)
+    if ids != nil do
+      asset_categories = from(a in AssetCategory, where: a.id in ^ids )
+              |> Repo.all(prefix: prefix)
+      case length(ids) == length(asset_categories) do
+        true -> cs
+        false -> add_error(cs, :skills, "Skills are invalid")
+      end
+    else
+      cs
+    end
+  end
   @doc """
   Updates a employee.
 
@@ -375,6 +391,7 @@ defmodule Inconn2Service.Staff do
   def update_employee(%Employee{} = employee, attrs, prefix) do
     employee
     |> Employee.changeset(attrs)
+    |> validate_skill_ids(prefix)
     |> Repo.update(prefix: prefix)
   end
 
