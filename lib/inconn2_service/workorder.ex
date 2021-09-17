@@ -276,7 +276,6 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
-              |> validate_user_id(prefix)
               |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
@@ -448,7 +447,6 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
-              |> validate_user_id(prefix)
               |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
@@ -609,6 +607,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkOrder{}
               |> WorkOrder.changeset(attrs)
               |> status_created()
+              |> status_assigned()
               |> validate_site_id(prefix)
               |> validate_asset_id_workorder(prefix)
               |> validate_user_id(prefix)
@@ -712,12 +711,13 @@ defmodule Inconn2Service.Workorder do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_work_order(%WorkOrder{} = work_order, attrs, prefix) do
+  def update_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
     work_order
     |> WorkOrder.changeset(attrs)
     |> validate_site_id(prefix)
     |> validate_asset_id_workorder(prefix)
     |> validate_user_id(prefix)
+    |> status_assigned(work_order, user, prefix)
     |> validate_workorder_template_id(prefix)
     |> validate_workorder_schedule_id(prefix)
     |> Repo.update(prefix: prefix)
@@ -740,23 +740,64 @@ defmodule Inconn2Service.Workorder do
   end
 
   def create_status_track(work_order, user, prefix) do
-    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id}, prefix)
-    {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+    case work_order.status do
+      "cr" ->
+            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+            date_time = DateTime.now!(site.time_zone)
+            date = Date.new!(date_time.year, date_time.month, date_time.day)
+            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+      "as" ->
+            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+            date_time = DateTime.now!(site.time_zone)
+            date = Date.new!(date_time.year, date_time.month, date_time.day)
+            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+    end
   end
 
   defp status_created(cs) do
     change(cs, status: "cr")
   end
 
+  defp status_assigned(cs) do
+    if get_change(cs, :user_id, nil) != nil do
+      change(cs, status: "as")
+    else
+      cs
+    end
+  end
+  defp status_assigned(cs, work_order, user, prefix) do
+    if get_change(cs, :user_id, nil) != nil do
+      update_status_track(work_order, user, prefix)
+      change(cs, status: "as")
+    else
+      cs
+    end
+  end
+
+  defp update_status_track(work_order, user, prefix) do
+    site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    date = Date.new!(date_time.year, date_time.month, date_time.day)
+    time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+  end
+
   def status_work_permitted(%WorkOrder{} = work_order, prefix, user) do
     result = work_order
               |> WorkOrder.changeset(%{"status" => "wp"})
               |> Repo.update(prefix: prefix)
+    IO.inspect(result)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -766,9 +807,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -778,9 +820,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -790,9 +833,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -802,9 +846,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -814,9 +859,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
 
@@ -826,9 +872,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, work_order} ->
-          create_status_track(work_order, user, prefix)
+            update_status_track(work_order, user, prefix)
+            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
       _ ->
-        result
+            result
     end
   end
   @doc """
@@ -1130,7 +1177,6 @@ defmodule Inconn2Service.Workorder do
   end
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
     create_work_order(%{"asset_id" => workorder_schedule.asset_id,
-                        "user_id" => workorder_schedule.user_id,
                         "type" => "PRV",
                         "scheduled_date" => workorder_schedule.next_occurrence_date,
                         "scheduled_time" => workorder_schedule.next_occurrence_time,

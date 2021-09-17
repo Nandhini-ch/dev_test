@@ -6,6 +6,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderStatusTracks do
       add :work_order_id, :integer
       add :status, :string
       add :user_id, :integer
+      add :date, :date
+      add :time, :time
 
       timestamps()
     end

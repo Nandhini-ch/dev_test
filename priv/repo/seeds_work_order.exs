@@ -128,11 +128,11 @@ wkord_tp5 = %{
 {:ok, wkord_tp4c} = Workorder.create_workorder_template(wkord_tp4, "inc_bata")
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
 
-wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "user_id" => 1, "config" => %{"time" => "09:00:00"}}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "user_id" => 1, "config" => %{"date" => "2021-09-01", "time" => "09:00:00"}}
-wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "user_id" => 1, "config" => %{"day" => 4, "time" => "09:00:00"}}
-wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "user_id" => 1, "config" => %{"day" => 15, "time" => "09:00:00"}}
-wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "user_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => "09:00:00"}}
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "config" => %{"time" => "09:00:00"}}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "config" => %{"date" => "2021-09-01", "time" => "09:00:00"}}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day" => 4, "time" => "09:00:00"}}
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => "09:00:00"}}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => "09:00:00"}}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_bata")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_bata")
@@ -164,3 +164,20 @@ wk_ord2 = %{
 
 {:ok, wk_ord1c} = Workorder.create_work_order(wk_ord1, "inc_bata", %{id: 1})
 {:ok, wk_ord2c} = Workorder.create_work_order(wk_ord2, "inc_bata", %{id: 1})
+
+wkord_tsk1 = %{
+  "work_order_id" => 1,
+  "task_id" => 1,
+  "sequence" => 1,
+  "response" => %{"label" => "abc", "value" => 30}
+}
+
+wkord_tsk2 = %{
+  "work_order_id" => 1,
+  "task_id" => 2,
+  "sequence" => 2,
+  "response" => %{"label" => "cde", "value" => 100}
+}
+
+{:ok, wkord_tsk1c} = Workorder.create_workorder_task(wkord_tsk1, "inc_bata")
+{:ok, wkord_tsk2c} = Workorder.create_workorder_task(wkord_tsk2, "inc_bata")
