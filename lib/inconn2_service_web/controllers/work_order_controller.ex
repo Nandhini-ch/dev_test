@@ -28,7 +28,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
   def update(conn, %{"id" => id, "work_order" => work_order_params}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
   end
