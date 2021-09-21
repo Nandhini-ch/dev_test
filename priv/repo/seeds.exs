@@ -42,7 +42,23 @@ site = %{
   "description" => "Main branch at Mount road",
   "site_code" => "BRCHN_MNTRD",
   "party_id" => 1,
-  "time_zone" => "Europe/Berlin"
+  "time_zone" => "Europe/Berlin",
+  "address" => %{
+    "address_line1" => "18, First Street",
+    "address_line2" => "Mountroad",
+    "city" => "Chennai",
+    "state" => "Tamilnadu",
+    "country" => "India",
+    "postcode" => "600040"
+  },
+  "contact" => %{
+    "first_name" => "Bala",
+    "last_name" => "Chandar",
+    "designation" => "Sales Head",
+    "land_line" => "+91-44-2457727",
+    "mobile" => "+91-9840022485",
+    "email" => "balac@bata.co.in"
+    }
 }
 
 sc =

@@ -16,5 +16,6 @@ defmodule Inconn2Service.Common.ContactEmbed do
     contact_embed
     |> cast(attrs, [:first_name, :last_name, :designation, :land_line, :mobile, :email])
     |> validate_required([:first_name, :last_name, :designation, :land_line, :mobile, :email])
+    |> validate_format(:email, ~r/@/)
   end
 end
