@@ -192,7 +192,7 @@ dg2 = %{
   "name" => "Diesel Generator 2",
   "equipment_code" => "EQ_DG2",
   "site_id" => sc.id,
-  "location_id" => b1c.id,
+  "location_id" => b2_f1_z3.id,
   "asset_category_id" => a2c.id
 }
 
@@ -227,7 +227,7 @@ dg2 = %{
     "name" => "IC Engine",
     "equipment_code" => "EQ_DG2_IC",
     "site_id" => sc.id,
-    "location_id" => b1c.id,
+    "location_id" => b2_f1_z3.id,
     "asset_category_id" => a2c.id
   }
   |> AssetConfig.create_equipment("inc_bata")
@@ -238,7 +238,7 @@ dg2 = %{
     "name" => "Alternator",
     "equipment_code" => "EQ_DG2_AL",
     "site_id" => sc.id,
-    "location_id" => b1c.id,
+    "location_id" => b2_f1_z3.id,
     "asset_category_id" => a2c.id
   }
   |> AssetConfig.create_equipment("inc_bata")

@@ -41,6 +41,11 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     render(conn, "show.json", equipment: equipment)
   end
 
+  def loc_path(conn, %{"equipment_id" => equipment_id}) do
+    locations = AssetConfig.location_path_of_equipments(equipment_id, conn.assigns.sub_domain_prefix)
+    render(conn, "location_index.json", locations: locations)
+  end
+
   def update(conn, %{"id" => id, "equipment" => equipment_params}) do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 

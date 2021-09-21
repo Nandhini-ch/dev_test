@@ -701,6 +701,17 @@ defmodule Inconn2Service.AssetConfig do
     |> where(location_id: ^location_id)
     |> Repo.all(prefix: prefix)
   end
+
+  def location_path_of_equipments(equipment_id, prefix) do
+    equipment = get_equipment!(equipment_id, prefix)
+    location = get_location!(equipment.location_id, prefix)
+    query = HierarchyManager.ancestors(location)
+    if query != [] do
+      Repo.all(query, prefix: prefix) ++ [location]
+    else
+      [location]
+    end
+  end
   @doc """
   Gets a single equipment.
 

@@ -15,6 +15,6 @@ defmodule Inconn2Service.Common.AddressEmbed do
   def changeset(address_embed, attrs) do
     address_embed
     |> cast(attrs, [:address_line1, :address_line2, :city, :state, :country, :postcode])
-    |> validate_required([:address_line1, :address_line2, :city, :state, :country, :postcode])
+    |> validate_required([:address_line1, :city, :state, :country, :postcode])
   end
 end

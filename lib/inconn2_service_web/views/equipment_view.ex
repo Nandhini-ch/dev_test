@@ -42,4 +42,15 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       children: render_many(equipment.children, EquipmentView, "equipment_node.json")
     }
   end
+
+  def render("location_index.json", %{locations: locations}) do
+    %{data: render_many(locations, EquipmentView, "location.json")}
+  end
+  def render("location.json", %{equipment: location}) do
+    %{
+      id: location.id,
+      name: location.name
+    }
+  end
+
 end
