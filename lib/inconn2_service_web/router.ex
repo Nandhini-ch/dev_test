@@ -75,5 +75,6 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
+    resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
   end
 end

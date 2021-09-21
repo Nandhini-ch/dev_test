@@ -1,4 +1,4 @@
-alias Inconn2Service.{CheckListConfig, Workorder}
+alias Inconn2Service.{CheckListConfig, Workorder, Ticket}
 
 chk1 = %{"label" => "check 1", "type" => "WP"}
 chk2 = %{"label" => "check 2", "type" => "WP"}
@@ -181,3 +181,9 @@ wkord_tsk2 = %{
 
 {:ok, wkord_tsk1c} = Workorder.create_workorder_task(wkord_tsk1, "inc_bata")
 {:ok, wkord_tsk2c} = Workorder.create_workorder_task(wkord_tsk2, "inc_bata")
+
+wkreq_cat1 = %{"name" => "Electrical", "description" => "Deals with electrical work"}
+wkreq_cat2 = %{"name" => "Mechanical", "description" => "Deals with mechanical work"}
+
+{:ok, wkreq_cat1c} = Ticket.create_workrequest_category(wkreq_cat1, "inc_bata")
+{:ok, wkreq_cat2c} = Ticket.create_workrequest_category(wkreq_cat2, "inc_bata")

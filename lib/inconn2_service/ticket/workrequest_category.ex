@@ -1,0 +1,18 @@
+defmodule Inconn2Service.Ticket.WorkrequestCategory do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "workrequest_categories" do
+    field :description, :string
+    field :name, :string
+
+    timestamps()
+  end
+
+  @doc false
+  def changeset(workrequest_category, attrs) do
+    workrequest_category
+    |> cast(attrs, [:name, :description])
+    |> validate_required([:name, :description])
+  end
+end
