@@ -704,12 +704,13 @@ defmodule Inconn2Service.AssetConfig do
 
   def location_path_of_equipments(equipment_id, prefix) do
     equipment = get_equipment!(equipment_id, prefix)
+    site = get_site!(equipment.site_id, prefix)
     location = get_location!(equipment.location_id, prefix)
     query = HierarchyManager.ancestors(location)
     if query != [] do
-      Repo.all(query, prefix: prefix) ++ [location]
+      [site] ++ Repo.all(query, prefix: prefix) ++ [location]
     else
-      [location]
+      [site] ++ [location]
     end
   end
   @doc """
