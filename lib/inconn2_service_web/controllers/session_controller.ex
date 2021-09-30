@@ -1,8 +1,7 @@
 defmodule Inconn2ServiceWeb.SessionController do
   use Inconn2ServiceWeb, :controller
   alias Inconn2Service.Account.Auth
-  alias Inconn2Service.AssetConfig
-  alias Inconn2Service.Staff
+  alias Inconn2Service.{AssetConfig, Staff, Account}
 
   def login(conn, %{"username" => username, "password" => password}) do
     prefix = conn.assigns.sub_domain_prefix
@@ -38,6 +37,8 @@ defmodule Inconn2ServiceWeb.SessionController do
     username = current_user.username
     employee = Staff.get_employee_email!(username, conn.assigns.sub_domain_prefix)
     party = AssetConfig.get_party!(party_id, conn.assigns.sub_domain_prefix)
-    render(conn, "current_user.json", current_user: current_user, party: party, employee: employee)
+    IO.inspect(conn.assigns.sub_domain_prefix)
+    licensee = Account.get_licensee_by_sub_domain(conn.assigns.sub_domain)
+    render(conn, "current_user.json", current_user: current_user, licensee: licensee, party: party, employee: employee)
   end
 end

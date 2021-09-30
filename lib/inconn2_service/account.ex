@@ -135,7 +135,7 @@ defmodule Inconn2Service.Account do
   def get_licensee!(id), do: Repo.get!(Licensee, id) |> Repo.preload(:business_type)
 
   def get_licensee_by_sub_domain(sub_domain) do
-    Repo.get_by(Licensee, sub_domain: sub_domain)
+    Repo.get_by(Licensee, sub_domain: sub_domain) |> Repo.preload(:business_type)
   end
 
   @doc """
