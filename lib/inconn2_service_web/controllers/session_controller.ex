@@ -37,8 +37,8 @@ defmodule Inconn2ServiceWeb.SessionController do
     username = current_user.username
     employee = Staff.get_employee_email!(username, conn.assigns.sub_domain_prefix)
     party = AssetConfig.get_party!(party_id, conn.assigns.sub_domain_prefix)
-    IO.inspect(conn.assigns.sub_domain_prefix)
-    licensee = Account.get_licensee_by_sub_domain(conn.assigns.sub_domain)
+    sub_domain = String.replace_prefix(conn.assigns.sub_domain_prefix, "inc_", "")
+    licensee = Account.get_licensee_by_sub_domain(sub_domain)
     render(conn, "current_user.json", current_user: current_user, licensee: licensee, party: party, employee: employee)
   end
 end

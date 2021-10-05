@@ -20,7 +20,6 @@ defmodule Inconn2ServiceWeb.Plugs.MatchTenantPlug do
   defp match_tenant(conn, sub_domain) do
     case Account.get_licensee_by_sub_domain(sub_domain) do
       %Licensee{} ->
-        conn = assign(conn, :sub_domain, sub_domain)
         assign(conn, :sub_domain_prefix, Triplex.to_prefix(sub_domain))
 
       nil ->
