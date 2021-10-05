@@ -1,6 +1,7 @@
 defmodule Inconn2Service.AssetConfig.Party do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.Common.{AddressEmbed, ContactEmbed}
 
   schema "parties" do
     field :company_name, :string
@@ -29,8 +30,7 @@ defmodule Inconn2Service.AssetConfig.Party do
     ])
     |> validate_required([
       :company_name,
-      :party_type,
-      :licensee
+      :party_type
     ])
     |> check_party_type()
     |> cast_embed(:address)

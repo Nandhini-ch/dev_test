@@ -1066,8 +1066,8 @@ defmodule Inconn2Service.AssetConfig do
   def create_default_party(licensee_set, prefix) do
     company_name = IO.inspect(licensee_set.company_name)
     party_type = IO.inspect(licensee_set.party_type)
-    _address = IO.inspect(licensee_set.address)
-    _contact = IO.inspect(licensee_set.contact)
+    address = IO.inspect(licensee_set.address)
+    contact = IO.inspect(licensee_set.contact)
     IO.inspect(party_type)
     licensee = check_licensee(party_type)
     IO.inspect(licensee)
@@ -1076,9 +1076,23 @@ defmodule Inconn2Service.AssetConfig do
     returnMap = %{
       "company_name" => company_name,
       "party_type" => party_type,
-      "licensee" => licensee
-      # "address" => address,
-      # "contact" => contact
+      "licensee" => licensee,
+      "address" => %{
+        "address_line1" => address.address_line1,
+        "address_line2" => address.address_line2,
+        "city" => address.city,
+        "state" => address.state,
+        "country" => address.country,
+        "postcode" => address.postcode
+      },
+      "contact" => %{
+        "first_name" => contact.first_name,
+        "last_name" => contact.last_name,
+        "designation" => contact.designation,
+        "land_line" => contact.land_line,
+        "mobile" => contact.mobile,
+        "email" => contact.email
+      }
     }
 
     %Party{}
@@ -1097,75 +1111,31 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def create_party(attrs \\ %{}, prefix) do
-    # licensee id
-    # service_id = Map.get(attrs, "service_id")
-    party_type = Map.get(attrs, "party_type")
-    # allowed_party_type = Map.get(attrs, "allowed_party_type")
-    # create_party = Map.get(attrs, "create_party")
-    # licensee = Map.get(attrs, "licensee")
+    %Party{}
+    |> Party.changeset(attrs)
+    |> validate_party(attrs, prefix)
+    |> Repo.insert(prefix: prefix)
+  end
 
-    # If if there exisit one record that was created automatically
-    # with licensee id, Asset owner and self servicing. More than one record
-    # should not be allowed to be created
+  defp validate_party(cs, attrs, prefix) do
+    case Map.get(attrs, "party_type") do
+      "SP" ->
+            sp_party = get_party_licensee_SP(prefix)
+            if sp_party == nil do
+              change(cs, %{licensee: false})
+            else
+              add_error(cs, :party_type, "Cannot create more parties as Service Provider")
+            end
 
-    if party_type == "SP" do
-      sp_part = get_party_licensee_SP(prefix)
-
-      case sp_part do
-        nil ->
-          # if no record for SP and licensee Y then create new record
-          %Party{}
-          |> Party.changeset(attrs)
-          |> change(%{licensee: false})
-          |> Repo.insert(prefix: prefix)
-
-        {:ok, change_set} ->
-          add_error(
-            change_set,
-            :party_id,
-            "Cannot create more parties for Service Providers"
-          )
-
-        {:error, change_set} ->
-          change_set
-
-        change_set ->
-          add_error(
-            change_set,
-            :party_id,
-            "Cannot create more parties for Service Providers"
-          )
-      end
-    end
-
-    if party_type == "AO" do
-      party = get_party_licensee_AO(prefix)
-
-      case party do
-        nil ->
-          # if no record for AO and licensee Y then check if it is an SP with license
-          %Party{}
-          |> Party.changeset(attrs)
-          |> change(%{licensee: false})
-          |> Repo.insert(prefix: prefix)
-
-        {:ok, change_set} ->
-          add_error(
-            change_set,
-            :party_id,
-            "Cannot create more parties for Asset Owner"
-          )
-
-        {:error, change_set} ->
-          change_set
-
-        change_set ->
-          add_error(
-            change_set,
-            :party_id,
-            "Cannot create more parties for Asset Owner"
-          )
-      end
+      "AO" ->
+            ao_party = get_party_licensee_AO(prefix)
+            if ao_party == nil do
+              change(cs, %{licensee: false})
+            else
+              add_error(cs, :party_type, "Cannot create more parties as Asset Owner")
+            end
+       _ ->
+            cs
     end
   end
 
@@ -1184,6 +1154,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_party(%Party{} = party, attrs, prefix) do
     party
     |> Party.changeset(attrs)
+    |> validate_party(attrs, prefix)
     |> Repo.update(prefix: prefix)
   end
 
