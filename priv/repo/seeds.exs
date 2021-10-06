@@ -245,30 +245,36 @@ dg2 = %{
 
 tsk1 = %{
   "label" => "Task 1",
-  "task_type" => "Inspection_one",
+  "task_type" => "IO",
   "estimated_time" => 60,
-  "config" => %{"label" => "abc", "value" => 30}
+  "config" => %{
+            "options" => [ %{"label" => "abc", "value" => "a"},
+                           %{"label" => "xyz", "value" => "b"} ]
+            }
 }
 
 tsk2 = %{
   "label" => "Task 2",
-  "task_type" => "Inspection_many",
+  "task_type" => "IM",
   "estimated_time" => 120,
-  "config" => %{"label" => "cde", "value" => 100}
+  "config" => %{
+            "options" => [ %{"label" => "abc", "value" => "a"},
+                           %{"label" => "xyz", "value" => "b"} ]
+            }
 }
 
 tsk3 = %{
   "label" => "Task 3",
-  "task_type" => "Metering",
+  "task_type" => "MT",
   "estimated_time" => 15,
   "config" => %{"UOM" => "ampere", "type" => "A"}
 }
 
 tsk4 = %{
   "label" => "Task 4",
-  "task_type" => "Observation",
+  "task_type" => "OB",
   "estimated_time" => 90,
-  "config" => %{"Observation" => "Observered certain things"}
+  "config" => %{"min_length" => 10, "max_length" => 100}
 }
 
 {:ok, tsk1c} = WorkOrderConfig.create_task(tsk1, "inc_bata")

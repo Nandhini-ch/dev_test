@@ -938,7 +938,7 @@ defmodule Inconn2Service.Workorder do
     %WorkorderTask{}
     |> WorkorderTask.changeset(attrs)
     |> validate_task_id(prefix)
-    |> validate_response(prefix)
+    #|> validate_response(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -962,27 +962,27 @@ defmodule Inconn2Service.Workorder do
       task = Repo.get(Task, task_id, prefix: prefix)
       if task != nil do
         case task.task_type do
-          "Inspection_one"  ->
+          "IO"  ->
                 if Map.keys(response) == ["label", "value"] do
                   cs
                 else
                   add_error(cs, :response, "Response is invalid")
                 end
-          "Inspection_many" ->
+          "IM" ->
                 if Map.keys(response) == ["label", "value"] do
                   cs
                 else
                   add_error(cs, :response, "Response is invalid")
                 end
-          "Metering" ->
+          "MT" ->
                 if Map.keys(response) == ["UOM", "type"] and response["type"] in ["C","A"] do
                   cs
                 else
                   add_error(cs, :response, "Response is invalid")
                 end
-          "Observation" ->
-                if Map.keys(response) == ["Observation"] do
-                  length = String.length(response["Observation"])
+          "OB" ->
+                if Map.keys(response) == ["OB"] do
+                  length = String.length(response["OB"])
                   if 10<length and length<100 do
                     cs
                   else
@@ -1015,7 +1015,7 @@ defmodule Inconn2Service.Workorder do
     workorder_task
     |> WorkorderTask.changeset(attrs)
     |> validate_task_id(prefix)
-    |> validate_response(prefix)
+    #|> validate_response(prefix)
     |> Repo.update(prefix: prefix)
   end
 

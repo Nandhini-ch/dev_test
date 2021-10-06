@@ -174,6 +174,7 @@ defmodule Inconn2Service.Account do
           )
 
         IO.inspect(return_party)
+        {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
 
       _ ->
         result
@@ -191,8 +192,6 @@ defmodule Inconn2Service.Account do
         delete_licensee(licensee)
         {:error, {:triplex, "Not able to create tenant schema"}}
     end
-
-    {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
   end
 
   @doc """
