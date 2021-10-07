@@ -24,9 +24,10 @@ defmodule Inconn2Service.Account.Licensee do
   def changeset(licensee, attrs) do
     licensee
     |> cast(attrs, [:company_name, :business_type_id, :sub_domain, :party_type])
-    |> validate_required([:company_name, :business_type_id, :sub_domain])
+    |> validate_required([:company_name, :business_type_id, :sub_domain, :party_type])
     |> unique_constraint(:company_name)
     |> unique_constraint(:sub_domain)
+    |> validate_inclusion(:party_type, ["AO", "SP"])
     |> assoc_constraint(:business_type)
     |> cast_embed(:address)
     |> cast_embed(:contact)
