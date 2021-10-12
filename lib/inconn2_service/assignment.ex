@@ -79,7 +79,7 @@ defmodule Inconn2Service.Assignment do
     site_id = get_change(cs, :site_id, nil)
     if site_id != nil do
       case Repo.get(Site, site_id, prefix: prefix) do
-        nil -> add_error(cs, :site_id, "Site ID is invalid")
+        nil -> add_error(cs, :site_id, "Site Id is invalid")
         _ -> cs
       end
     else

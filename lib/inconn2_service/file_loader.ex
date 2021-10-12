@@ -5,9 +5,9 @@ defmodule Inconn2Service.FileLoader do
       |> Map.put("name", Map.get(record, "Name"))
       |> Map.put("description", Map.get(record, "Description"))
       |> Map.put("location_code", Map.get(record, "Location Code"))
-      |> Map.put("asset_category_id", Map.get(record, "Asset Category ID"))
-      |> Map.put("site_id", Map.get(record, "Site ID"))
-      |> Map.put("parent_id", Map.get(record, "Parent ID"))
+      |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+      |> Map.put("site_id", Map.get(record, "Site Id"))
+      |> Map.put("parent_id", Map.get(record, "Parent Id"))
   end
 
   def get_records_as_map_for_csv(content, required_fields) do

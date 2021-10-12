@@ -5,7 +5,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_locations(prefix) do
     locations = AssetConfig.list_active_locations(prefix)
 
-    header = [["id", "action", "reference", "Name", "Description", "Location Code", "Asset Category ID", "Site ID", "Parent ID", "parent reference"]]
+    header = [["id", "action", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]]
 
     body =
       Enum.map(locations, fn r ->

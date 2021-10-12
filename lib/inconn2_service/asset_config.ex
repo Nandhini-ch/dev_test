@@ -820,7 +820,7 @@ defmodule Inconn2Service.AssetConfig do
     if loc_id != nil and site_id != nil do
       location = Repo.get(Location, loc_id, prefix: prefix)
       case site_id != location.site_id do
-        true -> add_error(eq_cs, :location_id, "Site ID of location doesn't match Site ID of equipment")
+        true -> add_error(eq_cs, :location_id, "Site Id of location doesn't match Site Id of equipment")
         false -> eq_cs
       end
     else
