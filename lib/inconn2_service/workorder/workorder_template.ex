@@ -35,6 +35,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_scheduled()
+    |> validate_time_required()
     |> validate_inclusion(:repeat_unit, ["H", "D", "W", "M", "Y"])
     |> validate_date_order()
     |> validate_time_order()
@@ -45,9 +46,16 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
 
   defp validate_scheduled(cs) do
     case get_field(cs, :scheduled) do
-      true -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :loto_required])
+      true -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :loto_required])
       false -> cs
       _ -> cs
+    end
+  end
+
+  defp validate_time_required(cs) do
+    case get_field(cs, :repeat_unit) do
+      "H" -> validate_required(cs, [:time_start, :time_end])
+       _ -> cs
     end
   end
 
@@ -63,9 +71,13 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   defp validate_time_order(cs) do
     start_time = get_field(cs, :time_start)
     end_time = get_field(cs, :time_end)
-    case Time.compare(start_time, end_time) do
-      :gt -> add_error(cs, :time_start, "cannot be later than 'time_end'")
-      _ -> cs
+    if start_time != nil and end_time != nil do
+      case Time.compare(start_time, end_time) do
+        :gt -> add_error(cs, :time_start, "cannot be later than 'time_end'")
+        _ -> cs
+      end
+    else
+      cs
     end
   end
 
