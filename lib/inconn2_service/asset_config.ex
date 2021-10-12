@@ -692,6 +692,11 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments(prefix) do
+    Equipment
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_equipments_tree(site_id, prefix) do
     list_equipments(site_id, prefix)
     |> HierarchyManager.build_tree()

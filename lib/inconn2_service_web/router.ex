@@ -23,6 +23,7 @@ defmodule Inconn2ServiceWeb.Router do
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
+    get "/download_sites", ReferenceDownloadController, :download_sites
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
@@ -42,6 +43,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
     get "/equipments/:equipment_id/location_path", EquipmentController, :loc_path
     get "/locations/:location_id/equipments", EquipmentController, :loc_equipments
+    get "/download_equipments", ReferenceDownloadController, :download_equipments
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
