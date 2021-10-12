@@ -445,6 +445,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_active_locations(prefix) do
+    Location
+    |> where(active: true)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_locations_tree(site_id, prefix) do
     list_locations(site_id, prefix)
     |> HierarchyManager.build_tree()
@@ -474,6 +480,7 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_location!(id, prefix), do: Repo.get!(Location, id, prefix: prefix)
+  def get_location(id, prefix), do: Repo.get(Location, id, prefix: prefix)
 
   def get_root_locations(site_id, prefix) do
     root_path = []
@@ -536,13 +543,16 @@ defmodule Inconn2Service.AssetConfig do
 
     if ac_id != nil do
       asset_category = Repo.get(AssetCategory, ac_id, prefix: prefix)
+      if asset_category != nil do
+        case asset_category.asset_type != "L" do
+          true ->
+            add_error(loc_cs, :asset_category_id, "Asset category should be location")
 
-      case asset_category.asset_type != "L" do
-        true ->
-          add_error(loc_cs, :asset_category_id, "Asset category should be location")
-
-        false ->
-          loc_cs
+          false ->
+            loc_cs
+        end
+      else
+        loc_cs
       end
     else
       loc_cs

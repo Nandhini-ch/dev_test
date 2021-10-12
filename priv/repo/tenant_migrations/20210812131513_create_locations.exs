@@ -11,6 +11,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateLocations do
 
       timestamps()
       add :path, {:array, :integer}, null: false
+      add :active, :boolean
     end
 
     create index(:locations, [:site_id])

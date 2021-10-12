@@ -48,7 +48,8 @@ defmodule Inconn2Service.MixProject do
       {:ecto_commons, "~> 0.3.3"},
       {:comeonin, "~> 5.1.2"},
       {:argon2_elixir, "~> 2.0"},
-      {:guardian, "~> 1.0"}
+      {:guardian, "~> 1.0"},
+      {:csv, "~> 2.4"}
     ]
   end
 

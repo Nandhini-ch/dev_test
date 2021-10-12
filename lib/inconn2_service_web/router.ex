@@ -33,6 +33,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
     get "/sites/:site_id/locations/leaves", LocationController, :leaves
+    get "/download_locations", ReferenceDownloadController, :download_locations
+    post "/upload_locations", ReferenceUploadController, :upload_locations
 
     resources "/equipments", EquipmentController, except: [:new, :edit, :index]
     get "/sites/:site_id/equipments", EquipmentController, :index
