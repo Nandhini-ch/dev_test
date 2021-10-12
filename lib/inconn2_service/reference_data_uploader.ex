@@ -5,7 +5,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
   alias Inconn2Service.Repo
 
   def upload_locations(content, prefix) do
-    req_fields = ["id", "action", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]
+    req_fields = ["id", "action", "reference", "Name", "Description", "Location Code", "Asset Category ID", "Site ID", "Parent ID", "parent reference"]
 
     upload_content(
       content,
@@ -38,14 +38,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
     case validate_result do
       {:ok, records} ->
-        perform_insert(
-          records,
-          param_mapper,
-          context_module,
-          insert_func,
-          update_func,
-          prefix
-        )
+            if Map.has_key?("Parent Id") do
+              perform_insert(records, param_mapper, context_module, insert_func, prefix)
+            else
+              perform_actions(records, param_mapper, context_module, insert_func, update_func, prefix)
+            end
 
       {:error, error_messages} ->
         {:error, error_messages}
@@ -131,10 +128,10 @@ defmodule Inconn2Service.ReferenceDataUploader do
   end
 
   defp fill_parent_id(record) do
-    case Integer.parse(Map.get(record, "Parent Id", "")) do
-      {0, _} -> Map.put(record, "Parent Id", nil)
-      {num, _} -> Map.put(record, "Parent Id", num)
-      _ -> Map.put(record, "Parent Id", nil)
+    case Integer.parse(Map.get(record, "Parent ID", "")) do
+      {0, _} -> Map.put(record, "Parent ID", nil)
+      {num, _} -> Map.put(record, "Parent ID", num)
+      _ -> Map.put(record, "Parent ID", nil)
     end
   end
 
@@ -187,7 +184,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
   # if action is U, D, R then id must be present and valid
   # Set id here and validate for existence and load the structure if action is U, D, R
   def validate_action_id("U", record, mod, func, prefix) do
-    case Map.has_key?(record, "Parent Id") do
+    case Map.has_key?(record, "Parent ID") do
       true ->
           id = Map.get(record, "id")
           case id do
@@ -269,8 +266,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
   end
 
 
-  defp perform_insert(records, param_mapper, context_module, insert_func, _update_func, prefix) do
-    {processing_list, unprocessed_list} = Enum.split_with(records, fn x -> x["Parent Id"] != nil end)
+  defp perform_insert(records, param_mapper, context_module, insert_func, prefix) do
+    {processing_list, unprocessed_list} = Enum.split_with(records, fn x -> x["Parent ID"] != nil end)
     processed_list = insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
 
 
@@ -309,7 +306,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
                             if attrs["parent_id"] != nil do
                                 {:ok, result} = apply(context_module, insert_func, [attrs, prefix])
-                                r = Map.put(r, "Parent Id", result.parent_id)
+                                r = Map.put(r, "Parent ID", result.parent_id)
                                 Map.put(r, "id", result.id)
                             end
 
