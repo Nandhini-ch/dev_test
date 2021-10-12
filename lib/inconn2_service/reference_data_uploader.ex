@@ -38,7 +38,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
     case validate_result do
       {:ok, records} ->
-            if Map.has_key?("Parent Id") do
+            if Map.has_key?(records, "Parent Id") do
               perform_insert(records, param_mapper, context_module, insert_func, prefix)
             else
               perform_actions(records, param_mapper, context_module, insert_func, update_func, prefix)
