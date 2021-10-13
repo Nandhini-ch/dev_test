@@ -61,14 +61,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
 
-    put "/work_orders/:id/work_permitted", WorkOrderController, :work_permitted
-    put "/work_orders/:id/loto_locked", WorkOrderController, :loto_locked
-    put "/work_orders/:id/in_progress", WorkOrderController, :in_progress
-    put "/work_orders/:id/completed", WorkOrderController, :completed
-    put "/work_orders/:id/loto_released", WorkOrderController, :loto_released
-    put "/work_orders/:id/cancelled", WorkOrderController, :cancelled
-    put "/work_orders/:id/hold", WorkOrderController, :hold
-
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree

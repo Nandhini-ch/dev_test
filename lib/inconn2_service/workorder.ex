@@ -718,6 +718,7 @@ defmodule Inconn2Service.Workorder do
     |> validate_asset_id_workorder(prefix)
     |> validate_user_id(prefix)
     |> status_assigned(work_order, user, prefix)
+    |> update_status(work_order, user, prefix)
     |> validate_workorder_template_id(prefix)
     |> validate_workorder_schedule_id(prefix)
     |> Repo.update(prefix: prefix)
@@ -772,112 +773,49 @@ defmodule Inconn2Service.Workorder do
   end
   defp status_assigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil do
-      update_status_track(work_order, user, prefix)
+      update_status_track(work_order, user, prefix, "as")
       change(cs, status: "as")
     else
       cs
     end
   end
 
-  defp update_status_track(work_order, user, prefix) do
+  defp update_status(cs, work_order, user, prefix) do
+    case get_change(cs, :status, nil) do
+      "wp" ->
+              update_status_track(work_order, user, prefix, "wp")
+              cs
+      "ltl" ->
+              update_status_track(work_order, user, prefix, "ltl")
+              cs
+      "ip" ->
+              update_status_track(work_order, user, prefix, "ip")
+              cs
+      "cp" ->
+              update_status_track(work_order, user, prefix, "cp")
+              cs
+      "ltr" ->
+              update_status_track(work_order, user, prefix, "ltr")
+              cs
+      "cn" ->
+              update_status_track(work_order, user, prefix, "cn")
+              cs
+      "hl" ->
+              update_status_track(work_order, user, prefix, "hl")
+              cs
+       _ ->
+              cs
+    end
+  end
+
+  defp update_status_track(work_order, user, prefix, status) do
     site = Repo.get!(Site, work_order.site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
     date = Date.new!(date_time.year, date_time.month, date_time.day)
     time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
   end
 
-  def status_work_permitted(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "wp"})
-              |> Repo.update(prefix: prefix)
-    IO.inspect(result)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_loto_locked(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "ltl"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_in_progress(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "ip"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_completed(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "cp"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_loto_released(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "ltr"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_cancelled(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "cn"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
-
-  def status_hold(%WorkOrder{} = work_order, prefix, user) do
-    result = work_order
-              |> WorkOrder.changeset(%{"status" => "hl"})
-              |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, work_order} ->
-            update_status_track(work_order, user, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
-      _ ->
-            result
-    end
-  end
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking work_order changes.
 
