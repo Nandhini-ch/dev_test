@@ -185,6 +185,7 @@ dg1 = %{
   "equipment_code" => "EQ_DG1",
   "site_id" => sc.id,
   "location_id" => b1c.id,
+  "connections_in" => [1,2,3],
   "asset_category_id" => a2c.id
 }
 

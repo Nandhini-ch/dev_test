@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -44,6 +44,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/equipments/:equipment_id/location_path", EquipmentController, :loc_path
     get "/locations/:location_id/equipments", EquipmentController, :loc_equipments
     get "/download_equipments", ReferenceDownloadController, :download_equipments
+    post "/upload_equipments", ReferenceUploadController, :upload_equipments
+
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
@@ -51,15 +53,23 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
+    get "/download_tasks", ReferenceDownloadController, :download_tasks
+    get "/download_task_lists", ReferenceDownloadController, :download_task_lists
 
     resources "/checks", CheckController, except: [:new, :edit]
     resources "/check_lists", CheckListController, except: [:new, :edit]
+    get "/download_checks", ReferenceDownloadController, :download_checks
+    get "/download_check_lists", ReferenceDownloadController, :download_check_lists
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
+<<<<<<< Updated upstream
+=======
+    get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
+>>>>>>> Stashed changes
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index

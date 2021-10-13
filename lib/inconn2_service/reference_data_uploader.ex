@@ -17,6 +17,21 @@ defmodule Inconn2Service.ReferenceDataUploader do
     )
   end
 
+  def upload_equipments(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Equipment Code", "Asset Category Id", "Site Id", "Location Id", "Connections In", "Connections Out","Parent Id", "parent reference"]
+
+    upload_content(
+      content,
+      req_fields,
+      &FileLoader.make_equipments/1,
+      AssetConfig,
+      :get_equipment,
+      :create_equipment,
+      :update_equipment,
+      prefix
+    )
+  end
+
   # Content upload function
   defp upload_content(
          content,
@@ -36,8 +51,18 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
     case validate_result do
       {:ok, records} ->
+<<<<<<< Updated upstream
             if Map.has_key?(List.first(records), "Parent Id") do
               perform_insert_with_parents(records, param_mapper, context_module, insert_func, prefix)
+=======
+<<<<<<< HEAD
+            if Map.has_key?(List.last(records), "Parent Id") do
+              perform_insert(records, param_mapper, context_module, insert_func, prefix)
+=======
+            if Map.has_key?(List.first(records), "Parent Id") do
+              perform_insert_with_parents(records, param_mapper, context_module, insert_func, prefix)
+>>>>>>> 1ac3687e93609bcbc2d4e9debbe239f83598d099
+>>>>>>> Stashed changes
             else
               perform_insert_without_parents(records, param_mapper, context_module, insert_func, prefix)
             end
@@ -56,9 +81,44 @@ defmodule Inconn2Service.ReferenceDataUploader do
         Map.split(r, ["id", "active", "reference", "parent reference", "action", "action_valid", "action_error"])
 
       attrs = param_mapper.(attrs)
+<<<<<<< Updated upstream
 
       apply(context_module, insert_func, [attrs, prefix])
 
+=======
+<<<<<<< HEAD
+      db_rec = Map.get(ctrl_map, "db_rec")
+
+      case Map.get(ctrl_map, "action") do
+        "I" ->
+          apply(context_module, insert_func, [attrs, prefix])
+
+        "U" ->
+          apply(context_module, update_func, [db_rec, attrs, prefix])
+
+        "D" ->
+          subtree = HierarchyManager.subtree(db_rec) |> Repo.all(prefix: prefix)
+          Enum.map(subtree, fn x ->
+                                apply(context_module, update_func, [x, %{"active" => false}, prefix])
+                            end)
+
+        "R" ->
+          subtree = HierarchyManager.subtree(db_rec) |> Repo.all(prefix: prefix)
+          Enum.map(subtree, fn x ->
+                                apply(context_module, update_func, [x, %{"active" => true}, prefix])
+                            end)
+        _ ->
+          apply(context_module, insert_func, [attrs, prefix])  
+         
+        nil ->
+          apply(context_module, insert_func, [attrs, prefix])
+      end
+=======
+
+      apply(context_module, insert_func, [attrs, prefix])
+
+>>>>>>> 1ac3687e93609bcbc2d4e9debbe239f83598d099
+>>>>>>> Stashed changes
     end)
   end
 

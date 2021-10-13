@@ -10,11 +10,26 @@ defmodule Inconn2Service.FileLoader do
       |> Map.put("parent_id", Map.get(record, "Parent Id"))
   end
 
+  def make_equipments(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("equipment_code", Map.get(record, "Equipment Code"))
+    |> Map.put("location_id", Map.get(record, "Location Id"))
+    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+    |> Map.put("connections_in", Map.get(record, "Connections In"))
+    |> Map.put("connections_out", Map.get(record, "Connections Out"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+    |> Map.put("parent_id", Map.get(record, "Parent Id"))
+end
+
+
   def get_records_as_map_for_csv(content, required_fields) do
     {header, data_lines} = get_header_and_data_for_upload_csv(content)
 
+    
     header_fields =
       String.split(String.trim(header), ",") |> Enum.map(fn fld -> String.trim(fld) end)
+    
 
     if validate_header(header_fields, required_fields) do
       records =
