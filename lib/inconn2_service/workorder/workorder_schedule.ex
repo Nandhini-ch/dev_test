@@ -8,7 +8,8 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
     belongs_to :workorder_template, WorkorderTemplate
     field :asset_id, :integer
     field :asset_type, :string
-    field :config, :map
+    field :first_occurrence_date, :date
+    field :first_occurrence_time, :time
     field :next_occurrence_date, :date
     field :next_occurrence_time, :time
 
@@ -18,8 +19,8 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
   @doc false
   def changeset(workorder_schedule, attrs) do
     workorder_schedule
-    |> cast(attrs, [:workorder_template_id, :asset_id, :config])
-    |> validate_required([:workorder_template_id, :asset_id, :config])
+    |> cast(attrs, [:workorder_template_id, :asset_id, :first_occurrence_date, :first_occurrence_time])
+    |> validate_required([:workorder_template_id, :asset_id, :first_occurrence_date, :first_occurrence_time])
     |> assoc_constraint(:workorder_template)
   end
 end
