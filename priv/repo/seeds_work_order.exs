@@ -25,8 +25,8 @@ wkord_tp1 = %{
   "scheduled" => true,
   "repeat_every" => 4,
   "repeat_unit" => "H",
-  "applicable_start" => "2021-08-27",
-  "applicable_end" => "2021-08-29",
+  "applicable_start" => "2021-10-15",
+  "applicable_end" => "2021-10-17",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
   "create_new" => "oc",
@@ -45,8 +45,8 @@ wkord_tp2 = %{
   "scheduled" => true,
   "repeat_every" => 2,
   "repeat_unit" => "D",
-  "applicable_start" => "2021-08-27",
-  "applicable_end" => "2021-09-30",
+  "applicable_start" => "2021-09-27",
+  "applicable_end" => "2021-10-30",
   "time_start" => nil,
   "time_end" => nil,
   "create_new" => "oc",
@@ -128,11 +128,11 @@ wkord_tp5 = %{
 {:ok, wkord_tp4c} = Workorder.create_workorder_template(wkord_tp4, "inc_bata")
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
 
-wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "config" => %{"time" => "09:00:00"}}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "config" => %{"date" => "2021-09-01", "time" => "09:00:00"}}
-wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "config" => %{"day" => 4, "time" => "09:00:00"}}
-wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "config" => %{"day" => 15, "time" => "09:00:00"}}
-wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "config" => %{"day" => 15, "month" => 11, "time" => "09:00:00"}}
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "first_occurrence_date" => "2021-10-15", "first_occurrence_time" => "09:00:00"}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "first_occurrence_date" => "2021-10-15", "first_occurrence_time" => "09:00:00"}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "first_occurrence_date" => "2021-10-15", "first_occurrence_time" => "09:00:00"}
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "first_occurrence_date" => "2021-10-15", "first_occurrence_time" => "09:00:00"}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "first_occurrence_date" => "2021-10-15", "first_occurrence_time" => "09:00:00"}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_bata")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_bata")

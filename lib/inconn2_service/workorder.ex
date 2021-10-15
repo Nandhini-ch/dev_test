@@ -276,7 +276,6 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
-              |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
@@ -324,111 +323,22 @@ defmodule Inconn2Service.Workorder do
       end
   end
 
-  defp validate_config(cs, prefix) do
-    workorder_template_id = get_field(cs, :workorder_template_id)
-    config = get_field(cs, :config)
-    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
-    if workorder_template != nil do
-      repeat_unit = workorder_template.repeat_unit
-      case repeat_unit do
-        "H" ->
-          if Map.keys(config) == ["time"] do
-            cs
-          else
-            add_error(cs, :config, "Config is invalid")
-          end
-        "D" ->
-          if Map.keys(config) == ["date", "time"] do
-            cs
-          else
-            add_error(cs, :config, "Config is invalid")
-          end
-        "W" ->
-          if Map.keys(config) == ["day", "time"] do
-            cs
-          else
-            add_error(cs, :config, "Config is invalid")
-          end
-        "M" ->
-          if Map.keys(config) == ["day", "time"] do
-            cs
-          else
-            add_error(cs, :config, "Config is invalid")
-          end
-        "Y" ->
-          if Map.keys(config) == ["day", "month", "time"] do
-            cs
-          else
-            add_error(cs, :config, "Config is invalid")
-          end
-        end
-      else
-        cs
-      end
-  end
-
   defp calculate_next_occurrence(cs, prefix) do
-    workorder_template_id = get_field(cs, :workorder_template_id)
-    config = get_field(cs, :config)
+    workorder_template_id = get_field(cs, :workorder_template_id, nil)
+    first_date = get_field(cs, :first_occurrence_date, nil)
+    first_time = get_field(cs, :first_occurrence_time, nil)
     workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
     if workorder_template != nil do
       applicable_start = workorder_template.applicable_start
-      repeat_unit = workorder_template.repeat_unit
-      case repeat_unit do
-        "H" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-          date = applicable_start
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        "D" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-          date = Enum.map(String.split(config["date"], "-"), fn x -> String.to_integer(x) end)
-          date = Date.new!(Enum.at(date,0), Enum.at(date,1), Enum.at(date,2))
-          change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-        "W" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-          day = Date.day_of_week(applicable_start)
-          if config["day"] >= day do
-            day_add = config["day"] - day
-            date = Date.add(applicable_start, day_add)
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-          else
-            day_add = 7 + config["day"] - day
-            date = Date.add(applicable_start,day_add)
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-          end
-        "M" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-          if config["day"] >= applicable_start.day do
-            date = Date.new!(applicable_start.year, applicable_start.month, config["day"])
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-          else
-            case applicable_start.month do
-              12 ->
-                date = Date.new!(applicable_start.year + 1, 1, config["day"])
-                change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-              _ ->
-                date = Date.new!(applicable_start.year, applicable_start.month + 1, config["day"])
-                change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-            end
-          end
-        "Y" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-          date = Date.new!(applicable_start.year, config["month"], config["day"])
-          if Date.compare(date, applicable_start) == :lt do
-              date = Date.new!(applicable_start.year + 1, config["month"], config["day"])
-              change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-          else
-              change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-          end
-        end
-      else
-        cs
+      case Date.compare(applicable_start,first_date) do
+        :gt ->
+          add_error(cs, :first_occurrence_date, "should be greater than or equal to applicable start date")
+        _ ->
+          change(cs, %{next_occurrence_date: first_date, next_occurrence_time: first_time})
       end
+    else
+      cs
+    end
   end
 
   @doc """
@@ -447,7 +357,6 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
-              |> validate_config(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
     case result do
