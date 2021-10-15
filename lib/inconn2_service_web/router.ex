@@ -29,6 +29,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
+    get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
 
     resources "/locations", LocationController, except: [:new, :edit, :index]
     get "/sites/:site_id/locations", LocationController, :index

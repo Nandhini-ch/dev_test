@@ -34,6 +34,20 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     final_report
   end
 
+  def download_asset_categories(prefix) do
+    asset_categories = AssetConfig.list_asset_categories(prefix)
+
+    header = [["id", "reference", "Name", "Asset Type", "Parent Id", "parent reference"]]
+
+    body = 
+      Enum.map(asset_categories, fn r -> 
+        [r.id, r.name, r.asset_type, r.parent_id, ""]
+      end)
+
+    final_report = header ++ body
+    final_report  
+  end
+
   def download_sites(prefix) do
     locations = AssetConfig.list_sites(prefix)
 

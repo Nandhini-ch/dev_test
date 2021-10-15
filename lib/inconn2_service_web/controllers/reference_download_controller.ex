@@ -17,6 +17,19 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
+  def download_asset_categories(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_asset_categories(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"asset_categories.csv\"")
+    |> send_resp(200, data)
+  end
+
   def download_equipments(conn, _params) do
     data =
       ReferenceDataDownloader.download_equipments(conn.assigns.sub_domain_prefix)
