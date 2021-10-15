@@ -18,6 +18,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/timezones", TimezoneController, :index
 
     post "/sessions/login", SessionController, :login
+
+    resources "/iot_meterings", IotMeteringController, only: [:create, :show]
   end
 
   scope "/api", Inconn2ServiceWeb do

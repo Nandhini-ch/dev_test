@@ -257,4 +257,100 @@ defmodule Inconn2Service.Common do
     WorkScheduler.changeset(work_scheduler, attrs)
   end
 
+
+  alias Inconn2Service.Common.IotMetering
+
+  @doc """
+  Returns the list of iot_meterings.
+
+  ## Examples
+
+      iex> list_iot_meterings()
+      [%IotMetering{}, ...]
+
+  """
+  def list_iot_meterings do
+    Repo.all(IotMetering)
+  end
+
+  @doc """
+  Gets a single iot_metering.
+
+  Raises `Ecto.NoResultsError` if the Iot metering does not exist.
+
+  ## Examples
+
+      iex> get_iot_metering!(123)
+      %IotMetering{}
+
+      iex> get_iot_metering!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_iot_metering!(id), do: Repo.get!(IotMetering, id)
+
+  @doc """
+  Creates a iot_metering.
+
+  ## Examples
+
+      iex> create_iot_metering(%{field: value})
+      {:ok, %IotMetering{}}
+
+      iex> create_iot_metering(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_iot_metering(attrs \\ %{}) do
+    %IotMetering{}
+    |> IotMetering.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a iot_metering.
+
+  ## Examples
+
+      iex> update_iot_metering(iot_metering, %{field: new_value})
+      {:ok, %IotMetering{}}
+
+      iex> update_iot_metering(iot_metering, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_iot_metering(%IotMetering{} = iot_metering, attrs) do
+    iot_metering
+    |> IotMetering.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a iot_metering.
+
+  ## Examples
+
+      iex> delete_iot_metering(iot_metering)
+      {:ok, %IotMetering{}}
+
+      iex> delete_iot_metering(iot_metering)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_iot_metering(%IotMetering{} = iot_metering) do
+    Repo.delete(iot_metering)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking iot_metering changes.
+
+  ## Examples
+
+      iex> change_iot_metering(iot_metering)
+      %Ecto.Changeset{data: %IotMetering{}}
+
+  """
+  def change_iot_metering(%IotMetering{} = iot_metering, attrs \\ %{}) do
+    IotMetering.changeset(iot_metering, attrs)
+  end
 end
