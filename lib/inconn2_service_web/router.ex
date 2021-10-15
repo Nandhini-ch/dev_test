@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -66,10 +66,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
-<<<<<<< Updated upstream
-=======
     get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
->>>>>>> Stashed changes
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
