@@ -75,4 +75,65 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_timezone(timezone)
     end
   end
+
+  describe "iot_meterings" do
+    alias Inconn2Service.Common.IotMetering
+
+    @valid_attrs %{equipment_readings: %{}, processed: true}
+    @update_attrs %{equipment_readings: %{}, processed: false}
+    @invalid_attrs %{equipment_readings: nil, processed: nil}
+
+    def iot_metering_fixture(attrs \\ %{}) do
+      {:ok, iot_metering} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_iot_metering()
+
+      iot_metering
+    end
+
+    test "list_iot_meterings/0 returns all iot_meterings" do
+      iot_metering = iot_metering_fixture()
+      assert Common.list_iot_meterings() == [iot_metering]
+    end
+
+    test "get_iot_metering!/1 returns the iot_metering with given id" do
+      iot_metering = iot_metering_fixture()
+      assert Common.get_iot_metering!(iot_metering.id) == iot_metering
+    end
+
+    test "create_iot_metering/1 with valid data creates a iot_metering" do
+      assert {:ok, %IotMetering{} = iot_metering} = Common.create_iot_metering(@valid_attrs)
+      assert iot_metering.equipment_readings == %{}
+      assert iot_metering.processed == true
+    end
+
+    test "create_iot_metering/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_iot_metering(@invalid_attrs)
+    end
+
+    test "update_iot_metering/2 with valid data updates the iot_metering" do
+      iot_metering = iot_metering_fixture()
+      assert {:ok, %IotMetering{} = iot_metering} = Common.update_iot_metering(iot_metering, @update_attrs)
+      assert iot_metering.equipment_readings == %{}
+      assert iot_metering.processed == false
+    end
+
+    test "update_iot_metering/2 with invalid data returns error changeset" do
+      iot_metering = iot_metering_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_iot_metering(iot_metering, @invalid_attrs)
+      assert iot_metering == Common.get_iot_metering!(iot_metering.id)
+    end
+
+    test "delete_iot_metering/1 deletes the iot_metering" do
+      iot_metering = iot_metering_fixture()
+      assert {:ok, %IotMetering{}} = Common.delete_iot_metering(iot_metering)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_iot_metering!(iot_metering.id) end
+    end
+
+    test "change_iot_metering/1 returns a iot_metering changeset" do
+      iot_metering = iot_metering_fixture()
+      assert %Ecto.Changeset{} = Common.change_iot_metering(iot_metering)
+    end
+  end
 end
