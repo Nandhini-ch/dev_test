@@ -1,6 +1,6 @@
 defmodule Inconn2Service.ReferenceDataUploader do
 
-  alias Inconn2Service.{AssetConfig, FileLoader, WorkOrderConfig, CheckListConfig}
+  alias Inconn2Service.{AssetConfig, FileLoader, WorkOrderConfig, CheckListConfig, Workorder}
 
   def upload_locations(content, prefix) do
     req_fields = ["id", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]
@@ -37,11 +37,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_equipments(content, prefix) do
     req_fields = ["id", "reference", "Name", "Equipment Code", "Asset Category Id", "Site Id", "Location Id", "Connections In", "Connections Out","Parent Id", "parent reference"]
-    array_fields = ["Connections In", "Connections Out"]
+    special_fields = [{"Connections In", "array_of_integers", []}, {"Connections Out", "array_of_integers", []}]
     upload_content(
       content,
       req_fields,
-      array_fields,
+      special_fields,
       &FileLoader.make_equipments/1,
       AssetConfig,
       :get_equipment,
@@ -53,11 +53,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_task_lists(content, prefix) do
     req_fields = ["id", "reference", "Name", "Task Ids", "Asset Category Id"]
-    array_fields = ["Task Ids"]
+    special_fields = [{"Task Ids", "array_of_integers", []}]
     upload_content(
       content,
       req_fields,
-      array_fields,
+      special_fields,
       &FileLoader.make_task_lists/1,
       WorkOrderConfig,
       :get_task_list,
@@ -84,12 +84,12 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_check_lists(content, prefix) do
     req_fields = ["id", "reference", "Name", "Type", "Check Ids"]
-    array_fields = ["Check Ids"]
+    special_fields = [{"Check Ids", "array_of_integers", []}]
 
      upload_content(
        content,
        req_fields,
-       array_fields,
+       special_fields,
        &FileLoader.make_check_lists/1,
        CheckListConfig,
        :get_check_list,
@@ -99,11 +99,53 @@ defmodule Inconn2Service.ReferenceDataUploader do
      )
   end
 
+  def upload_workorder_templates(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Asset Category Id", "Asset Type", "Task List Id", "Tasks",
+    "Estimated Time", "Scheduled", "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End",
+    "Time Start", "Time End", "Create New", "Max Times", "Work Order Prior Time", "Work Permit Required",
+    "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id", "Loto Release Check List Id"]
+
+    special_fields = [{"Tasks", "integer_array_tuples_with_index", []}, {"Scheduled", "boolean", []}, {"Work Permit Required", "boolean", []}, {"Loto Required", "boolean", []}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_workorder_templates/1,
+      Workorder,
+      :get_workorder_template,
+      :create_workorder_template,
+      :update_workorder_template,
+      prefix
+    )
+  end
+
+  def upload_sites(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id",
+    "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "First Name", "Last Name", "Designation",
+    "Email", "Mobile", "Land Line"]
+
+    special_fields = [{"Address", "map_out_of_existing_options", ["Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode"]},
+                      {"Contact", "map_out_of_existing_options", ["First Name", "Last Name", "Designation", "Email", "Mobile", "Land Line"]}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_sites/1,
+      AssetConfig,
+      :get_site,
+      :create_site,
+      :update_site,
+      prefix
+    )
+  end
+
   # Content upload function
   defp upload_content(
          content,
          required_fields,
-         array_fields,
+         special_fields,
          param_mapper,
          context_module,
          _getter_func,
@@ -114,7 +156,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
     IO.inspect("Inside Upload Content Function")
     validate_result =
-      case parse_and_choose_records(content, required_fields, array_fields) do
+      case parse_and_choose_records(content, required_fields, special_fields) do
         {:ok, records} -> {:ok, records}
         {:error, err_msgs} -> {:error, err_msgs}
       end
@@ -202,10 +244,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
     processed_list = insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
 
     {processing_list, unprocessed_list} = Enum.split_with(unprocessed_list, fn x -> x["parent reference"] == nil end)
-    IO.inspect(processing_list)
     processed_list = processed_list ++ insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
 
-    IO.inspect(Enum.count(processed_list))
     insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list, unprocessed_list)
 
 

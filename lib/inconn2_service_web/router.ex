@@ -26,6 +26,7 @@ defmodule Inconn2ServiceWeb.Router do
     pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
     get "/download_sites", ReferenceDownloadController, :download_sites
+    post "/upload_sites", ReferenceUploadController, :upload_sites
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
@@ -74,6 +75,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
     get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
+    post "/upload_workorder_templates", ReferenceUploadController, :upload_workorder_templates
+
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
