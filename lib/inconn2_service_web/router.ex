@@ -76,6 +76,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
     get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
     post "/upload_workorder_templates", ReferenceUploadController, :upload_workorder_templates
+    get "/download_workorder_schedules", ReferenceDownloadController, :download_workorder_schedules
+    post "/upload_workorder_schedules", ReferenceUploadController, :upload_workorder_schedules
 
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]

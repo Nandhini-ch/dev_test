@@ -141,6 +141,25 @@ defmodule Inconn2Service.ReferenceDataUploader do
     )
   end
 
+  def upload_workorder_schedules(content, prefix) do
+    req_fields = ["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays",
+                  "First Occurrence Date", "First Occurrence Time", "Next Occurrence Date", "Next Occurrence Time"]
+
+    special_fields = [{"Holidays", "array_of_integers", []}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_workorder_schedules/1,
+      Workorder,
+      :get_workorder_schedule,
+      :create_workorder_schedule,
+      :update_workorder_schedule,
+      prefix
+    )
+  end
+
   # Content upload function
   defp upload_content(
          content,

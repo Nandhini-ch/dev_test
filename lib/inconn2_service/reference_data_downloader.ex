@@ -147,7 +147,23 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
       final_report = header ++ body
       final_report
+  end
 
+  def download_workorder_schedules(prefix) do
+    workorder_schedules = Workorder.list_workorder_schedules(prefix)
+
+    header = [["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "First Occurrence Date", "First Occurrence Time",
+             "Next Occurrence Date", "Next Occurrence Time"]]
+
+    body =
+      Enum.map(workorder_schedules, fn r ->
+        # IO.inspect(r)
+        [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), r.first_occurrence_date, r.first_occurrence_time,
+        r.next_occurrence_date, r.next_occurrence_time]
+      end)
+
+    final_report = header ++ body
+    final_report
   end
 
   defp convert_array_of_integers_to_string(array_of_ids) do

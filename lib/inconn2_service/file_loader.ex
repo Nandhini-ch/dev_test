@@ -90,6 +90,18 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("contact", Map.get(record, "Contact"))
   end
 
+  def make_workorder_schedules(record) do
+    %{}
+    |> Map.put("workorder_template_id", Map.get(record, "Workorder Template Id"))
+    |> Map.put("asset_id", Map.get(record, "Asset Id"))
+    |> Map.put("asset_type", Map.get(record, "Asset Type"))
+    |> Map.put("holidays", Map.get(record, "Holidays"))
+    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
+    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
+    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
+    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
+  end
+
   def convert_sigil_to_array([], map), do: map
 
   def convert_sigil_to_array(keys, map) do
@@ -135,7 +147,7 @@ defmodule Inconn2Service.FileLoader do
           end)
           submap = Enum.zip(options, submap_value_list) |> Enum.into(%{})
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
-          convert_special_keys_to_required_type(tail, map)
+          convert_special_keys_to_required_type(tail, new_map)
       _ ->
          IO.puts("No Type Match")
     end
