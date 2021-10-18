@@ -32,6 +32,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         loto_required: workorder_schedule.workorder_template.loto_required,
         loto_lock_check_list_id: workorder_schedule.workorder_template.loto_lock_check_list_id,
         loto_release_check_list_id: workorder_schedule.workorder_template.loto_release_check_list_id,
+      holidays: workorder_schedule.holidays,
       first_occurrence_date: workorder_schedule.first_occurrence_date,
       first_occurrence_time: workorder_schedule.first_occurrence_time,
       next_occurrence_date: workorder_schedule.next_occurrence_date,
