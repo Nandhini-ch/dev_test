@@ -41,7 +41,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(asset_categories, fn r ->
-        [r.id, "", r.name, r.asset_type, r.parent_id, ""]
+        [r.id,"", r.name, r.asset_type, r.parent_id, ""]
       end)
 
     final_report = header ++ body
@@ -51,11 +51,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_sites(prefix) do
     locations = AssetConfig.list_sites(prefix)
 
-    header = [["id", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "Contact First Name", "Contact Last Name", "Contact Designtion", "Contact Email", "Contact Mobile", "Contact Land Line"]]
+    header = [["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "First Name", "Last Name", "Designation", "Email", "Mobile", "Land Line"]]
 
     body =
       Enum.map(locations, fn r ->
-        [r.id, r.name, r.description, r.branch, r.area, r.latitude, r.longitude, r.fencing_radius, r.site_code, r.time_zone, r.party_id, r.address.address_line1, r.address.address_line2, r.address.city, r.address.state, r.address.country, r.address.postcode, r.contact.first_name, r.contact.last_name, r.contact.designation, r.contact.email, r.contact.land_line]
+        [r.id, "", r.name, r.description, r.branch, r.area, r.latitude, r.longitude, r.fencing_radius, r.site_code, r.time_zone, r.party_id, r.address.address_line1, r.address.address_line2, r.address.city, r.address.state, r.address.country, r.address.postcode, r.contact.first_name, r.contact.last_name, r.contact.designation, r.contact.email, r.contact.land_line]
       end)
 
     final_report = header ++ body
@@ -65,14 +65,14 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_work_order_templates(prefix) do
     workorder_templates = Workorder.list_workorder_templates(prefix)
 
-    header = [["id", "Asset Category Id", "Asset Type", "Name", "Task list Id", "Tasks", "Estimated time", "Scheduled",
-     "Repeat every", "Repeat unit", "Applicable start", "Applicable End", "Time Start", "Time End", "Create New", "Max Times",
-     "Workorder Prior Time", "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List ID",
+    header = [["id", "reference", "Asset Category Id", "Asset Type", "Name", "Task List Id", "Tasks", "Estimated Time", "Scheduled",
+     "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End", "Time Start", "Time End", "Create New", "Max Times",
+     "Work Order Prior Time", "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id",
      "Loto Release Check List Id",]]
 
     body =
       Enum.map(workorder_templates, fn r ->
-        [r.id, r.asset_category_id, r.asset_type, r.name, r.task_list_id, get_only_ids_for_workorder_tasks(r.tasks), r.estimated_time, r.scheduled,
+        [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, get_only_ids_for_workorder_tasks(r.tasks), r.estimated_time, r.scheduled,
         r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times,
         r.workorder_prior_time, r.workpermit_required, r.workpermit_check_list_id, r.loto_required, r.loto_lock_check_list_id,
         r.loto_release_check_list_id]
@@ -85,11 +85,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_task_lists(prefix) do
     task_lists = WorkOrderConfig.list_task_lists(prefix)
 
-    header = [["id", "Name", "Task Ids", "Asset Category Id"]]
+    header = [["id", "reference", "Name", "Task Ids", "Asset Category Id"]]
 
     body =
       Enum.map(task_lists, fn r ->
-        [r.id, r.name, convert_array_of_integers_to_string(r.task_ids), r.asset_category_id]
+        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids), r.asset_category_id]
       end)
 
       final_report = header ++ body
@@ -99,11 +99,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_check_lists(prefix) do
     check_lists = CheckListConfig.list_check_lists(prefix)
 
-    header = [["id", "Name", "Type", "Check Ids"]]
+    header = [["id", "reference", "Name", "Type", "Check Ids"]]
 
     body =
       Enum.map(check_lists, fn r ->
-        [r.id, r.name, r.type, convert_array_of_integers_to_string(r.check_ids)]
+        [r.id, "", r.name, r.type, convert_array_of_integers_to_string(r.check_ids)]
       end)
 
       final_report = header ++ body
@@ -113,11 +113,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_checks(prefix) do
     check = CheckListConfig.list_checks(prefix)
 
-    header = [["id", "Label", "Type"]]
+    header = [["id", "reference", "Label", "Type"]]
 
     body =
       Enum.map(check, fn r ->
-        [r.id, r.label, r.type]
+        [r.id, "", r.label, r.type]
       end)
 
       final_report = header ++ body
@@ -152,9 +152,9 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
   defp convert_array_of_integers_to_string(array_of_ids) do
     if array_of_ids != nil do
-      array_of_ids
-      |> Enum.map(fn id -> to_string(id) end)
-      |> Enum.join(";")
+        array_of_ids
+        |> Enum.map(fn id -> to_string(id) end)
+        |> Enum.join(";")
     else
       ""
     end

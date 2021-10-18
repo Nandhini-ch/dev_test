@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -26,12 +26,14 @@ defmodule Inconn2ServiceWeb.Router do
     pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
     get "/download_sites", ReferenceDownloadController, :download_sites
+    post "/upload_sites", ReferenceUploadController, :upload_sites
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
+    post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
     resources "/locations", LocationController, except: [:new, :edit, :index]
     get "/sites/:site_id/locations", LocationController, :index
@@ -58,11 +60,14 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/task_lists", TaskListController, except: [:new, :edit]
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
+    post "/upload_task_lists", ReferenceUploadController, :upload_task_lists
 
     resources "/checks", CheckController, except: [:new, :edit]
     resources "/check_lists", CheckListController, except: [:new, :edit]
     get "/download_checks", ReferenceDownloadController, :download_checks
+    post "/upload_checks", ReferenceUploadController, :upload_checks
     get "/download_check_lists", ReferenceDownloadController, :download_check_lists
+    post "/upload_check_lists", ReferenceUploadController, :upload_check_lists
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
@@ -70,6 +75,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
     get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
+    post "/upload_workorder_templates", ReferenceUploadController, :upload_workorder_templates
+
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
     get "/parties/:party_id/org_units", OrgUnitController, :index
