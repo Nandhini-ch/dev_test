@@ -102,6 +102,14 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
   end
 
+  def make_tasks(record) do
+    %{}
+    |> Map.put("label", Map.get(record, "Label"))
+    |> Map.put("task_type", Map.get(record, "Task Type"))
+    |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
+    |> Map.put("config", Map.get(record, "Config"))
+  end
+
   def convert_sigil_to_array([], map), do: map
 
   def convert_sigil_to_array(keys, map) do
@@ -148,6 +156,29 @@ defmodule Inconn2Service.FileLoader do
           submap = Enum.zip(options, submap_value_list) |> Enum.into(%{})
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
           convert_special_keys_to_required_type(tail, new_map)
+      "random_json_key_value" ->
+        IO.inspect(map)
+        if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
+          array =
+            Enum.map(map["Config"], fn x ->
+              [label, value] = String.split(x, ":")
+              %{"label" => label, "value" => value}
+            end)
+          new_map = Map.put(map, "Config", %{"options" => array})
+          IO.inspect(new_map)
+          convert_special_keys_to_required_type(tail, new_map)
+        else
+          if map["Task Type"] == "MT" do
+            [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
+            new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
+            convert_special_keys_to_required_type(tail, new_map)
+          else
+            [min, max] = String.split(Enum.at(map["Config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
+            new_map = Map.put(map, "Config", %{"min_length" => min, "max_length" => max})
+            IO.inspect(new_map)
+            convert_special_keys_to_required_type(tail, new_map)
+          end
+        end
       _ ->
          IO.puts("No Type Match")
     end
@@ -165,18 +196,36 @@ defmodule Inconn2Service.FileLoader do
           data_fields =
             String.split(String.trim(data_line), ",") |> Enum.map(fn v -> String.trim(v) end)
 
+
+
           # convert_sigil_to_array(Enum.zip(header_fields, data_fields) |> Enum.into(%{}), array_keys)
-          map = Enum.zip(header_fields, data_fields) |> Enum.into(%{})
+          # map = Enum.zip(header_fields, data_fields) |> Enum.into(%{})
+          # IO.inspect(data_fields)
+          # IO.inspect(header_fields)
+          map =
+            if Enum.count(data_fields) > Enum.count(header_fields) do
+              zip_and_map(header_fields, data_fields)
+            else
+              Enum.zip(header_fields, data_fields) |> Enum.into(%{})
+            end
+
           # release_map = convert_sigil_to_array(array_keys, map)
           release_map = convert_special_keys_to_required_type(array_keys, map)
-          # IO.puts(map)
+          # IO.inspect(release_map)
           release_map
         end)
-
       {:ok, records}
     else
       {:error, ["Invalid Header Fields"]}
     end
+  end
+
+  def zip_and_map(header_fields, data_fields) do
+    {real_data, extra_fields} = Enum.split(data_fields, Enum.count(header_fields))
+    new_header_fields = header_fields ++ ["Config"]
+    new_data_fields = real_data ++ [extra_fields]
+    IO.inspect(Enum.zip(new_header_fields, new_data_fields) |> Enum.into(%{}))
+    Enum.zip(new_header_fields, new_data_fields) |> Enum.into(%{})
   end
 
   def get_header_and_data_for_upload_csv(content) do
@@ -192,10 +241,6 @@ defmodule Inconn2Service.FileLoader do
   end
 
   defp validate_header(header_fields, required_fields) do
-    IO.inspect(header_fields)
-    IO.inspect(required_fields)
-    IO.inspect(header_fields -- required_fields)
-    IO.inspect(required_fields -- header_fields)
     hms = MapSet.new(header_fields)
     rms = MapSet.new(required_fields)
     count = Enum.count(MapSet.intersection(hms, rms))

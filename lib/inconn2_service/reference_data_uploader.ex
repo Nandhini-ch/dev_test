@@ -160,6 +160,23 @@ defmodule Inconn2Service.ReferenceDataUploader do
     )
   end
 
+  def upload_tasks(content, prefix) do
+    req_fields = ["id", "reference", "Label", "Task Type", "Estimated Time"]
+    special_fields = [{"Config", "random_json_key_value", []}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_tasks/1,
+      WorkOrderConfig,
+      :get_task,
+      :create_task,
+      :update_task,
+      prefix
+    )
+  end
+
   # Content upload function
   defp upload_content(
          content,

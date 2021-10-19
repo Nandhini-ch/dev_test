@@ -70,6 +70,13 @@ defmodule Inconn2ServiceWeb.ReferenceUploadController do
     render_response_json(conn, data)
   end
 
+  def upload_tasks(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_tasks(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
   def upload_equipments(conn, params) do
     file = params["csv_file"]
     data = ReferenceDataUploader.upload_equipments(file, conn.assigns.sub_domain_prefix)

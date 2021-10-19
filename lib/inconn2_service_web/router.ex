@@ -59,6 +59,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/task_lists", TaskListController, except: [:new, :edit]
     get "/download_tasks", ReferenceDownloadController, :download_tasks
+    post "/upload_tasks", ReferenceUploadController, :upload_tasks
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
     post "/upload_task_lists", ReferenceUploadController, :upload_task_lists
 
