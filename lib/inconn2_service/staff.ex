@@ -22,6 +22,11 @@ defmodule Inconn2Service.Staff do
       [%OrgUnit{}, ...]
 
   """
+  def list_org_units(prefix) do
+    OrgUnit
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_org_units(party_id, prefix) do
     OrgUnit
     |> where(party_id: ^party_id)

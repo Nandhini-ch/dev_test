@@ -4,7 +4,7 @@ defmodule Inconn2Service.Repo do
     adapter: Ecto.Adapters.Postgres
 
   def add_active_filter(query, query_params) do
-    filler =
+    filter =
       case query_params do
         %{"active" => "true"} -> %{active: true}
         %{"active" => "false"} -> %{active: false}
@@ -12,8 +12,8 @@ defmodule Inconn2Service.Repo do
       end
 
       case Map.get(filter, active: true) do
-        true -> where(query, active: true)
-        false -> where(query, active: false)
+        true -> "where(query, active: true)"
+        false -> "where(query, active: false)"
         _ -> query
     end
   end

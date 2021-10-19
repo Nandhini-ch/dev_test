@@ -54,6 +54,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     resources "/bankholidays", HolidayController, except: [:new, :edit]
+    get "/download_bankholidays", ReferenceDownloadController, :download_bankholidays
     resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
@@ -82,16 +83,20 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
+    get "/download_org_units", ReferenceDownloadController, :download_org_units
     get "/parties/:party_id/org_units", OrgUnitController, :index
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
 
     resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/download_employees", ReferenceDownloadController, :download_employees
     resources "/users", UserController, except: [:new, :edit]
+    get "/download_users", ReferenceDownloadController, :download_users
     resources "/roles", RoleController, except: [:new, :edit]
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
+    get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
   end
 end

@@ -4,6 +4,9 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   alias Inconn2Service.Workorder
   alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.CheckListConfig
+  alias Inconn2Service.Staff
+  alias Inconn2Service.Assignment
+  alias Inconn2Service.Settings
 
   def download_locations(prefix) do
     locations = AssetConfig.list_active_locations(prefix)
@@ -118,6 +121,96 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     body =
       Enum.map(check, fn r ->
         [r.id, "", r.label, r.type]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_employees(prefix) do
+    check = Staff.list_employees(prefix)
+
+    header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employement End Date",
+    "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "reports_to",
+    "Skills", "Org Unit Id", "Party Id"]]
+
+    body =
+      Enum.map(check, fn r ->
+        [r.id, "", r.first_name, r.last_name, r.employement_start_date, r.employment_end_date,
+        r.designation, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
+        convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_users(prefix) do
+    check = Staff.list_users(prefix)
+
+    header = [["id", "reference", "Username", "Role Id", "Party Id"]]
+
+    body =
+      Enum.map(check, fn r ->
+        [r.id, "", r.username, convert_array_of_integers_to_string(r.role_id), r.party_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_employee_rosters(prefix) do
+    check = Assignment.list_employee_rosters(prefix)
+
+    header = [["id", "reference", "Employee Id", "Site Id", "Shift Id", "start_date", "end_date"]]
+
+    body =
+      Enum.map(check, fn r ->
+        [r.id, "", r.employee_id, r.site_id, r.shift_id, r.start_date, r.end_date]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_org_units(prefix) do
+    org_units = Staff.list_org_units(prefix)
+
+    header = [["id", "reference", "Name", "Party Id", "Parent Id", "parent reference"]]
+
+    body =
+      Enum.map(org_units, fn r ->
+        [r.id, "", r.name, r.party_id, r.parent_id, ""]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_bankholidays(prefix) do
+    org_units = Settings.list_bankholidays(prefix)
+
+    header = [["id", "reference", "Name", "Start Date", "End Date", "Site Id"]]
+
+    body =
+      Enum.map(org_units, fn r ->
+        [r.id, "", r.name, r.start_date, r.end_date, r.site_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_shifts(prefix) do
+    shifts = Settings.list_shifts(prefix)
+
+    header = [["id", "reference", "Name", "Start Time", "End Time", "Applicable Days",
+    "Start Date", "End Date", "Site Id"]]
+
+    body =
+      Enum.map(shifts, fn r ->
+        [r.id, "", r.name, r.start_time, r.end_time, convert_array_of_integers_to_string(r.applicable_days),
+        r.start_date, r.end_date, r.site_id]
       end)
 
       final_report = header ++ body

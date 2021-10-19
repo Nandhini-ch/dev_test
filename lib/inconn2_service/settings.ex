@@ -17,6 +17,10 @@ defmodule Inconn2Service.Settings do
       [%Shift{}, ...]
 
   """
+  def list_shifts(prefix) do
+    Shift
+    |> Repo.all(prefix: prefix)
+  end
 
   def list_shifts(site_id, prefix) do
     Shift
@@ -159,6 +163,11 @@ defmodule Inconn2Service.Settings do
       [%Holiday{}, ...]
 
   """
+  def list_bankholidays(prefix) do
+    Holiday
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_bankholidays(site_id, year_begin, year_end, prefix) do
     query =
       from(h in Holiday,
