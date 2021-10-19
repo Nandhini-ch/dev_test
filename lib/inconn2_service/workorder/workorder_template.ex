@@ -25,6 +25,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :loto_required, :boolean
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
+    field :active, :boolean, default: true
 
     timestamps()
   end

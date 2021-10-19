@@ -5,6 +5,7 @@ defmodule Inconn2Service.Account.BusinessType do
   schema "business_types" do
     field :description, :string
     field :name, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end

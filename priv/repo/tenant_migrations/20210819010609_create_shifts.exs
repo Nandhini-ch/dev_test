@@ -12,7 +12,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateShifts do
       add :end_date, :date
       add :site_id, references(:sites, on_delete: :nothing)
 
-
       timestamps()
     end
 

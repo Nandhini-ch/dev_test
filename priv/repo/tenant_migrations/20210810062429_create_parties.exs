@@ -13,6 +13,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateParties do
       add :contact, :jsonb
 
       timestamps()
+      add :active, :boolean
     end
   end
 end

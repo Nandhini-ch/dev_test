@@ -8,6 +8,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployeeRosters do
       add :shift_id, :integer
       add :start_date, :date
       add :end_date, :date
+      add :active, :boolean
 
       timestamps()
     end

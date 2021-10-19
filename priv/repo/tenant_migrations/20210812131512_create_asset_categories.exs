@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateAssetCategories do
       add :asset_type, :string
       timestamps()
       add :path, {:array, :integer}, null: false
+      add :active, :boolean, default: true
     end
 
   end

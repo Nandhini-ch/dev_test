@@ -14,6 +14,7 @@ defmodule Inconn2Service.AssetConfig.Site do
     field :fencing_radius, :float
     field :site_code, :string
     field :time_zone, :string
+    field :active, :boolean, default: true
     belongs_to :party, Party
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete

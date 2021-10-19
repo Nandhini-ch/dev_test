@@ -11,6 +11,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateLicensees do
       add :business_type_id, references(:business_types, on_delete: :nothing)
 
       timestamps()
+      add :active, :boolean
     end
 
     create index(:licensees, [:business_type_id])

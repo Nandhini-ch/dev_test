@@ -6,6 +6,7 @@ defmodule Inconn2Service.CheckListConfig.CheckList do
     field :name, :string
     field :type, :string
     field :check_ids, {:array, :integer}
+    field :active, :boolean, default: true
 
     timestamps()
   end

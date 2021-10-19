@@ -13,6 +13,7 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
     field :first_occurrence_time, :time
     field :next_occurrence_date, :date
     field :next_occurrence_time, :time
+    field :active, :boolean, default: true
 
     timestamps()
   end

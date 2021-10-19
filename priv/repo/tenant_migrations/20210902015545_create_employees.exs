@@ -18,6 +18,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
       add :skills, {:array, :integer}
       add :org_unit_id, references(:org_units, on_delete: :nothing)
       add :party_id, references(:parties, on_delete: :nothing)
+      add :active, :boolean
       timestamps()
     end
 

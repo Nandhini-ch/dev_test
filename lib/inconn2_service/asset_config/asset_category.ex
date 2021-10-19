@@ -8,6 +8,7 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
     field :asset_type, :string
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
+    field :active, :boolean, default: true
 
     timestamps()
   end

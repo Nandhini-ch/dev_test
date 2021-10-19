@@ -5,6 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateChecks do
     create table(:checks) do
       add :label, :string
       add :type, :string
+      add :active, :boolean
 
       timestamps()
     end

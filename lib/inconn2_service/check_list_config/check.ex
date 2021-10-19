@@ -5,6 +5,7 @@ defmodule Inconn2Service.CheckListConfig.Check do
   schema "checks" do
     field :label, :string
     field :type, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end
