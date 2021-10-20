@@ -7,7 +7,7 @@ defmodule Inconn2Service.Workorder.WorkorderTask do
     belongs_to :work_order, WorkOrder
     field :task_id, :integer
     field :sequence, :integer
-    field :response, :map
+    field :response, :string
 
     timestamps()
   end

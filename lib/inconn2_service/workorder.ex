@@ -753,6 +753,10 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderTask, prefix: prefix)
   end
 
+  def list_workorder_tasks(prefix, work_order_id) do
+    from(t in WorkorderTask, where: t.work_order_id == ^work_order_id)
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Gets a single workorder_task.
 
@@ -785,7 +789,7 @@ defmodule Inconn2Service.Workorder do
     %WorkorderTask{}
     |> WorkorderTask.changeset(attrs)
     |> validate_task_id(prefix)
-    #|> validate_response(prefix)
+    |> validate_response(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -804,40 +808,13 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_response(cs, prefix) do
     task_id = get_field(cs, :task_id)
-    response = get_field(cs, :response)
-    if response != nil and task_id != nil do
-      task = Repo.get(Task, task_id, prefix: prefix)
+    if task_id != nil do
+      task = Repo.get!(Task, task_id, prefix: prefix)
       if task != nil do
+        config = task.config
         case task.task_type do
-          "IO"  ->
-                if Map.keys(response) == ["label", "value"] do
-                  cs
-                else
-                  add_error(cs, :response, "Response is invalid")
-                end
-          "IM" ->
-                if Map.keys(response) == ["label", "value"] do
-                  cs
-                else
-                  add_error(cs, :response, "Response is invalid")
-                end
-          "MT" ->
-                if Map.keys(response) == ["UOM", "type"] and response["type"] in ["C","A"] do
-                  cs
-                else
-                  add_error(cs, :response, "Response is invalid")
-                end
-          "OB" ->
-                if Map.keys(response) == ["OB"] do
-                  length = String.length(response["OB"])
-                  if 10<length and length<100 do
-                    cs
-                  else
-                    add_error(cs, :response, "Response length is invalid")
-                  end
-                else
-                  add_error(cs, :response, "Response is invalid")
-                end
+          "OB" -> validate_length(cs, :response, min: config["min_length"], max: config["max_length"])
+            _ -> cs
         end
       else
         cs
@@ -862,7 +839,7 @@ defmodule Inconn2Service.Workorder do
     workorder_task
     |> WorkorderTask.changeset(attrs)
     |> validate_task_id(prefix)
-    #|> validate_response(prefix)
+    |> validate_response(prefix)
     |> Repo.update(prefix: prefix)
   end
 

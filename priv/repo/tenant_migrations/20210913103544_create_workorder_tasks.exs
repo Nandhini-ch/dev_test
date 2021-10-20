@@ -6,7 +6,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTasks do
       add :work_order_id, references(:work_orders, on_delete: :nothing)
       add :task_id, :integer
       add :sequence, :integer
-      add :response, :map
+      add :response, :string
 
       timestamps()
     end

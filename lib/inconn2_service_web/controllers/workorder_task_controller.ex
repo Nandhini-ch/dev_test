@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkorderTaskController do
     render(conn, "index.json", workorder_tasks: workorder_tasks)
   end
 
+  def index_by_workorder(conn, %{"work_order_id" => work_order_id}) do
+    workorder_tasks = Workorder.list_workorder_tasks(conn.assigns.sub_domain_prefix, work_order_id)
+    render(conn, "index.json", workorder_tasks: workorder_tasks)
+  end
+
   def create(conn, %{"workorder_task" => workorder_task_params}) do
     with {:ok, %WorkorderTask{} = workorder_task} <- Workorder.create_workorder_task(workorder_task_params, conn.assigns.sub_domain_prefix) do
       conn
