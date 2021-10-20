@@ -70,9 +70,44 @@ defmodule Inconn2ServiceWeb.ReferenceUploadController do
     render_response_json(conn, data)
   end
 
+  def upload_employees(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_employees(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
   def upload_tasks(conn, params) do
     file = params["csv_file"]
     data = ReferenceDataUploader.upload_tasks(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  def upload_org_units(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_org_units(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  def upload_shifts(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_shifts(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  def upload_bankholidays(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_bankholidays(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  def upload_employee_rosters(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_employee_rosters(file, conn.assigns.sub_domain_prefix)
 
     render_response_json(conn, data)
   end

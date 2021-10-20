@@ -110,14 +110,59 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("config", Map.get(record, "Config"))
   end
 
-  def convert_sigil_to_array([], map), do: map
+  def make_employees(record) do
+    %{}
+    |> Map.put("first_name", Map.get(record, "First Name"))
+    |> Map.put("last_name", Map.get(record, "Last Name"))
+    |> Map.put("employement_start_date", Map.get(record, "Employment Start Date"))
+    |> Map.put("employment_end_date", Map.get(record, "Employment End Date"))
+    |> Map.put("designation", Map.get(record, "Designation"))
+    |> Map.put("email", Map.get(record, "Email"))
+    |> Map.put("employee_id", Map.get(record, "Employee Id"))
+    |> Map.put("landline_no", Map.get(record, "Landline No"))
+    |> Map.put("mobile_no", Map.get(record, "Mobile No"))
+    |> Map.put("salary", Map.get(record, "Salary"))
+    |> Map.put("has_login_crendentials", Map.get(record, "Create User?"))
+    |> Map.put("reports_to", Map.get(record, "Reports to"))
+    |> Map.put("skills", Map.get(record, "Skills"))
+    |> Map.put("org_unit_id", Map.get(record, "Org Unit Id"))
+    |> Map.put("party_id", Map.get(record, "Party Id"))
+  end
 
-  def convert_sigil_to_array(keys, map) do
-    [array_key| tail] = keys
-    array_value =
-      if map[array_key] == "", do: [], else: String.split(map[array_key], ";") |> Enum.map(fn x -> String.to_integer(x) end)
-    new_map = Map.put(map, array_key, array_value)
-    convert_sigil_to_array(tail, new_map)
+  def make_org_units(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("party_id", Map.get(record, "Party Id"))
+    |> Map.put("active", Map.get(record, "Active"))
+    |> Map.put("parent_id", Map.get(record, "Parent Id"))
+  end
+
+  def make_shifts(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("start_time", Map.get(record, "Start Time"))
+    |> Map.put("end_time", Map.get(record, "End Time"))
+    |> Map.put("applicable_days", Map.get(record, "Applicable Days"))
+    |> Map.put("start_date", Map.get(record, "Start Date"))
+    |> Map.put("end_date", Map.get(record, "End Date"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+  end
+
+  def make_bankholidays(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("start_date", Map.get(record, "Start Date"))
+    |> Map.put("end_date", Map.get(record, "End Date"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+  end
+
+  def make_employee_rosters(record) do
+    %{}
+    |> Map.put("employee_id", Map.get(record, "Employee Id"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+    |> Map.put("shift_id", Map.get(record, "Shift Id"))
+    |> Map.put("start_date", Map.get(record, "Start Date"))
+    |> Map.put("end_date", Map.get(record, "End Date"))
   end
 
   def convert_special_keys_to_required_type([], map), do: map
@@ -138,9 +183,14 @@ defmodule Inconn2Service.FileLoader do
         convert_special_keys_to_required_type(tail, new_map)
 
       "date" ->
-        [date, month, year] = String.split(map[key_name], "-")
-        {:ok, date} = Date.from_iso8601("#{year}-#{month}-#{date}")
-        new_map = Map.put(map, key_name, date)
+        new_map =
+          if is_binary(map[key_name]) do
+            [date, month, year] = String.split(map[key_name], "-")
+            {:ok, date} = Date.from_iso8601("#{year}-#{month}-#{date}")
+            Map.put(map, key_name, date)
+          else
+            map
+          end
         convert_special_keys_to_required_type(tail, new_map)
 
       "boolean" ->
@@ -196,10 +246,6 @@ defmodule Inconn2Service.FileLoader do
           data_fields =
             String.split(String.trim(data_line), ",") |> Enum.map(fn v -> String.trim(v) end)
 
-
-
-          # convert_sigil_to_array(Enum.zip(header_fields, data_fields) |> Enum.into(%{}), array_keys)
-          # map = Enum.zip(header_fields, data_fields) |> Enum.into(%{})
           # IO.inspect(data_fields)
           # IO.inspect(header_fields)
           map =
@@ -214,6 +260,8 @@ defmodule Inconn2Service.FileLoader do
           # IO.inspect(release_map)
           release_map
         end)
+        # IO.inspect(records)
+      # IO.inspect(records)
       {:ok, records}
     else
       {:error, ["Invalid Header Fields"]}
@@ -241,6 +289,10 @@ defmodule Inconn2Service.FileLoader do
   end
 
   defp validate_header(header_fields, required_fields) do
+    IO.inspect(header_fields)
+    IO.inspect(required_fields)
+    IO.inspect(header_fields -- required_fields)
+    IO.inspect(required_fields -- header_fields)
     hms = MapSet.new(header_fields)
     rms = MapSet.new(required_fields)
     count = Enum.count(MapSet.intersection(hms, rms))

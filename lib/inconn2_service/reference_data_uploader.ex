@@ -1,6 +1,7 @@
 defmodule Inconn2Service.ReferenceDataUploader do
 
   alias Inconn2Service.{AssetConfig, FileLoader, WorkOrderConfig, CheckListConfig, Workorder}
+  alias Inconn2Service.{Staff, Settings, Assignment}
 
   def upload_locations(content, prefix) do
     req_fields = ["id", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]
@@ -160,6 +161,42 @@ defmodule Inconn2Service.ReferenceDataUploader do
     )
   end
 
+  def upload_employees(content, prefix) do
+    req_fields = ["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
+                  "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
+                  "Skills", "Org Unit Id", "Party Id"]
+
+    special_fields = [{"Skills", "array_of_integers", []}, {"Create User?", "boolean", []}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_employees/1,
+      Staff,
+      :get_employee,
+      :create_employee,
+      :update_employee,
+      prefix
+    )
+  end
+
+  def upload_org_units(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Party Id", "Parent Id", "parent reference"]
+
+    upload_content(
+      content,
+      req_fields,
+      [],
+      &FileLoader.make_org_units/1,
+      Staff,
+      :get_org_unit,
+      :create_org_unit,
+      :update_org_unit,
+      prefix
+    )
+  end
+
   def upload_tasks(content, prefix) do
     req_fields = ["id", "reference", "Label", "Task Type", "Estimated Time"]
     special_fields = [{"Config", "random_json_key_value", []}]
@@ -175,6 +212,56 @@ defmodule Inconn2Service.ReferenceDataUploader do
       :update_task,
       prefix
     )
+  end
+
+  def upload_shifts(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Start Time", "End Time", "Applicable Days", "Start Date", "Site Id"]
+    special_fields = [{"Applicable Days", "array_of_integers", []}]
+
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_shifts/1,
+      Settings,
+      :get_shift,
+      :create_shift,
+      :update_shift,
+      prefix
+    )
+  end
+
+  def upload_bankholidays(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Start Date", "End Date", "Site Id"]
+    special_fields = [{"Start Date", "date", []}, {"End Date", "date", []}]
+    upload_content(
+      content,
+      req_fields,
+      special_fields,
+      &FileLoader.make_bankholidays/1,
+      Settings,
+      :get_holiday,
+      :create_holiday,
+      :update_holiday,
+      prefix
+    )
+  end
+
+  def upload_employee_rosters(content, prefix) do
+    req_fields = ["id", "reference", "Employee Id", "Site Id", "Shift Id", "Start Date", "End Date"]
+
+    upload_content(
+      content,
+      req_fields,
+      [],
+      &FileLoader.make_employee_rosters/1,
+      Assignment,
+      :get_employee_roster,
+      :create_employee_roster,
+      :update_employee_roster,
+      prefix
+    )
+
   end
 
   # Content upload function
@@ -196,6 +283,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
         {:ok, records} -> {:ok, records}
         {:error, err_msgs} -> {:error, err_msgs}
       end
+
+    IO.inspect(validate_result)
 
     case validate_result do
       {:ok, records} ->
@@ -225,16 +314,28 @@ defmodule Inconn2Service.ReferenceDataUploader do
     end)
   end
 
+  def fill_parent_id_and_reference(records) do
+    case Map.has_key?(List.first(records),  "Parent Id") do
+      true ->
+        records
+        |> Enum.map(fn r -> fill_parent_id(r) end)
+        |> Enum.map(fn r -> fill_parent_reference(r)  end)
+      _ ->
+        records
+    end
+  end
+
   defp parse_and_choose_records(content, required_fields, array_fields) do
     case FileLoader.get_records_as_map_for_csv(content, required_fields, array_fields) do
       {:ok, map} ->
         records =
           map
           |> Enum.map(fn r -> fill_id(r) end)
-          |> Enum.map(fn r -> fill_parent_id(r) end)
           |> Enum.map(fn r -> fill_reference(r) end)
-          |> Enum.map(fn r -> fill_parent_reference(r) end)
+          |> fill_parent_id_and_reference()
 
+
+        IO.inspect(records)
         {:ok, records}
 
       {:error, messages} ->
@@ -261,6 +362,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
     case Integer.parse(Map.get(record, "reference", "")) do
       {0, _} -> Map.put(record, "reference", nil)
       {num, _} -> Map.put(record, "reference", num)
+      nil -> record
       _ -> Map.put(record, "reference", nil)
     end
   end
@@ -269,6 +371,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
     case Integer.parse(Map.get(record, "parent reference", "")) do
       {0, _} -> Map.put(record, "parent reference", nil)
       {num, _} -> Map.put(record, "parent reference", num)
+      nil -> record
       _ -> Map.put(record, "parent reference", nil)
     end
   end

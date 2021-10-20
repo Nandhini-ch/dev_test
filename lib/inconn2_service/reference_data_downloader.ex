@@ -130,8 +130,8 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_employees(prefix) do
     check = Staff.list_employees(prefix)
 
-    header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employement End Date",
-    "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "reports_to",
+    header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
+    "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
     "Skills", "Org Unit Id", "Party Id"]]
 
     body =
@@ -162,7 +162,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_employee_rosters(prefix) do
     check = Assignment.list_employee_rosters(prefix)
 
-    header = [["id", "reference", "Employee Id", "Site Id", "Shift Id", "start_date", "end_date"]]
+    header = [["id", "reference", "Employee Id", "Site Id", "Shift Id", "Start Date", "End Date"]]
 
     body =
       Enum.map(check, fn r ->
