@@ -106,7 +106,9 @@ defmodule Inconn2Service.ReferenceDataUploader do
     "Time Start", "Time End", "Create New", "Max Times", "Work Order Prior Time", "Work Permit Required",
     "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id", "Loto Release Check List Id"]
 
-    special_fields = [{"Tasks", "integer_array_tuples_with_index", []}, {"Scheduled", "boolean", []}, {"Work Permit Required", "boolean", []}, {"Loto Required", "boolean", []}]
+    special_fields = [{"Tasks", "integer_array_tuples_with_index", []}, {"Scheduled", "boolean", []},
+                      {"Work Permit Required", "boolean", []}, {"Loto Required", "boolean", []},
+                      {"Applicable Start", "date", []}, {"Applicable End", "date", []}]
 
     upload_content(
       content,
@@ -146,7 +148,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
     req_fields = ["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays",
                   "First Occurrence Date", "First Occurrence Time", "Next Occurrence Date", "Next Occurrence Time"]
 
-    special_fields = [{"Holidays", "array_of_integers", []}]
+    special_fields = [{"Holidays", "array_of_integers", []}, {"First Occurrence Date", "date", []]
 
     upload_content(
       content,
@@ -166,7 +168,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
                   "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
                   "Skills", "Org Unit Id", "Party Id"]
 
-    special_fields = [{"Skills", "array_of_integers", []}, {"Create User?", "boolean", []}]
+    special_fields = [{"Skills", "array_of_integers", []}, {"Create User?", "boolean", []},
+                      {"Employment Start Date", "date", []}, {"Employment End Date", "date", []}]
 
     upload_content(
       content,
@@ -216,7 +219,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_shifts(content, prefix) do
     req_fields = ["id", "reference", "Name", "Start Time", "End Time", "Applicable Days", "Start Date", "Site Id"]
-    special_fields = [{"Applicable Days", "array_of_integers", []}]
+    special_fields = [{"Applicable Days", "array_of_integers", []}, {"Applicable Days", "date", []}, {"Start Date", "date", []}]
 
     upload_content(
       content,
@@ -249,6 +252,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_employee_rosters(content, prefix) do
     req_fields = ["id", "reference", "Employee Id", "Site Id", "Shift Id", "Start Date", "End Date"]
+    special_fields = [{"Start Date", "date", []}, {"End Date", "date", []}]
 
     upload_content(
       content,
