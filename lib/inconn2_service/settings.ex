@@ -28,6 +28,13 @@ defmodule Inconn2Service.Settings do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_shifts(site_id, query_params, prefix) do
+    Shift
+    |> Repo.add_active_filter(query_params)
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_shifts_for_a_day(site_id, shiftdate, prefix) do
     query =
       from(s in Shift,
@@ -165,6 +172,12 @@ defmodule Inconn2Service.Settings do
   """
   def list_bankholidays(prefix) do
     Holiday
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_bankholidays(query_params, prefix) do
+    Holiday
+    |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
   end
 

@@ -25,6 +25,12 @@ defmodule Inconn2Service.AssetConfig do
     Repo.all(Site, prefix: prefix)
   end
 
+  def list_sites(query_params, prefix) do
+   Site
+   |> Repo.add_active_filter(query_params)
+   |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single site.
 
@@ -161,6 +167,12 @@ defmodule Inconn2Service.AssetConfig do
   """
   def list_asset_categories(prefix) do
     AssetCategory
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_asset_categories(query_params, prefix) do
+    AssetCategory
+    |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
   end
 
@@ -445,6 +457,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_locations(site_id, query_params, prefix) do
+    Location
+    |> Repo.add_active_filter(query_params)
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_active_locations(prefix) do
     Location
     |> where(active: true)
@@ -452,13 +471,13 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def list_locations_tree(site_id, prefix) do
-    list_locations(site_id, prefix)
+    list_locations(site_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_locations_leaves(site_id, prefix) do
     ids =
-      list_locations(site_id, prefix)
+      list_locations(site_id, %{"active" => "true"}, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -692,19 +711,26 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments(site_id, query_params, prefix) do
+    Equipment
+    |> Repo.add_active_filter(query_params)
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_equipments(prefix) do
     Equipment
     |> Repo.all(prefix: prefix)
   end
 
   def list_equipments_tree(site_id, prefix) do
-    list_equipments(site_id, prefix)
+    list_equipments(site_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_equipments_leaves(site_id, prefix) do
     ids =
-      list_equipments(site_id, prefix)
+      list_equipments(site_id, %{"active" => "true"}, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -963,6 +989,12 @@ defmodule Inconn2Service.AssetConfig do
   """
   def list_parties(prefix) do
     Repo.all(Party, prefix: prefix)
+  end
+
+  def list_parties(query_params, prefix) do
+    Party
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   def list_SP(prefix) do

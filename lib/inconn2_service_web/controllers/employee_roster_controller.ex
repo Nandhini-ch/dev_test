@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    employee_rosters = Assignment.list_employee_rosters(conn.assigns.sub_domain_prefix)
+    employee_rosters = Assignment.list_employee_rosters(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", employee_rosters: employee_rosters)
   end
 

@@ -58,7 +58,8 @@ site = %{
     "land_line" => "+91-44-2457727",
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
-    }
+  },
+  "active" => false
 }
 
 sc =
@@ -77,7 +78,7 @@ b1 = %{
   "name" => "Building1",
   "location_code" => "LOC_BUILD1",
   "site_id" => sc.id,
-  "asset_category_id" => a1c.id
+  "asset_category_id" => a1c.id,
 }
 
 b2 = %{

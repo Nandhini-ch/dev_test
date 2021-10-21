@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, %{"party_id" => party_id}) do
-    org_units = Staff.list_org_units(party_id, conn.assigns.sub_domain_prefix)
+    org_units = Staff.list_org_units(party_id, conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", org_units: org_units)
   end
 

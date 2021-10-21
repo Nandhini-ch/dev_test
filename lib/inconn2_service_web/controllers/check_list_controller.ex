@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.CheckListController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    check_lists = CheckListConfig.list_check_lists(conn.assigns.sub_domain_prefix)
+    check_lists = CheckListConfig.list_check_lists(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", check_lists: check_lists)
   end
 

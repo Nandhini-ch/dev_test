@@ -9,7 +9,7 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
   def index(conn, _params) do
     case Map.get(conn.query_params, "type", nil) do
       nil ->
-        asset_categories = AssetConfig.list_asset_categories(conn.assigns.sub_domain_prefix)
+        asset_categories = AssetConfig.list_asset_categories(conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", asset_categories: asset_categories)
       type ->
         asset_categories = AssetConfig.list_asset_categories_by_type(type, conn.assigns.sub_domain_prefix)

@@ -22,6 +22,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     Repo.all(Task, prefix: prefix)
   end
 
+  def list_tasks(query_params, prefix) do
+    Task
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   def search_tasks(label, prefix) do
     if String.length(label) < 3 do
       []
@@ -127,6 +133,12 @@ defmodule Inconn2Service.WorkOrderConfig do
   """
   def list_task_lists(prefix) do
     Repo.all(TaskList, prefix: prefix)
+  end
+
+  def list_task_lists(query_params, prefix) do
+    TaskList
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """

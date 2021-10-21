@@ -22,7 +22,13 @@ defmodule Inconn2Service.Assignment do
 
   """
   def list_employee_rosters(prefix) do
-    Repo.all(EmployeeRoster,prefix: prefix )
+    Repo.all(EmployeeRoster,prefix: prefix)
+  end
+
+  def list_employee_rosters(query_params, prefix) do
+    EmployeeRoster
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """

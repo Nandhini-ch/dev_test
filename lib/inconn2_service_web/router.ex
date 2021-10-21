@@ -25,6 +25,8 @@ defmodule Inconn2ServiceWeb.Router do
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
+    get "/sites?active=true", SiteController, :index
+    get "/sites?active=false", SiteController, :index
     get "/download_sites", ReferenceDownloadController, :download_sites
     post "/upload_sites", ReferenceUploadController, :upload_sites
 

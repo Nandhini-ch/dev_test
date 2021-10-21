@@ -21,6 +21,12 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkrequestCategory, prefix: prefix)
   end
 
+  def list_workrequest_categories(query_params, prefix) do
+    WorkrequestCategory
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single workrequest_category.
 

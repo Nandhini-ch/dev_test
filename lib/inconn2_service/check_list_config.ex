@@ -22,6 +22,12 @@ defmodule Inconn2Service.CheckListConfig do
     Repo.all(Check, prefix: prefix)
   end
 
+  def list_checks(query_params, prefix) do
+    Check
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single check.
 
@@ -116,6 +122,12 @@ defmodule Inconn2Service.CheckListConfig do
   """
   def list_check_lists(prefix) do
     Repo.all(CheckList, prefix: prefix)
+  end
+
+  def list_check_lists(query_params, prefix) do
+    CheckList
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """

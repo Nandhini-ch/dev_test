@@ -27,20 +27,33 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_org_units(query_params, prefix) do
+    OrgUnit
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_org_units(party_id, prefix) do
     OrgUnit
     |> where(party_id: ^party_id)
     |> Repo.all(prefix: prefix)
   end
 
+  def list_org_units(party_id, query_params, prefix) do
+    OrgUnit
+    |> Repo.add_active_filter(query_params)
+    |> where(party_id: ^party_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_org_units_tree(party_id, prefix) do
-    list_org_units(party_id, prefix)
+    list_org_units(party_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_org_units_leaves(party_id, prefix) do
     ids =
-      list_org_units(party_id, prefix)
+      list_org_units(party_id, %{"active" => "true"},prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -286,6 +299,12 @@ defmodule Inconn2Service.Staff do
     Repo.all(Employee, prefix: prefix)
   end
 
+  def list_employees(query_params, prefix) do
+    Employee
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single employee.
 
@@ -444,6 +463,12 @@ defmodule Inconn2Service.Staff do
     Repo.all(User, prefix: prefix)
   end
 
+  def list_users(query_params, prefix) do
+    User
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single user.
 
@@ -597,6 +622,12 @@ defmodule Inconn2Service.Staff do
   """
   def list_roles(prefix) do
     Repo.all(Role, prefix: prefix)
+  end
+
+  def list_roles(query_params, prefix) do
+    Role
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """

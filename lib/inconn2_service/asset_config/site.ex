@@ -35,7 +35,8 @@ defmodule Inconn2Service.AssetConfig.Site do
       :fencing_radius,
       :site_code,
       :party_id,
-      :time_zone
+      :time_zone,
+      :active
     ])
     |> validate_required([:name, :description, :site_code, :party_id, :time_zone])
     |> cast_embed(:address)
