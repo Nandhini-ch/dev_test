@@ -10,6 +10,7 @@ defmodule Inconn2Service.Settings.Shift do
     field :name, :string
     field :start_date, :date
     field :start_time, :time
+    field :active, :boolean, default: true
     belongs_to :site, Site
     timestamps()
   end

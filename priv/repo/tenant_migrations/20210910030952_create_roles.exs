@@ -5,6 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateRoles do
     create table(:roles) do
       add :code, :string
       add :name, :string
+      add :active, :boolean
 
       timestamps()
     end

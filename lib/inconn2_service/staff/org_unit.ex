@@ -9,6 +9,7 @@ defmodule Inconn2Service.Staff.OrgUnit do
     belongs_to :party, Party
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
+    field :active, :boolean, default: true
     timestamps()
   end
 

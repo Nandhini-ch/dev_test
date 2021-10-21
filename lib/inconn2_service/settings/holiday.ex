@@ -7,6 +7,7 @@ defmodule Inconn2Service.Settings.Holiday do
     field :end_date, :date
     field :name, :string
     field :start_date, :date
+    field :active, :boolean, default: true
     belongs_to :site, Site
 
     timestamps()

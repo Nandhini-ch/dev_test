@@ -5,6 +5,7 @@ defmodule Inconn2Service.Staff.Role do
   schema "roles" do
     field :code, :string
     field :name, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end

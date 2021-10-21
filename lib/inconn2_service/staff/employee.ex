@@ -19,6 +19,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :last_name, :string
     field :reports_to, :string
     field :skills, {:array, :integer}
+    field :active, :boolean, default: true
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
 

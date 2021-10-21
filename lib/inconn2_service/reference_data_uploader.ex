@@ -148,7 +148,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
     req_fields = ["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays",
                   "First Occurrence Date", "First Occurrence Time", "Next Occurrence Date", "Next Occurrence Time"]
 
-    special_fields = [{"Holidays", "array_of_integers", []}, {"First Occurrence Date", "date", []]
+    special_fields = [{"Holidays", "array_of_integers", []}, {"First Occurrence Date", "date", []}]
 
     upload_content(
       content,

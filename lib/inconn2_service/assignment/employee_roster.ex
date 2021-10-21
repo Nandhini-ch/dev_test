@@ -8,6 +8,7 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
     field :shift_id, :integer
     field :start_date, :date
     field :end_date, :date
+    field :active, :boolean, default: true
 
     timestamps()
   end

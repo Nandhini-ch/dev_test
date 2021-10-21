@@ -13,6 +13,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateShifts do
       add :site_id, references(:sites, on_delete: :nothing)
 
       timestamps()
+      add :active, :boolean
     end
 
     #create index(:shifts, [:site_id])
