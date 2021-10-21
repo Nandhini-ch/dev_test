@@ -165,22 +165,6 @@ wk_ord2 = %{
 {:ok, wk_ord1c} = Workorder.create_work_order(wk_ord1, "inc_bata", %{id: 1})
 {:ok, wk_ord2c} = Workorder.create_work_order(wk_ord2, "inc_bata", %{id: 1})
 
-wkord_tsk1 = %{
-  "work_order_id" => 1,
-  "task_id" => 1,
-  "sequence" => 1,
-  "response" => %{"label" => "abc", "value" => 30}
-}
-
-wkord_tsk2 = %{
-  "work_order_id" => 1,
-  "task_id" => 2,
-  "sequence" => 2,
-  "response" => %{"label" => "cde", "value" => 100}
-}
-
-{:ok, wkord_tsk1c} = Workorder.create_workorder_task(wkord_tsk1, "inc_bata")
-{:ok, wkord_tsk2c} = Workorder.create_workorder_task(wkord_tsk2, "inc_bata")
 
 wkreq_cat1 = %{"name" => "Electrical", "description" => "Deals with electrical work"}
 wkreq_cat2 = %{"name" => "Mechanical", "description" => "Deals with mechanical work"}
