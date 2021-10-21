@@ -231,6 +231,7 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Workorder.WorkorderSchedule
   alias Inconn2Service.Common
+  alias Inconn2Service.Settings
   @doc """
   Returns the list of workorder_schedules.
 
@@ -325,17 +326,21 @@ defmodule Inconn2Service.Workorder do
 
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id, nil)
-    first_date = get_field(cs, :first_occurrence_date, nil)
-    first_time = get_field(cs, :first_occurrence_time, nil)
-    workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
-    if workorder_template != nil do
-      applicable_start = workorder_template.applicable_start
-      case Date.compare(applicable_start,first_date) do
-        :gt ->
-          add_error(cs, :first_occurrence_date, "should be greater than or equal to applicable start date")
-        _ ->
-          change(cs, %{next_occurrence_date: first_date, next_occurrence_time: first_time})
-      end
+    first_date = get_change(cs, :first_occurrence_date, nil)
+    first_time = get_change(cs, :first_occurrence_time, nil)
+    if first_date != nil and first_time != nil do
+        workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+        if workorder_template != nil do
+          applicable_start = workorder_template.applicable_start
+          case Date.compare(applicable_start,first_date) do
+            :gt ->
+              add_error(cs, :first_occurrence_date, "should be greater than or equal to applicable start date")
+            _ ->
+              change(cs, %{next_occurrence_date: first_date, next_occurrence_time: first_time})
+          end
+        else
+          cs
+        end
     else
       cs
     end
@@ -372,13 +377,16 @@ defmodule Inconn2Service.Workorder do
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
-    config = get_field(cs, :config)
+    site_id = get_site_id(cs, prefix)
     workorder_template = get_workorder_template!(workorder_template_id, prefix)
+    applicable_start = workorder_template.applicable_start
     applicable_end = workorder_template.applicable_end
     time_start = workorder_template.time_start
     time_end = workorder_template.time_end
     repeat_every = workorder_template.repeat_every
     repeat_unit = workorder_template.repeat_unit
+    first_occurrence_date = get_field(cs, :first_occurrence_date)
+    first_occurrence_time = get_field(cs, :first_occurrence_time)
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     next_occurrence_time = get_field(cs, :next_occurrence_time)
     if next_occurrence_date != nil and next_occurrence_time != nil do
@@ -388,44 +396,52 @@ defmodule Inconn2Service.Workorder do
           date = next_occurrence_date
           if time >= time_start and time <= time_end do
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+            |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
           else
-            time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-            time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+            time = first_occurrence_time
             date = Date.add(next_occurrence_date, 1)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+            |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
           end
         "D" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          time = first_occurrence_time
           date = Date.add(next_occurrence_date, repeat_every)
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+          |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+          |> check_for_holidays()
           |> check_before_applicable_date(applicable_end)
         "W" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          time = first_occurrence_time
           date = Date.add(next_occurrence_date, repeat_every*7)
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+          |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
           |> check_before_applicable_date(applicable_end)
         "M" ->
-          time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-          time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
+          time = first_occurrence_time
           month = next_occurrence_date.month + repeat_every
           if month > 12 do
-            date = Date.new!(next_occurrence_date.year + 1, month - 12, config["day"])
+            date = Date.new!(next_occurrence_date.year + 1, month - 12, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+            |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
           else
-            date = Date.new!(next_occurrence_date.year, month, config["day"])
+            date = Date.new!(next_occurrence_date.year, month, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+            |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
           end
         "Y" ->
-            time = Enum.map(String.split(config["time"], ":"), fn x -> String.to_integer(x) end)
-            time = Time.new!(Enum.at(time,0), Enum.at(time,1), Enum.at(time,2))
-            date = Date.new!(next_occurrence_date.year + repeat_every, config["month"], config["day"])
+            time = first_occurrence_time
+            date = Date.new!(next_occurrence_date.year + repeat_every, first_occurrence_date.month, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+            |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
       end
     else
@@ -440,6 +456,60 @@ defmodule Inconn2Service.Workorder do
       true -> change(cs, %{next_occurrence_date: nil, next_occurrence_time: nil})
     end
   end
+
+  def check_for_holidays(cs) do
+    next_occurrence_date = get_field(cs, :next_occurrence_date)
+    holidays = get_field(cs, :holidays)
+    case Date.day_of_week(next_occurrence_date) in holidays do
+      true -> next_occurrence_date = Date.add(next_occurrence_date, 1)
+              cs = change(cs, next_occurrence_date: next_occurrence_date)
+              check_for_holidays(cs)
+      false -> cs
+    end
+  end
+
+  def check_for_bank_holidays(cs, site_id, applicable_start, applicable_end, prefix) do
+    next_occurrence_date = get_field(cs, :next_occurrence_date)
+    year_begin = applicable_start
+    year_end = applicable_end
+    holidays = Settings.list_bankholidays(site_id, year_begin, year_end, prefix)
+    holiday = check_which_bank_holidays(next_occurrence_date, holidays)
+    case holiday do
+      nil ->
+              cs
+      _ ->
+              next_occurrence_date = Date.add(holiday["end_date"], 1)
+              cs = change(cs, next_occurrence_date: next_occurrence_date)
+              check_for_bank_holidays(cs, site_id, applicable_start, applicable_end, prefix)
+    end
+  end
+
+  defp check_which_bank_holidays(next_occurrence_date, holidays) do
+    holidays_boolean = Enum.map(holidays, fn holiday ->
+                                                if holiday["start_date"] <= next_occurrence_date and next_occurrence_date <= holiday["end_date"] do
+                                                  true
+                                                else
+                                                  false
+                                                end
+                                            end)
+    holiday_index = Enum.find_index(holidays_boolean, fn x -> x == true end)
+    if holiday_index != nil do
+      Enum.at(holidays, holiday_index)
+    else
+      nil
+    end
+  end
+
+  defp get_site_id(cs, prefix) do
+    asset_id = get_field(cs, :asset_id)
+    case get_field(cs, :asset_type) do
+      "L" ->  location = Repo.get!(Location, asset_id, prefix: prefix)
+              location.site_id
+      "E" ->  equipment = Repo.get!(Equipment, asset_id, prefix: prefix)
+              equipment.site_id
+    end
+  end
+
   @doc """
   Deletes a workorder_schedule.
 
