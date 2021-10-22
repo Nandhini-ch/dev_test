@@ -16,7 +16,7 @@ defmodule Inconn2Service.Settings.Holiday do
   @doc false
   def changeset(holiday, attrs) do
     holiday
-    |> cast(attrs, [:name, :start_date, :end_date, :site_id])
+    |> cast(attrs, [:name, :start_date, :end_date, :site_id, :active])
     |> validate_required([:name, :start_date, :end_date, :site_id])
     |> unique_constraint(:name, name: :index_holidays_dates)
     |> assoc_constraint(:site)

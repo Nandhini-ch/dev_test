@@ -16,7 +16,7 @@ defmodule Inconn2Service.Staff.OrgUnit do
   @doc false
   def changeset(org_unit, attrs) do
     org_unit
-    |> cast(attrs, [:name, :party_id, :parent_id])
+    |> cast(attrs, [:name, :party_id, :parent_id, :active])
     |> validate_required([:name, :party_id])
     |> assoc_constraint(:party)
   end

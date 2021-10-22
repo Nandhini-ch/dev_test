@@ -27,7 +27,8 @@ defmodule Inconn2Service.AssetConfig.Party do
       :contract_start_date,
       :contract_end_date,
       :licensee,
-      :license_no
+      :license_no,
+      :active
     ])
     |> validate_required([
       :company_name,

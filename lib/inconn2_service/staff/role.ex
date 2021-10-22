@@ -13,7 +13,7 @@ defmodule Inconn2Service.Staff.Role do
   @doc false
   def changeset(role, attrs) do
     role
-    |> cast(attrs, [:code, :name])
+    |> cast(attrs, [:code, :name, :active])
     |> validate_required([:code, :name])
   end
 end

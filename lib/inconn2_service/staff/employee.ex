@@ -44,7 +44,8 @@ defmodule Inconn2Service.Staff.Employee do
       :reports_to,
       :skills,
       :org_unit_id,
-      :party_id
+      :party_id,
+      :active
     ])
     |> validate_required([
       :first_name,
