@@ -257,7 +257,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
     upload_content(
       content,
       req_fields,
-      [],
+      special_fields,
       &FileLoader.make_employee_rosters/1,
       Assignment,
       :get_employee_roster,

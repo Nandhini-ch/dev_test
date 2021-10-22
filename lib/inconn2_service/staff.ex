@@ -27,9 +27,9 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_org_units(query_params, prefix) do
+  def list_org_units(%{"active" => active}, prefix) do
     OrgUnit
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter(%{"active" => active})
     |> Repo.all(prefix: prefix)
   end
 
