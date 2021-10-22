@@ -14,7 +14,7 @@ defmodule Inconn2Service.CheckListConfig.CheckList do
   @doc false
   def changeset(check_list, attrs) do
     check_list
-    |> cast(attrs, [:name, :type, :check_ids])
+    |> cast(attrs, [:name, :type, :check_ids, :active])
     |> validate_required([:name, :type, :check_ids])
     |> validate_inclusion(:type, ["WP", "LOTO"])
   end

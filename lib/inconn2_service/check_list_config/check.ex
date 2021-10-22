@@ -13,7 +13,7 @@ defmodule Inconn2Service.CheckListConfig.Check do
   @doc false
   def changeset(check, attrs) do
     check
-    |> cast(attrs, [:label, :type])
+    |> cast(attrs, [:label, :type, :active])
     |> validate_required([:label, :type])
     |> validate_inclusion(:type, ["WP", "LOTO"])
   end

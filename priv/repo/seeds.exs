@@ -59,7 +59,6 @@ site = %{
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
   },
-  "active" => false
 }
 
 sc =
