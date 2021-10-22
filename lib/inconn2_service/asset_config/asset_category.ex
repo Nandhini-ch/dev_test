@@ -16,7 +16,7 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
   @doc false
   def changeset(asset_category, attrs) do
     asset_category
-    |> cast(attrs, [:name, :asset_type, :parent_id], :active)
+    |> cast(attrs, [:name, :asset_type, :parent_id, :active])
     |> validate_required([:name])
     |> validate_inclusion(:asset_type, ["L", "E"] )
     |> validate_asset_type()
