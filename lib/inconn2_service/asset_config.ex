@@ -1017,14 +1017,13 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_party_AO(id, prefix) do
     org_type_AO = "AO"
-    licensee = true
     # checking in party table for Asset Owner with licensee Y given party id to create a site
     query =
       from(p in Party,
-        where: p.id == ^id and (p.party_type == ^org_type_AO and p.licensee == ^licensee)
+        where: p.id == ^id and (p.party_type == ^org_type_AO)
       )
 
-    IO.inspect(Repo.one(query, prefix: prefix))
+    Repo.one(query, prefix: prefix)
   end
 
   def check_party_with_licensee(id, prefix) do

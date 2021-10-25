@@ -8,7 +8,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :name, :string
     field :asset_type, :string
     field :task_list_id, :integer
-    field :tasks, {:array, :map}
+    field :tasks, {:array, :map}, default: []
     field :estimated_time, :integer
     field :scheduled, :boolean
     field :repeat_every, :integer
