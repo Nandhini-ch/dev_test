@@ -12,7 +12,7 @@ defmodule Inconn2Service.Batch.WorkorderScheduler do
   end
 
   def init(_args) do
-    {:ok, Process.send_after(self(), :schedule, 300000)}
+    {:ok, Process.send_after(self(), :schedule, 10000)}
   end
 
   def handle_info(:schedule, _state) do
