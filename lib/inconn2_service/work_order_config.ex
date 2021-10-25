@@ -90,6 +90,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_task(%Task{} = task, attrs, prefix) do
+    task
+    |> Task.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a task.
 
@@ -221,6 +227,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> TaskList.changeset(attrs)
     |> validate_task_ids(prefix)
     |> validate_asset_category_id(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_active_status_for_task_list(%TaskList{} = task_list, attrs, prefix) do
+    task_list
+    |> TaskList.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 

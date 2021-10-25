@@ -40,4 +40,20 @@ defmodule Inconn2ServiceWeb.CheckListController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_check_list(conn, %{"id" => id}) do
+    check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %CheckList{} = check_list} <- CheckListConfig.update_check_list_active_status(check_list, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", check_list: check_list)
+    end
+  end
+
+  def deactivate_check_list(conn, %{"id" => id}) do
+    check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %CheckList{} = check_list} <- CheckListConfig.update_check_list_active_status(check_list, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", check_list: check_list)
+    end
+  end
 end

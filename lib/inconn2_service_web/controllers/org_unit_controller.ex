@@ -50,4 +50,20 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_org_unit(conn, %{"id" => id}) do
+    org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %OrgUnit{} = org_unit} <- Staff.update_active_status_for_org_unit(org_unit, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", org_unit: org_unit)
+    end
+  end
+
+  def deactivate_org_unit(conn, %{"id" => id}) do
+    org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %OrgUnit{} = org_unit} <- Staff.update_active_status_for_org_unit(org_unit, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", org_unit: org_unit)
+    end
+  end
 end

@@ -58,7 +58,7 @@ site = %{
     "land_line" => "+91-44-2457727",
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
-  },
+  }
 }
 
 sc =
@@ -185,8 +185,7 @@ dg1 = %{
   "equipment_code" => "EQ_DG1",
   "site_id" => sc.id,
   "location_id" => b1c.id,
-  "connections_in" => [1,2,3],
-  "asset_category_id" => a2c.id
+  "asset_category_id" => a2c.id,
 }
 
 dg2 = %{
@@ -207,7 +206,8 @@ dg2 = %{
     "equipment_code" => "EQ_DG1_IC",
     "site_id" => sc.id,
     "location_id" => b1c.id,
-    "asset_category_id" => a2c.id
+    "asset_category_id" => a2c.id,
+    "connections_in" => [1],
   }
   |> AssetConfig.create_equipment("inc_bata")
 

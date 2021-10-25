@@ -79,6 +79,12 @@ defmodule Inconn2Service.Ticket do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
+    workrequest_category
+    |> WorkrequestCategory.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a workrequest_category.
 

@@ -250,6 +250,17 @@ defmodule Inconn2Service.Staff do
     |> OrgUnit.changeset(attrs)
   end
 
+  def update_active_status_for_org_unit(%OrgUnit{} = org_unit, org_unit_params, prefix) do
+    case org_unit_params do
+      %{"active" => false} ->
+        deactivate_children(org_unit, org_unit_params, OrgUnit, prefix)
+
+      %{"active" => true} ->
+        parent_id = HierarchyManager.parent_id(org_unit)
+        handle_hierarchical_activation(org_unit, org_unit_params, OrgUnit, prefix, parent_id)
+    end
+  end
+
   @doc """
   Deletes a org_unit.
 
@@ -419,6 +430,12 @@ defmodule Inconn2Service.Staff do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_employee(%Employee{} = employee, attrs, prefix) do
+    employee
+    |> Employee.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a employee.
 
@@ -537,6 +554,12 @@ defmodule Inconn2Service.Staff do
 
   """
   def update_user(%User{} = user, attrs, prefix) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_active_status_for_user(%User{} = user, attrs, prefix) do
     user
     |> User.changeset(attrs)
     |> Repo.update(prefix: prefix)
@@ -682,6 +705,12 @@ defmodule Inconn2Service.Staff do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_role(%Role{} = role, attrs, prefix) do
+    role
+    |> Role.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a role.
 
@@ -710,4 +739,44 @@ defmodule Inconn2Service.Staff do
   def change_role(%Role{} = role, attrs \\ %{}) do
     Role.changeset(role, attrs)
   end
+
+  defp handle_hierarchical_activation(resource, resource_params, module, prefix, parent_id) do
+    resource
+    |> module.changeset(resource_params)
+    |> validate_parent_for_true_condition(module, prefix, parent_id)
+    |> Repo.update(prefix: prefix)
+    |> update_children(prefix)
+  end
+
+  defp deactivate_children(resource, resource_params, module, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
+    resource |> module.changeset(resource_params) |> Repo.update(prefix: prefix)
+  end
+
+  defp validate_parent_for_true_condition(cs, module, prefix, parent_id) do
+    # parent_id = get_field(cs, :parent_id, nil)
+    IO.inspect("Parent Id is #{parent_id}")
+    if parent_id != nil do
+      parent = Repo.get(module, parent_id, prefix: prefix)
+      if parent != nil do
+        case parent.active do
+          false -> add_error(cs, :parent_id, "Parent Not Active")
+          _ -> cs
+        end
+      else
+        add_error(cs, :parent_id, "Parent Not Found")
+      end
+    else
+      cs
+    end
+  end
+
+  defp update_children({:ok, resource}, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: true]], prefix: prefix)
+    {:ok, resource}
+  end
+
+  defp update_children({:error, cs}, _prefix), do: {:error, cs}
 end

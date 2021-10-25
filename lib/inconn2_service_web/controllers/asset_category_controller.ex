@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
         asset_categories = AssetConfig.list_asset_categories(conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", asset_categories: asset_categories)
       type ->
-        asset_categories = AssetConfig.list_asset_categories_by_type(type, conn.assigns.sub_domain_prefix)
+        asset_categories = AssetConfig.list_asset_categories_by_type(type, conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", asset_categories: asset_categories)
     end
   end
@@ -64,4 +64,21 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
     end
   end
 
+  def deactivate_asset_category(conn, %{"id" => id}) do
+    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %AssetCategory{} = asset_category} <-
+           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", asset_category: asset_category)
+    end
+  end
+
+  def activate_asset_category(conn, %{"id" => id}) do
+    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %AssetCategory{} = asset_category} <-
+           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", asset_category: asset_category)
+    end
+  end
 end

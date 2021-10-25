@@ -63,4 +63,22 @@ defmodule Inconn2ServiceWeb.LocationController do
       end
     end
   end
+
+  def activate_location(conn, %{"id" => id}) do
+    location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Location{} = location} <-
+           AssetConfig.update_active_status_for_location(location, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", location: location)
+    end
+  end
+
+  def deactivate_location(conn, %{"id" => id}) do
+    location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Location{} = location} <-
+           AssetConfig.update_active_status_for_location(location, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", location: location)
+    end
+  end
 end

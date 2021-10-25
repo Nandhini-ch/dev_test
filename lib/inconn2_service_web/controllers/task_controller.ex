@@ -46,4 +46,20 @@ defmodule Inconn2ServiceWeb.TaskController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_task(conn, %{"id" => id}) do
+    task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", task: task)
+    end
+  end
+
+  def deactivate_task(conn, %{"id" => id}) do
+    task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", task: task)
+    end
+  end
 end

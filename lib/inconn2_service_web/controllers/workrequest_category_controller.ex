@@ -40,4 +40,20 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_workrequest_category(conn, %{"id" => id}) do
+    workrequest_category = Ticket.get_workrequest_category!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkrequestCategory{} = workrequest_category} <- Ticket.update_active_status_for_workrequest_category(workrequest_category, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workrequest_category: workrequest_category)
+    end
+  end
+
+  def deactivate_workrequest_category(conn, %{"id" => id}) do
+    workrequest_category = Ticket.get_workrequest_category!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkrequestCategory{} = workrequest_category} <- Ticket.update_active_status_for_workrequest_category(workrequest_category, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", workrequest_category: workrequest_category)
+    end
+  end
 end

@@ -42,4 +42,20 @@ defmodule Inconn2ServiceWeb.SiteController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_site(conn, %{"id" => id}) do
+    site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Site{} = site} <-
+      AssetConfig.update_site_active_status(site, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", site: site)
+    end
+  end
+
+  def deactivate_site(conn, %{"id" => id}) do
+    site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Site{} = site} <-
+      AssetConfig.update_site_active_status(site, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", site: site)
+    end
+  end
 end

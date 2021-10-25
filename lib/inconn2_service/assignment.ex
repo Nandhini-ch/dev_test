@@ -150,6 +150,12 @@ defmodule Inconn2Service.Assignment do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do
+    employee_roster
+    |> EmployeeRoster.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a employee_roster.
 

@@ -80,6 +80,12 @@ defmodule Inconn2Service.CheckListConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_check_active_status(%Check{} = check, attrs, prefix) do
+    check
+    |> Check.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a check.
 
@@ -194,6 +200,12 @@ defmodule Inconn2Service.CheckListConfig do
     check_list
     |> CheckList.changeset(attrs)
     |> validate_check_ids(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_check_list_active_status(%CheckList{} = check_list, attrs, prefix) do
+    check_list
+    |> CheckList.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
