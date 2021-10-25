@@ -54,7 +54,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_sites(prefix) do
     locations = AssetConfig.list_sites(prefix)
 
-    header = [["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "First Name", "Last Name", "Designation", "Email", "Mobile", "Land Line"]]
+    header = [["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "Contact First Name", "Contact Last Name", "Contact Designation", "Contact Email", "Contact Mobile", "Contact Land Line"]]
 
     body =
       Enum.map(locations, fn r ->
@@ -263,7 +263,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     if array_of_ids != nil do
         array_of_ids
         |> Enum.map(fn id -> to_string(id) end)
-        |> Enum.join(";")
+        |> Enum.join(",")
     else
       ""
     end
@@ -274,7 +274,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   defp get_only_ids_for_workorder_tasks(array_of_maps) do
     array_of_maps
     |> Enum.map(fn(map) -> map["id"] end)
-    |> Enum.join(";")
+    |> Enum.join(",")
   end
 
   # def convert_array_of_integers_to_string([]), do: []

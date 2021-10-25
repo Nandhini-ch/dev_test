@@ -125,11 +125,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_sites(content, prefix) do
     req_fields = ["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id",
-    "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "First Name", "Last Name", "Designation",
-    "Email", "Mobile", "Land Line"]
+    "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "Contact First Name", "Contact Last Name", "Contact Designation",
+    "Contact Email", "Contact Mobile", "Contact Land Line"]
 
-    special_fields = [{"Address", "map_out_of_existing_options", ["Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode"]},
-                      {"Contact", "map_out_of_existing_options", ["First Name", "Last Name", "Designation", "Email", "Mobile", "Land Line"]}]
+    special_fields = [{"Address", "map_out_of_existing_options", [{"Address Line 1", "address_line1"}, {"Address Line 2", "address_line2"}, {"City", "city"}, {"State", "state"}, {"Country", "country"}, {"Postcode", "postcode"}]},
+                      {"Contact", "map_out_of_existing_options", [{"Contact First Name", "first_name"}, {"Contact Last Name", "last_name"}, {"Contact Designation", "designation"}, {"Contact Email", "email"}, {"Contact Mobile", "mobile"}, {"Contact Land Line", "land_line"}]}]
 
     upload_content(
       content,
@@ -307,12 +307,12 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   # Action perform functions
   defp perform_insert_without_parents(records, param_mapper, context_module, insert_func, prefix) do
+    IO.inspect("Here are the records")
     Enum.map(records, fn r ->
       {_ctrl_map, attrs} =
         Map.split(r, ["id", "active", "reference", "parent reference", "action", "action_valid", "action_error"])
-
+      IO.inspect(attrs)
       attrs = param_mapper.(attrs)
-
       apply(context_module, insert_func, [attrs, prefix])
 
     end)

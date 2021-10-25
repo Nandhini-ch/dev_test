@@ -172,19 +172,19 @@ defmodule Inconn2Service.FileLoader do
     case type do
       "array_of_integers" ->
         array_value =
-          if map[key_name] == "", do: [], else: String.split(map[key_name], ";") |> Enum.map(fn x -> String.to_integer(x) end)
+          if map[key_name] == "", do: [], else: String.split(map[key_name], ",") |> Enum.map(fn x -> String.to_integer(x) end)
           new_map = Map.put(map, key_name, array_value)
         convert_special_keys_to_required_type(tail, new_map
         )
       "integer_array_tuples_with_index" ->
         array_value =
-          if map[key_name] == "", do: [], else: String.split(map[key_name], ";") |> Enum.map(fn x -> String.to_integer(x) end) |> Enum.with_index(1) |> Enum.map(fn {v, i} -> %{"id" => v, "order" => i} end)
+          if map[key_name] == "", do: [], else: String.split(map[key_name], ",") |> Enum.map(fn x -> String.to_integer(x) end) |> Enum.with_index(1) |> Enum.map(fn {v, i} -> %{"id" => v, "order" => i} end)
         new_map = Map.put(map, key_name, array_value)
         convert_special_keys_to_required_type(tail, new_map)
 
       "date" ->
         new_map =
-          if is_binary(map[key_name]) do
+          if map[key_name] != "" &&  is_binary(map[key_name]) do
             [date, month, year] = String.split(map[key_name], "-")
             {:ok, date} = Date.from_iso8601("#{year}-#{month}-#{date}")
             Map.put(map, key_name, date)
@@ -199,11 +199,15 @@ defmodule Inconn2Service.FileLoader do
         convert_special_keys_to_required_type(tail, new_map)
 
       "map_out_of_existing_options" ->
-        submap_value_list =
-          Enum.map(options, fn option ->
-            map[option]
+        actual_keys =
+          Enum.map(options, fn {_readble_key, actual_key} ->
+            actual_key
           end)
-          submap = Enum.zip(options, submap_value_list) |> Enum.into(%{})
+        submap_value_list =
+          Enum.map(options, fn {readble_key, _actual_key} ->
+            map[readble_key]
+          end)
+          submap = Enum.zip(actual_keys, submap_value_list) |> Enum.into(%{})
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
           convert_special_keys_to_required_type(tail, new_map)
       "random_json_key_value" ->
@@ -211,7 +215,7 @@ defmodule Inconn2Service.FileLoader do
         if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
           array =
             Enum.map(map["Config"], fn x ->
-              [label, value] = String.split(x, ":")
+              [label, value] = String.split(x, ";")
               %{"label" => label, "value" => value}
             end)
           new_map = Map.put(map, "Config", %{"options" => array})
@@ -219,7 +223,7 @@ defmodule Inconn2Service.FileLoader do
           convert_special_keys_to_required_type(tail, new_map)
         else
           if map["Task Type"] == "MT" do
-            [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
+            [type, uom] = String.split(Enum.at(map["Config"], 0), ";")
             new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
             convert_special_keys_to_required_type(tail, new_map)
           else
@@ -237,17 +241,19 @@ defmodule Inconn2Service.FileLoader do
   def get_records_as_map_for_csv(content, required_fields, array_keys \\ []) do
     {header, data_lines} = get_header_and_data_for_upload_csv(content)
 
-    header_fields =
-      String.split(String.trim(header), ",") |> Enum.map(fn fld -> String.trim(fld) end)
+    # header_fields =
+    #   String.split(String.trim(header), ",") |> Enum.map(fn fld -> String.trim(fld) end)
+
+    header_fields = header |> Enum.filter(fn x -> if x != "" do x end end)
 
     if validate_header(header_fields, required_fields) do
       records =
         Enum.map(data_lines, fn data_line ->
-          data_fields =
-            String.split(String.trim(data_line), ",") |> Enum.map(fn v -> String.trim(v) end)
+          data_fields = data_line
+            # String.split(String.trim(data_line), ",") |> Enum.map(fn v -> String.trim(v) end)
 
-          # IO.inspect(data_fields)
-          # IO.inspect(header_fields)
+          IO.inspect(data_fields)
+          IO.inspect(header_fields)
           map =
             if Enum.count(data_fields) > Enum.count(header_fields) do
               zip_and_map(header_fields, data_fields)
@@ -255,6 +261,7 @@ defmodule Inconn2Service.FileLoader do
               Enum.zip(header_fields, data_fields) |> Enum.into(%{})
             end
 
+          IO.inspect(map)
           # release_map = convert_sigil_to_array(array_keys, map)
           release_map = convert_special_keys_to_required_type(array_keys, map)
           # IO.inspect(release_map)
@@ -284,7 +291,9 @@ defmodule Inconn2Service.FileLoader do
         String.length(String.trim(line)) != 0
       end)
 
-    [header | data_lines] = content_lines
+    [header | data_lines] = Path.expand(content.path) |> File.stream!() |> CSV.decode() |> Enum.map(fn {:ok, element} -> element end)
+
+    # [header | data_lines] = content_lines
     {header, data_lines}
   end
 
