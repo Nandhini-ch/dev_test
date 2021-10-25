@@ -248,12 +248,8 @@ defmodule Inconn2Service.FileLoader do
 
     if validate_header(header_fields, required_fields) do
       records =
-        Enum.map(data_lines, fn data_line ->
-          data_fields = data_line
-            # String.split(String.trim(data_line), ",") |> Enum.map(fn v -> String.trim(v) end)
+        Enum.map(data_lines, fn data_fields ->
 
-          IO.inspect(data_fields)
-          IO.inspect(header_fields)
           map =
             if Enum.count(data_fields) > Enum.count(header_fields) do
               zip_and_map(header_fields, data_fields)
@@ -262,13 +258,9 @@ defmodule Inconn2Service.FileLoader do
             end
 
           IO.inspect(map)
-          # release_map = convert_sigil_to_array(array_keys, map)
           release_map = convert_special_keys_to_required_type(array_keys, map)
-          # IO.inspect(release_map)
           release_map
         end)
-        # IO.inspect(records)
-      # IO.inspect(records)
       {:ok, records}
     else
       {:error, ["Invalid Header Fields"]}
@@ -284,24 +276,15 @@ defmodule Inconn2Service.FileLoader do
   end
 
   def get_header_and_data_for_upload_csv(content) do
-    content_lines =
-      File.read!(content.path)
-      |> String.split("\n")
-      |> Enum.filter(fn line ->
-        String.length(String.trim(line)) != 0
-      end)
-
     [header | data_lines] = Path.expand(content.path) |> File.stream!() |> CSV.decode() |> Enum.map(fn {:ok, element} -> element end)
-
-    # [header | data_lines] = content_lines
     {header, data_lines}
   end
 
   defp validate_header(header_fields, required_fields) do
-    IO.inspect(header_fields)
-    IO.inspect(required_fields)
-    IO.inspect(header_fields -- required_fields)
-    IO.inspect(required_fields -- header_fields)
+    # IO.inspect(header_fields)
+    # IO.inspect(required_fields)
+    # IO.inspect(header_fields -- required_fields)
+    # IO.inspect(required_fields -- header_fields)
     hms = MapSet.new(header_fields)
     rms = MapSet.new(required_fields)
     count = Enum.count(MapSet.intersection(hms, rms))
