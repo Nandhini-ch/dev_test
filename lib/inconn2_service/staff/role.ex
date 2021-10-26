@@ -3,8 +3,9 @@ defmodule Inconn2Service.Staff.Role do
   import Ecto.Changeset
 
   schema "roles" do
-    field :code, :string
     field :name, :string
+    field :description, :string
+    field :features, {:array, :string}
 
     timestamps()
   end
@@ -12,7 +13,8 @@ defmodule Inconn2Service.Staff.Role do
   @doc false
   def changeset(role, attrs) do
     role
-    |> cast(attrs, [:code, :name])
-    |> validate_required([:code, :name])
+    |> cast(attrs, [:name, :description, :features])
+    |> validate_required([:name, :description, :features])
+    |> unique_constraint(:name)
   end
 end

@@ -6,19 +6,20 @@ defmodule Inconn2ServiceWeb.UserController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    users = Staff.list_users(conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", users: users)
-  end
+  # def index(conn, _params) do
+  #   users = Staff.list_users(conn.assigns.sub_domain_prefix)
+  #   render(conn, "index.json", users: users)
+  # end
 
-  def show(conn, %{"username" => username}) do
-    # username = Map.get(user_params, "username", nil)
+  def index(conn, _params) do
+    username = Map.get(conn.query_params, "username", nil)
 
     if username != nil do
-      user = Staff.get_user_by_email(username, conn.assigns.sub_domain_prefix)
+      user = Staff.get_user_by_username(username, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", user: user)
     else
-      send_resp(conn, :no_content, "")
+      users = Staff.list_users(conn.assigns.sub_domain_prefix)
+      render(conn, "index.json", users: users)
     end
   end
 

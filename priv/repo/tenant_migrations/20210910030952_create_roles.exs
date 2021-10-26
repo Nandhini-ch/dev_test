@@ -3,11 +3,13 @@ defmodule Inconn2Service.Repo.Migrations.CreateRoles do
 
   def change do
     create table(:roles) do
-      add :code, :string
       add :name, :string
+      add :description, :string
+      add :features, {:array, :string}
 
       timestamps()
     end
+    create unique_index(:roles, [:name])
 
   end
 end

@@ -78,8 +78,9 @@ defmodule Inconn2ServiceWeb.Router do
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
 
     resources "/employees", EmployeeController, except: [:new, :edit]
-    resources "/users", UserController, except: [:new, :edit]
+    resources "/users", UserController, only: [:index, :update, :delete]
     resources "/roles", RoleController, except: [:new, :edit]
+    get "/features", FeatureController, :index
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
