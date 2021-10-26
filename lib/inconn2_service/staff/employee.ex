@@ -2,7 +2,6 @@ defmodule Inconn2Service.Staff.Employee do
   use Ecto.Schema
   import Ecto.Changeset
   alias Inconn2Service.Staff.OrgUnit
-  import EctoCommons.EmailValidator
   alias Inconn2Service.AssetConfig.Party
 
   schema "employees" do
@@ -21,6 +20,9 @@ defmodule Inconn2Service.Staff.Employee do
     field :skills, {:array, :integer}
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
+    field :username, :string, virtual: true
+    field :role_id, {:array, :integer}, virtual: true
+    field :password, :string, virtual: true
 
     timestamps()
   end
@@ -43,26 +45,49 @@ defmodule Inconn2Service.Staff.Employee do
       :reports_to,
       :skills,
       :org_unit_id,
-      :party_id
+      :party_id,
+      :username, :password, :role_id
     ])
     |> validate_required([
       :first_name,
       :last_name,
       :designation,
-      :email,
       :employee_id,
       :mobile_no,
       :has_login_credentials,
-      :skills,
       :org_unit_id,
       :party_id
     ])
-    |> validate_email(:email, checks: [:html_input, :pow])
+    |> validate_format(:username, ~r/@/)
     |> unique_constraint(:employee_id)
     |> unique_constraint(:email)
-    #  |> unique_constraint(:name, name: :index_holidays_dates)
-    # unique_constraint(:name, name: :index_shifts_dates)
+    |> validate_login()
     |> assoc_constraint(:org_unit)
     |> assoc_constraint(:party)
   end
+
+  defp validate_login(cs) do
+    case get_field(cs, :has_login_credentials, false) do
+      true -> validate_required(cs, [:username, :password, :role_id])
+              |> validate_username()
+              |> validate_confirmation(:password, message: "does not match password")
+
+      false -> cs
+
+    end
+  end
+
+  defp validate_username(cs) do
+    email = get_field(cs, :email)
+    username = get_field(cs, :username)
+    if email != nil and username != nil do
+      case email == username do
+        true -> cs
+        false -> add_error(cs, :username, "must be same as email")
+      end
+    else
+      cs
+    end
+  end
+
 end

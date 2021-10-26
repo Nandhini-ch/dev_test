@@ -303,7 +303,7 @@ defmodule Inconn2Service.Staff do
         where: e.email == ^email
       )
 
-    IO.inspect(Repo.one(query, prefix: prefix))
+    Repo.one(query, prefix: prefix)
   end
 
   @doc """
@@ -326,40 +326,29 @@ defmodule Inconn2Service.Staff do
         %Employee{}
         |> Employee.changeset(attrs)
         |> validate_skill_ids(prefix)
+        |> validate_role_ids(prefix)
         |> Repo.insert(prefix: prefix)
 
-      case employee_set do
-        {:ok, emp_set} ->
-          case create_user(attrs, prefix) do
-            {:ok, _change_set} ->
-              IO.inspect(emp_set)
+       case employee_set do
+         {:ok, emp_set} ->
+                 case create_user(attrs, prefix) do
+                   {:ok, _user} ->
+                       employee_set
 
-            {:error, change_set} ->
-              IO.inspect(change_set)
+                   {:error, _changeset} ->
+                       Repo.delete(emp_set, prefix: prefix)
+                       employee_set
+                 end
 
-            changeset ->
-              IO.inspect(changeset)
-          end
+         {:error, _change_set} ->
+                 employee_set
+       end
 
-        {:error, change_set} ->
-          IO.inspect(change_set)
-      end
-    end
-
-    if has_login_credentials == false do
-      employee_set =
-        %Employee{}
-        |> Employee.changeset(attrs)
-        |> validate_skill_ids(prefix)
-        |> Repo.insert(prefix: prefix)
-
-      case employee_set do
-        {:ok, emp_set} ->
-          IO.inspect(emp_set)
-
-        {:error, change_set} ->
-          IO.inspect(change_set)
-      end
+    else
+         %Employee{}
+         |> Employee.changeset(attrs)
+         |> validate_skill_ids(prefix)
+         |> Repo.insert(prefix: prefix)
     end
   end
 
@@ -376,6 +365,8 @@ defmodule Inconn2Service.Staff do
       cs
     end
   end
+
+
   @doc """
   Updates a employee.
 
@@ -425,6 +416,7 @@ defmodule Inconn2Service.Staff do
   end
 
   alias Inconn2Service.Staff.User
+  alias Inconn2Service.Staff.Role
 
   @doc """
   Returns the list of users.
@@ -468,31 +460,25 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_user(attrs \\ %{}, prefix) do
-    # Check to see if create_employee has called this method or directly create_user is called
-    # If the call is from employee then email from employee is set as username here
-    # The password is defaulted to password#1234
-    has_email = Map.get(attrs, "email", nil)
-    IO.inspect(has_email)
-    # check_licensee(party_type)
-
-    returnMap = %{
-      "username" => has_email,
-      "password" => "password#1234",
-      "role_id" => [1]
-    }
-
-    if(has_email != nil) do
-      %User{}
-      |> User.changeset(returnMap)
-      |> Repo.insert(prefix: prefix)
-    end
-
-    if has_email == nil do
       %User{}
       |> User.changeset(attrs)
       |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_role_ids(cs, prefix) do
+    role_ids = get_field(cs, :role, nil)
+    if role_ids != nil do
+      roles = from(r in Role, where: r.id in ^role_ids )
+                  |> Repo.all(prefix: prefix)
+      case length(role_ids) == length(roles) do
+        false -> add_error(cs, :role_id, "role ids are not valid")
+        true -> cs
+      end
+    else
+      cs
     end
   end
+
 
   @doc """
   Updates a user.
@@ -509,6 +495,7 @@ defmodule Inconn2Service.Staff do
   def update_user(%User{} = user, attrs, prefix) do
     user
     |> User.changeset(attrs)
+    |> validate_role_ids(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -528,21 +515,13 @@ defmodule Inconn2Service.Staff do
     Repo.delete(user, prefix: prefix)
   end
 
-  def get_user_by_email(email, prefix) do
-    # pass_hash_map = Argon2.add_hash(password)
-    # pass_hash = Map.get(pass_hash_map, :password_hash)
-
+  def get_user_by_username(username, prefix) do
     query =
       from(u in User,
-        where: u.username == ^email
+        where: u.username == ^username
       )
 
-    #    and
-    #    u.password_hash == ^pass_hash
-
-    IO.inspect(Repo.one(query, prefix: prefix))
-
-    # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
+    Repo.one(query, prefix: prefix)
   end
 
   def change_user_password(email, password, prefix) do
@@ -569,17 +548,15 @@ defmodule Inconn2Service.Staff do
 
   """
   def change_user(%User{} = user, attrs \\ %{}) do
-    # passwd = Map.get(attrs, "password", nil)
-
     User.changeset(user, attrs)
-    # |> check_password(passwd)
   end
 
   # defp check_password(user, password) do
   # Argon2.check_pass(password, user.password_hash)
   # end
 
-  alias Inconn2Service.Staff.Role
+
+  alias Inconn2Service.Staff.Feature
 
   @doc """
   Returns the list of roles.
@@ -609,6 +586,7 @@ defmodule Inconn2Service.Staff do
 
   """
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix)
+  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix)
 
   @doc """
   Creates a role.
@@ -625,9 +603,24 @@ defmodule Inconn2Service.Staff do
   def create_role(attrs \\ %{}, prefix) do
     %Role{}
     |> Role.changeset(attrs)
+    |> validate_features(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
+  defp validate_features(cs, prefix) do
+    features = get_field(cs, :features, nil)
+    if features != nil do
+      codes = Feature |> select([f], f.code) |> Repo.all(prefix: prefix)
+      features = MapSet.new(features)
+      codes = MapSet.new(codes)
+      case MapSet.subset?(features, codes) do
+        true -> cs
+        false -> add_error(cs, :features, "feature codes are not valid")
+      end
+    else
+      cs
+    end
+  end
   @doc """
   Updates a role.
 
@@ -643,6 +636,7 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
+    |> validate_features(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -673,5 +667,111 @@ defmodule Inconn2Service.Staff do
   """
   def change_role(%Role{} = role, attrs \\ %{}) do
     Role.changeset(role, attrs)
+  end
+
+
+
+  @doc """
+  Returns the list of features.
+
+  ## Examples
+
+      iex> list_features()
+      [%Feature{}, ...]
+
+  """
+  def list_features(prefix) do
+    Repo.all(Feature, prefix: prefix)
+  end
+
+  def search_features(name_text, prefix) do
+    if String.length(name_text) < 3 do
+      []
+    else
+      search_text = name_text <> "%"
+
+      from(f in Feature, where: ilike(f.name, ^search_text), order_by: f.name)
+      |> Repo.all(prefix: prefix)
+    end
+  end
+  @doc """
+  Gets a single feature.
+
+  Raises `Ecto.NoResultsError` if the Feature does not exist.
+
+  ## Examples
+
+      iex> get_feature!(123)
+      %Feature{}
+
+      iex> get_feature!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_feature!(id, prefix), do: Repo.get!(Feature, id, prefix: prefix)
+
+  @doc """
+  Creates a feature.
+
+  ## Examples
+
+      iex> create_feature(%{field: value})
+      {:ok, %Feature{}}
+
+      iex> create_feature(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_feature(attrs \\ %{}, prefix) do
+    %Feature{}
+    |> Feature.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a feature.
+
+  ## Examples
+
+      iex> update_feature(feature, %{field: new_value})
+      {:ok, %Feature{}}
+
+      iex> update_feature(feature, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_feature(%Feature{} = feature, attrs, prefix) do
+    feature
+    |> Feature.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a feature.
+
+  ## Examples
+
+      iex> delete_feature(feature)
+      {:ok, %Feature{}}
+
+      iex> delete_feature(feature)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_feature(%Feature{} = feature, prefix) do
+    Repo.delete(feature, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking feature changes.
+
+  ## Examples
+
+      iex> change_feature(feature)
+      %Ecto.Changeset{data: %Feature{}}
+
+  """
+  def change_feature(%Feature{} = feature, attrs \\ %{}) do
+    Feature.changeset(feature, attrs)
   end
 end

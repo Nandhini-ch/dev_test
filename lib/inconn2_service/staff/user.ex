@@ -1,7 +1,6 @@
 defmodule Inconn2Service.Staff.User do
   use Ecto.Schema
   import Ecto.Changeset
-  import EctoCommons.EmailValidator
   import Comeonin
   alias Inconn2Service.AssetConfig.Party
 
@@ -20,7 +19,8 @@ defmodule Inconn2Service.Staff.User do
     user
     |> cast(attrs, [:username, :password, :role_id, :party_id])
     |> validate_required([:username, :password, :role_id, :party_id])
-    |> validate_email(:username, checks: [:html_input, :pow])
+    |> validate_format(:username, ~r/@/)
+    |> validate_confirmation(:password, message: "does not match password")
     # |> validate_length(:password, min: 6, max: 12)
     #  |> validate_confirmation(:password,
     #   message: "does not match password" )

@@ -3,7 +3,7 @@ defmodule Inconn2Service.Account.Auth do
   import Comeonin
 
   def authenticate(username, password, prefix) do
-    user = Staff.get_user_by_email(username, prefix)
+    user = Staff.get_user_by_username(username, prefix)
 
     case IO.inspect(check_password(password, user)) do
       {:error, msg} ->

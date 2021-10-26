@@ -1,4 +1,19 @@
 alias Inconn2Service.{Staff, Assignment}
+
+feat1 = %{"name" => "Create Site", "code" => "CRST", "description" => "Can create site"}
+feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
+feat3 = %{"name" => "Create Employee", "code" => "CREM", "description" => "Can create employees"}
+
+{:ok, feat1c} = Staff.create_feature(feat1, "inc_bata")
+{:ok, feat2c} = Staff.create_feature(feat2, "inc_bata")
+{:ok, feat3c} = Staff.create_feature(feat3, "inc_bata")
+
+role1 = %{"name" => "Super Admin", "description" => "Has all access", "features" => ["CRST", "CRAS", "CREM"]}
+role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "features" => ["CRAS", "CREM"]}
+
+{:ok, role1c} = Staff.create_role(role1, "inc_bata")
+{:ok, role2c} = Staff.create_role(role2, "inc_bata")
+
 employee1 = %{
   "employee_id" => "Empid0001",
   "landline_no" => "12345",
@@ -11,17 +26,13 @@ employee1 = %{
   "has_login_credentials" => true,
   "skills" => [1,2],
   "org_unit_id" =>  1,
-  "party_id" => 1
+  "party_id" => 1,
+  "username" => "abc@c.com",
+  "role_id" => [1, 2],
+  "password" => "hello123",
+  "password_confirmation" => "hello123"
 }
-emp1 =
-case (IO.inspect(Staff.create_employee(employee1,"inc_bata"))) do
-  {:ok, emp_created} -> IO.inspect(emp_created)
-  {:error, cs} -> IO.inspect(cs)
-  nil -> IO.puts("null value returned")
-end
-
-IO.inspect(emp1)
-IO.puts("First employee done $$$$$$$$$$$$$$$$$$$$")
+{:ok, emp_cs1} = Staff.create_employee(employee1,"inc_bata")
 
 employee2 = %{
   "employee_id" => "Empid0002",
@@ -35,85 +46,16 @@ employee2 = %{
   "has_login_credentials" => true,
   "skills" => [1],
   "org_unit_id" =>  1,
-  "party_id" => 1
+  "party_id" => 1,
+  "username" => "blab@c.com",
+  "role_id" => [2],
+  "password" => "hi123",
+  "password_confirmation" => "hi123"
 }
 
-emp2 =
-  case (IO.inspect(Staff.create_employee(employee2,"inc_bata"))) do
-    {:ok, emp_created} -> IO.inspect(emp_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
 
-IO.inspect(emp2)
-IO.puts("Second employee done $$$$$$$$$$$$$$$$$$$$")
+{:ok, emp_cs2} = Staff.create_employee(employee2,"inc_bata")
 
-roles1 = %{
-  "code" => "EMP",
-  "name" => "Employee"
-}
-
-roles2 = %{
-  "code" => "MGR",
-  "name" => "Manager"
-}
-
-roles3 = %{
-  "code" => "ADM",
-  "name" => "Admin"
-}
-
-rc1 =
-  case IO.inspect(Staff.create_role(roles1, "inc_bata")) do
-    {:ok, role_created} -> IO.inspect(role_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
-
-  IO.inspect(rc1)
-IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
-
-rc2 =
-  case IO.inspect(Staff.create_role(roles2, "inc_bata")) do
-    {:ok, role_created} -> IO.inspect(role_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
-
-  IO.inspect(rc2)
-IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
-
-rc3 =
-  case IO.inspect(Staff.create_role(roles3, "inc_bata")) do
-    {:ok, role_created} -> IO.inspect(role_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
-
-  IO.inspect(rc3)
-IO.puts("Role done $$$$$$$$$$$$$$$$$$$$")
-
-
-  user1 = %{
-    "password" => "hello123",
-    "role_id" => [1,2],
-    "username" => "abc@c.com",
-    "first_name" => "Rama",
-    "last_name" =>  "Janma boomi",
-    "has_login_credentials" => true,
-    "org_unit_id" =>  1,
-    "party_id" => 1
-  }
-
-pc =
-  case IO.inspect(Staff.create_user(user1, "inc_bata")) do
-    {:ok, party_created} -> IO.inspect(party_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
-
-  IO.inspect(pc)
-IO.puts("User done $$$$$$$$$$$$$$$$$$$$")
 
 emp_rst1 = %{
   "employee_id" => 1,

@@ -17,7 +17,7 @@ defmodule Inconn2ServiceWeb.SessionView do
     %{errors: %{detail: [error_message]}}
   end
 
-  def render("current_user.json", %{current_user: current_user, licensee: licensee, party: party, employee: employee}) do
+  def render("current_user.json", %{current_user: current_user, licensee: licensee, party: party, employee: employee, features: features}) do
     %{
       data: %{
         id: current_user.id,
@@ -28,7 +28,8 @@ defmodule Inconn2ServiceWeb.SessionView do
         party_id: current_user.party_id,
         party_type: party.party_type,
         is_licensee: party.licensee,
-        licensee: render_one(licensee, LicenseeView, "licensee.json")
+        licensee: render_one(licensee, LicenseeView, "licensee.json"),
+        features: features
       }
     }
   end
