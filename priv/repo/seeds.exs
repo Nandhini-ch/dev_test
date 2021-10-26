@@ -40,7 +40,7 @@ client = %{
 # _ -> IO.inspect()
 # end
 IO.inspect(Account.create_licensee(client))
-IO.inspect(Account.create_licensee(client2))
+# IO.inspect(Account.create_licensee(client2))
 
 site = %{
   "name" => "Mountroad",

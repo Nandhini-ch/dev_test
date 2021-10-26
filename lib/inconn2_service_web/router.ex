@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -138,5 +138,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
+
+    resources "/suppliers", SupplierController, except: [:new, :edit]
   end
 end
