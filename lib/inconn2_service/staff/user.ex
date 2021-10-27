@@ -6,7 +6,7 @@ defmodule Inconn2Service.Staff.User do
 
   schema "users" do
     field :password, :string, virtual: true
-    field :role_id, {:array, :integer}
+    field :role_ids, {:array, :integer}
     field :username, :string
     field(:password_hash, :string)
     belongs_to :party, Party
@@ -17,8 +17,8 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :role_id, :party_id])
-    |> validate_required([:username, :password, :role_id, :party_id])
+    |> cast(attrs, [:username, :password, :role_ids, :party_id])
+    |> validate_required([:username, :password, :role_ids, :party_id])
     |> validate_format(:username, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
     # |> validate_length(:password, min: 6, max: 12)

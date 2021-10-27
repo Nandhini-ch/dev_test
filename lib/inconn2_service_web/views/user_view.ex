@@ -15,7 +15,7 @@ defmodule Inconn2ServiceWeb.UserView do
       id: user.id,
       username: user.username,
       party_id: user.party_id,
-      role_id: user.role_id
+      role_ids: user.role_ids
     }
   end
 end

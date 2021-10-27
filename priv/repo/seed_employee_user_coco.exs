@@ -37,7 +37,7 @@ employee1 = %{
   "org_unit_id" =>  1,
   "party_id" => 1,
   "username" => "arul.nambi@uds.in",
-  "role_id" => [1],
+  "role_ids" => [1],
   "password" => "hello123",
   "password_confirmation" => "hello123"
 }
@@ -55,7 +55,7 @@ employee2 = %{
   "org_unit_id" =>  1,
   "party_id" => 1,
   "username" => "gokulakrishnan.a@uds.in",
-  "role_id" => [2],
+  "role_ids" => [2],
   "password" => "hello123",
   "password_confirmation" => "hello123"
 }
@@ -74,7 +74,7 @@ employee3 = %{
   "org_unit_id" =>  1,
   "party_id" => 1,
   "username" => "earnest.p@inconn.com",
-  "role_id" => [3],
+  "role_ids" => [3],
   "password" => "hello123",
   "password_confirmation" => "hello123"
 }

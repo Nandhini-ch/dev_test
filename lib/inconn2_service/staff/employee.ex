@@ -11,7 +11,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :salary, :float
     field :designation, :string
     field :email, :string
-    field :employement_start_date, :date
+    field :employment_start_date, :date
     field :employment_end_date, :date
     field :first_name, :string
     field :has_login_credentials, :boolean, default: false
@@ -21,7 +21,7 @@ defmodule Inconn2Service.Staff.Employee do
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
     field :username, :string, virtual: true
-    field :role_id, {:array, :integer}, virtual: true
+    field :role_ids, {:array, :integer}, virtual: true
     field :password, :string, virtual: true
 
     timestamps()
@@ -33,7 +33,7 @@ defmodule Inconn2Service.Staff.Employee do
     |> cast(attrs, [
       :first_name,
       :last_name,
-      :employement_start_date,
+      :employment_start_date,
       :employment_end_date,
       :designation,
       :email,
@@ -46,7 +46,7 @@ defmodule Inconn2Service.Staff.Employee do
       :skills,
       :org_unit_id,
       :party_id,
-      :username, :password, :role_id
+      :username, :password, :role_ids
     ])
     |> validate_required([
       :first_name,
@@ -59,6 +59,7 @@ defmodule Inconn2Service.Staff.Employee do
       :party_id
     ])
     |> validate_format(:username, ~r/@/)
+    |> validate_format(:email, ~r/@/)
     |> unique_constraint(:employee_id)
     |> unique_constraint(:email)
     |> validate_login()
@@ -68,7 +69,7 @@ defmodule Inconn2Service.Staff.Employee do
 
   defp validate_login(cs) do
     case get_field(cs, :has_login_credentials, false) do
-      true -> validate_required(cs, [:username, :password, :role_id])
+      true -> validate_required(cs, [:username, :password, :role_ids])
               |> validate_username()
               |> validate_confirmation(:password, message: "does not match password")
 

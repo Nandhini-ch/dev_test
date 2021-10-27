@@ -39,7 +39,7 @@ defmodule Inconn2ServiceWeb.SessionController do
     party = AssetConfig.get_party!(party_id, conn.assigns.sub_domain_prefix)
     sub_domain = String.replace_prefix(conn.assigns.sub_domain_prefix, "inc_", "")
     licensee = Account.get_licensee_by_sub_domain(sub_domain)
-    role_ids = current_user.role_id
+    role_ids = current_user.role_ids
     features = Enum.map(role_ids, fn role_id -> (Staff.get_role!(role_id, conn.assigns.sub_domain_prefix)).features end)
     features = Enum.uniq(List.flatten(features))
     render(conn, "current_user.json", current_user: current_user, licensee: licensee, party: party, employee: employee, features: features)

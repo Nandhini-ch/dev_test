@@ -28,7 +28,7 @@ employee1 = %{
   "org_unit_id" =>  1,
   "party_id" => 1,
   "username" => "abc@c.com",
-  "role_id" => [1, 2],
+  "role_ids" => [1, 2],
   "password" => "hello123",
   "password_confirmation" => "hello123"
 }
@@ -48,7 +48,7 @@ employee2 = %{
   "org_unit_id" =>  1,
   "party_id" => 1,
   "username" => "blab@c.com",
-  "role_id" => [2],
+  "role_ids" => [2],
   "password" => "hi123",
   "password_confirmation" => "hi123"
 }

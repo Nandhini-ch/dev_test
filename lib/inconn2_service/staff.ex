@@ -466,12 +466,12 @@ defmodule Inconn2Service.Staff do
   end
 
   defp validate_role_ids(cs, prefix) do
-    role_ids = get_field(cs, :role, nil)
+    role_ids = get_field(cs, :role_ids, nil)
     if role_ids != nil do
       roles = from(r in Role, where: r.id in ^role_ids )
                   |> Repo.all(prefix: prefix)
       case length(role_ids) == length(roles) do
-        false -> add_error(cs, :role_id, "role ids are not valid")
+        false -> add_error(cs, :role_ids, "role ids are not valid")
         true -> cs
       end
     else
@@ -531,8 +531,8 @@ defmodule Inconn2Service.Staff do
       )
 
     user = Repo.one(query, prefix: prefix)
-    role_id = user.get_role_id
-    usr = Map.new(password: password, role_id: role_id, username: email)
+    role_ids = user.get_role_ids
+    usr = Map.new(password: password, role_ids: role_ids, username: email)
     update_user(user, usr, prefix)
 
     # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
