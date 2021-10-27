@@ -17,6 +17,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
 
   def create(conn, %{"workorder_schedule" => workorder_schedule_params}) do
     with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.create_workorder_schedule(workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_site_id(workorder_schedule, conn.assigns.sub_domain_prefix)
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.workorder_schedule_path(conn, :show, workorder_schedule))
@@ -34,6 +35,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.update_workorder_schedule(workorder_schedule, workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_site_id(workorder_schedule, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", workorder_schedule: workorder_schedule)
     end
   end
