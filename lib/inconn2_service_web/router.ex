@@ -140,5 +140,22 @@ defmodule Inconn2ServiceWeb.Router do
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
+    resources "/supplier_items", SupplierItemController, except: [:new, :edit]
+    resources "/uoms", UOMController, except: [:new, :edit]
+    resources "/uom_conversions", UomConversionController, except: [:new, :edit]
+    post "/uoms/convert/:value/from/:from_uom_id/to/:to_uom_id", UomConversionController, :convert
+    resources "/items", ItemController, except: [:new, :edit]
+
+    resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
+    get "/sites/:site_id/inventory_locations/", InventoryLocationController, :index
+
+    get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
+    get "/inventory_locations/:inventory_location_id/inventory_transactions", InventoryTransactionController, :loc_transaction
+    get "/inventory_locations/:inventory_location_id/inventory_transfers", InventoryTransferController, :loc_transfer
+    
+
+    # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]
+    resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit, :update]
+    resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit, :update]
   end
 end
