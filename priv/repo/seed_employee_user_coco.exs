@@ -27,7 +27,7 @@ role3 = %{"name" => "Supervisor", "description" => "Execution of work flows", "f
 
 employee1 = %{
   "employee_id" => "Empid0001",
-  "mobile_no" => "+91-7305556558",
+  "mobile_no" => "7305556558",
   "designation" => "Manager - Engineering Services",
   "email" => "arul.nambi@uds.in",
   "first_name" => "Arul Nambi",
@@ -36,16 +36,13 @@ employee1 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "username" => "arul.nambi@uds.in",
-  "role_ids" => [1],
-  "password" => "hello123",
-  "password_confirmation" => "hello123"
+  "role_ids" => [1]
 }
 {:ok, emp_cs1} = Staff.create_employee(employee1,"inc_uds")
 
 employee2 = %{
   "employee_id" => "Empid0002",
-  "mobile_no" => "+91-7373844860",
+  "mobile_no" => "7373844860",
   "designation" => "Support Engineering",
   "email" => "gokulakrishnan.a@uds.in",
   "first_name" => "Gokulakrishnan",
@@ -54,17 +51,14 @@ employee2 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "username" => "gokulakrishnan.a@uds.in",
-  "role_ids" => [2],
-  "password" => "hello123",
-  "password_confirmation" => "hello123"
+  "role_ids" => [2]
 }
 
 {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_uds")
 
 employee3 = %{
   "employee_id" => "Empid0003",
-  "mobile_no" => "+91-9876543210",
+  "mobile_no" => "9876543210",
   "designation" => "Supervisor",
   "email" => "earnest.p@inconn.com",
   "first_name" => "Earnest Josh",
@@ -73,10 +67,7 @@ employee3 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "username" => "earnest.p@inconn.com",
-  "role_ids" => [3],
-  "password" => "hello123",
-  "password_confirmation" => "hello123"
+  "role_ids" => [3]
 }
 
 {:ok, emp_cs3} = Staff.create_employee(employee3,"inc_uds")

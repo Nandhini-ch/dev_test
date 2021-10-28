@@ -5,9 +5,9 @@ defmodule Inconn2Service.Staff.User do
   alias Inconn2Service.AssetConfig.Party
 
   schema "users" do
+    field :username, :string
     field :password, :string, virtual: true
     field :role_ids, {:array, :integer}
-    field :username, :string
     field(:password_hash, :string)
     belongs_to :party, Party
     timestamps()

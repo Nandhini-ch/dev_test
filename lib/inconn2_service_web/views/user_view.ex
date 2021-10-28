@@ -18,4 +18,12 @@ defmodule Inconn2ServiceWeb.UserView do
       role_ids: user.role_ids
     }
   end
+
+  def render("success.json", _user) do
+    %{result: "successfully changed the password"}
+  end
+
+  def render("error.json", %{error: error_message}) do
+    %{errors: %{old_password: [error_message]}}
+  end
 end

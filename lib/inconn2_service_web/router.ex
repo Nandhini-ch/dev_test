@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    #plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -77,8 +77,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
 
-    resources "/employees", EmployeeController, except: [:new, :edit]
-    resources "/users", UserController, only: [:index, :update, :delete]
+    get "/parties/:party_id/employees", EmployeeController, :index
+    resources "/employees", EmployeeController, except: [:new, :edit, :index]
+    resources "/users", UserController, only: [:index, :delete]
+    put "/users/change_password", UserController, :change_password
     resources "/roles", RoleController, except: [:new, :edit]
     get "/features", FeatureController, :index
     get "/sessions/current_user", SessionController, :current_user

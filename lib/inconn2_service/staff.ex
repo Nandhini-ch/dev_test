@@ -277,8 +277,10 @@ defmodule Inconn2Service.Staff do
       [%Employee{}, ...]
 
   """
-  def list_employees(prefix) do
-    Repo.all(Employee, prefix: prefix)
+  def list_employees(party_id, prefix) do
+    Employee
+    |> where(party_id: ^party_id)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -337,7 +339,6 @@ defmodule Inconn2Service.Staff do
 
                    {:error, _changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
-                       employee_set
                  end
 
          {:error, _change_set} ->
@@ -399,6 +400,8 @@ defmodule Inconn2Service.Staff do
 
   """
   def delete_employee(%Employee{} = employee, prefix) do
+    user = get_user_by_username(employee.email, prefix)
+    Repo.delete(user, prefix: prefix)
     Repo.delete(employee, prefix: prefix)
   end
 
@@ -417,6 +420,7 @@ defmodule Inconn2Service.Staff do
 
   alias Inconn2Service.Staff.User
   alias Inconn2Service.Staff.Role
+  alias Inconn2Service.Account.Auth
 
   @doc """
   Returns the list of users.
@@ -447,6 +451,14 @@ defmodule Inconn2Service.Staff do
   """
   def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix)
 
+  def get_user_by_username(username, prefix) do
+    query =
+      from(u in User,
+      where: u.username == ^username
+      )
+
+      Repo.one(query, prefix: prefix)
+    end
   @doc """
   Creates a user.
 
@@ -460,8 +472,16 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_user(attrs \\ %{}, prefix) do
+      user_map = %{
+        "username" => attrs["email"],
+        "password" => attrs["mobile_no"],
+        "password_confirmation" => attrs["mobile_no"],
+        "party_id" => attrs["party_id"],
+        "role_ids" => attrs["role_ids"]
+      }
+
       %User{}
-      |> User.changeset(attrs)
+      |> User.changeset(user_map)
       |> Repo.insert(prefix: prefix)
   end
 
@@ -515,27 +535,20 @@ defmodule Inconn2Service.Staff do
     Repo.delete(user, prefix: prefix)
   end
 
-  def get_user_by_username(username, prefix) do
-    query =
-      from(u in User,
-        where: u.username == ^username
-      )
 
-    Repo.one(query, prefix: prefix)
-  end
+  def change_user_password(user, credentials, prefix) do
+    old_password = credentials["old_password"]
+    attrs = %{
+      "password" => credentials["new_password"],
+      "password_confirmation" => credentials["new_password_confirmation"]
+    }
+    case Auth.check_password(old_password, user) do
+      {:ok, user} ->
+              update_user(user, attrs, prefix)
+      {:error, msg} ->
+              {:error, msg}
+    end
 
-  def change_user_password(email, password, prefix) do
-    query =
-      from(u in User,
-        where: u.username == ^email
-      )
-
-    user = Repo.one(query, prefix: prefix)
-    role_ids = user.get_role_ids
-    usr = Map.new(password: password, role_ids: role_ids, username: email)
-    update_user(user, usr, prefix)
-
-    # IO.inspect(Repo.get_by(User, username: email, prefix: prefix))
   end
 
   @doc """

@@ -16,11 +16,11 @@ defmodule Inconn2Service.Account.Auth do
     end
   end
 
-  defp check_password(nil, _) do
+  def check_password(nil, _) do
     false
   end
 
-  defp check_password(password, user) do
+  def check_password(password, user) do
     user
     |> Argon2.check_pass(password, hash_key: :password_hash)
   end
