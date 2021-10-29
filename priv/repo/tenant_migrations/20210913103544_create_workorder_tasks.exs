@@ -7,6 +7,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTasks do
       add :task_id, :integer
       add :sequence, :integer
       add :response, :string
+      add :response_date, :date
+      add :response_time, :time
 
       timestamps()
     end
