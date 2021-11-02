@@ -14,7 +14,7 @@ supplier1 = %{
 }
 
 supplier2 = %{
-	"name" => "Supplier @",
+	"name" => "Supplier 2",
 	"description" => "Supplier for bata",
 	"contact" => %{
 		"first_name" => "John",
@@ -44,8 +44,8 @@ uom2 = %{
 {:ok, unit2} = Inventory.create_uom(uom2, "inc_bata")
 
 uom_conversion = %{
-	"from_uom_id" => 1,
-	"to_uom_id" => 2,
+	"from_uom_id" => unit2.id,
+	"to_uom_id" => unit1.id,
 	"mult_factor" => 1000
 }
 
@@ -56,7 +56,7 @@ item1 = %{
 	"name" => "A Inventory Item",
 	"type" => "consumables",
 	"purchase_unit_uom_id" => unit2.id,
-	"inventory_unit_uom_id" => unit2.id,
+	"inventory_unit_uom_id" => unit1.id,
 	"consume_unit_uom_id" => unit2.id,
 	"reorder_quantity" => 10,
 	"min_order_quantity" => 5,

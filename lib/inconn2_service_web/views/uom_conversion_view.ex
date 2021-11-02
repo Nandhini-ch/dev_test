@@ -16,8 +16,8 @@ defmodule Inconn2ServiceWeb.UomConversionView do
 
   def render("uom_conversion.json", %{uom_conversion: uom_conversion}) do
     %{id: uom_conversion.id,
-      from_uom: uom_conversion.from_uom_id,
-      to_uom: uom_conversion.to_uom_id,
+      from_uom_id: uom_conversion.from_uom_id,
+      to_uom_id: uom_conversion.to_uom_id,
       mult_factor: uom_conversion.mult_factor,
       inverse_factor: uom_conversion.inverse_factor}
   end

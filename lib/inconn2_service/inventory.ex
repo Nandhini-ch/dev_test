@@ -214,7 +214,7 @@ defmodule Inconn2Service.Inventory do
       [%UomConversion{}, ...]
 
   """
-  def list_uom_conversions(prefix: prefix) do
+  def list_uom_conversions(prefix) do
     Repo.all(UomConversion, prefix: prefix)
   end
 
@@ -696,23 +696,24 @@ defmodule Inconn2Service.Inventory do
       {:error, %Ecto.Changeset{}}
 
   """
+
   def create_inventory_transaction(attrs \\ %{}, prefix) do
     # inventory_transaction = %InventoryTransaction{} |> InventoryTransaction.changeset(attrs)
     multi = Multi.new()
     |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> validate_presence_in_database(prefix), prefix: prefix)
     |> Multi.run(:inventory_stock, fn repo, %{inventory_transaction: inventory_transaction} -> 
-        inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
-        case inventory_stock do
-          nil ->
-            InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id, 
-              "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
-            |> InventoryStock.changeset(attrs)
-            |> Repo.insert(prefix: prefix)
-          inventory_stock ->
-            quantity = if inventory_transaction.transaction_type == "IN", do: inventory_stock.quantity + inventory_transaction.quantity, else: inventory_stock.quantity + inventory_transaction.quantity
-            repo.update(change(inventory_stock, quantity: quantity))
-        end  
-      end)     
+      inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
+      case inventory_transaction.transaction_type do
+        "IN" ->
+          handle_purchase_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
+        
+        "RT" ->
+          handle_return_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)  
+        
+        "IS" ->
+          handle_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)  
+      end
+    end)
 
     case Repo.transaction(multi) do
       {:ok, %{inventory_transaction: inventory_transaction, inventory_stock: _inventory_stock}} ->
@@ -722,6 +723,114 @@ defmodule Inconn2Service.Inventory do
         {:error, inventory_transaction_changeset}  
     end
   end
+
+  def handle_purchase_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+    # IO.inspect(item)
+    # convert_for_transaction(item.purchase_unit_uom_id, item.inventory_unit_uom_id, quantity)
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id, 
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> convert_for_transaction(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix)
+        |> Repo.insert(prefix: prefix)
+      
+      inventory_stock ->
+        inventory_stock 
+        |> InventoryStock.changeset(%{})
+        |> convert_for_transaction(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix) 
+        |>  Repo.update(prefix: prefix)
+    end           
+  end
+
+  def convert_for_transaction(cs, uom_id1, uom_id2, quantity, prefix, direction \\ "forward", transaction_type \\ "IN") do
+    uom_conversion = Repo.get_by(UomConversion, [from_uom_id: uom_id1, to_uom_id: uom_id2], prefix: prefix)
+    case direction do
+      "forward" ->
+        case uom_conversion do
+          nil -> 
+            convert_for_transaction(cs, uom_id2, uom_id1, quantity, prefix, "reverse")
+          
+          uom_conversion ->
+            quantity = get_field(cs, :quantity, nil)
+            change(cs, %{quantity: update_for_transaction_type(transaction_type, quantity, uom_conversion.mult_factor)})  
+        end
+      
+      "reverse" ->
+        case uom_conversion do
+          nil -> 
+            add_error(cs, :quantity, "Uom Conversion not present")
+          
+          uom_conversion ->
+            quantity = get_field(cs, :quantity, nil)
+            change(cs, %{quantity: update_for_transaction_type(transaction_type, quantity, uom_conversion.inverse_factor)})  
+        end 
+    end
+  end
+
+  def update_for_transaction_type(transaction_type, quantity, factor) do
+    case transaction_type do
+      "IN" ->
+        quantity * factor
+      
+      "IS" ->
+        quantity - quantity * factor
+      
+      "RT" ->
+        quantity + quantity * factor  
+    end
+  end
+
+  def handle_return_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id, 
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> force_error("No record found to return in stock")
+        |> Repo.insert(prefix: prefix)
+      
+      inventory_stock ->
+        inventory_stock
+        |> InventoryStock.changeset(%{})
+        |> convert_for_transaction(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "forward", "RT") 
+        |> Repo.update(prefix: prefix)
+    end           
+  end
+
+  def handle_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id, 
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> force_error("No record found to return in stock")
+        |> Repo.insert(prefix: prefix)
+      
+      inventory_stock ->
+        if inventory_stock.quantity < inventory_transaction.quantity do
+          InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id, 
+          "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+          |> force_error("Required Quantity Not found")
+          |> Repo.insert(prefix: prefix)
+        else
+          inventory_stock
+          |> InventoryStock.changeset(%{})
+          |> convert_for_transaction(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "forward", "IS") 
+          |> Repo.update(prefix: prefix)
+        end
+        
+    end           
+  end
+
+  
+
+  def force_error(cs, error_msg) do
+    add_error(cs, :quantity, error_msg)
+  end
+
 
   def validate_presence_in_database(cs, prefix) do
     inventory_location_id = get_field(cs, :inventory_location_id, nil) 

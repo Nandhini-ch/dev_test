@@ -26,7 +26,7 @@ defmodule Inconn2ServiceWeb.UomConversionController do
   end
 
   def update(conn, %{"id" => id, "uom_conversion" => uom_conversion_params}) do
-    uom_conversion = Inventory.get_uom_conversion!(id, conn.asssigns.sub_domain_prefix)
+    uom_conversion = Inventory.get_uom_conversion!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %UomConversion{} = uom_conversion} <- Inventory.update_uom_conversion(uom_conversion, uom_conversion_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", uom_conversion: uom_conversion)

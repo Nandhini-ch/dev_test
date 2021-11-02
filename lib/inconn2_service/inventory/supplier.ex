@@ -17,5 +17,6 @@ defmodule Inconn2Service.Inventory.Supplier do
     supplier
     |> cast(attrs, [:name, :description])
     |> validate_required([:name])
+    |> cast_embed(:contact)
   end
 end
