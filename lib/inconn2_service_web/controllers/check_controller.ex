@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.CheckController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    checks = CheckListConfig.list_checks(conn.assigns.sub_domain_prefix)
+    checks = CheckListConfig.list_checks(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", checks: checks)
   end
 
@@ -38,6 +38,22 @@ defmodule Inconn2ServiceWeb.CheckController do
 
     with {:ok, %Check{}} <- CheckListConfig.delete_check(check, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def activate_check(conn, %{"id" => id}) do
+    check = CheckListConfig.get_check!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Check{} = check} <- CheckListConfig.update_check_active_status(check, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", check: check)
+    end
+  end
+
+  def deactivate_check(conn, %{"id" => id}) do
+    check = CheckListConfig.get_check!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Check{} = check} <- CheckListConfig.update_check_active_status(check, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", check: check)
     end
   end
 end

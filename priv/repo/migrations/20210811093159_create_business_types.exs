@@ -5,6 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateBusinessTypes do
     create table(:business_types) do
       add :name, :string
       add :description, :string
+      add :active, :boolean
 
       timestamps()
     end

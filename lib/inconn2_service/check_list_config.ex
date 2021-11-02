@@ -22,6 +22,12 @@ defmodule Inconn2Service.CheckListConfig do
     Repo.all(Check, prefix: prefix)
   end
 
+  def list_checks(query_params, prefix) do
+    Check
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single check.
 
@@ -74,6 +80,12 @@ defmodule Inconn2Service.CheckListConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_check_active_status(%Check{} = check, attrs, prefix) do
+    check
+    |> Check.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a check.
 
@@ -116,6 +128,12 @@ defmodule Inconn2Service.CheckListConfig do
   """
   def list_check_lists(prefix) do
     Repo.all(CheckList, prefix: prefix)
+  end
+
+  def list_check_lists(query_params, prefix) do
+    CheckList
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -182,6 +200,12 @@ defmodule Inconn2Service.CheckListConfig do
     check_list
     |> CheckList.changeset(attrs)
     |> validate_check_ids(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_check_list_active_status(%CheckList{} = check_list, attrs, prefix) do
+    check_list
+    |> CheckList.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 

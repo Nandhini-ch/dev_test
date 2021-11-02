@@ -22,6 +22,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     Repo.all(Task, prefix: prefix)
   end
 
+  def list_tasks(query_params, prefix) do
+    Task
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   def search_tasks(label, prefix) do
     if String.length(label) < 3 do
       []
@@ -84,6 +90,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_task(%Task{} = task, attrs, prefix) do
+    task
+    |> Task.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a task.
 
@@ -127,6 +139,12 @@ defmodule Inconn2Service.WorkOrderConfig do
   """
   def list_task_lists(prefix) do
     Repo.all(TaskList, prefix: prefix)
+  end
+
+  def list_task_lists(query_params, prefix) do
+    TaskList
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -209,6 +227,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> TaskList.changeset(attrs)
     |> validate_task_ids(prefix)
     |> validate_asset_category_id(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_active_status_for_task_list(%TaskList{} = task_list, attrs, prefix) do
+    task_list
+    |> TaskList.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 

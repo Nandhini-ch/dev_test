@@ -25,6 +25,12 @@ defmodule Inconn2Service.AssetConfig do
     Repo.all(Site, prefix: prefix)
   end
 
+  def list_sites(query_params, prefix) do
+   Site
+   |> Repo.add_active_filter(query_params)
+   |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single site.
 
@@ -119,6 +125,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_site_active_status(%Site{} = site, attrs, prefix) do
+    site
+    |> Site.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
   @doc """
   Deletes a site.
 
@@ -164,20 +177,33 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_asset_categories(query_params, prefix) do
+    AssetCategory
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_asset_categories_by_type(type, prefix) do
     AssetCategory
     |> where(asset_type: ^type)
     |> Repo.all(prefix: prefix)
   end
 
+  def list_asset_categories_by_type(type, query_params, prefix) do
+    AssetCategory
+    |> Repo.add_active_filter(query_params)
+    |> where(asset_type: ^type)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_asset_categories_tree(prefix) do
-    list_asset_categories(prefix)
+    list_asset_categories(%{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_asset_categories_leaves(prefix) do
     ids =
-      list_asset_categories(prefix)
+      list_asset_categories(%{"active" => "true"}, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -306,6 +332,26 @@ defmodule Inconn2Service.AssetConfig do
 
         update_asset_category_default_changeset_pipe(asset_category, attrs, prefix)
         |> Repo.update(prefix: prefix)
+    end
+  end
+
+  def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
+    case asset_params do
+      %{"active" => false} ->
+        children = HierarchyManager.children(asset_category)
+        IO.inspect(children)
+        Repo.update_all(children, [set: [active: false]], prefix: prefix)
+        asset_category
+        |> AssetCategory.changeset(asset_params)
+        |> Repo.update(prefix: prefix)
+
+      %{"active" => true} ->
+        parent_id = HierarchyManager.parent_id(asset_category)
+        asset_category
+        |> AssetCategory.changeset(asset_params)
+        |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
+        |> Repo.update(prefix: prefix)
+        |> update_children(prefix)
     end
   end
 
@@ -445,6 +491,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_locations(site_id, query_params, prefix) do
+    Location
+    |> Repo.add_active_filter(query_params)
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_active_locations(prefix) do
     Location
     |> where(active: true)
@@ -452,13 +505,13 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def list_locations_tree(site_id, prefix) do
-    list_locations(site_id, prefix)
+    list_locations(site_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_locations_leaves(site_id, prefix) do
     ids =
-      list_locations(site_id, prefix)
+      list_locations(site_id, %{"active" => "true"}, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -642,6 +695,17 @@ defmodule Inconn2Service.AssetConfig do
     |> Location.changeset(attrs)
   end
 
+  def update_active_status_for_location(%Location{} = location, location_params, prefix) do
+    case location_params do
+      %{"active" => false} ->
+        deactivate_children(location, location_params, Location, prefix)
+
+      %{"active" => true} ->
+        parent_id = HierarchyManager.parent_id(location)
+        handle_hierarchical_activation(location, location_params, Location, prefix, parent_id)
+    end
+  end
+
   @doc """
   Deletes a location.
 
@@ -692,19 +756,26 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments(site_id, query_params, prefix) do
+    Equipment
+    |> Repo.add_active_filter(query_params)
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_equipments(prefix) do
     Equipment
     |> Repo.all(prefix: prefix)
   end
 
   def list_equipments_tree(site_id, prefix) do
-    list_equipments(site_id, prefix)
+    list_equipments(site_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_equipments_leaves(site_id, prefix) do
     ids =
-      list_equipments(site_id, prefix)
+      list_equipments(site_id, %{"active" => "true"}, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
@@ -713,6 +784,13 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments_of_location(location_id, prefix) do
     Equipment
+    |> where(location_id: ^location_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_equipments_of_location(location_id, query_params, prefix) do
+    Equipment
+    |> Repo.add_active_filter(query_params)
     |> where(location_id: ^location_id)
     |> Repo.all(prefix: prefix)
   end
@@ -868,6 +946,31 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  def update_active_status_for_equipment(%Equipment{} = equipment, equipment_params, prefix) do
+    case equipment_params do
+      %{"active" => false} ->
+        deactivate_children(equipment, equipment_params, Equipment, prefix)
+      %{"active" => true} ->
+        parent_id = HierarchyManager.parent_id(equipment)
+        handle_hierarchical_activation(equipment, equipment_params, Equipment, prefix, parent_id)
+    end
+  end
+
+  def validate_parent_active_status(cs, prefix) do
+    parent_id = get_field(cs, :parent_id, prefix: prefix)
+    if parent_id != nil do
+      parent_equipment = Repo.get(Equipment, parent_id)
+      case parent_equipment.active do
+        false ->
+          add_error(cs, :active, "Parent Equipment is not active")
+        _ ->
+          cs
+      end
+    else
+      cs
+    end
+  end
+
   defp update_equipment_in_tree(nil, eq_cs, equipment, prefix) do
     descendents = HierarchyManager.descendants(equipment) |> Repo.all(prefix: prefix)
     # adjust the path (from old path to ne path )for all descendents
@@ -963,6 +1066,12 @@ defmodule Inconn2Service.AssetConfig do
   """
   def list_parties(prefix) do
     Repo.all(Party, prefix: prefix)
+  end
+
+  def list_parties(query_params, prefix) do
+    Party
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
   end
 
   def list_SP(prefix) do
@@ -1200,4 +1309,45 @@ defmodule Inconn2Service.AssetConfig do
   def change_party(%Party{} = party, attrs \\ %{}) do
     Party.changeset(party, attrs)
   end
+
+  defp handle_hierarchical_activation(resource, resource_params, module, prefix, parent_id) do
+    resource
+    |> module.changeset(resource_params)
+    |> validate_parent_for_true_condition(module, prefix, parent_id)
+    |> Repo.update(prefix: prefix)
+    |> update_children(prefix)
+  end
+
+  defp deactivate_children(resource, resource_params, module, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
+    resource |> module.changeset(resource_params) |> Repo.update(prefix: prefix)
+  end
+
+  defp validate_parent_for_true_condition(cs, module, prefix, parent_id) do
+    # parent_id = get_field(cs, :parent_id, nil)
+    IO.inspect("Parent Id is #{parent_id}")
+    if parent_id != nil do
+      parent = Repo.get(module, parent_id, prefix: prefix)
+      if parent != nil do
+        case parent.active do
+          false -> add_error(cs, :parent_id, "Parent Not Active")
+          _ -> cs
+        end
+      else
+        add_error(cs, :parent_id, "Parent Not Found")
+      end
+    else
+      cs
+    end
+  end
+
+  defp update_children({:ok, resource}, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: true]], prefix: prefix)
+    {:ok, resource}
+  end
+
+  defp update_children({:error, cs}, _prefix), do: {:error, cs}
+
 end

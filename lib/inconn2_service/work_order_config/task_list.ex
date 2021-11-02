@@ -7,6 +7,7 @@ defmodule Inconn2Service.WorkOrderConfig.TaskList do
   schema "task_lists" do
     field :name, :string
     field :task_ids, {:array, :integer}
+    field :active, :boolean, default: true
     belongs_to :asset_category, AssetCategory
 
     timestamps()

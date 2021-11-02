@@ -16,7 +16,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateSites do
       add :party_id, references(:parties, on_delete: :nothing)
       add :address, :jsonb
       add :contact, :jsonb
-
+      add :active, :boolean
 
       timestamps()
     end

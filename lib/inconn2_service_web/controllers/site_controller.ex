@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.SiteController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    sites = AssetConfig.list_sites(conn.assigns.sub_domain_prefix)
+    sites = AssetConfig.list_sites(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", sites: sites)
   end
 
@@ -40,6 +40,22 @@ defmodule Inconn2ServiceWeb.SiteController do
 
     with {:ok, %Site{}} <- AssetConfig.delete_site(site, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def activate_site(conn, %{"id" => id}) do
+    site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Site{} = site} <-
+      AssetConfig.update_site_active_status(site, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", site: site)
+    end
+  end
+
+  def deactivate_site(conn, %{"id" => id}) do
+    site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Site{} = site} <-
+      AssetConfig.update_site_active_status(site, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", site: site)
     end
   end
 end

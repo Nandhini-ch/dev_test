@@ -6,6 +6,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateRoles do
       add :name, :string
       add :description, :string
       add :features, {:array, :string}
+      add :active, :boolean
 
       timestamps()
     end

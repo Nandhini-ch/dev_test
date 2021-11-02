@@ -5,6 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateOrgUnits do
     create table(:org_units) do
       add :name, :string
       add :party_id, references(:parties, on_delete: :nothing)
+      add :active, :boolean
 
       timestamps()
       add :path, {:array, :integer}, null: false

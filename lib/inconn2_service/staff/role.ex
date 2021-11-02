@@ -6,6 +6,7 @@ defmodule Inconn2Service.Staff.Role do
     field :name, :string
     field :description, :string
     field :features, {:array, :string}
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -13,7 +14,7 @@ defmodule Inconn2Service.Staff.Role do
   @doc false
   def changeset(role, attrs) do
     role
-    |> cast(attrs, [:name, :description, :features])
+    |> cast(attrs, [:name, :description, :features, :active])
     |> validate_required([:name, :description, :features])
     |> unique_constraint(:name)
   end

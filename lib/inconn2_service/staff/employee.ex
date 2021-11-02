@@ -18,6 +18,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :last_name, :string
     field :reports_to, :string
     field :skills, {:array, :integer}
+    field :active, :boolean, default: true
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
     field :role_ids, {:array, :integer}, virtual: true
@@ -44,7 +45,8 @@ defmodule Inconn2Service.Staff.Employee do
       :skills,
       :org_unit_id,
       :party_id,
-      :role_ids
+      :role_ids,
+      :active
     ])
     |> validate_required([
       :first_name,

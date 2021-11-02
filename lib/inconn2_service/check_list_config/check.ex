@@ -5,6 +5,7 @@ defmodule Inconn2Service.CheckListConfig.Check do
   schema "checks" do
     field :label, :string
     field :type, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule Inconn2Service.CheckListConfig.Check do
   @doc false
   def changeset(check, attrs) do
     check
-    |> cast(attrs, [:label, :type])
+    |> cast(attrs, [:label, :type, :active])
     |> validate_required([:label, :type])
     |> validate_inclusion(:type, ["WP", "LOTO"])
   end

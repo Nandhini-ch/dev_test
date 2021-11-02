@@ -11,6 +11,7 @@ defmodule Inconn2Service.AssetConfig.Party do
     field :contract_start_date, :date
     field :license_no, :string
     field :licensee, :boolean, default: false
+    field :active, :boolean, default: true
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
 
@@ -26,7 +27,8 @@ defmodule Inconn2Service.AssetConfig.Party do
       :contract_start_date,
       :contract_end_date,
       :licensee,
-      :license_no
+      :license_no,
+      :active
     ])
     |> validate_required([
       :company_name,

@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, %{"site_id" => site_id}) do
-    equipments = AssetConfig.list_equipments(site_id, conn.assigns.sub_domain_prefix)
+    equipments = AssetConfig.list_equipments(site_id, conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", equipments: equipments)
   end
 
@@ -22,7 +22,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
   end
 
   def loc_equipments(conn, %{"location_id" => location_id}) do
-    equipments = AssetConfig.list_equipments_of_location(location_id, conn.assigns.sub_domain_prefix)
+    equipments = AssetConfig.list_equipments_of_location(location_id, conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json",equipments: equipments)
   end
 
@@ -63,4 +63,23 @@ defmodule Inconn2ServiceWeb.EquipmentController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def activate_equipment(conn, %{"id" => id, "site_id" => site_id}) do
+    equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Equipment{} = equipment} <-
+           AssetConfig.update_active_status_for_equipment(equipment, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", equipment: equipment)
+    end
+  end
+
+  def deactivate_equipment(conn, %{"id" => id, "site_id" => site_id}) do
+    equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Equipment{} = equipment} <-
+           AssetConfig.update_active_status_for_equipment(equipment, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", equipment: equipment)
+    end
+  end
+
 end

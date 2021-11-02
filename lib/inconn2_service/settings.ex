@@ -17,9 +17,20 @@ defmodule Inconn2Service.Settings do
       [%Shift{}, ...]
 
   """
+  def list_shifts(prefix) do
+    Shift
+    |> Repo.all(prefix: prefix)
+  end
 
   def list_shifts(site_id, prefix) do
     Shift
+    |> where(site_id: ^site_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_shifts(site_id, query_params, prefix) do
+    Shift
+    |> Repo.add_active_filter(query_params)
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -119,6 +130,12 @@ defmodule Inconn2Service.Settings do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_active_status_for_shift(%Shift{} = shift, attrs, prefix) do
+    shift
+    |> Shift.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a shift.
 
@@ -159,6 +176,17 @@ defmodule Inconn2Service.Settings do
       [%Holiday{}, ...]
 
   """
+  def list_bankholidays(prefix) do
+    Holiday
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_bankholidays(query_params, prefix) do
+    Holiday
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_bankholidays(site_id, year_begin, year_end, prefix) do
     query =
       from(h in Holiday,
@@ -224,6 +252,13 @@ defmodule Inconn2Service.Settings do
 
   """
   def update_holiday(%Holiday{} = holiday, attrs, prefix) do
+    holiday
+    |> Holiday.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  def update_active_status_for_holiday(%Holiday{} = holiday, attrs, prefix) do
     holiday
     |> Holiday.changeset(attrs)
     |> Repo.update(prefix: prefix)

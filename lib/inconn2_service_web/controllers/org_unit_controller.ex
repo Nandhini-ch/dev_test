@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, %{"party_id" => party_id}) do
-    org_units = Staff.list_org_units(party_id, conn.assigns.sub_domain_prefix)
+    org_units = Staff.list_org_units(party_id, conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", org_units: org_units)
   end
 
@@ -48,6 +48,22 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
 
     with {_, nil} <- Staff.delete_org_unit(org_unit, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def activate_org_unit(conn, %{"id" => id}) do
+    org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %OrgUnit{} = org_unit} <- Staff.update_active_status_for_org_unit(org_unit, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", org_unit: org_unit)
+    end
+  end
+
+  def deactivate_org_unit(conn, %{"id" => id}) do
+    org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %OrgUnit{} = org_unit} <- Staff.update_active_status_for_org_unit(org_unit, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", org_unit: org_unit)
     end
   end
 end

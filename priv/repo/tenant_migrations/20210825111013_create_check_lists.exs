@@ -6,6 +6,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateCheckLists do
       add :name, :string
       add :type, :string
       add :check_ids, {:array, :integer}
+      add :active, :boolean
 
       timestamps()
     end

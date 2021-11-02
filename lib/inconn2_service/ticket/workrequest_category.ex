@@ -5,6 +5,7 @@ defmodule Inconn2Service.Ticket.WorkrequestCategory do
   schema "workrequest_categories" do
     field :description, :string
     field :name, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end

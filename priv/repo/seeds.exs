@@ -7,6 +7,10 @@ alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, St
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
 
+bt2 = %{"name" => "Carbonated Drinks"}
+{:ok, btrec2} = Account.create_business_type(bt2)
+
+
 client = %{
   "company_name" => "Bata Shoe Company",
   "business_type_id" => btrec.id,
@@ -36,6 +40,7 @@ client = %{
 # _ -> IO.inspect()
 # end
 IO.inspect(Account.create_licensee(client))
+# IO.inspect(Account.create_licensee(client2))
 
 site = %{
   "name" => "Mountroad",
@@ -58,8 +63,36 @@ site = %{
     "land_line" => "+91-44-2457727",
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
-    }
+  }
 }
+
+# site2 = %{
+#   "name" => "HCCB - COCA COLA",
+#   "description" => "HINDUSTAN COCA COLA BEVERAGES PVT LTD",
+#   "area" => 500,
+#   "latitude" => 15.371807,
+#   "longitude" => 73.947236,
+#   "fencing_radius" => 500,
+#   "site_code" => "Asia/Kolkata",
+#   "party_id" => 1,
+#   "time_zone" => "Europe/Berlin",
+#   "address" => %{
+#     "address_line1" => "M2 To M11 Phase III B Industrial Estate",
+#     "address_line2" => "Verna Industrial Estate Verna",
+#     "city" => "Baneji",
+#     "state" => "GOA",
+#     "country" => "India",
+#     "postcode" => "403722"
+#   },
+#   "contact" => %{
+#     "first_name" => "Bala",
+#     "last_name" => "Chandar",
+#     "designation" => "Sales Head",
+#     "land_line" => "+91-44-2457727",
+#     "mobile" => "+91-9840022485",
+#     "email" => "balac@bata.co.in"
+#   }
+# }
 
 sc =
   case IO.inspect(AssetConfig.create_site(site, "inc_bata")) do
@@ -68,16 +101,26 @@ sc =
     nil -> IO.puts("null value returned")
   end
 
+# sc2 =
+#   case IO.inspect(AssetConfig.create_site(site2, "inc_cola")) do
+#     {:ok, site_created} -> IO.inspect(site_created)
+#     {:error, cs} -> IO.inspect(cs)
+#     nil -> IO.puts("null value returned")
+#   end
+
+
 a1 = %{"name" => "Open floor", "asset_type" => "L"}
 a2 = %{"name" => "Electrical", "asset_type" => "E"}
+a3 = %{"name" => "HouseKeeping", "asset_type" => "L"}
 {:ok, a1c} = AssetConfig.create_asset_category(a1, "inc_bata")
 {:ok, a2c} = AssetConfig.create_asset_category(a2, "inc_bata")
+
 
 b1 = %{
   "name" => "Building1",
   "location_code" => "LOC_BUILD1",
   "site_id" => sc.id,
-  "asset_category_id" => a1c.id
+  "asset_category_id" => a1c.id,
 }
 
 b2 = %{
@@ -185,8 +228,7 @@ dg1 = %{
   "equipment_code" => "EQ_DG1",
   "site_id" => sc.id,
   "location_id" => b1c.id,
-  "connections_in" => [1,2,3],
-  "asset_category_id" => a2c.id
+  "asset_category_id" => a2c.id,
 }
 
 dg2 = %{
@@ -207,7 +249,8 @@ dg2 = %{
     "equipment_code" => "EQ_DG1_IC",
     "site_id" => sc.id,
     "location_id" => b1c.id,
-    "asset_category_id" => a2c.id
+    "asset_category_id" => a2c.id,
+    "connections_in" => [1],
   }
   |> AssetConfig.create_equipment("inc_bata")
 

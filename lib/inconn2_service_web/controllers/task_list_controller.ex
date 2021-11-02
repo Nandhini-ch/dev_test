@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.TaskListController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    task_lists = WorkOrderConfig.list_task_lists(conn.assigns.sub_domain_prefix)
+    task_lists = WorkOrderConfig.list_task_lists(conn.query_param, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", task_lists: task_lists)
   end
 
@@ -38,6 +38,22 @@ defmodule Inconn2ServiceWeb.TaskListController do
 
     with {:ok, %TaskList{}} <- WorkOrderConfig.delete_task_list(task_list, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def activate_task_list(conn, %{"id" => id}) do
+    task_list = WorkOrderConfig.get_task_list!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %TaskList{} = task_list} <- WorkOrderConfig.update_task_list(task_list, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", task_list: task_list)
+    end
+  end
+
+  def deactivate_task_list(conn, %{"id" => id}) do
+    task_list = WorkOrderConfig.get_task_list!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %TaskList{} = task_list} <- WorkOrderConfig.update_task_list(task_list, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", task_list: task_list)
     end
   end
 end

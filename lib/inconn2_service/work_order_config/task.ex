@@ -8,6 +8,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     field :task_type, :string
     field :config, :map
     field :estimated_time, :integer
+    field :active, :boolean, default: true
 
     timestamps()
   end

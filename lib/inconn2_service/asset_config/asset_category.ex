@@ -8,6 +8,7 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
     field :asset_type, :string
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -15,7 +16,7 @@ defmodule Inconn2Service.AssetConfig.AssetCategory do
   @doc false
   def changeset(asset_category, attrs) do
     asset_category
-    |> cast(attrs, [:name, :asset_type, :parent_id])
+    |> cast(attrs, [:name, :asset_type, :parent_id, :active])
     |> validate_required([:name])
     |> validate_inclusion(:asset_type, ["L", "E"] )
     |> validate_asset_type()

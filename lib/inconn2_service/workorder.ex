@@ -245,6 +245,13 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderSchedule, prefix: prefix) |> Repo.preload(:workorder_template)
   end
 
+  def list_workorder_schedules(query_params, prefix) do
+    WorkorderSchedule
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload(:workorder_template)
+  end
+
   @doc """
   Gets a single workorder_schedule.
 
@@ -374,6 +381,7 @@ defmodule Inconn2Service.Workorder do
         result
     end
   end
+
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)

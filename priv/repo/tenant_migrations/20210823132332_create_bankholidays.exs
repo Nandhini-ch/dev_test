@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateBankholidays do
       add :start_date, :date
       add :end_date, :date
       add :site_id, references(:sites, on_delete: :nothing)
+      add :active, :boolean
 
       timestamps()
     end

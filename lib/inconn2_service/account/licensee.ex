@@ -13,6 +13,7 @@ defmodule Inconn2Service.Account.Licensee do
     # if party_type is [AO, SP] then other_party_type is SP
     # if party_type is [SP, AO] then other_party_type is AO
     field :party_type, :string
+    field :active, :boolean, default: true
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
     belongs_to :business_type, BusinessType

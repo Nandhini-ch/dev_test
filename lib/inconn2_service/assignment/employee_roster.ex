@@ -8,6 +8,7 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
     field :shift_id, :integer
     field :start_date, :date
     field :end_date, :date
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -15,7 +16,7 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
   @doc false
   def changeset(employee_roster, attrs) do
     employee_roster
-    |> cast(attrs, [:employee_id, :site_id, :shift_id, :start_date, :end_date])
+    |> cast(attrs, [:employee_id, :site_id, :shift_id, :start_date, :end_date, :active])
     |> validate_required([:employee_id, :site_id, :shift_id, :start_date, :end_date])
     |> validate_date_order()
   end

@@ -10,6 +10,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
       add :location_id, references(:locations, on_delete: :nothing)
       add :connections_in, {:array, :integer}
       add :connections_out, {:array, :integer}
+      add :active, :boolean
+
 
       timestamps()
       add :path, {:array, :integer}, null: false

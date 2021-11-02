@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
       add :password_hash, :string
       add :role_ids, {:array, :integer}
       add :party_id, references(:parties, on_delete: :nothing)
+      add :active, :boolean
 
       timestamps()
     end

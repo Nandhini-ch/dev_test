@@ -56,6 +56,24 @@ defmodule Inconn2ServiceWeb.HolidayController do
     end
   end
 
+  def activate_holiday(conn, %{"id" => id}) do
+    holiday = Settings.get_holiday!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Holiday{} = holiday} <-
+           Settings.update_active_status_for_holiday(holiday, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", holiday: holiday)
+    end
+  end
+
+  def deactivate_holiday(conn, %{"id" => id}) do
+    holiday = Settings.get_holiday!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %Holiday{} = holiday} <-
+           Settings.update_active_status_for_holiday(holiday, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", holiday: holiday)
+    end
+  end
+
   defp year_end_date_convert(year) do
     Date.new(year, 12, 31)
   end

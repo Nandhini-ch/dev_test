@@ -11,6 +11,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderSchedules do
       add :first_occurrence_time, :time
       add :next_occurrence_date, :date
       add :next_occurrence_time, :time
+      add :active, :boolean
 
       timestamps()
     end

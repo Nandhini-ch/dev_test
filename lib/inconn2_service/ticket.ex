@@ -22,6 +22,12 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkrequestCategory, prefix: prefix)
   end
 
+  def list_workrequest_categories(query_params, prefix) do
+    WorkrequestCategory
+    |> Repo.add_active_filter(query_params)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single workrequest_category.
 
@@ -69,6 +75,12 @@ defmodule Inconn2Service.Ticket do
 
   """
   def update_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
+    workrequest_category
+    |> WorkrequestCategory.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_active_status_for_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
     workrequest_category
     |> WorkrequestCategory.changeset(attrs)
     |> Repo.update(prefix: prefix)
