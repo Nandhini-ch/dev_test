@@ -63,9 +63,13 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   defp validate_date_order(cs) do
     start_date = get_field(cs, :applicable_start)
     end_date = get_field(cs, :applicable_end)
-    case Date.compare(start_date, end_date) do
-      :gt -> add_error(cs, :start_date, "cannot be later than 'end_date'")
-      _ -> cs
+    if start_date != nil and end_date != nil do
+      case Date.compare(start_date, end_date) do
+        :gt -> add_error(cs, :start_date, "cannot be later than 'end_date'")
+        _ -> cs
+      end
+    else
+      cs
     end
   end
 

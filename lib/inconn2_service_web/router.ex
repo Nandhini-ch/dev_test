@@ -54,8 +54,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/equipments", EquipmentController, :index
     get "/sites/:site_id/equipments_tree", EquipmentController, :tree
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
-    put "/sites/:site_id/equipments/:id/activate", EquipmentController, :activate_equipment
-    put "/sites/:site_id/equipments/:id/deactivate", EquipmentController, :deactivate_equipment
+    put "/equipments/:id/activate", EquipmentController, :activate_equipment
+    put "/equipments/:id/deactivate", EquipmentController, :deactivate_equipment
     get "/equipments/:equipment_id/location_path", EquipmentController, :loc_path
     get "/locations/:location_id/equipments", EquipmentController, :loc_equipments
     get "/download_equipments", ReferenceDownloadController, :download_equipments
@@ -118,18 +118,22 @@ defmodule Inconn2ServiceWeb.Router do
     put "/org_units/:id/deactivate", OrgUnitController, :deactivate_org_unit
 
 
-    resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/parties/:party_id/employees", EmployeeController, :index
+    resources "/employees", EmployeeController, except: [:new, :edit, :index]
     put "/employees/:id/activate", EmployeeController, :activate_employee
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
-    resources "/users", UserController, except: [:new, :edit]
+    resources "/users", UserController, only: [:index, :delete]
+    put "/users/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
     put "/users/:id/deactivate", UserController, :deactivate_user
     get "/download_users", ReferenceDownloadController, :download_users
     resources "/roles", RoleController, except: [:new, :edit]
+    get "/features", FeatureController, :index
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
+
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
@@ -138,6 +142,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
+    resources "/work_requests", WorkRequestController, except: [:new, :edit]
+    get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]
@@ -152,7 +158,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
     get "/inventory_locations/:inventory_location_id/inventory_transactions", InventoryTransactionController, :loc_transaction
     get "/inventory_locations/:inventory_location_id/inventory_transfers", InventoryTransferController, :loc_transfer
-    
+
 
     # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]
     resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit, :update]

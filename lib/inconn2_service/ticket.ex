@@ -5,6 +5,7 @@ defmodule Inconn2Service.Ticket do
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  import Ecto.Changeset
 
   alias Inconn2Service.Ticket.WorkrequestCategory
 
@@ -112,5 +113,133 @@ defmodule Inconn2Service.Ticket do
   """
   def change_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs \\ %{}) do
     WorkrequestCategory.changeset(workrequest_category, attrs)
+  end
+
+  alias Inconn2Service.Ticket.WorkRequest
+
+
+  @doc """
+  Returns the list of work_requests.
+
+  ## Examples
+
+      iex> list_work_requests()
+      [%WorkRequest{}, ...]
+
+  """
+  def list_work_requests(prefix) do
+    Repo.all(WorkRequest, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single work_request.
+
+  Raises `Ecto.NoResultsError` if the Work request does not exist.
+
+  ## Examples
+
+      iex> get_work_request!(123)
+      %WorkRequest{}
+
+      iex> get_work_request!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
+
+  @doc """
+  Creates a work_request.
+
+  ## Examples
+
+      iex> create_work_request(%{field: value})
+      {:ok, %WorkRequest{}}
+
+      iex> create_work_request(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_work_request(attrs \\ %{}, prefix, user \\ %{id: nil}) do
+    payload = read_attachment(attrs)
+    %WorkRequest{}
+    |> WorkRequest.changeset(payload)
+    |> attachment_format(attrs)
+    |> requested_user_id(user)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  #defp read_attachment(%{"attachment" => ""} = attrs), do: attrs
+
+  defp read_attachment(attrs) do
+    attachment = Map.get(attrs, "attachment")
+    if attachment != nil and attachment != "" do
+      {:ok, attachment_binary} = File.read(attachment.path)
+      Map.put(attrs, "attachment", attachment_binary)
+    else
+      attrs
+    end
+  end
+
+  defp attachment_format(cs, attrs) do
+    attachment = Map.get(attrs, "attachment")
+    if attachment != nil and attachment != "" do
+      change(cs, %{attachment_type: attachment.content_type})
+    else
+      cs
+    end
+  end
+
+  def requested_user_id(cs, user) do
+    change(cs, %{requested_user_id: user.id})
+  end
+
+
+  @doc """
+  Updates a work_request.
+
+  ## Examples
+
+      iex> update_work_request(work_request, %{field: new_value})
+      {:ok, %WorkRequest{}}
+
+      iex> update_work_request(work_request, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_work_request(%WorkRequest{} = work_request, attrs, prefix) do
+    payload = read_attachment(attrs)
+    work_request
+    |> WorkRequest.changeset(payload)
+    |> attachment_format(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a work_request.
+
+  ## Examples
+
+      iex> delete_work_request(work_request)
+      {:ok, %WorkRequest{}}
+
+      iex> delete_work_request(work_request)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_work_request(%WorkRequest{} = work_request, prefix) do
+    Repo.delete(work_request, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking work_request changes.
+
+  ## Examples
+
+      iex> change_work_request(work_request)
+      %Ecto.Changeset{data: %WorkRequest{}}
+
+  """
+  def change_work_request(%WorkRequest{} = work_request, attrs \\ %{}) do
+    WorkRequest.changeset(work_request, attrs)
   end
 end

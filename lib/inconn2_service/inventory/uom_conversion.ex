@@ -2,14 +2,14 @@ defmodule Inconn2Service.Inventory.UomConversion do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Inconn2Service.Inventory
+  # alias Inconn2Service.Inventory
 
   schema "uom_conversions" do
     field :from_uom_id, :integer
     field :inverse_factor, :float
     field :mult_factor, :float
     field :to_uom_id, :integer
-    
+
 
     timestamps()
   end

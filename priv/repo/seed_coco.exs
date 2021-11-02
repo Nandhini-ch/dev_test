@@ -81,7 +81,7 @@ sc =
     nil -> IO.puts("null value returned")
   end
 
-a1 = %{"name" => "Housr Keeping", "asset_type" => "L"}
+a1 = %{"name" => "House Keeping", "asset_type" => "L"}
 {:ok, a1c} = AssetConfig.create_asset_category(a1, "inc_uds")
 
 {:ok, l1c} = %{

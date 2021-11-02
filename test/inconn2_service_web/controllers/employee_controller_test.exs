@@ -11,7 +11,7 @@ defmodule Inconn2ServiceWeb.EmployeeControllerTest do
     Salary: 120.5,
     designation: "some designation",
     email: "some email",
-    employement_start_date: ~D[2010-04-17],
+    employment_start_date: ~D[2010-04-17],
     employment_end_date: ~D[2010-04-17],
     first_name: "some first_name",
     has_login_credentials: true,
@@ -24,13 +24,13 @@ defmodule Inconn2ServiceWeb.EmployeeControllerTest do
     Salary: 456.7,
     designation: "some updated designation",
     email: "some updated email",
-    employement_start_date: ~D[2011-05-18],
+    employment_start_date: ~D[2011-05-18],
     employment_end_date: ~D[2011-05-18],
     first_name: "some updated first_name",
     has_login_credentials: false,
     last_name: "some updated last_name"
   }
-  @invalid_attrs %{Emp_id: nil, Landline_no: nil, Mobile_no: nil, Salary: nil, designation: nil, email: nil, employement_start_date: nil, employment_end_date: nil, first_name: nil, has_login_credentials: nil, last_name: nil}
+  @invalid_attrs %{Emp_id: nil, Landline_no: nil, Mobile_no: nil, Salary: nil, designation: nil, email: nil, employment_start_date: nil, employment_end_date: nil, first_name: nil, has_login_credentials: nil, last_name: nil}
 
   def fixture(:employee) do
     {:ok, employee} = Staff.create_employee(@create_attrs)
@@ -63,7 +63,7 @@ defmodule Inconn2ServiceWeb.EmployeeControllerTest do
                "Salary" => 120.5,
                "designation" => "some designation",
                "email" => "some email",
-               "employement_start_date" => "2010-04-17",
+               "employment_start_date" => "2010-04-17",
                "employment_end_date" => "2010-04-17",
                "first_name" => "some first_name",
                "has_login_credentials" => true,
@@ -94,7 +94,7 @@ defmodule Inconn2ServiceWeb.EmployeeControllerTest do
                "Salary" => 456.7,
                "designation" => "some updated designation",
                "email" => "some updated email",
-               "employement_start_date" => "2011-05-18",
+               "employment_start_date" => "2011-05-18",
                "employment_end_date" => "2011-05-18",
                "first_name" => "some updated first_name",
                "has_login_credentials" => false,

@@ -5,7 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
     create table(:employees) do
       add :first_name, :string
       add :last_name, :string
-      add :employement_start_date, :date
+      add :employment_start_date, :date
       add :employment_end_date, :date
       add :designation, :string
       add :email, :string

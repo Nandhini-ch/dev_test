@@ -15,7 +15,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       id: employee.id,
       first_name: employee.first_name,
       last_name: employee.last_name,
-      employement_start_date: employee.employement_start_date,
+      employment_start_date: employee.employment_start_date,
       employment_end_date: employee.employment_end_date,
       designation: employee.designation,
       email: employee.email,

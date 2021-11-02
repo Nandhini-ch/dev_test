@@ -2,7 +2,7 @@ defmodule Inconn2Service.Inventory.Item do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Inconn2Service.Inventory.UOM
+  # alias Inconn2Service.Inventory.UOM
 
   schema "items" do
     field :asset_categories_ids, {:array, :integer}
