@@ -87,5 +87,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
+    resources "/work_requests", WorkRequestController, except: [:new, :edit]
+    get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
   end
 end
