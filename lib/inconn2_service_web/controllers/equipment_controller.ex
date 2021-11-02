@@ -64,7 +64,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     end
   end
 
-  def activate_equipment(conn, %{"id" => id, "site_id" => site_id}) do
+  def activate_equipment(conn, %{"id" => id}) do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Equipment{} = equipment} <-
@@ -73,7 +73,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     end
   end
 
-  def deactivate_equipment(conn, %{"id" => id, "site_id" => site_id}) do
+  def deactivate_equipment(conn, %{"id" => id}) do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Equipment{} = equipment} <-

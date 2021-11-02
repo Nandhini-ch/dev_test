@@ -54,8 +54,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/equipments", EquipmentController, :index
     get "/sites/:site_id/equipments_tree", EquipmentController, :tree
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
-    put "/sites/:site_id/equipments/:id/activate", EquipmentController, :activate_equipment
-    put "/sites/:site_id/equipments/:id/deactivate", EquipmentController, :deactivate_equipment
+    put "/equipments/:id/activate", EquipmentController, :activate_equipment
+    put "/equipments/:id/deactivate", EquipmentController, :deactivate_equipment
     get "/equipments/:equipment_id/location_path", EquipmentController, :loc_path
     get "/locations/:location_id/equipments", EquipmentController, :loc_equipments
     get "/download_equipments", ReferenceDownloadController, :download_equipments

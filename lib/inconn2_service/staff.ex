@@ -306,14 +306,14 @@ defmodule Inconn2Service.Staff do
       [%Employee{}, ...]
 
   """
-  def list_employees(party_id, prefix) do
+  def list_employees(prefix) do
     Employee
-    |> where(party_id: ^party_id)
     |> Repo.all(prefix: prefix)
   end
 
-  def list_employees(query_params, prefix) do
+  def list_employees(party_id, query_params, prefix) do
     Employee
+    |> where(party_id: ^party_id)
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
   end
