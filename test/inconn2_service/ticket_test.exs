@@ -124,4 +124,63 @@ defmodule Inconn2Service.TicketTest do
       assert %Ecto.Changeset{} = Ticket.change_work_request(work_request)
     end
   end
+
+  describe "category_helpdesks" do
+    alias Inconn2Service.Ticket.CategoryHelpdesk
+
+    @valid_attrs %{user_id: 42}
+    @update_attrs %{user_id: 43}
+    @invalid_attrs %{user_id: nil}
+
+    def category_helpdesk_fixture(attrs \\ %{}) do
+      {:ok, category_helpdesk} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ticket.create_category_helpdesk()
+
+      category_helpdesk
+    end
+
+    test "list_category_helpdesks/0 returns all category_helpdesks" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert Ticket.list_category_helpdesks() == [category_helpdesk]
+    end
+
+    test "get_category_helpdesk!/1 returns the category_helpdesk with given id" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert Ticket.get_category_helpdesk!(category_helpdesk.id) == category_helpdesk
+    end
+
+    test "create_category_helpdesk/1 with valid data creates a category_helpdesk" do
+      assert {:ok, %CategoryHelpdesk{} = category_helpdesk} = Ticket.create_category_helpdesk(@valid_attrs)
+      assert category_helpdesk.user_id == 42
+    end
+
+    test "create_category_helpdesk/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ticket.create_category_helpdesk(@invalid_attrs)
+    end
+
+    test "update_category_helpdesk/2 with valid data updates the category_helpdesk" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert {:ok, %CategoryHelpdesk{} = category_helpdesk} = Ticket.update_category_helpdesk(category_helpdesk, @update_attrs)
+      assert category_helpdesk.user_id == 43
+    end
+
+    test "update_category_helpdesk/2 with invalid data returns error changeset" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ticket.update_category_helpdesk(category_helpdesk, @invalid_attrs)
+      assert category_helpdesk == Ticket.get_category_helpdesk!(category_helpdesk.id)
+    end
+
+    test "delete_category_helpdesk/1 deletes the category_helpdesk" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert {:ok, %CategoryHelpdesk{}} = Ticket.delete_category_helpdesk(category_helpdesk)
+      assert_raise Ecto.NoResultsError, fn -> Ticket.get_category_helpdesk!(category_helpdesk.id) end
+    end
+
+    test "change_category_helpdesk/1 returns a category_helpdesk changeset" do
+      category_helpdesk = category_helpdesk_fixture()
+      assert %Ecto.Changeset{} = Ticket.change_category_helpdesk(category_helpdesk)
+    end
+  end
 end
