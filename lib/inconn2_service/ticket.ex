@@ -8,6 +8,7 @@ defmodule Inconn2Service.Ticket do
   import Ecto.Changeset
 
   alias Inconn2Service.Ticket.WorkrequestCategory
+  alias Inconn2Service.Staff.User
 
   @doc """
   Returns the list of workrequest_categories.
@@ -241,5 +242,118 @@ defmodule Inconn2Service.Ticket do
   """
   def change_work_request(%WorkRequest{} = work_request, attrs \\ %{}) do
     WorkRequest.changeset(work_request, attrs)
+  end
+
+  alias Inconn2Service.Ticket.CategoryHelpdesk
+
+  @doc """
+  Returns the list of category_helpdesks.
+
+  ## Examples
+
+      iex> list_category_helpdesks()
+      [%CategoryHelpdesk{}, ...]
+
+  """
+  def list_category_helpdesks(prefix) do
+    Repo.all(CategoryHelpdesk, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single category_helpdesk.
+
+  Raises `Ecto.NoResultsError` if the Category helpdesk does not exist.
+
+  ## Examples
+
+      iex> get_category_helpdesk!(123)
+      %CategoryHelpdesk{}
+
+      iex> get_category_helpdesk!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix)
+
+  @doc """
+  Creates a category_helpdesk.
+
+  ## Examples
+
+      iex> create_category_helpdesk(%{field: value})
+      {:ok, %CategoryHelpdesk{}}
+
+      iex> create_category_helpdesk(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_category_helpdesk(attrs \\ %{}, prefix) do
+    %CategoryHelpdesk{}
+    |> CategoryHelpdesk.changeset(attrs)
+    |> validate_user_id(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_user_id(cs, prefix) do
+    user_id = get_field(cs, :user_id, nil)
+    if user_id != nil do
+      case Repo.get(User, user_id, prefix: prefix) do
+        nil ->
+          add_error(cs, :user_id, "User should exist")
+        
+        _ ->
+          cs      
+      end
+    else
+      cs  
+    end
+  end
+
+  @doc """
+  Updates a category_helpdesk.
+
+  ## Examples
+
+      iex> update_category_helpdesk(category_helpdesk, %{field: new_value})
+      {:ok, %CategoryHelpdesk{}}
+
+      iex> update_category_helpdesk(category_helpdesk, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs, prefix) do
+    category_helpdesk
+    |> CategoryHelpdesk.changeset(attrs)
+    |> validate_user_id(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a category_helpdesk.
+
+  ## Examples
+
+      iex> delete_category_helpdesk(category_helpdesk)
+      {:ok, %CategoryHelpdesk{}}
+
+      iex> delete_category_helpdesk(category_helpdesk)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, prefix) do
+    Repo.delete(category_helpdesk, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking category_helpdesk changes.
+
+  ## Examples
+
+      iex> change_category_helpdesk(category_helpdesk)
+      %Ecto.Changeset{data: %CategoryHelpdesk{}}
+
+  """
+  def change_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs \\ %{}) do
+    CategoryHelpdesk.changeset(category_helpdesk, attrs)
   end
 end
