@@ -15,11 +15,11 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkRequests do
       add :assigned_user_id, :integer
       add :attachment, :binary
       add :attachment_type, :string
+      add :status, :string
+      add :is_approvals_required, :boolean
       add :approvals_required, {:array, :integer}
       add :approved_user_ids, {:array, :integer}
       add :rejected_user_ids, {:array, :integer}
-      add :status, :string
-      add :is_migration_required, :boolean
 
       timestamps()
     end

@@ -28,7 +28,7 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
   def update(conn, %{"id" => id} = work_request_params) do
     work_request = Ticket.get_work_request!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkRequest{} = work_request} <- Ticket.update_work_request(work_request, work_request_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkRequest{} = work_request} <- Ticket.update_work_request(work_request, work_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_request: work_request)
     end
   end
