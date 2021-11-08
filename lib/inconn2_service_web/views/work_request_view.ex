@@ -22,6 +22,11 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       time_of_requirement: work_request.time_of_requirement,
       requested_user_id: work_request.requested_user_id,
       assigned_user_id: work_request.assigned_user_id,
-      attachment_type: work_request.attachment_type}
+      attachment_type: work_request.attachment_type,
+      status: work_request.status,
+      is_approvals_required: work_request.is_approvals_required,
+      approvals_required: work_request.approvals_required,
+      approved_user_ids: work_request.approved_user_ids,
+      rejected_user_ids: work_request.rejected_user_ids}
   end
 end
