@@ -17,11 +17,11 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :assigned_user_id, :integer
     field :attachment, :string
     field :attachment_type, :string
-    field :status, :string
+    field :status, :string, default: "RS"
     field :is_approvals_required, :boolean
     field :approvals_required, {:array, :integer}
-    field :approved_user_ids, {:array, :integer}
-    field :rejected_user_ids, {:array, :integer}
+    field :approved_user_ids, {:array, :integer}, default: []
+    field :rejected_user_ids, {:array, :integer}, default: []
 
     timestamps()
   end
@@ -37,6 +37,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     |> validate_inclusion(:request_type, ["CO", "RE"])
     |> validate_inclusion(:status, ["RS", "AP", "AS", "RJ", "CL"])
     |> validate_asset_id_mandatory()
+    |> validate_approvals_required
     |> assoc_constraint(:site)
     |> assoc_constraint(:workrequest_category)
   end
@@ -44,12 +45,23 @@ defmodule Inconn2Service.Ticket.WorkRequest do
   defp validate_asset_id_mandatory(cs) do
     req_type = get_field(cs, :request_type, nil)
     if req_type != nil do
-      validate_required(cs, :validate_required)
+      validate_required(cs, :asset_ids)
     else
       cs
     end
   end
 
-  # def validate_approvals_required()
+  def validate_approvals_required() do
+    approvals_required = get_field(cs, :is_approvals_required, nil)
+    if approvals_required != nil do
+      case approvals_required do
+        true ->
+          validate_required(cs, approvals_required)
+        
+        _ ->
+          cs  
+      end
+    end
+  end
 
 end

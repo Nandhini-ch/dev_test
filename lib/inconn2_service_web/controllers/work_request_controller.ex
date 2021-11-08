@@ -11,7 +11,7 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
-  def create(conn, work_request_params) do
+  def create(conn, %{"work_request" => work_request_params}) do
     with {:ok, %WorkRequest{} = work_request} <- Ticket.create_work_request(work_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
       |> put_status(:created)
