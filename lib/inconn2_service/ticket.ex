@@ -7,8 +7,8 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Repo
   import Ecto.Changeset
 
-  alias Inconn2Service.Ticket.WorkrequestCategory
-  alias Inconn2Service.Staff.{User}
+  alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
+  alias Inconn2Service.Staff.User
   alias Inconn2Service.AssetConfig.Site
 
   @doc """
@@ -242,6 +242,10 @@ defmodule Inconn2Service.Ticket do
     |> attachment_format(attrs)
     |> Repo.update(prefix: prefix)
   end
+
+    # defp update_status_track(work_request, prefix) do
+    #   case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, ])
+    # end
 
   @doc """
   Deletes a work_request.
