@@ -795,6 +795,7 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+
   defp update_status_track(work_order, user, prefix, status) do
     site = Repo.get!(Site, work_order.site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
@@ -1103,5 +1104,4 @@ defmodule Inconn2Service.Workorder do
       multi
     end
   end
-
 end

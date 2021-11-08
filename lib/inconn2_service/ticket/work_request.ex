@@ -37,7 +37,6 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     |> validate_inclusion(:request_type, ["CO", "RE"])
     |> validate_inclusion(:status, ["RS", "AP", "AS", "RJ", "CL"])
     |> validate_asset_id_mandatory()
-    |> validate_approvals_required
     |> assoc_constraint(:site)
     |> assoc_constraint(:workrequest_category)
   end
@@ -51,7 +50,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     end
   end
 
-  def validate_approvals_required() do
+  def validate_approvals_required(cs) do
     approvals_required = get_field(cs, :is_approvals_required, nil)
     if approvals_required != nil do
       case approvals_required do

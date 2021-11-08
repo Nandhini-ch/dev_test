@@ -8,7 +8,8 @@ defmodule Inconn2Service.Ticket do
   import Ecto.Changeset
 
   alias Inconn2Service.Ticket.WorkrequestCategory
-  alias Inconn2Service.Staff.User
+  alias Inconn2Service.Staff.{User}
+  alias Inconn2Service.AssetConfig.Site
 
   @doc """
   Returns the list of workrequest_categories.
@@ -162,11 +163,38 @@ defmodule Inconn2Service.Ticket do
   """
   def create_work_request(attrs \\ %{}, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
-    %WorkRequest{}
+    created_work_request = %WorkRequest{}
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
     |> requested_user_id(user)
     |> Repo.insert(prefix: prefix)
+    
+    case created_work_request do
+      {:ok, work_request} ->
+        create_status_track(work_request, prefix)
+      
+      _ ->
+        created_work_request  
+        
+    end
+  end
+
+  defp get_date_time_in_required_time_zone(work_request, prefix) do
+    site = Repo.get!(Site, work_request.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
+  end
+
+  defp create_status_track(work_request, prefix) do
+    {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
+    workrequest_status_track = %{
+      "work_request_id" => work_request.id,
+      "status_update_date" => date,
+      "status_update_time" => time,
+      "status" => "RS"
+    }
+    create_workrequest_status_track(workrequest_status_track, prefix)
+    {:ok, work_request}
   end
 
   #defp read_attachment(%{"attachment" => ""} = attrs), do: attrs
@@ -355,5 +383,101 @@ defmodule Inconn2Service.Ticket do
   """
   def change_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs \\ %{}) do
     CategoryHelpdesk.changeset(category_helpdesk, attrs)
+  end
+
+  alias Inconn2Service.Ticket.WorkrequestStatusTrack
+
+  @doc """
+  Returns the list of workrequest_status_track.
+
+  ## Examples
+
+      iex> list_workrequest_status_track()
+      [%WorkrequestStatusTrack{}, ...]
+
+  """
+  def list_workrequest_status_track(prefix) do
+    Repo.all(WorkrequestStatusTrack, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workrequest_status_track.
+
+  Raises `Ecto.NoResultsError` if the Workrequest status track does not exist.
+
+  ## Examples
+
+      iex> get_workrequest_status_track!(123)
+      %WorkrequestStatusTrack{}
+
+      iex> get_workrequest_status_track!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workrequest_status_track!(id, prefix), do: Repo.get!(WorkrequestStatusTrack, id, prefix: prefix)
+
+  @doc """
+  Creates a workrequest_status_track.
+
+  ## Examples
+
+      iex> create_workrequest_status_track(%{field: value})
+      {:ok, %WorkrequestStatusTrack{}}
+
+      iex> create_workrequest_status_track(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workrequest_status_track(attrs \\ %{}, prefix) do
+    %WorkrequestStatusTrack{}
+    |> WorkrequestStatusTrack.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a workrequest_status_track.
+
+  ## Examples
+
+      iex> update_workrequest_status_track(workrequest_status_track, %{field: new_value})
+      {:ok, %WorkrequestStatusTrack{}}
+
+      iex> update_workrequest_status_track(workrequest_status_track, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, attrs, prefix) do
+    workrequest_status_track
+    |> WorkrequestStatusTrack.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workrequest_status_track.
+
+  ## Examples
+
+      iex> delete_workrequest_status_track(workrequest_status_track)
+      {:ok, %WorkrequestStatusTrack{}}
+
+      iex> delete_workrequest_status_track(workrequest_status_track)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, prefix) do
+    Repo.delete(workrequest_status_track, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workrequest_status_track changes.
+
+  ## Examples
+
+      iex> change_workrequest_status_track(workrequest_status_track)
+      %Ecto.Changeset{data: %WorkrequestStatusTrack{}}
+
+  """
+  def change_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, attrs \\ %{}) do
+    WorkrequestStatusTrack.changeset(workrequest_status_track, attrs)
   end
 end

@@ -183,4 +183,69 @@ defmodule Inconn2Service.TicketTest do
       assert %Ecto.Changeset{} = Ticket.change_category_helpdesk(category_helpdesk)
     end
   end
+
+  describe "workrequest_status_track" do
+    alias Inconn2Service.Ticket.WorkrequestStatusTrack
+
+    @valid_attrs %{status: "some status", status_update_date: ~D[2010-04-17], status_update_time: ~T[14:00:00], user_id: 42}
+    @update_attrs %{status: "some updated status", status_update_date: ~D[2011-05-18], status_update_time: ~T[15:01:01], user_id: 43}
+    @invalid_attrs %{status: nil, status_update_date: nil, status_update_time: nil, user_id: nil}
+
+    def workrequest_status_track_fixture(attrs \\ %{}) do
+      {:ok, workrequest_status_track} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ticket.create_workrequest_status_track()
+
+      workrequest_status_track
+    end
+
+    test "list_workrequest_status_track/0 returns all workrequest_status_track" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert Ticket.list_workrequest_status_track() == [workrequest_status_track]
+    end
+
+    test "get_workrequest_status_track!/1 returns the workrequest_status_track with given id" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert Ticket.get_workrequest_status_track!(workrequest_status_track.id) == workrequest_status_track
+    end
+
+    test "create_workrequest_status_track/1 with valid data creates a workrequest_status_track" do
+      assert {:ok, %WorkrequestStatusTrack{} = workrequest_status_track} = Ticket.create_workrequest_status_track(@valid_attrs)
+      assert workrequest_status_track.status == "some status"
+      assert workrequest_status_track.status_update_date == ~D[2010-04-17]
+      assert workrequest_status_track.status_update_time == ~T[14:00:00]
+      assert workrequest_status_track.user_id == 42
+    end
+
+    test "create_workrequest_status_track/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ticket.create_workrequest_status_track(@invalid_attrs)
+    end
+
+    test "update_workrequest_status_track/2 with valid data updates the workrequest_status_track" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:ok, %WorkrequestStatusTrack{} = workrequest_status_track} = Ticket.update_workrequest_status_track(workrequest_status_track, @update_attrs)
+      assert workrequest_status_track.status == "some updated status"
+      assert workrequest_status_track.status_update_date == ~D[2011-05-18]
+      assert workrequest_status_track.status_update_time == ~T[15:01:01]
+      assert workrequest_status_track.user_id == 43
+    end
+
+    test "update_workrequest_status_track/2 with invalid data returns error changeset" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ticket.update_workrequest_status_track(workrequest_status_track, @invalid_attrs)
+      assert workrequest_status_track == Ticket.get_workrequest_status_track!(workrequest_status_track.id)
+    end
+
+    test "delete_workrequest_status_track/1 deletes the workrequest_status_track" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:ok, %WorkrequestStatusTrack{}} = Ticket.delete_workrequest_status_track(workrequest_status_track)
+      assert_raise Ecto.NoResultsError, fn -> Ticket.get_workrequest_status_track!(workrequest_status_track.id) end
+    end
+
+    test "change_workrequest_status_track/1 returns a workrequest_status_track changeset" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert %Ecto.Changeset{} = Ticket.change_workrequest_status_track(workrequest_status_track)
+    end
+  end
 end
