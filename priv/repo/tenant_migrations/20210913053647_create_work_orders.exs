@@ -7,6 +7,10 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkOrders do
       add :asset_id, :integer
       add :user_id, :integer
       add :type, :string
+      add :created_date, :date
+      add :created_time, :time
+      add :assigned_date, :date
+      add :assigned_time, :time
       add :scheduled_date, :date
       add :scheduled_time, :time
       add :start_date, :date

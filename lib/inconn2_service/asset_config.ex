@@ -225,6 +225,7 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
+  def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
 
   def get_root_asset_categories(prefix) do
     root_path = []
@@ -821,6 +822,7 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_equipment!(id, prefix), do: Repo.get!(Equipment, id, prefix: prefix)
+  def get_equipment(id, prefix), do: Repo.get(Equipment, id, prefix: prefix)
 
   def get_root_equipments(site_id, prefix) do
     root_path = []

@@ -10,6 +10,7 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
+  alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
   alias Inconn2Service.CheckListConfig.CheckList
@@ -42,6 +43,7 @@ defmodule Inconn2Service.Workorder do
 
   """
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
+  def get_workorder_template(id, prefix), do: Repo.get(WorkorderTemplate, id, prefix: prefix)
 
   @doc """
   Creates a workorder_template.
@@ -593,8 +595,8 @@ defmodule Inconn2Service.Workorder do
   def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
     result = %WorkOrder{}
               |> WorkOrder.changeset(attrs)
-              |> status_created()
-              |> status_assigned()
+              |> status_created(prefix)
+              |> status_assigned(prefix)
               |> validate_site_id(prefix)
               |> validate_asset_id_workorder(prefix)
               |> validate_user_id(prefix)
@@ -747,21 +749,35 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp status_created(cs) do
-    change(cs, status: "cr")
+  defp status_created(cs, prefix) do
+    site_id = get_field(cs, :site_id)
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    date = Date.new!(date_time.year, date_time.month, date_time.day)
+    time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+    change(cs, %{status: "cr", created_date: date, created_time: time})
   end
 
-  defp status_assigned(cs) do
+  defp status_assigned(cs, prefix) do
     if get_change(cs, :user_id, nil) != nil do
-      change(cs, status: "as")
+      site_id = get_field(cs, :site_id)
+      site = Repo.get!(Site, site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
     end
   end
   defp status_assigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil do
+      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "as")
-      change(cs, status: "as")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
     end
@@ -1050,6 +1066,14 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
     WorkorderStatusTrack.changeset(workorder_status_track, attrs)
   end
+  defp get_asset(workorder_schedule, prefix) do
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(workorder_schedule.asset_id, prefix)
+      "E" ->
+        AssetConfig.get_equipment(workorder_schedule.asset_id, prefix)
+    end
+  end
 
 
   def work_order_creation(workorder_schedule_id, prefix, zone) do
@@ -1078,7 +1102,9 @@ defmodule Inconn2Service.Workorder do
     end
   end
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
-    create_work_order(%{"asset_id" => workorder_schedule.asset_id,
+    asset = get_asset(workorder_schedule, prefix)
+    create_work_order(%{"site_id" => asset.site_id,
+                        "asset_id" => workorder_schedule.asset_id,
                         "type" => "PRV",
                         "scheduled_date" => workorder_schedule.next_occurrence_date,
                         "scheduled_time" => workorder_schedule.next_occurrence_time,
