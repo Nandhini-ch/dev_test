@@ -117,6 +117,7 @@ defmodule Inconn2Service.Ticket do
     WorkrequestCategory.changeset(workrequest_category, attrs)
   end
 
+  alias Inconn2Service.Ticket.CategoryHelpdesk
   alias Inconn2Service.Ticket.WorkRequest
 
 
@@ -167,6 +168,7 @@ defmodule Inconn2Service.Ticket do
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
     |> requested_user_id(user)
+    |> validate_assigned_user_id(prefix)
     |> Repo.insert(prefix: prefix)
     
     case created_work_request do
@@ -218,11 +220,20 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  def requested_user_id(cs, user) do
+  defp requested_user_id(cs, user) do
     change(cs, %{requested_user_id: user.id})
   end
 
-
+  defp validate_assigned_user_id(cs, prefix) do
+    as_user_id = get_change(cs, :assigned_user_id, nil)
+    if as_user_id != nil do
+      case Repo.get(User, as_user_id, prefix: prefix) do
+        nil -> add_error(cs, :assigned_user_id, "Assigned User Id is invalid")
+        _ ->  change(cs, %{status: "AS"})
+              cs
+      end
+    end
+  end
   @doc """
   Updates a work_request.
 
@@ -235,11 +246,15 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_work_request(%WorkRequest{} = work_request, attrs, prefix) do
+  def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user) do
     payload = read_attachment(attrs)
     work_request
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
+    |> validate_assigned_user_id(prefix)
+    |> validate_approvals_required_ids(prefix)
+    |> is_approvals_required(user, prefix)
+    |> approval()
     |> Repo.update(prefix: prefix)
   end
 
@@ -247,6 +262,67 @@ defmodule Inconn2Service.Ticket do
     #   case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, ])
     # end
 
+  defp validate_approvals_required_ids(cs, prefix) do
+    user_ids = get_change(cs, :approvals_required, nil)
+    if user_ids != nil do
+      users = from(u in User, where: u.id in ^user_ids )
+              |> Repo.all(prefix: prefix)
+      case length(user_ids) == length(users) do
+        true -> cs
+        false -> add_error(cs, :approvals_required, "User IDs are invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp is_approvals_required(cs, user, prefix) do
+    site_id = get_field(cs, :site_id)
+    category_id = get_field(cs, :workorder_category_id)
+    helpdesks = CategoryHelpdesk
+                |> where(site_id: ^site_id)
+                |> where(workrequest_category_id: ^category_id)
+                |> Repo.all(prefix: prefix)
+    helpdesk_users = Enum.map(helpdesks, fn helpdesk -> helpdesk.user_id end)
+    if user.id in helpdesk_users do
+      validate_required(cs, :is_approvals_required)
+    else
+      cs
+    end
+  end
+
+  defp approval(cs) do
+    case get_field(cs, :is_approvals_required) do
+      true ->
+            if get_field(cs, :rejected_user_ids, []) == [] do
+              approved(cs)
+            else
+              rejected(cs)
+            end
+      _ -> cs
+    end
+  end
+
+  defp approved(cs) do
+    all_users = MapSet.new(get_field(cs, :approvals_required, []))
+    approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
+    if all_users == approved_users do
+      change(cs, %{status: "AP"})
+    else
+      cs
+    end
+  end
+
+  defp rejected(cs) do
+    all_users = MapSet.new(get_field(cs, :approvals_required, []))
+    approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
+    rejected_users = MapSet.new(get_field(cs, :rejected_user_ids, []))
+    if all_users == MapSet.union(approved_users, rejected_users) do
+      change(cs, %{status: "RJ"})
+    else
+      cs
+    end
+  end
   @doc """
   Deletes a work_request.
 
@@ -276,7 +352,6 @@ defmodule Inconn2Service.Ticket do
     WorkRequest.changeset(work_request, attrs)
   end
 
-  alias Inconn2Service.Ticket.CategoryHelpdesk
 
   @doc """
   Returns the list of category_helpdesks.
@@ -332,12 +407,12 @@ defmodule Inconn2Service.Ticket do
       case Repo.get(User, user_id, prefix: prefix) do
         nil ->
           add_error(cs, :user_id, "User should exist")
-        
+
         _ ->
-          cs      
+          cs
       end
     else
-      cs  
+      cs
     end
   end
 
