@@ -248,7 +248,7 @@ defmodule Inconn2Service.Ticket do
   """
   def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user) do
     payload = read_attachment(attrs)
-    work_request
+    updated_work_request = work_request
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
     |> validate_assigned_user_id(prefix)
@@ -256,11 +256,36 @@ defmodule Inconn2Service.Ticket do
     |> is_approvals_required(user, prefix)
     |> approval()
     |> Repo.update(prefix: prefix)
+
+    case updated_work_request do
+      {:ok, work_request} ->
+        update_status_track(work_request, prefix)
+       
+      _ ->
+        updated_work_request  
+    end
+
+
   end
 
-    # defp update_status_track(work_request, prefix) do
-    #   case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, ])
-    # end
+  defp update_status_track(work_request, prefix) do
+    case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status]) do
+      nil -> 
+        {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
+        workrequest_status_track = %{
+          "work_request_id" => work_request.id,
+          "status_update_date" => date,
+          "status_update_time" => time,
+          "status" => work_request.status
+        }
+        create_workrequest_status_track(workrequest_status_track, prefix)
+        {:ok, work_request}
+      
+      _ ->
+        {:ok, work_request}
+
+    end
+  end
 
   defp validate_approvals_required_ids(cs, prefix) do
     user_ids = get_change(cs, :approvals_required, nil)
