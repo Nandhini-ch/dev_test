@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.WorkorderTaskView do
       sequence: workorder_task.sequence,
       work_order_id: workorder_task.work_order_id,
       response: workorder_task.response,
-      responce_date: workorder_task.response_date,
+      response_date: workorder_task.response_date,
       response_time: workorder_task.response_time}
   end
 end
