@@ -18,7 +18,7 @@ defmodule Inconn2Service.Workorder.WorkorderTask do
   def changeset(workorder_task, attrs) do
     workorder_task
     |> cast(attrs, [:task_id, :sequence, :work_order_id, :response, :response_date, :response_time])
-    |> validate_required([:task_id, :sequence, :work_order_id, :response, :response_date, :response_time])
+    |> validate_required([:task_id, :sequence, :work_order_id])
     |> assoc_constraint(:work_order)
   end
 end

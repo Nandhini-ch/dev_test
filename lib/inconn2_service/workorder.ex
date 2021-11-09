@@ -1134,6 +1134,8 @@ defmodule Inconn2Service.Workorder do
                                             "workorder_template_id" => workorder_schedule.workorder_template_id,
                                             "workorder_schedule_id" => workorder_schedule.id
                                             }, prefix)
+
+    auto_create_workorder_task(work_order, prefix)
     auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
@@ -1220,6 +1222,19 @@ defmodule Inconn2Service.Workorder do
                                         end)
     from(u in User, where: u.username in ^employee_emails)
       |> Repo.all(prefix: prefix)
+  end
+
+  defp auto_create_workorder_task(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    tasks = workorder_template.tasks
+    Enum.map(tasks, fn task ->
+                          attrs = %{
+                            "work_order_id" => work_order.id,
+                            "task_id" => task["id"],
+                            "sequence" => task["order"]
+                          }
+                          create_workorder_task(attrs, prefix)
+                    end)
   end
 
 end
