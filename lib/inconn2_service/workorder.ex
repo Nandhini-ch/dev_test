@@ -14,7 +14,9 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
   alias Inconn2Service.CheckListConfig.CheckList
-  alias Inconn2Service.Staff.User
+  alias Inconn2Service.Staff.{Employee, User}
+  alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.Assignment.EmployeeRoster
   @doc """
   Returns the list of workorder_templates.
 
@@ -564,6 +566,12 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkOrder, prefix: prefix)
   end
 
+  def list_work_orders_of_user(prefix, user \\ %{id: nil}) do
+    WorkOrder
+    |> where(user_id: ^user.id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single work_order.
 
@@ -770,6 +778,21 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
+
+  defp status_auto_assigned(cs, work_order, prefix) do
+    if get_change(cs, :user_id, nil) != nil do
+      site_id = get_field(cs, :site_id)
+      site = Repo.get!(Site, site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      update_status_track(work_order, %{id: nil}, prefix, "as")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
   defp status_assigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil do
       site = Repo.get!(Site, work_order.site_id, prefix: prefix)
@@ -1103,14 +1126,15 @@ defmodule Inconn2Service.Workorder do
   end
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
     asset = get_asset(workorder_schedule, prefix)
-    create_work_order(%{"site_id" => asset.site_id,
-                        "asset_id" => workorder_schedule.asset_id,
-                        "type" => "PRV",
-                        "scheduled_date" => workorder_schedule.next_occurrence_date,
-                        "scheduled_time" => workorder_schedule.next_occurrence_time,
-                        "workorder_template_id" => workorder_schedule.workorder_template_id,
-                        "workorder_schedule_id" => workorder_schedule.id
-                        }, prefix)
+    {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
+                                            "asset_id" => workorder_schedule.asset_id,
+                                            "type" => "PRV",
+                                            "scheduled_date" => workorder_schedule.next_occurrence_date,
+                                            "scheduled_time" => workorder_schedule.next_occurrence_time,
+                                            "workorder_template_id" => workorder_schedule.workorder_template_id,
+                                            "workorder_schedule_id" => workorder_schedule.id
+                                            }, prefix)
+    auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
     {:ok, workorder_schedule} = Multi.new()
@@ -1128,6 +1152,74 @@ defmodule Inconn2Service.Workorder do
     else
       multi
     end
+  end
+
+  defp auto_assign_user(work_order, prefix) do
+    asset = get_asset_by_asset_id(work_order.asset_id, work_order.workorder_schedule_id, prefix)
+    site_id = asset.site_id
+    shift_ids = get_shifts_for_work_order(site_id, work_order.scheduled_date, work_order.scheduled_time, prefix)
+    employee_ids = get_users_with_skills(asset.asset_category_id, prefix)
+    matching_employee_ids = get_employees_with_shifts(site_id, shift_ids, employee_ids, work_order.scheduled_date, prefix)
+    users = get_users_for_employees(matching_employee_ids, prefix)
+    user = List.first(users)
+    if user != nil do
+      work_order
+      |> WorkOrder.changeset(%{"user_id" => user.id})
+      |> status_auto_assigned(work_order, prefix)
+      |> Repo.update(prefix: prefix)
+    else
+      work_order
+    end
+  end
+
+  defp get_asset_by_asset_id(asset_id, workorder_schedule_id, prefix) do
+    workorder_schedule = Repo.get(WorkorderSchedule, workorder_schedule_id, prefix: prefix)
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(asset_id, prefix)
+      "E" ->
+        AssetConfig.get_equipment(asset_id, prefix)
+    end
+  end
+
+  defp get_shifts_for_work_order(site_id, scheduled_date, scheduled_time, prefix) do
+    day = Date.day_of_week(scheduled_date)
+    query = from(s in Shift,
+              where: s.site_id == ^site_id and
+                     s.start_date <= ^scheduled_date and s.end_date >= ^scheduled_date and
+                     s.start_time <= ^scheduled_time and s.end_time >= ^scheduled_time and
+                     ^day in s.applicable_days
+                  )
+    shifts = Repo.all(query, prefix: prefix)
+    Enum.map(shifts, fn shift -> shift.id end)
+  end
+
+  defp get_users_with_skills(asset_category_id, prefix) do
+    query = from(e in Employee,
+              where: e.has_login_credentials == true and
+                     ^asset_category_id in e.skills
+                  )
+    employees = Repo.all(query, prefix: prefix)
+    Enum.map(employees, fn employee -> employee.id end)
+  end
+
+  defp get_employees_with_shifts(site_id, shift_ids, employee_ids, scheduled_date, prefix) do
+    query = from(r in EmployeeRoster,
+              where: r.site_id == ^site_id and
+                     r.start_date <= ^scheduled_date and r.end_date >= ^scheduled_date and
+                     r.shift_id in ^shift_ids and
+                     r.employee_id in ^employee_ids
+                  )
+    rosters = Repo.all(query, prefix: prefix)
+    Enum.map(rosters, fn roster -> roster.employee_id end)
+  end
+
+  defp get_users_for_employees(employee_ids, prefix) do
+    employee_emails = Enum.map(employee_ids, fn id ->
+                                          (Repo.get(Employee, id, prefix: prefix)).email
+                                        end)
+    from(u in User, where: u.username in ^employee_emails)
+      |> Repo.all(prefix: prefix)
   end
 
 end

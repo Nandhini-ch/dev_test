@@ -45,6 +45,12 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
+  def work_orders_of_user(conn, _params) do
+    work_orders = Workorder.list_work_orders_of_user(conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    work_orders = Enum.map(work_orders, fn work_order -> get_work_order_with_asset(work_order, conn.assigns.sub_domain_prefix) end)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   defp get_work_order_with_asset(work_order, prefix) do
     workorder_template_id = work_order.workorder_template_id
     asset_id = work_order.asset_id
