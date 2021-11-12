@@ -25,7 +25,7 @@ client = %{
     "last_name" => "BS",
     "designation" => "AVP- Digital Transformation",
     #"land_line" => "+91-44-2457727",
-    "mobile" => "+91-9061057706",
+    "mobile" => "9061057706",
     "email" => "info@inconn.com"
   }
 }
