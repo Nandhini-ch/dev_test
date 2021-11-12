@@ -16,6 +16,9 @@ defmodule Inconn2ServiceWeb.WorkorderStatusTrackView do
       status: workorder_status_track.status,
       user_id: workorder_status_track.user_id,
       date: workorder_status_track.date,
-      time: workorder_status_track.time}
+      time: workorder_status_track.time,
+      scheduled_from_date: workorder_status_track.scheduled_from_date,
+      scheduled_from_time: workorder_status_track.scheduled_from_time,
+      assigned_from: workorder_status_track.assigned_from}
   end
 end

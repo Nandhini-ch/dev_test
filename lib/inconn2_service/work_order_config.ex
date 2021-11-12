@@ -53,6 +53,7 @@ defmodule Inconn2Service.WorkOrderConfig do
 
   """
   def get_task!(id, prefix), do: Repo.get!(Task, id, prefix: prefix)
+  def get_task(id, prefix), do: Repo.get(Task, id, prefix: prefix)
 
   @doc """
   Creates a task.

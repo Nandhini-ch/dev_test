@@ -10,7 +10,7 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
-  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.{AssetConfig, WorkOrderConfig}
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
   alias Inconn2Service.CheckListConfig.CheckList
@@ -709,16 +709,26 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
-    work_order
-    |> WorkOrder.changeset(attrs)
-    |> validate_site_id(prefix)
-    |> validate_asset_id_workorder(prefix)
-    |> validate_user_id(prefix)
-    |> status_assigned(work_order, user, prefix)
-    |> update_status(work_order, user, prefix)
-    |> validate_workorder_template_id(prefix)
-    |> validate_workorder_schedule_id(prefix)
-    |> Repo.update(prefix: prefix)
+    result = work_order
+            |> WorkOrder.changeset(attrs)
+            |> validate_site_id(prefix)
+            |> validate_asset_id_workorder(prefix)
+            |> validate_user_id(prefix)
+            |> status_assigned(work_order, user, prefix)
+            |> status_reassigned(work_order, user, prefix)
+            |> status_rescheduled(work_order, user, prefix)
+            |> update_status(work_order, user, prefix)
+            |> validate_workorder_template_id(prefix)
+            |> validate_workorder_schedule_id(prefix)
+            |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, work_order} ->
+          auto_update_workorder_task(work_order, prefix)
+          result
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -794,13 +804,35 @@ defmodule Inconn2Service.Workorder do
   end
 
   defp status_assigned(cs, work_order, user, prefix) do
-    if get_change(cs, :user_id, nil) != nil do
+    if get_change(cs, :user_id, nil) != nil and work_order.user_id == nil do
       site = Repo.get!(Site, work_order.site_id, prefix: prefix)
       date_time = DateTime.now!(site.time_zone)
       date = Date.new!(date_time.year, date_time.month, date_time.day)
       time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "as")
       change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
+  defp status_reassigned(cs, work_order, user, prefix) do
+    if get_change(cs, :user_id, nil) != nil and work_order.user_id != nil do
+      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      update_status_track(work_order, user, prefix, "reassigned")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
+  defp status_rescheduled(cs, work_order, user, prefix) do
+    if get_change(cs, :scheduled_date, nil) != nil or get_change(cs, :scheduled_time, nil) != nil do
+      update_status_track(work_order, user, prefix, "rescheduled")
+      cs
     else
       cs
     end
@@ -839,7 +871,18 @@ defmodule Inconn2Service.Workorder do
     date_time = DateTime.now!(site.time_zone)
     date = Date.new!(date_time.year, date_time.month, date_time.day)
     time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    case status do
+      "reassigned" ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time,
+                                          "assigned_from" => work_order.user_id}, prefix)
+
+      "rescheduled" ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time,
+                                          "scheduled_from_date" => work_order.scheduled_date, "scheduled_from_time" => work_order.scheduled_time}, prefix)
+
+       _ ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    end
   end
 
   @doc """
@@ -1228,13 +1271,55 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
     tasks = workorder_template.tasks
     Enum.map(tasks, fn task ->
+                          start_dt = calculate_start_of_task(work_order, task["order"], prefix)
+                          end_dt = calculate_end_of_task(start_dt, task["id"], prefix)
                           attrs = %{
                             "work_order_id" => work_order.id,
                             "task_id" => task["id"],
-                            "sequence" => task["order"]
+                            "sequence" => task["order"],
+                            "expected_start_time" => start_dt,
+                            "expected_end_time" => end_dt
                           }
                           create_workorder_task(attrs, prefix)
                     end)
+  end
+
+  defp auto_update_workorder_task(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    tasks = workorder_template.tasks
+    Enum.map(tasks, fn task ->
+                          workorder_task = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == ^task["order"])
+                                           |> Repo.one(prefix: prefix)
+                          start_dt = calculate_start_of_task(work_order, task["order"], prefix)
+                          end_dt = calculate_end_of_task(start_dt, task["id"], prefix)
+                          attrs = %{
+                            "work_order_id" => work_order.id,
+                            "task_id" => task["id"],
+                            "sequence" => task["order"],
+                            "expected_start_time" => start_dt,
+                            "expected_end_time" => end_dt
+                          }
+                          update_workorder_task(workorder_task, attrs, prefix)
+                    end)
+  end
+
+  defp calculate_start_of_task(work_order, sequence, prefix) do
+    if sequence == 1 do
+      NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    else
+      previous_wt = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == (^sequence-1))
+                    |> Repo.one(prefix: prefix)
+      task = WorkOrderConfig.get_task(previous_wt.task_id, prefix)
+      estimated_time = task.estimated_time
+      dt = previous_wt.expected_start_time
+      NaiveDateTime.add(dt, estimated_time*60)
+    end
+  end
+
+  defp calculate_end_of_task(start_dt, task_id, prefix) do
+      task = WorkOrderConfig.get_task(task_id, prefix)
+      estimated_time = task.estimated_time
+      NaiveDateTime.add(start_dt, estimated_time*60)
   end
 
 end
