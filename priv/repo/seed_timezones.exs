@@ -1,4 +1,6 @@
 alias Inconn2Service.Common
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Staff}
+
 Common.build_timezone_db()
 
 bt = %{"name" => "Facility Management"}
