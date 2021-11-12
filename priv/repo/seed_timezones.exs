@@ -57,7 +57,7 @@ pc =
     "party_id" => pc.id,
     "role_ids" => [1, 2]
   }
-  {:ok, emp_cs1} = Staff.create_employee(employee1,"inc_bata")
+  {:ok, emp_cs1} = Staff.create_employee(employee1, "inc_uds")
   
   employee2 = %{
     "employee_id" => "Empid0002",
@@ -75,4 +75,4 @@ pc =
     "role_ids" => [2]
   }
   
-  {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_bata")
+  {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_uds")
