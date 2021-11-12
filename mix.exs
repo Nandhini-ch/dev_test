@@ -81,7 +81,7 @@ defmodule Inconn2Service.MixProject do
         ],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "ecto.reset_coco": ["ecto.drop", "ecto.setup_coco"],
-      "ecto.create_timezoned": ["run priv/repo/seed_timezones.exs"],
+      "ecto.create_timezones": ["run priv/repo/seed_timezones.exs"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
