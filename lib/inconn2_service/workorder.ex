@@ -10,10 +10,13 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
+  alias Inconn2Service.{AssetConfig, WorkOrderConfig}
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
   alias Inconn2Service.CheckListConfig.CheckList
-  alias Inconn2Service.Staff.User
+  alias Inconn2Service.Staff.{Employee, User}
+  alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.Assignment.EmployeeRoster
   @doc """
   Returns the list of workorder_templates.
 
@@ -42,6 +45,7 @@ defmodule Inconn2Service.Workorder do
 
   """
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
+  def get_workorder_template(id, prefix), do: Repo.get(WorkorderTemplate, id, prefix: prefix)
 
   @doc """
   Creates a workorder_template.
@@ -562,6 +566,12 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkOrder, prefix: prefix)
   end
 
+  def list_work_orders_of_user(prefix, user \\ %{id: nil}) do
+    WorkOrder
+    |> where(user_id: ^user.id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single work_order.
 
@@ -593,8 +603,8 @@ defmodule Inconn2Service.Workorder do
   def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
     result = %WorkOrder{}
               |> WorkOrder.changeset(attrs)
-              |> status_created()
-              |> status_assigned()
+              |> status_created(prefix)
+              |> status_assigned(prefix)
               |> validate_site_id(prefix)
               |> validate_asset_id_workorder(prefix)
               |> validate_user_id(prefix)
@@ -699,16 +709,26 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
-    work_order
-    |> WorkOrder.changeset(attrs)
-    |> validate_site_id(prefix)
-    |> validate_asset_id_workorder(prefix)
-    |> validate_user_id(prefix)
-    |> status_assigned(work_order, user, prefix)
-    |> update_status(work_order, user, prefix)
-    |> validate_workorder_template_id(prefix)
-    |> validate_workorder_schedule_id(prefix)
-    |> Repo.update(prefix: prefix)
+    result = work_order
+            |> WorkOrder.changeset(attrs)
+            |> validate_site_id(prefix)
+            |> validate_asset_id_workorder(prefix)
+            |> validate_user_id(prefix)
+            |> status_assigned(work_order, user, prefix)
+            |> status_reassigned(work_order, user, prefix)
+            |> status_rescheduled(work_order, user, prefix)
+            |> update_status(work_order, user, prefix)
+            |> validate_workorder_template_id(prefix)
+            |> validate_workorder_schedule_id(prefix)
+            |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, work_order} ->
+          auto_update_workorder_task(work_order, prefix)
+          result
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -747,21 +767,72 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp status_created(cs) do
-    change(cs, status: "cr")
+  defp status_created(cs, prefix) do
+    site_id = get_field(cs, :site_id)
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    date = Date.new!(date_time.year, date_time.month, date_time.day)
+    time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+    change(cs, %{status: "cr", created_date: date, created_time: time})
   end
 
-  defp status_assigned(cs) do
+  defp status_assigned(cs, prefix) do
     if get_change(cs, :user_id, nil) != nil do
-      change(cs, status: "as")
+      site_id = get_field(cs, :site_id)
+      site = Repo.get!(Site, site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
     end
   end
-  defp status_assigned(cs, work_order, user, prefix) do
+
+  defp status_auto_assigned(cs, work_order, prefix) do
     if get_change(cs, :user_id, nil) != nil do
+      site_id = get_field(cs, :site_id)
+      site = Repo.get!(Site, site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      update_status_track(work_order, %{id: nil}, prefix, "as")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
+  defp status_assigned(cs, work_order, user, prefix) do
+    if get_change(cs, :user_id, nil) != nil and work_order.user_id == nil do
+      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "as")
-      change(cs, status: "as")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
+  defp status_reassigned(cs, work_order, user, prefix) do
+    if get_change(cs, :user_id, nil) != nil and work_order.user_id != nil do
+      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      date_time = DateTime.now!(site.time_zone)
+      date = Date.new!(date_time.year, date_time.month, date_time.day)
+      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      update_status_track(work_order, user, prefix, "reassigned")
+      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+    else
+      cs
+    end
+  end
+
+  defp status_rescheduled(cs, work_order, user, prefix) do
+    if get_change(cs, :scheduled_date, nil) != nil or get_change(cs, :scheduled_time, nil) != nil do
+      update_status_track(work_order, user, prefix, "rescheduled")
+      cs
     else
       cs
     end
@@ -801,7 +872,18 @@ defmodule Inconn2Service.Workorder do
     date_time = DateTime.now!(site.time_zone)
     date = Date.new!(date_time.year, date_time.month, date_time.day)
     time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    case status do
+      "reassigned" ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time,
+                                          "assigned_from" => work_order.user_id}, prefix)
+
+      "rescheduled" ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time,
+                                          "scheduled_from_date" => work_order.scheduled_date, "scheduled_from_time" => work_order.scheduled_time}, prefix)
+
+       _ ->
+          create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    end
   end
 
   @doc """
@@ -1051,6 +1133,14 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
     WorkorderStatusTrack.changeset(workorder_status_track, attrs)
   end
+  defp get_asset(workorder_schedule, prefix) do
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(workorder_schedule.asset_id, prefix)
+      "E" ->
+        AssetConfig.get_equipment(workorder_schedule.asset_id, prefix)
+    end
+  end
 
 
   def work_order_creation(workorder_schedule_id, prefix, zone) do
@@ -1079,13 +1169,18 @@ defmodule Inconn2Service.Workorder do
     end
   end
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
-    create_work_order(%{"asset_id" => workorder_schedule.asset_id,
-                        "type" => "PRV",
-                        "scheduled_date" => workorder_schedule.next_occurrence_date,
-                        "scheduled_time" => workorder_schedule.next_occurrence_time,
-                        "workorder_template_id" => workorder_schedule.workorder_template_id,
-                        "workorder_schedule_id" => workorder_schedule.id
-                        }, prefix)
+    asset = get_asset(workorder_schedule, prefix)
+    {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
+                                            "asset_id" => workorder_schedule.asset_id,
+                                            "type" => "PRV",
+                                            "scheduled_date" => workorder_schedule.next_occurrence_date,
+                                            "scheduled_time" => workorder_schedule.next_occurrence_time,
+                                            "workorder_template_id" => workorder_schedule.workorder_template_id,
+                                            "workorder_schedule_id" => workorder_schedule.id
+                                            }, prefix)
+
+    auto_create_workorder_task(work_order, prefix)
+    auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
     {:ok, workorder_schedule} = Multi.new()
@@ -1104,4 +1199,128 @@ defmodule Inconn2Service.Workorder do
       multi
     end
   end
+
+  defp auto_assign_user(work_order, prefix) do
+    asset = get_asset_by_asset_id(work_order.asset_id, work_order.workorder_schedule_id, prefix)
+    site_id = asset.site_id
+    shift_ids = get_shifts_for_work_order(site_id, work_order.scheduled_date, work_order.scheduled_time, prefix)
+    employee_ids = get_users_with_skills(asset.asset_category_id, prefix)
+    matching_employee_ids = get_employees_with_shifts(site_id, shift_ids, employee_ids, work_order.scheduled_date, prefix)
+    users = get_users_for_employees(matching_employee_ids, prefix)
+    user = List.first(users)
+    if user != nil do
+      work_order
+      |> WorkOrder.changeset(%{"user_id" => user.id})
+      |> status_auto_assigned(work_order, prefix)
+      |> Repo.update(prefix: prefix)
+    else
+      work_order
+    end
+  end
+
+  defp get_asset_by_asset_id(asset_id, workorder_schedule_id, prefix) do
+    workorder_schedule = Repo.get(WorkorderSchedule, workorder_schedule_id, prefix: prefix)
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(asset_id, prefix)
+      "E" ->
+        AssetConfig.get_equipment(asset_id, prefix)
+    end
+  end
+
+  defp get_shifts_for_work_order(site_id, scheduled_date, scheduled_time, prefix) do
+    day = Date.day_of_week(scheduled_date)
+    query = from(s in Shift,
+              where: s.site_id == ^site_id and
+                     s.start_date <= ^scheduled_date and s.end_date >= ^scheduled_date and
+                     s.start_time <= ^scheduled_time and s.end_time >= ^scheduled_time and
+                     ^day in s.applicable_days
+                  )
+    shifts = Repo.all(query, prefix: prefix)
+    Enum.map(shifts, fn shift -> shift.id end)
+  end
+
+  defp get_users_with_skills(asset_category_id, prefix) do
+    query = from(e in Employee,
+              where: e.has_login_credentials == true and
+                     ^asset_category_id in e.skills
+                  )
+    employees = Repo.all(query, prefix: prefix)
+    Enum.map(employees, fn employee -> employee.id end)
+  end
+
+  defp get_employees_with_shifts(site_id, shift_ids, employee_ids, scheduled_date, prefix) do
+    query = from(r in EmployeeRoster,
+              where: r.site_id == ^site_id and
+                     r.start_date <= ^scheduled_date and r.end_date >= ^scheduled_date and
+                     r.shift_id in ^shift_ids and
+                     r.employee_id in ^employee_ids
+                  )
+    rosters = Repo.all(query, prefix: prefix)
+    Enum.map(rosters, fn roster -> roster.employee_id end)
+  end
+
+  defp get_users_for_employees(employee_ids, prefix) do
+    employee_emails = Enum.map(employee_ids, fn id ->
+                                          (Repo.get(Employee, id, prefix: prefix)).email
+                                        end)
+    from(u in User, where: u.username in ^employee_emails)
+      |> Repo.all(prefix: prefix)
+  end
+
+  defp auto_create_workorder_task(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    tasks = workorder_template.tasks
+    Enum.map(tasks, fn task ->
+                          start_dt = calculate_start_of_task(work_order, task["order"], prefix)
+                          end_dt = calculate_end_of_task(start_dt, task["id"], prefix)
+                          attrs = %{
+                            "work_order_id" => work_order.id,
+                            "task_id" => task["id"],
+                            "sequence" => task["order"],
+                            "expected_start_time" => start_dt,
+                            "expected_end_time" => end_dt
+                          }
+                          create_workorder_task(attrs, prefix)
+                    end)
+  end
+
+  defp auto_update_workorder_task(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    tasks = workorder_template.tasks
+    Enum.map(tasks, fn task ->
+                          workorder_task = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == ^task["order"])
+                                           |> Repo.one(prefix: prefix)
+                          start_dt = calculate_start_of_task(work_order, task["order"], prefix)
+                          end_dt = calculate_end_of_task(start_dt, task["id"], prefix)
+                          attrs = %{
+                            "work_order_id" => work_order.id,
+                            "task_id" => task["id"],
+                            "sequence" => task["order"],
+                            "expected_start_time" => start_dt,
+                            "expected_end_time" => end_dt
+                          }
+                          update_workorder_task(workorder_task, attrs, prefix)
+                    end)
+  end
+
+  defp calculate_start_of_task(work_order, sequence, prefix) do
+    if sequence == 1 do
+      NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    else
+      previous_wt = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == (^sequence-1))
+                    |> Repo.one(prefix: prefix)
+      task = WorkOrderConfig.get_task(previous_wt.task_id, prefix)
+      estimated_time = task.estimated_time
+      dt = previous_wt.expected_start_time
+      NaiveDateTime.add(dt, estimated_time*60)
+    end
+  end
+
+  defp calculate_end_of_task(start_dt, task_id, prefix) do
+      task = WorkOrderConfig.get_task(task_id, prefix)
+      estimated_time = task.estimated_time
+      NaiveDateTime.add(start_dt, estimated_time*60)
+  end
+
 end

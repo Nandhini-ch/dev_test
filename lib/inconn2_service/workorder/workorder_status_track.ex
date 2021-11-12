@@ -8,6 +8,9 @@ defmodule Inconn2Service.Workorder.WorkorderStatusTrack do
     field :user_id, :integer
     field :date, :date
     field :time, :time
+    field :scheduled_from_date, :date
+    field :scheduled_from_time, :time
+    field :assigned_from, :integer
 
     timestamps()
   end
@@ -15,7 +18,7 @@ defmodule Inconn2Service.Workorder.WorkorderStatusTrack do
   @doc false
   def changeset(workorder_status_track, attrs) do
     workorder_status_track
-    |> cast(attrs, [:work_order_id, :status, :user_id, :date, :time])
+    |> cast(attrs, [:work_order_id, :status, :user_id, :date, :time, :scheduled_from_date, :scheduled_from_time, :assigned_from])
     |> validate_required([:work_order_id, :status])
   end
 end

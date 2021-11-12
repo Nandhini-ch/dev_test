@@ -1,4 +1,4 @@
-alias Inconn2Service.Staff
+alias Inconn2Service.{Staff, Assignment, Settings}
 
 org_ut1 = %{"name" => "House Keeping", "party_id" => 1}
 
@@ -71,3 +71,46 @@ employee3 = %{
 }
 
 {:ok, emp_cs3} = Staff.create_employee(employee3,"inc_uds")
+
+shift1 = %{"name" => "shift1", "start_date" => "2021-01-01", "end_date" => "2023-12-31",
+"start_time" => "08:00:00", "end_time" => "20:00:00", "applicable_days" => [1,2,3,4,5], "site_id" => 1}
+
+shift2 = %{"name" => "shift2", "start_date" => "2021-01-01", "end_date" => "2023-12-31",
+"start_time" => "06:00:00", "end_time" => "14:00:00", "applicable_days" => [1,2,3,4,5], "site_id" => 1}
+
+shift3 = %{"name" => "shift3", "start_date" => "2021-01-01", "end_date" => "2023-12-31",
+"start_time" => "14:00:00", "end_time" => "22:00:00", "applicable_days" => [1,2,3,4,5], "site_id" => 1}
+
+shift4 = %{"name" => "shift4", "start_date" => "2021-01-01", "end_date" => "2023-12-31",
+"start_time" => "22:00:00", "end_time" => "04:00:00", "applicable_days" => [6,7], "site_id" => 1}
+
+{:ok, shift1_c} = Settings.create_shift(shift1,"inc_uds")
+{:ok, shift2_c} = Settings.create_shift(shift2,"inc_uds")
+{:ok, shift3_c} = Settings.create_shift(shift3,"inc_uds")
+{:ok, shift4_c} = Settings.create_shift(shift4,"inc_uds")
+
+emp_rst1 = %{
+  "employee_id" => 3,
+  "site_id" => 1,
+  "shift_id" => shift2_c.id,
+  "start_date" => "2021-01-01",
+  "end_date" => "2021-12-31"
+}
+emp_rst2 = %{
+  "employee_id" => 3,
+  "site_id" => 1,
+  "shift_id" => shift1_c.id,
+  "start_date" => "2021-01-01",
+  "end_date" => "2021-12-31"
+}
+
+emp_rst3 = %{
+  "employee_id" => 3,
+  "site_id" => 1,
+  "shift_id" => shift2_c.id,
+  "start_date" => "2022-01-01",
+  "end_date" => "2023-12-31"
+}
+ {:ok, emp_rst1c} = Assignment.create_employee_roster(emp_rst1, "inc_uds")
+ {:ok, emp_rst2c} = Assignment.create_employee_roster(emp_rst2, "inc_uds")
+ {:ok, emp_rst3c} = Assignment.create_employee_roster(emp_rst3, "inc_uds")

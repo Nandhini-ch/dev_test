@@ -7,6 +7,10 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :asset_id, :integer
     field :user_id, :integer
     field :type, :string
+    field :created_date, :date
+    field :created_time, :time
+    field :assigned_date, :date
+    field :assigned_time, :time
     field :scheduled_date, :date
     field :scheduled_time, :time
     field :start_date, :date
@@ -24,7 +28,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   @doc false
   def changeset(work_order, attrs) do
     work_order
-    |> cast(attrs, [:site_id, :asset_id, :user_id, :type, :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
+    |> cast(attrs, [:site_id, :asset_id, :user_id, :type, :created_date, :created_time, :assigned_date, :assigned_time,
+                    :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
