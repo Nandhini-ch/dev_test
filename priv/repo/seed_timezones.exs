@@ -6,6 +6,7 @@ Common.build_timezone_db()
 bt = %{"name" => "Facility Management"}
 {:ok, btrec} = Account.create_business_type(bt)
 
+
 client = %{
   "company_name" => "UPDATER SERVICES (P) Limited",
   "business_type_id" => btrec.id,
@@ -43,6 +44,15 @@ pc =
     {:error, cs} -> IO.inspect(cs)
     nil -> IO.puts("null value returned")
   end
+
+feat1 = %{"name" => "Create Site", "code" => "CRST", "description" => "Can create site"}
+feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
+feat3 = %{"name" => "Create Employee", "code" => "CREM", "description" => "Can create employees"}
+  
+{:ok, feat1c} = Staff.create_feature(feat1, "inc_uds")
+{:ok, feat2c} = Staff.create_feature(feat2, "inc_uds")
+{:ok, feat3c} = Staff.create_feature(feat3, "inc_uds")  
+
 
 role1 = %{"name" => "Super Admin", "description" => "Has all access", "features" => ["CRST", "CRAS", "CREM"]}
 role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "features" => ["CRAS", "CREM"]}
