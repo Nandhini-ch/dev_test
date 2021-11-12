@@ -281,10 +281,10 @@ defmodule Inconn2Service.FileLoader do
   end
 
   defp validate_header(header_fields, required_fields) do
-    # IO.inspect(header_fields)
-    # IO.inspect(required_fields)
-    # IO.inspect(header_fields -- required_fields)
-    # IO.inspect(required_fields -- header_fields)
+    IO.inspect(header_fields)
+    IO.inspect(required_fields)
+    IO.inspect(header_fields -- required_fields)
+    IO.inspect(required_fields -- header_fields)
     hms = MapSet.new(header_fields)
     rms = MapSet.new(required_fields)
     count = Enum.count(MapSet.intersection(hms, rms))
