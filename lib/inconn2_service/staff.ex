@@ -532,6 +532,12 @@ defmodule Inconn2Service.Staff do
       |> Repo.insert(prefix: prefix)
   end
 
+  def create_licensee_admin(attrs \\ %{}, prefix) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
   defp validate_role_ids(cs, prefix) do
     role_ids = get_field(cs, :role_ids, nil)
     if role_ids != nil do

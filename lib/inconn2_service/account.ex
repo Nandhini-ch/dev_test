@@ -6,6 +6,7 @@ defmodule Inconn2Service.Account do
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Staff
 
   alias Inconn2Service.Account.BusinessType
 
@@ -174,12 +175,20 @@ defmodule Inconn2Service.Account do
         IO.puts("creating party_type")
         IO.inspect(party_type)
 
-        return_party =
+        {:ok, return_party} =
           IO.inspect(
             AssetConfig.create_default_party(licensee, Triplex.to_prefix(licensee.sub_domain))
           )
 
         IO.inspect(return_party)
+        prefix = "inc_" <> attrs["sub_domain"]
+        role = Staff.create_role(%{"name" => "Licensee Admin", "description" => "Super Admin for licensee. Has access to all features"}, prefix)
+        Staff.create_licensee_admin(%{
+          "username" => licensee.contact.email,
+          "password" => licensee.contact.mobile,
+          "role_ids" => [role.id],
+          "party_id" => return_party.id
+        })
         {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
 
       _ ->
