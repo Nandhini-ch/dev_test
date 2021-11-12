@@ -8,6 +8,7 @@ defmodule Inconn2Service.Workorder.WorkorderTask do
     field :task_id, :integer
     field :sequence, :integer
     field :response, :string
+    field :remarks, :string
     field :expected_start_time, :naive_datetime
     field :expected_end_time, :naive_datetime
     field :actual_start_time, :naive_datetime
@@ -19,7 +20,7 @@ defmodule Inconn2Service.Workorder.WorkorderTask do
   @doc false
   def changeset(workorder_task, attrs) do
     workorder_task
-    |> cast(attrs, [:task_id, :sequence, :work_order_id, :response, :expected_start_time, :expected_end_time, :actual_start_time, :actual_end_time])
+    |> cast(attrs, [:task_id, :sequence, :work_order_id, :response, :remarks, :expected_start_time, :expected_end_time, :actual_start_time, :actual_end_time])
     |> validate_required([:task_id, :sequence, :work_order_id])
     |> assoc_constraint(:work_order)
   end
