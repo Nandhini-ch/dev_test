@@ -24,7 +24,7 @@ client = %{
     "first_name" => "Ajithkumar",
     "last_name" => "BS",
     "designation" => "AVP- Digital Transformation",
-    #"land_line" => "+91-44-2457727",
+    "land_line" => "+91-44-2457727",
     "mobile" => "+91-9061057706",
     "email" => "info@inconn.com"
   }
@@ -68,7 +68,7 @@ site = %{
     "first_name" => "Bhoju",
     "last_name" => "S",
     "designation" => "Operation Manager",
-    #"land_line" => "+91-44-2457727",
+    "land_line" => "+91-44-2457727",
     "mobile" => "+91-9823259569",
     "email" => "bhoju.s@uds.in"
     }
