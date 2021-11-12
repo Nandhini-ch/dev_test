@@ -52,6 +52,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
   end
 
   defp get_work_order_with_asset(work_order, prefix) do
+    work_order = add_overdue_flag(work_order, prefix)
     workorder_template_id = work_order.workorder_template_id
     asset_id = work_order.asset_id
     workorder_template = Workorder.get_workorder_template(workorder_template_id, prefix)
@@ -68,6 +69,20 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
       end
     else
       Map.put_new(work_order, :asset_type, nil) |> Map.put_new(:asset_name, nil)
+    end
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    IO.inspect(site_dt)
+    IO.inspect(scheduled_dt)
+    IO.puts("$$$$$$$$$$$$$$$$$$$$")
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
     end
   end
 end
