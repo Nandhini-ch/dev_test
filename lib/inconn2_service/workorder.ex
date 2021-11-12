@@ -877,8 +877,9 @@ defmodule Inconn2Service.Workorder do
                                           "assigned_from" => work_order.user_id}, prefix)
 
       "rescheduled" ->
+          date_time = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
           create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time,
-                                          "scheduled_from_date" => work_order.scheduled_date, "scheduled_from_time" => work_order.scheduled_time}, prefix)
+                                          "scheduled_from" => date_time}, prefix)
 
        _ ->
           create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
