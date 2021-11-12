@@ -44,7 +44,13 @@ pc =
     nil -> IO.puts("null value returned")
   end
 
-  employee1 = %{
+role1 = %{"name" => "Super Admin", "description" => "Has all access", "features" => ["CRST", "CRAS", "CREM"]}
+role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "features" => ["CRAS", "CREM"]}
+
+{:ok, role1c} = Staff.create_role(role1, "inc_uds")
+{:ok, role2c} = Staff.create_role(role2, "inc_uds")
+
+employee1 = %{
     "employee_id" => "Empid0001",
     "landline_no" => "12345",
     "mobile_no" => "hello123",
@@ -58,10 +64,10 @@ pc =
     "org_unit_id" =>  1,
     "party_id" => pc.id,
     "role_ids" => [1, 2]
-  }
-  {:ok, emp_cs1} = Staff.create_employee(employee1, "inc_uds")
+}
+{:ok, emp_cs1} = Staff.create_employee(employee1, "inc_uds")
   
-  employee2 = %{
+employee2 = %{
     "employee_id" => "Empid0002",
     "landline_no" => "123",
     "mobile_no" => "hello123",
@@ -75,6 +81,6 @@ pc =
     "org_unit_id" =>  1,
     "party_id" => pc.id,
     "role_ids" => [2]
-  }
+}
   
-  {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_uds")
+{:ok, emp_cs2} = Staff.create_employee(employee2,"inc_uds")
