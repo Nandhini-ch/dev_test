@@ -215,7 +215,7 @@ defmodule Inconn2Service.FileLoader do
         if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
           array =
             Enum.map(map["Config"], fn x ->
-              [label, value] = String.split(x, ";")
+              [label, value] = String.split(x, ":")
               %{"label" => label, "value" => value}
             end)
           new_map = Map.put(map, "Config", %{"options" => array})
@@ -223,7 +223,7 @@ defmodule Inconn2Service.FileLoader do
           convert_special_keys_to_required_type(tail, new_map)
         else
           if map["Task Type"] == "MT" do
-            [type, uom] = String.split(Enum.at(map["Config"], 0), ";")
+            [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
             new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
             convert_special_keys_to_required_type(tail, new_map)
           else
@@ -244,7 +244,7 @@ defmodule Inconn2Service.FileLoader do
     # header_fields =
     #   String.split(String.trim(header), ",") |> Enum.map(fn fld -> String.trim(fld) end)
 
-    header_fields = header |> Enum.filter(fn x -> if x != "" do x end end)
+    header_fields = header |> Enum.filter(fn x -> if x != "" do String.trim(x) end end)
 
     if validate_header(header_fields, required_fields) do
       records =
