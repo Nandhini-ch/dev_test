@@ -401,8 +401,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
                 attrs = param_mapper.(attrs)
 
-                {:ok, result} = apply(context_module, insert_func, [attrs, prefix])
-                Map.put(r, "id", result.id)
+                result = apply(context_module, insert_func, [attrs, prefix])
+                case result do
+                  {:ok, result} -> Map.put(r, "id", result.id)
+                  {:error, _} -> IO.inspect(r)
+                end
 
               end)
   end
@@ -419,9 +422,15 @@ defmodule Inconn2Service.ReferenceDataUploader do
                             attrs = Map.put(attrs, "parent_id", processed["id"])
 
                             if attrs["parent_id"] != nil do
-                                {:ok, result} = apply(context_module, insert_func, [attrs, prefix])
-                                r = Map.put(r, "Parent Id", result.parent_id)
-                                Map.put(r, "id", result.id)
+                                result = apply(context_module, insert_func, [attrs, prefix])
+                                case result do
+                                  {:ok, result} ->
+                                      r = Map.put(r, "Parent Id", result.parent_id)
+                                      Map.put(r, "id", result.id)
+                                  {:error, _} ->
+                                      IO.inspect(r)
+                                end
+
                             end
 
                           end)
