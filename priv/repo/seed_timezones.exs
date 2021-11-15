@@ -3,47 +3,47 @@ alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, St
 
 Common.build_timezone_db()
 
-bt = %{"name" => "Facility Management"}
-{:ok, btrec} = Account.create_business_type(bt)
+# bt = %{"name" => "Facility Management"}
+# {:ok, btrec} = Account.create_business_type(bt)
 
 
-client = %{
-  "company_name" => "UPDATER SERVICES (P) Limited",
-  "business_type_id" => btrec.id,
-  "sub_domain" => "uds",
-  "party_type" => "SP",
-  "address" => %{
-    "address_line1" => "No.2/302/A, UDS Salai",
-    "address_line2" => "Off. Old Mahabalipuram Road, Thoraipakkam",
-    "city" => "Chennai",
-    "state" => "Tamilnadu",
-    "country" => "India",
-    "postcode" => "600097"
-  },
-  "contact" => %{
-    "first_name" => "Ajithkumar",
-    "last_name" => "BS",
-    "designation" => "AVP- Digital Transformation",
-    #"land_line" => "+91-44-2457727",
-    "mobile" => "9061057706",
-    "email" => "info@inconn.com"
-  }
-}
+# client = %{
+#   "company_name" => "UPDATER SERVICES (P) Limited",
+#   "business_type_id" => btrec.id,
+#   "sub_domain" => "uds",
+#   "party_type" => "SP",
+#   "address" => %{
+#     "address_line1" => "No.2/302/A, UDS Salai",
+#     "address_line2" => "Off. Old Mahabalipuram Road, Thoraipakkam",
+#     "city" => "Chennai",
+#     "state" => "Tamilnadu",
+#     "country" => "India",
+#     "postcode" => "600097"
+#   },
+#   "contact" => %{
+#     "first_name" => "Ajithkumar",
+#     "last_name" => "BS",
+#     "designation" => "AVP- Digital Transformation",
+#     #"land_line" => "+91-44-2457727",
+#     "mobile" => "9061057706",
+#     "email" => "info@inconn.com"
+#   }
+# }
 
-IO.inspect(Account.create_licensee(client))
+# IO.inspect(Account.create_licensee(client))
 
-party = %{
-  "company_name" => "Hindustan Coco Cola Beaverages Limited",
-  "party_type" => "AO",
-  "licensee" => false
-}
+# party = %{
+#   "company_name" => "Hindustan Coco Cola Beaverages Limited",
+#   "party_type" => "AO",
+#   "licensee" => false
+# }
 
-pc =
-  case IO.inspect(AssetConfig.create_party(party, "inc_uds")) do
-    {:ok, party_created} -> IO.inspect(party_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
+# pc =
+#   case IO.inspect(AssetConfig.create_party(party, "inc_uds")) do
+#     {:ok, party_created} -> IO.inspect(party_created)
+#     {:error, cs} -> IO.inspect(cs)
+#     nil -> IO.puts("null value returned")
+#   end
 
 # feat1 = %{"name" => "Create Site", "code" => "CRST", "description" => "Can create site"}
 # feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
