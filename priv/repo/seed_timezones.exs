@@ -35,7 +35,7 @@ IO.inspect(Account.create_licensee(client))
 party = %{
   "company_name" => "Hindustan Coco Cola Beaverages Limited",
   "party_type" => "AO",
-  "licensee" => true
+  "licensee" => false
 }
 
 pc =
