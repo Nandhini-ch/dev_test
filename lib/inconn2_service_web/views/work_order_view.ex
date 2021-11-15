@@ -31,6 +31,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       status: work_order.status,
       workorder_template_id: work_order.workorder_template_id,
       workorder_schedule_id: work_order.workorder_schedule_id,
-      work_request_id: work_order.work_request_id}
+      work_request_id: work_order.work_request_id,
+      overdue: work_order.overdue}
   end
 end

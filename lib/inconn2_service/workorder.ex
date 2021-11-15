@@ -731,6 +731,13 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
+    work_order
+    |> WorkOrder.changeset(attrs)
+    |> update_status(work_order, user, prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
   @doc """
   Deletes a work_order.
 
@@ -948,10 +955,10 @@ defmodule Inconn2Service.Workorder do
   """
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}
-    |> WorkorderTask.changeset(attrs)
-    |> validate_task_id(prefix)
-    |> validate_response(prefix)
-    |> Repo.insert(prefix: prefix)
+        |> WorkorderTask.changeset(attrs)
+        |> validate_task_id(prefix)
+        |> validate_response(prefix)
+        |> Repo.insert(prefix: prefix)
   end
 
   defp validate_task_id(cs, prefix) do
@@ -984,6 +991,32 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
+
+  defp auto_update_workorder_status(workorder_task, prefix, user) do
+    work_order = get_work_order!(workorder_task.work_order_id, prefix)
+    workorder_tasks = list_workorder_tasks(prefix, workorder_task.work_order_id)
+    responses = Enum.map(workorder_tasks, fn workorder_task -> workorder_task.response end)
+    remarks = Enum.map(workorder_tasks, fn workorder_task -> workorder_task.remarks end)
+    responses = Enum.filter(responses, fn response -> response != nil end)
+    remarks = Enum.filter(remarks, fn remark -> remark != nil end)
+    workorder_tasks_length = Kernel.length(workorder_tasks)
+    responses_length = Kernel.length(responses)
+    remarks_length = Kernel.length(remarks)
+    case responses_length + remarks_length do
+      0 ->
+            {:ok, workorder_task}
+      _ ->
+            if responses_length + remarks_length == workorder_tasks_length do
+              attrs = %{"status" => "cp"}
+              update_work_order_status(work_order, attrs, prefix, user)
+              {:ok, workorder_task}
+            else
+              attrs = %{"status" => "ip"}
+              update_work_order_status(work_order, attrs, prefix, user)
+              {:ok, workorder_task}
+            end
+    end
+  end
   @doc """
   Updates a workorder_task.
 
@@ -996,12 +1029,18 @@ defmodule Inconn2Service.Workorder do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_workorder_task(%WorkorderTask{} = workorder_task, attrs, prefix) do
-    workorder_task
-    |> WorkorderTask.changeset(attrs)
-    |> validate_task_id(prefix)
-    |> validate_response(prefix)
-    |> Repo.update(prefix: prefix)
+  def update_workorder_task(%WorkorderTask{} = workorder_task, attrs, prefix, user \\ %{id: nil}) do
+    result = workorder_task
+            |> WorkorderTask.changeset(attrs)
+            |> validate_task_id(prefix)
+            |> validate_response(prefix)
+            |> Repo.update(prefix: prefix)
+    case result do
+        {:ok, workorder_task} ->
+              auto_update_workorder_status(workorder_task, prefix, user)
+        _ ->
+              result
+    end
   end
 
   @doc """

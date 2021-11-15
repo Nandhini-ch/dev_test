@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.WorkorderTaskController do
   def update(conn, %{"id" => id, "workorder_task" => workorder_task_params}) do
     workorder_task = Workorder.get_workorder_task!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderTask{} = workorder_task} <- Workorder.update_workorder_task(workorder_task, workorder_task_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkorderTask{} = workorder_task} <- Workorder.update_workorder_task(workorder_task, workorder_task_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", workorder_task: workorder_task)
     end
   end

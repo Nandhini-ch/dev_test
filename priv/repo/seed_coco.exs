@@ -545,12 +545,12 @@ wkord_tp6 = %{
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_uds")
 {:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_uds")
 
-wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
-wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
-wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
-wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
-wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-10-25", "first_occurrence_time" => "09:00:00"}
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-12", "first_occurrence_time" => "09:00:00"}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-12", "first_occurrence_time" => "09:00:00"}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-13", "first_occurrence_time" => "09:00:00"}
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-13", "first_occurrence_time" => "12:00:00"}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-13", "first_occurrence_time" => "15:00:00"}
+wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 3, "holidays" => [7], "first_occurrence_date" => "2021-11-13", "first_occurrence_time" => "18:00:00"}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_uds")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_uds")
