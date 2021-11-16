@@ -173,9 +173,8 @@ defmodule Inconn2Service.FileLoader do
       "array_of_integers" ->
         array_value =
           if map[key_name] == "", do: [], else: String.split(map[key_name], ",") |> Enum.map(fn x -> String.to_integer(x) end)
-          new_map = Map.put(map, key_name, array_value)
-        convert_special_keys_to_required_type(tail, new_map
-        )
+        new_map = Map.put(map, key_name, array_value)
+        convert_special_keys_to_required_type(tail, new_map)
       "integer_array_tuples_with_index" ->
         array_value =
           if map[key_name] == "", do: [], else: String.split(map[key_name], ",") |> Enum.map(fn x -> String.to_integer(x) end) |> Enum.with_index(1) |> Enum.map(fn {v, i} -> %{"id" => v, "order" => i} end)

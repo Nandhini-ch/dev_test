@@ -384,6 +384,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   defp perform_insert_with_parents(records, param_mapper, context_module, insert_func, prefix) do
     {processing_list, unprocessed_list} = Enum.split_with(records, fn x -> x["Parent Id"] != nil end)
+    IO.inspect(processing_list)
+    IO.inspect(unprocessed_list)
     processed_list = insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
 
     {processing_list, unprocessed_list} = Enum.split_with(unprocessed_list, fn x -> x["parent reference"] == nil end)
