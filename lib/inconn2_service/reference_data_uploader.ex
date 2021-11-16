@@ -406,7 +406,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
                 result = apply(context_module, insert_func, [attrs, prefix])
                 case result do
                   {:ok, result} -> Map.put(r, "id", result.id)
-                  {:error, _} -> IO.inspect(r)
+                  {:error, cs} -> IO.inspect(cs)
                 end
 
               end)
@@ -429,8 +429,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
                                   {:ok, result} ->
                                       r = Map.put(r, "Parent Id", result.parent_id)
                                       Map.put(r, "id", result.id)
-                                  {:error, _} ->
-                                      IO.inspect(r)
+                                  {:error, cs} ->
+                                      IO.inspect(cs)
                                 end
 
                             end
