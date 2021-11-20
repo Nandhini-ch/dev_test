@@ -7,7 +7,7 @@ defmodule Inconn2Service.Workorder.WorkorderTask do
     belongs_to :work_order, WorkOrder
     field :task_id, :integer
     field :sequence, :integer
-    field :response, :string
+    field :response, :map
     field :remarks, :string
     field :expected_start_time, :naive_datetime
     field :expected_end_time, :naive_datetime

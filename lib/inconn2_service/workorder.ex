@@ -976,21 +976,56 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_response(cs, prefix) do
     task_id = get_field(cs, :task_id)
-    if task_id != nil do
-      task = Repo.get!(Task, task_id, prefix: prefix)
-      if task != nil do
-        config = task.config
-        case task.task_type do
-          "OB" -> validate_length(cs, :response, min: config["min_length"], max: config["max_length"])
-            _ -> cs
-        end
-      else
-        cs
+    response = get_field(cs, :response)
+    task = Repo.get!(Task, task_id, prefix: prefix)
+    if task != nil and response != nil do
+      case task.task_type do
+        "IO" -> validate_io(cs, response)
+        "IM" -> validate_im(cs, response)
+        "MT" -> validate_mt(cs, response)
+        "OB" -> validate_ob(cs, response)
       end
     else
       cs
     end
   end
+
+  defp validate_io(cs, response) do
+    answer = response["answers"]
+    if is_bitstring(answer) do
+      cs
+    else
+      add_error(cs, :response, "answer should be string")
+    end
+  end
+
+  defp validate_im(cs, response) do
+    answer = response["answers"]
+    if is_list(answer) do
+      cs
+    else
+      add_error(cs, :response, "answer should be list")
+    end
+  end
+
+  defp validate_mt(cs, response) do
+    answer = response["answers"]
+    if is_integer(answer) do
+      cs
+    else
+      add_error(cs, :response, "answer should be integer")
+    end
+  end
+
+  defp validate_ob(cs, response) do
+    answer = response["answers"]
+    if is_bitstring(answer) do
+      cs
+    else
+      add_error(cs, :response, "answer should be string")
+    end
+  end
+
 
   defp auto_update_workorder_status(workorder_task, prefix, user) do
     work_order = get_work_order!(workorder_task.work_order_id, prefix)
