@@ -11,6 +11,9 @@ defmodule Inconn2Service.Repo.Migrations.CreateItems do
       add :consume_unit_uom_id, :integer
       add :reorder_quantity, :float
       add :min_order_quantity, :float
+      add :aisle, :string
+      add :row, :string
+      add :bin, :string
       add :asset_categories_ids, {:array, :integer}
 
       timestamps()

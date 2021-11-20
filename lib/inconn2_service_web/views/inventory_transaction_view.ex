@@ -20,6 +20,9 @@ defmodule Inconn2ServiceWeb.InventoryTransactionView do
       inventory_location_id: inventory_transaction.inventory_location_id,
       item_id: inventory_transaction.item_id,
       uom_id: inventory_transaction.uom_id,
-      workorder_id: inventory_transaction.workorder_id}
+      workorder_id: inventory_transaction.workorder_id,
+      remarks: inventory_transaction.remarks,
+      cost: inventory_transaction.cost,
+      cost_unit_uom_id: inventory_transaction.cost_unit_uom_id}
   end
 end

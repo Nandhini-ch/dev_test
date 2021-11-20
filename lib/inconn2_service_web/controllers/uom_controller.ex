@@ -11,6 +11,16 @@ defmodule Inconn2ServiceWeb.UOMController do
     render(conn, "index.json", uoms: uoms)
   end
 
+  def index_physical(conn, _params) do
+    uoms = Inventory.list_physical_uoms(conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", uoms: uoms)
+  end
+
+  def index_cost(conn, _params) do
+    uoms = Inventory.list_cost_uoms(conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", uoms: uoms)
+  end
+
   def create(conn, %{"uom" => uom_params}) do
     with {:ok, %UOM{} = uom} <- Inventory.create_uom(uom_params, conn.assigns.sub_domain_prefix) do
       conn
