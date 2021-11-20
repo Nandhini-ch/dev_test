@@ -3,6 +3,9 @@ alias Inconn2Service.Inventory
 supplier1 = %{
 	"name" => "Supplier 1",
 	"description" => "Supplier for bata",
+	"nature_of_business" => "Supplying Spare Parts",
+	"registration_no" => "123412",
+	"gst_no" => "12345",
 	"contact" => %{
 		"first_name" => "John",
 		"last_name" => "Doe",
@@ -16,6 +19,9 @@ supplier1 = %{
 supplier2 = %{
 	"name" => "Supplier 2",
 	"description" => "Supplier for bata",
+	"nature_of_business" => "Supplying Consumables",
+	"registration_no" => "1234",
+	"gst_no" => "12345768",
 	"contact" => %{
 		"first_name" => "John",
 		"last_name" => "Bunyan",
@@ -32,12 +38,14 @@ supplier2 = %{
 
 uom1 = %{
 	"name" => "Gram",
-	"symbol" => "g"
-} 
+	"symbol" => "g",
+	"uom_type" => "physical"
+}
 
 uom2 = %{
 	"name" => "Kilo Gram",
-	"symbol" => "kg"
+	"symbol" => "kg",
+	"uom_type" => "cost"
 }
 
 {:ok, unit1} = Inventory.create_uom(uom1, "inc_bata")
@@ -60,7 +68,10 @@ item1 = %{
 	"consume_unit_uom_id" => unit2.id,
 	"reorder_quantity" => 10,
 	"min_order_quantity" => 5,
-	"asset_categories_ids" => [1]
+	"asset_categories_ids" => [1],
+	"aisle" => "1",
+	"row" => "a",
+	"bin" => "1"
 }
 
 item2 = %{
@@ -72,7 +83,10 @@ item2 = %{
 	"consume_unit_uom_id" => unit1.id,
 	"reorder_quantity" => 10,
 	"min_order_quantity" => 5,
-	"asset_categories_ids" => [1]
+	"asset_categories_ids" => [1],
+	"aisle" => "1",
+	"row" => "a",
+	"bin" => "1"
 }
 
 {:ok, item1} = Inventory.create_item(item1, "inc_bata")

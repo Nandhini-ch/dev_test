@@ -333,4 +333,61 @@ defmodule Inconn2Service.WorkorderTest do
       assert %Ecto.Changeset{} = Workorder.change_workorder_status_track(workorder_status_track)
     end
   end
+
+  describe "workorder_" do
+    alias Inconn2Service.Workorder.WorkrequestStatusTrack
+
+    @valid_attrs %{}
+    @update_attrs %{}
+    @invalid_attrs %{}
+
+    def workrequest_status_track_fixture(attrs \\ %{}) do
+      {:ok, workrequest_status_track} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workrequest_status_track()
+
+      workrequest_status_track
+    end
+
+    test "list_workorder_/0 returns all workorder_" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert Workorder.list_workorder_() == [workrequest_status_track]
+    end
+
+    test "get_workrequest_status_track!/1 returns the workrequest_status_track with given id" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert Workorder.get_workrequest_status_track!(workrequest_status_track.id) == workrequest_status_track
+    end
+
+    test "create_workrequest_status_track/1 with valid data creates a workrequest_status_track" do
+      assert {:ok, %WorkrequestStatusTrack{} = workrequest_status_track} = Workorder.create_workrequest_status_track(@valid_attrs)
+    end
+
+    test "create_workrequest_status_track/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workrequest_status_track(@invalid_attrs)
+    end
+
+    test "update_workrequest_status_track/2 with valid data updates the workrequest_status_track" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:ok, %WorkrequestStatusTrack{} = workrequest_status_track} = Workorder.update_workrequest_status_track(workrequest_status_track, @update_attrs)
+    end
+
+    test "update_workrequest_status_track/2 with invalid data returns error changeset" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workrequest_status_track(workrequest_status_track, @invalid_attrs)
+      assert workrequest_status_track == Workorder.get_workrequest_status_track!(workrequest_status_track.id)
+    end
+
+    test "delete_workrequest_status_track/1 deletes the workrequest_status_track" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert {:ok, %WorkrequestStatusTrack{}} = Workorder.delete_workrequest_status_track(workrequest_status_track)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workrequest_status_track!(workrequest_status_track.id) end
+    end
+
+    test "change_workrequest_status_track/1 returns a workrequest_status_track changeset" do
+      workrequest_status_track = workrequest_status_track_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workrequest_status_track(workrequest_status_track)
+    end
+  end
 end

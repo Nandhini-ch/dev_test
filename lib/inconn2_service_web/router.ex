@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -148,10 +148,13 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
+    resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]
     resources "/uoms", UOMController, except: [:new, :edit]
+    get "/uoms/physical", UOMController, :index_physical
+    get "/uoms/cost", UOMController, :index_cost
     resources "/uom_conversions", UomConversionController, except: [:new, :edit]
     post "/uoms/convert/:value/from/:from_uom_id/to/:to_uom_id", UomConversionController, :convert
     resources "/items", ItemController, except: [:new, :edit]
@@ -165,7 +168,7 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]
-    resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit, :update]
-    resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit, :update]
+    resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit]
+    resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit]
   end
 end
