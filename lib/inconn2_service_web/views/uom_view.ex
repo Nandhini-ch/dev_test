@@ -13,6 +13,7 @@ defmodule Inconn2ServiceWeb.UOMView do
   def render("uom.json", %{uom: uom}) do
     %{id: uom.id,
       name: uom.name,
-      symbol: uom.symbol}
+      symbol: uom.symbol,
+      uom_type: uom.uom_type}
   end
 end

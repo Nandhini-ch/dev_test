@@ -16,6 +16,7 @@ defmodule Inconn2ServiceWeb.InventoryTransferView do
       to_location_id: inventory_transfer.to_location_id,
       uom_id: inventory_transfer.uom_id,
       quantity: inventory_transfer.quantity,
-      reference: inventory_transfer.reference}
+      reference: inventory_transfer.reference,
+      remarks: inventory_transfer.remarks}
   end
 end

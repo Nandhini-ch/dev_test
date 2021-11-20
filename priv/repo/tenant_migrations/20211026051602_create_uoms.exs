@@ -5,6 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUoms do
     create table(:uoms) do
       add :name, :string
       add :symbol, :string
+      add :uom_type, :string
 
       timestamps()
     end

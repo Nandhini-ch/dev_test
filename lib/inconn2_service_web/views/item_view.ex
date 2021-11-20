@@ -21,6 +21,9 @@ defmodule Inconn2ServiceWeb.ItemView do
       consume_unit_uom_id: item.consume_unit_uom_id,
       reorder_quantity: item.reorder_quantity,
       min_order_quantity: item.min_order_quantity,
-      asset_categories_ids: item.asset_categories_ids}
+      asset_categories_ids: item.asset_categories_ids,
+      aisle: item.aisle,
+      bin: item.bin,
+      row: item.row}
   end
 end

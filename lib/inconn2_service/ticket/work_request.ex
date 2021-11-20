@@ -17,11 +17,11 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :assigned_user_id, :integer
     field :attachment, :string
     field :attachment_type, :string
-    field :status, :string
+    field :status, :string, default: "RS"
     field :is_approvals_required, :boolean
     field :approvals_required, {:array, :integer}
-    field :approved_user_ids, {:array, :integer}
-    field :rejected_user_ids, {:array, :integer}
+    field :approved_user_ids, {:array, :integer}, default: []
+    field :rejected_user_ids, {:array, :integer}, default: []
 
     timestamps()
   end
@@ -32,7 +32,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     |> cast(attrs, [:site_id, :workrequest_category_id, :asset_ids, :description, :priority, :request_type,
                     :date_of_requirement, :time_of_requirement, :requested_user_id, :assigned_user_id,
                     :attachment, :attachment_type, :approvals_required, :approved_user_ids, :rejected_user_ids, :status])
-    |> validate_required([:site_id, :workrequest_category_id, :description, :priority, :request_type])
+    |> validate_required([:site_id, :workrequest_category_id, :description, :priority, :request_type, :status])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])
     |> validate_inclusion(:request_type, ["CO", "RE"])
     |> validate_inclusion(:status, ["RS", "AP", "AS", "RJ", "CL"])
@@ -44,12 +44,25 @@ defmodule Inconn2Service.Ticket.WorkRequest do
   defp validate_asset_id_mandatory(cs) do
     req_type = get_field(cs, :request_type, nil)
     if req_type != nil do
-      validate_required(cs, :validate_required)
+      case req_type do
+        "RE" -> validate_required(cs, :asset_ids)
+           _ -> cs
+      end
     else
       cs
     end
   end
 
-  # def validate_approvals_required()
+  def validate_approvals_required(cs) do
+    approvals_required = get_field(cs, :is_approvals_required, nil)
+    if approvals_required != nil do
+      case approvals_required do
+        true -> validate_required(cs, approvals_required)
+           _ -> cs
+      end
+    else
+      cs
+    end
+  end
 
 end

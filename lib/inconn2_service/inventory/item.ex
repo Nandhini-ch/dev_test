@@ -14,6 +14,9 @@ defmodule Inconn2Service.Inventory.Item do
     field :purchase_unit_uom_id, :integer
     field :reorder_quantity, :float
     field :type, :string
+    field :aisle, :string
+    field :row, :string
+    field :bin, :string
     has_many :inventory_transactions, Inconn2Service.Inventory.InventoryTransaction
 
 
@@ -23,8 +26,8 @@ defmodule Inconn2Service.Inventory.Item do
   @doc false
   def changeset(item, attrs) do
     item
-    |> cast(attrs, [:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids])
-    |> validate_required([:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids])
+    |> cast(attrs, [:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids, :aisle, :row, :bin])
+    |> validate_required([:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids, :aisle, :row, :bin])
     |> validate_inclusion(:type, ["tools", "spares", "consumables"])
   end
 end

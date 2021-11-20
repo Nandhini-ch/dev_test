@@ -15,6 +15,11 @@ defmodule Inconn2ServiceWeb.SupplierView do
     %{id: supplier.id,
       name: supplier.name,
       description: supplier.description,
+      nature_of_business: supplier.nature_of_business,
+      registration_no: supplier.registration_no,
+      gst_no: supplier.gst_no,
+      website: supplier.website,
+      remarks: supplier.remarks,
       contact: render_one(supplier.contact, AddressContactView, "contact.json")
     }
   end

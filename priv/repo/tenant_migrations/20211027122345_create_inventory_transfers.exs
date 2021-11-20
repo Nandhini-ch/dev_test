@@ -9,6 +9,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryTransfers do
       add :quantity, :integer
       add :reference, :text
       add :item_id, :integer
+      add :remarks, :text
 
       timestamps()
     end
