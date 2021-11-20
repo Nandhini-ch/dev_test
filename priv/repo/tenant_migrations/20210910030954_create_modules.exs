@@ -1,16 +1,15 @@
-defmodule Inconn2Service.Repo.Migrations.CreateRoles do
+defmodule Inconn2Service.Repo.Migrations.CreateModules do
   use Ecto.Migration
 
   def change do
-    create table(:roles) do
+    create table(:modules) do
       add :name, :string
       add :description, :string
       add :feature_ids, {:array, :integer}
-      add :active, :boolean
 
       timestamps()
     end
-    create unique_index(:roles, [:name])
 
+    create unique_index(:modules, [:name])
   end
 end

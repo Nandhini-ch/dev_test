@@ -14,6 +14,6 @@ defmodule Inconn2ServiceWeb.RoleView do
     %{id: role.id,
       name: role.name,
       description: role.description,
-      features: role.features}
+      feature_ids: role.feature_ids}
   end
 end

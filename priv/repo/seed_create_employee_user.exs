@@ -1,18 +1,18 @@
 alias Inconn2Service.{Staff, Assignment}
 
-feat1 = %{"name" => "Create Site", "code" => "CRST", "description" => "Can create site"}
-feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
-feat3 = %{"name" => "Create Employee", "code" => "CREM", "description" => "Can create employees"}
-
-{:ok, feat1c} = Staff.create_feature(feat1, "inc_bata")
-{:ok, feat2c} = Staff.create_feature(feat2, "inc_bata")
-{:ok, feat3c} = Staff.create_feature(feat3, "inc_bata")
-
-role1 = %{"name" => "Super Admin", "description" => "Has all access", "features" => ["CRST", "CRAS", "CREM"]}
-role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "features" => ["CRAS", "CREM"]}
-
-{:ok, role1c} = Staff.create_role(role1, "inc_bata")
-{:ok, role2c} = Staff.create_role(role2, "inc_bata")
+# feat1 = %{"name" => "Create sites", "code" => "CRST", "description" => "Can create site"}
+# feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
+# feat3 = %{"name" => "Create Employee", "code" => "CREM", "description" => "Can create employees"}
+#
+# {:ok, feat1c} = Staff.create_feature(feat1, "inc_bata")
+# {:ok, feat2c} = Staff.create_feature(feat2, "inc_bata")
+# {:ok, feat3c} = Staff.create_feature(feat3, "inc_bata")
+#
+# role1 = %{"name" => "Super admin", "description" => "Has all access", "feature_ids" => [feat1c.id, feat2c.id, feat3c.id]}
+# role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "feature_ids" => [feat2c.id, feat3c.id]}
+#
+# {:ok, role1c} = Staff.create_role(role1, "inc_bata")
+# {:ok, role2c} = Staff.create_role(role2, "inc_bata")
 
 employee1 = %{
   "employee_id" => "Empid0001",
@@ -27,7 +27,7 @@ employee1 = %{
   "skills" => [1,2],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "role_ids" => [1, 2]
+  "role_ids" => [1]
 }
 {:ok, emp_cs1} = Staff.create_employee(employee1,"inc_bata")
 
@@ -44,7 +44,7 @@ employee2 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "role_ids" => [2]
+  "role_ids" => [3]
 }
 
 {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_bata")

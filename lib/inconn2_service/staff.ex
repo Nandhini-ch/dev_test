@@ -681,24 +681,10 @@ defmodule Inconn2Service.Staff do
   def create_role(attrs \\ %{}, prefix) do
     %Role{}
     |> Role.changeset(attrs)
-    |> validate_features(prefix)
+    |> validate_feature_ids(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
-  defp validate_features(cs, prefix) do
-    features = get_field(cs, :features, nil)
-    if features != nil do
-      codes = Feature |> select([f], f.code) |> Repo.all(prefix: prefix)
-      features = MapSet.new(features)
-      codes = MapSet.new(codes)
-      case MapSet.subset?(features, codes) do
-        true -> cs
-        false -> add_error(cs, :features, "feature codes are not valid")
-      end
-    else
-      cs
-    end
-  end
   @doc """
   Updates a role.
 
@@ -714,7 +700,7 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
-    |> validate_features(prefix)
+    |> validate_feature_ids(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -895,5 +881,116 @@ defmodule Inconn2Service.Staff do
   """
   def change_feature(%Feature{} = feature, attrs \\ %{}) do
     Feature.changeset(feature, attrs)
+  end
+
+  alias Inconn2Service.Staff.Module
+
+  @doc """
+  Returns the list of modules.
+
+  ## Examples
+
+      iex> list_modules()
+      [%Module{}, ...]
+
+  """
+  def list_modules(prefix) do
+    Repo.all(Module, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single module.
+
+  Raises `Ecto.NoResultsError` if the Module does not exist.
+
+  ## Examples
+
+      iex> get_module!(123)
+      %Module{}
+
+      iex> get_module!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_module!(id, prefix), do: Repo.get!(Module, id, prefix: prefix)
+
+  @doc """
+  Creates a module.
+
+  ## Examples
+
+      iex> create_module(%{field: value})
+      {:ok, %Module{}}
+
+      iex> create_module(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_module(attrs \\ %{}, prefix) do
+    %Module{}
+    |> Module.changeset(attrs)
+    |> validate_feature_ids(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_feature_ids(cs, prefix) do
+    ids = get_change(cs, :feature_ids, nil)
+    if ids != nil do
+      features = from(f in Feature, where: f.id in ^ids )
+              |> Repo.all(prefix: prefix)
+      case length(ids) == length(features) do
+        true -> cs
+        false -> add_error(cs, :feature_ids, "Feature IDs are invalid")
+      end
+    else
+      cs
+    end
+  end
+  @doc """
+  Updates a module.
+
+  ## Examples
+
+      iex> update_module(module, %{field: new_value})
+      {:ok, %Module{}}
+
+      iex> update_module(module, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_module(%Module{} = module, attrs, prefix) do
+    module
+    |> Module.changeset(attrs)
+    |> validate_feature_ids(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a module.
+
+  ## Examples
+
+      iex> delete_module(module)
+      {:ok, %Module{}}
+
+      iex> delete_module(module)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_module(%Module{} = module, prefix) do
+    Repo.delete(module, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking module changes.
+
+  ## Examples
+
+      iex> change_module(module)
+      %Ecto.Changeset{data: %Module{}}
+
+  """
+  def change_module(%Module{} = module, attrs \\ %{}) do
+    Module.changeset(module, attrs)
   end
 end

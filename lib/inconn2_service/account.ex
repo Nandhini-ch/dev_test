@@ -9,6 +9,7 @@ defmodule Inconn2Service.Account do
   alias Inconn2Service.Staff
 
   alias Inconn2Service.Account.BusinessType
+  alias Inconn2Service.CreateModuleFeatureRoles
 
   @doc """
   Returns the list of business_types.
@@ -182,7 +183,8 @@ defmodule Inconn2Service.Account do
 
         IO.inspect(return_party)
         prefix = "inc_" <> attrs["sub_domain"]
-        {:ok, role} = Staff.create_role(%{"name" => "Licensee Admin", "description" => "Super Admin for licensee. Has access to all features"}, prefix)
+        role = CreateModuleFeatureRoles.seed_features(prefix)
+        #{:ok, role} = Staff.create_role(%{"name" => "Licensee Admin", "description" => "Super Admin for licensee. Has access to all features"}, prefix)
         Staff.create_licensee_admin(%{
           "username" => licensee.contact.email,
           "password" => licensee.contact.mobile,

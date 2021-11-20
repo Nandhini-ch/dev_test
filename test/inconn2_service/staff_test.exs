@@ -327,4 +327,65 @@ defmodule Inconn2Service.StaffTest do
       assert %Ecto.Changeset{} = Staff.change_feature(feature)
     end
   end
+
+  describe "modules" do
+    alias Inconn2Service.Staff.Module
+
+    @valid_attrs %{feature_ids: [], name: "some name"}
+    @update_attrs %{feature_ids: [], name: "some updated name"}
+    @invalid_attrs %{feature_ids: nil, name: nil}
+
+    def module_fixture(attrs \\ %{}) do
+      {:ok, module} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Staff.create_module()
+
+      module
+    end
+
+    test "list_modules/0 returns all modules" do
+      module = module_fixture()
+      assert Staff.list_modules() == [module]
+    end
+
+    test "get_module!/1 returns the module with given id" do
+      module = module_fixture()
+      assert Staff.get_module!(module.id) == module
+    end
+
+    test "create_module/1 with valid data creates a module" do
+      assert {:ok, %Module{} = module} = Staff.create_module(@valid_attrs)
+      assert module.feature_ids == []
+      assert module.name == "some name"
+    end
+
+    test "create_module/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Staff.create_module(@invalid_attrs)
+    end
+
+    test "update_module/2 with valid data updates the module" do
+      module = module_fixture()
+      assert {:ok, %Module{} = module} = Staff.update_module(module, @update_attrs)
+      assert module.feature_ids == []
+      assert module.name == "some updated name"
+    end
+
+    test "update_module/2 with invalid data returns error changeset" do
+      module = module_fixture()
+      assert {:error, %Ecto.Changeset{}} = Staff.update_module(module, @invalid_attrs)
+      assert module == Staff.get_module!(module.id)
+    end
+
+    test "delete_module/1 deletes the module" do
+      module = module_fixture()
+      assert {:ok, %Module{}} = Staff.delete_module(module)
+      assert_raise Ecto.NoResultsError, fn -> Staff.get_module!(module.id) end
+    end
+
+    test "change_module/1 returns a module changeset" do
+      module = module_fixture()
+      assert %Ecto.Changeset{} = Staff.change_module(module)
+    end
+  end
 end

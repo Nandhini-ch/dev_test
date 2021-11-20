@@ -25,12 +25,12 @@ defmodule Inconn2ServiceWeb.FeatureController do
   #     |> render("show.json", feature: feature)
   #   end
   # end
-  #
-  # def show(conn, %{"id" => id}) do
-  #   feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)
-  #   render(conn, "show.json", feature: feature)
-  # end
-  #
+
+  def show(conn, %{"id" => id}) do
+    feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)
+    render(conn, "show.json", feature: feature)
+  end
+
   # def update(conn, %{"id" => id, "feature" => feature_params}) do
   #   feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)
   #
