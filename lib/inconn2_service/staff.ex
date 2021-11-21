@@ -368,7 +368,7 @@ defmodule Inconn2Service.Staff do
 
        case employee_set do
          {:ok, emp_set} ->
-                 case create_user(attrs, prefix) do
+                 case create_employee_user(attrs, prefix) do
                    {:ok, _user} ->
                        employee_set
 
@@ -519,6 +519,13 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_user(attrs \\ %{}, prefix) do
+    %User{}
+    |> User.changeset(attrs)
+    |> validate_role_ids(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def create_employee_user(attrs \\ %{}, prefix) do
       user_map = %{
         "username" => attrs["email"],
         "password" => attrs["mobile_no"],
@@ -567,7 +574,7 @@ defmodule Inconn2Service.Staff do
   """
   def update_user(%User{} = user, attrs, prefix) do
     user
-    |> User.changeset(attrs)
+    |> User.changeset_update(attrs)
     |> validate_role_ids(prefix)
     |> Repo.update(prefix: prefix)
   end

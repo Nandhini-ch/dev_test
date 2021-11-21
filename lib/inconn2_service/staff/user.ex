@@ -8,7 +8,7 @@ defmodule Inconn2Service.Staff.User do
     field :username, :string
     field :password, :string, virtual: true
     field :role_ids, {:array, :integer}
-    field(:password_hash, :string)
+    field :password_hash, :string
     field :active, :boolean, default: false
     belongs_to :party, Party
     timestamps()
@@ -27,6 +27,15 @@ defmodule Inconn2Service.Staff.User do
     #   message: "does not match password" )
     |> unique_constraint(:username)
     |> hash_password()
+    |> assoc_constraint(:party)
+  end
+
+  def changeset_update(user, attrs) do
+    user
+    |> cast(attrs, [:username, :role_ids, :party_id, :active])
+    |> validate_required([:username, :role_ids, :party_id])
+    |> validate_format(:username, ~r/@/)
+    |> unique_constraint(:username)
     |> assoc_constraint(:party)
   end
 

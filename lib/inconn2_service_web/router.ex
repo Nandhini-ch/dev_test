@@ -125,14 +125,14 @@ defmodule Inconn2ServiceWeb.Router do
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
-    resources "/users", UserController, only: [:index, :delete]
+    resources "/users", UserController, except: [:new, :edit]
     put "/users/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
     put "/users/:id/deactivate", UserController, :deactivate_user
     get "/download_users", ReferenceDownloadController, :download_users
-    resources "/roles", RoleController, except: [:new, :edit]
     resources "/features", FeatureController, only: [:index, :show]
     resources "/modules", ModuleController, only: [:index, :show]
+    resources "/roles", RoleController, except: [:new, :edit]
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
 
