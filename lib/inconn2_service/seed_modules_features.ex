@@ -39,7 +39,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
 
     md1 = %{"name" => "Licensee management", "feature_ids" => [ft1c.id, ft2c.id, ft3c.id, ft4c.id, ft5c.id, ft6c.id, ft7c.id, ft8c.id,
                                                               ft9c.id, ft10c.id, ft11c.id, ft12c.id, ft13c.id, ft14c.id, ft15c.id, ft16c.id]}
-    {:ok, md1c} = Staff.create_module(md1, prefix)
+    {:ok, _md1c} = Staff.create_module(md1, prefix)
 
     ft17 = %{"name" => "Create Equipment ", "code" => "CREQ"}
     ft18 = %{"name" => "Edit Equipment", "code" => "EDEQ"}
@@ -79,7 +79,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
 
     md2 = %{"name" => "Asset management", "feature_ids" => [ft17c.id, ft18c.id, ft19c.id, ft20c.id, ft21c.id, ft22c.id, ft23c.id, ft24c.id,
                                                             ft25c.id, ft26c.id, ft27c.id, ft28c.id, ft29c.id, ft30c.id, ft31c.id, ft32c.id, ft33c.id]}
-    {:ok, md2c} = Staff.create_module(md2, prefix)
+    {:ok, _md2c} = Staff.create_module(md2, prefix)
 
     ft34 = %{"name" => "create Work order template", "code" => "CRWT"}
     ft35 = %{"name" => "Edit work order template", "code" => "EDWT"}
@@ -173,7 +173,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
                                                                ft47c.id, ft48c.id, ft49c.id, ft50c.id, ft51c.id, ft52c.id, ft53c.id, ft54c.id, ft55c.id, ft56c.id, ft57c.id, ft58c.id, ft59c.id,
                                                                ft60c.id, ft61c.id, ft62c.id, ft63c.id, ft64c.id, ft65c.id, ft66c.id, ft67c.id, ft68c.id, ft69c.id, ft70c.id, ft71c.id, ft72c.id,
                                                                ft73c.id, ft74c.id, ft75c.id, ft76c.id]}
-    {:ok, md3c} = Staff.create_module(md3, prefix)
+    {:ok, _md3c} = Staff.create_module(md3, prefix)
 
     ft77 = %{"name" => "Create Users", "code" => "CRUS"}
     ft78 = %{"name" => "Edit Users", "code" => "EDUS"}
@@ -219,7 +219,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
 
     md4 = %{"name" => "People management", "feature_ids" => [ft77c.id, ft78c.id, ft79c.id, ft80c.id, ft81c.id, ft82c.id, ft83c.id, ft84c.id, ft85c.id, ft86c.id,
                                                             ft87c.id, ft88c.id, ft89c.id, ft90c.id, ft91c.id, ft92c.id, ft93c.id, ft94c.id, ft95c.id, ft96c.id]}
-    {:ok, md4c} = Staff.create_module(md4, prefix)
+    {:ok, _md4c} = Staff.create_module(md4, prefix)
 
     ft97 = %{"name" => "Create part", "code" => "CRPA"}
     ft98 = %{"name" => "Edit part", "code" => "EDPA"}
@@ -245,7 +245,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
 
     md5 = %{"name" => "Inventory management", "feature_ids" => [ft97c.id, ft98c.id, ft99c.id, ft100c.id, ft101c.id,
                                                             ft102c.id, ft103c.id, ft104c.id, ft105c.id, ft106c.id]}
-    {:ok, md5c} = Staff.create_module(md5, prefix)
+    {:ok, _md5c} = Staff.create_module(md5, prefix)
 
     ft107 = %{"name" => "Create tickets", "code" => "CRTI"}
     ft108 = %{"name" => "Edit tickets", "code" => "EDTI"}
@@ -268,7 +268,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
     {:ok, ft115c} = Staff.create_feature(ft115, prefix)
 
     md6 = %{"name" => "Ticketing Management", "feature_ids" => [ft107c.id, ft108c.id, ft109c.id, ft110c.id, ft111c.id, ft112c.id, ft113c.id, ft114c.id, ft115c.id]}
-    {:ok, md6c} = Staff.create_module(md6, prefix)
+    {:ok, _md6c} = Staff.create_module(md6, prefix)
 
     ft116 = %{"name" => "Create alerts", "code" => "CRAL"}
     ft117 = %{"name" => "Edit alerts", "code" => "EDAL"}
@@ -302,7 +302,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
 
     md7 = %{"name" => "Alerts and Notifications", "feature_ids" => [ft116c.id, ft117c.id, ft118c.id, ft119c.id, ft120c.id, ft121c.id, ft122c.id,
                                                                     ft123c.id, ft124c.id, ft125c.id, ft126c.id, ft127c.id, ft128c.id, ft129c.id]}
-    {:ok, md7c} = Staff.create_module(md7, prefix)
+    {:ok, _md7c} = Staff.create_module(md7, prefix)
 
     ft130 = %{"name" => "Reports - Data download", "code" => "REDD"}
     ft131 = %{"name" => "Reports - Print", "code" => "REPR"}
@@ -317,7 +317,7 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
     {:ok, ft134c} = Staff.create_feature(ft134, prefix)
 
     md8 = %{"name" => "Reports and Dashboards", "feature_ids" => [ft130c.id, ft131c.id, ft132c.id, ft133c.id, ft134c.id]}
-    {:ok, md8c} = Staff.create_module(md8, prefix)
+    {:ok, _md8c} = Staff.create_module(md8, prefix)
 
 
     role1 = %{"name" => "Super Admin", "feature_ids" => [ft1c.id, ft2c.id, ft3c.id, ft4c.id, ft5c.id, ft6c.id, ft7c.id, ft8c.id, ft9c.id, ft10c.id, ft11c.id, ft12c.id, ft13c.id, ft14c.id, ft15c.id, ft16c.id, ft17c.id, ft18c.id, ft19c.id, ft20c.id, ft21c.id, ft22c.id, ft23c.id, ft24c.id, ft25c.id, ft26c.id, ft27c.id, ft28c.id, ft29c.id, ft30c.id,
@@ -347,12 +347,12 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
     role6 = %{"name" => "Others", "feature_ids" => [ft16c.id, ft20c.id, ft21c.id, ft26c.id, ft27c.id, ft32c.id, ft37c.id, ft38c.id, ft42c.id, ft43c.id, ft48c.id, ft52c.id, ft56c.id, ft57c.id, ft62c.id, ft63c.id, ft68c.id, ft69c.id, ft74c.id, ft75c.id, ft80c.id, ft81c.id, ft85c.id, ft86c.id, ft90c.id, ft91c.id, ft95c.id, ft96c.id, ft100c.id, ft105c.id, ft107c.id,
                                                     ft115c.id, ft116c.id, ft122c.id, ft129c.id, ft130c.id, ft131c.id, ft134c.id]}
 
-    {:ok, role1c} = Staff.create_role(role1, prefix)
+    {:ok, _role1c} = Staff.create_role(role1, prefix)
     {:ok, role2c} = Staff.create_role(role2, prefix)
-    {:ok, role3c} = Staff.create_role(role3, prefix)
-    {:ok, role4c} = Staff.create_role(role4, prefix)
-    {:ok, role5c} = Staff.create_role(role5, prefix)
-    {:ok, role6c} = Staff.create_role(role6, prefix)
+    {:ok, _role3c} = Staff.create_role(role3, prefix)
+    {:ok, _role4c} = Staff.create_role(role4, prefix)
+    {:ok, _role5c} = Staff.create_role(role5, prefix)
+    {:ok, _role6c} = Staff.create_role(role6, prefix)
 
     role2c
   end
