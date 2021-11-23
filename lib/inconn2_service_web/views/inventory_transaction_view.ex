@@ -25,7 +25,7 @@ defmodule Inconn2ServiceWeb.InventoryTransactionView do
       dc_reference: inventory_transaction.dc_reference,
       dc_date: inventory_transaction.dc_date,
       gate_pass_reference: inventory_transaction.gate_pass_reference,
-      gate_pass_date: inventory_transaction.gate_pass_date
+      gate_pass_date: inventory_transaction.gate_pass_date,
       cost: inventory_transaction.cost,
       cost_unit_uom_id: inventory_transaction.cost_unit_uom_id}
   end

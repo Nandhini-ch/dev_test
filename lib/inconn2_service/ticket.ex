@@ -248,6 +248,7 @@ defmodule Inconn2Service.Ticket do
   """
   def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user) do
     payload = read_attachment(attrs)
+    wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
     updated_work_request = work_request
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
@@ -260,12 +261,19 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
+        # create_workorder_from_ticket(work_request, user, prefix, wr_status)
 
       _ ->
         updated_work_request
     end
+  end
 
+  defp create_workorder_from_ticket(work_request, user, prefix, "AS") do
+    {:ok, work_request}
+  end
 
+  defp create_workorder_from_ticket(work_request, _user, _prefix, _) do
+    {:ok, work_request}
   end
 
   defp update_status_track(work_request, prefix) do
