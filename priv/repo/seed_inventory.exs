@@ -118,7 +118,7 @@ inventory_location2 = %{
 {:ok, inventory_location2} = Inventory.create_inventory_location(inventory_location2, "inc_bata")
 
 
-inventory_transaction = %{
+inventory_transaction1 = %{
 	"inventory_location_id" => inventory_location1.id,
 	"item_id" => item1.id,
 	"transaction_type" => "IN",
@@ -126,10 +126,28 @@ inventory_transaction = %{
 	"supplier_id" => supplier1.id,
 	"reference" =>"test",
 	"quantity" => 11,
-	"uom_id" => unit2.id
+	"uom_id" => unit2.id,
+	"dc_reference" => "1234",
+	"dc_date" => "2021-11-27"
 }
 
-{:ok, inventory_transaction} = Inventory.create_inventory_transaction(inventory_transaction, "inc_bata")
+{:ok, inventory_transaction1} = Inventory.create_inventory_transaction(inventory_transaction1, "inc_bata")
+
+inventory_transaction2 = %{
+	"inventory_location_id" => inventory_location1.id,
+	"item_id" => item1.id,
+	"transaction_type" => "IN",
+	"price" => 10,
+	"supplier_id" => supplier1.id,
+	"reference" =>"test",
+	"quantity" => 11,
+	"uom_id" => unit2.id,
+	"dc_reference" => "1235",
+	"dc_date" => "2022-11-27"
+}
+
+{:ok, inventory_transaction2} = Inventory.create_inventory_transaction(inventory_transaction2, "inc_bata")
+
 
 inventory_transfer = %{
 	"from_location_id" => inventory_location1.id,
