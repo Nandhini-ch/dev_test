@@ -13,6 +13,15 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryTransactions do
       add :uom_id, :integer
       add :workorder_id, :integer
       add :remarks, :text
+      add :dc_attachment, :string
+      add :dc_attachment_type, :string
+      add :dc_reference, :string
+      add :dc_date, :date
+      add :gate_pass_attachment, :string
+      add :gate_pass_attachment_type, :string
+      add :gate_pass_reference, :string
+      add :gate_pass_date, :date
+      add :remaining, :float
       add :cost, :float
       add :cost_unit_uom_id, :integer
 
