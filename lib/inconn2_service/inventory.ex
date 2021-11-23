@@ -720,6 +720,9 @@ defmodule Inconn2Service.Inventory do
 
         "IS" ->
           handle_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
+
+        "PRT" ->
+          handle_purchase_return_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
       end
     end)
 
@@ -736,6 +739,7 @@ defmodule Inconn2Service.Inventory do
     item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
     # IO.inspect(item)
     # convert_for_transaction(item.purchase_unit_uom_id, item.inventory_unit_uom_id, quantity)
+
     case inventory_stock do
       nil ->
         InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
@@ -747,9 +751,10 @@ defmodule Inconn2Service.Inventory do
         inventory_stock
         |> InventoryStock.changeset(%{})
         |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "IN")
-        |>  Repo.update(prefix: prefix)
+        |> Repo.update(prefix: prefix)
     end
   end
+
 
   def convert_for_transaction_forward(cs, uom_id1, uom_id2, quantity, _prefix, transaction_type) when uom_id1 == uom_id2 do
     # quantity = get_field(cs, :quantity, nil)
@@ -811,8 +816,36 @@ defmodule Inconn2Service.Inventory do
       "IS" ->
         quantity - quantity * factor
 
+      "PRT" ->
+        quantity - quantity * factor
+
       "RT" ->
         quantity + quantity * factor
+    end
+  end
+
+  def handle_purchase_return_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> force_error("No record found to return in stock")
+        |> Repo.insert(prefix: prefix)
+
+      inventory_stock ->
+        if inventory_stock.quantity < inventory_transaction.quantity do
+          InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+          "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+          |> force_error("Required Quantity Not found")
+          |> Repo.insert(prefix: prefix)
+        else
+          inventory_stock
+          |> InventoryStock.changeset(%{})
+          |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "PRT")
+          |> Repo.update(prefix: prefix)
+        end
     end
   end
 
@@ -856,7 +889,6 @@ defmodule Inconn2Service.Inventory do
           |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "IS")
           |> Repo.update(prefix: prefix)
         end
-
     end
   end
 
@@ -896,17 +928,14 @@ defmodule Inconn2Service.Inventory do
   end
 
   def calculate_cost(cs, prefix)  do
-    IO.inspect("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     case get_field(cs, :transaction_type, nil) do
       "IN" ->
-        IO.inspect("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         supplier_id = get_field(cs, :supplier_id, nil)
         item_id = get_field(cs, :item_id, nil)
         quantity = get_field(cs, :quantity, nil)
         IO.inspect("Supplier Id: #{supplier_id}")
         IO.inspect("Item Id: #{item_id}")
         if supplier_id != nil && item_id != nil do
-          IO.inspect(")))))))))))))))))))))))))))))")
           case Repo.get_by(SupplierItem, [supplier_id: supplier_id, item_id: item_id], prefix: prefix) do
             nil ->
               add_error(cs, :supplier_id, "Item Not Found for selected supplier")
@@ -919,6 +948,79 @@ defmodule Inconn2Service.Inventory do
         else
           cs
         end
+      "IS" ->
+        item_id = get_field(cs, :item_id, nil)
+        quantity = get_field(cs, :quantity, nil)
+        query = from(u in InventoryTransaction,
+                    where: u.item_id == ^item_id and
+                           u.transaction_type == "IN" and
+                           u.remaining > ^quantity)
+        required_issue_transaction = Repo.get_by(query, prefix: prefix)
+        supplier_id = required_issue_transaction.supplier_id
+        item_id = get_field(cs, :item_id, nil)
+        if supplier_id != nil && item_id != nil do
+          case Repo.get_by(SupplierItem, [supplier_id: supplier_id, item_id: item_id], prefix: prefix) do
+            nil ->
+              add_error(cs, :supplier_id, "Item Not Found for selected supplier")
+
+            supplier_item ->
+              IO.inspect("Supplier Item price: #{supplier_item.price * quantity}")
+              update_inventory_transaction(required_issue_transaction, %{"remaining" => required_issue_transaction.remaining - quantity}, prefix)
+              change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id, supplier_id: required_issue_transaction.supplier_id})
+              # IO.inspect(changeset)
+          end
+        else
+          cs
+        end
+      "RT" ->
+        item_id = get_field(cs, :item_id, nil)
+        quantity = get_field(cs, :quantity, nil)
+        query = from(u in InventoryTransaction,
+                    where: u.item_id == ^item_id and
+                           u.transaction_type == "IS" and
+                           u.remaining > ^quantity,
+                           order_by: [desc: u.inserted_at])
+        required_issue_transaction = Repo.one(query, prefix: prefix)
+        supplier_id = required_issue_transaction.supplier_id
+        item_id = get_field(cs, :item_id, nil)
+        if supplier_id != nil && item_id != nil do
+          case Repo.get_by(SupplierItem, [supplier_id: supplier_id, item_id: item_id], prefix: prefix) do
+            nil ->
+              add_error(cs, :supplier_id, "Item Not Found for selected supplier")
+
+            supplier_item ->
+              IO.inspect("Supplier Item price: #{supplier_item.price * quantity}")
+              update_inventory_transaction(required_issue_transaction, %{"remaining" => required_issue_transaction.remaining - quantity}, prefix)
+              change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id, supplier_id: required_issue_transaction.supplier_id})
+              # IO.inspect(changeset)
+          end
+        else
+          cs
+        end
+      "PRT" ->
+          item_id = get_field(cs, :item_id, nil)
+          quantity = get_field(cs, :quantity, nil)
+          query = from(u in InventoryTransaction,
+                      where: u.item_id == ^item_id and
+                             u.transaction_type == "IN" and
+                             u.remaining > ^quantity)
+          required_issue_transaction = Repo.get_by(query, prefix: prefix)
+          supplier_id = required_issue_transaction.supplier_id
+          item_id = get_field(cs, :item_id, nil)
+          if supplier_id != nil && item_id != nil do
+            case Repo.get_by(SupplierItem, [supplier_id: supplier_id, item_id: item_id], prefix: prefix) do
+              nil ->
+                add_error(cs, :supplier_id, "Item Not Found for selected supplier")
+
+              supplier_item ->
+                IO.inspect("Supplier Item price: #{supplier_item.price * quantity}")
+                update_inventory_transaction(required_issue_transaction, %{"remaining" => required_issue_transaction.remaining - quantity}, prefix)
+                change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id, supplier_id: required_issue_transaction.supplier_id})
+                # IO.inspect(changeset)
+            end
+          else
+            cs
+          end
       _ ->
         cs
     end
