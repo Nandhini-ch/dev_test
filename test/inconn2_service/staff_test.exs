@@ -388,4 +388,67 @@ defmodule Inconn2Service.StaffTest do
       assert %Ecto.Changeset{} = Staff.change_module(module)
     end
   end
+
+  describe "role_profiles" do
+    alias Inconn2Service.Staff.RoleProfile
+
+    @valid_attrs %{code: "some code", feature_ids: [], label: "some label"}
+    @update_attrs %{code: "some updated code", feature_ids: [], label: "some updated label"}
+    @invalid_attrs %{code: nil, feature_ids: nil, label: nil}
+
+    def role_profile_fixture(attrs \\ %{}) do
+      {:ok, role_profile} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Staff.create_role_profile()
+
+      role_profile
+    end
+
+    test "list_role_profiles/0 returns all role_profiles" do
+      role_profile = role_profile_fixture()
+      assert Staff.list_role_profiles() == [role_profile]
+    end
+
+    test "get_role_profile!/1 returns the role_profile with given id" do
+      role_profile = role_profile_fixture()
+      assert Staff.get_role_profile!(role_profile.id) == role_profile
+    end
+
+    test "create_role_profile/1 with valid data creates a role_profile" do
+      assert {:ok, %RoleProfile{} = role_profile} = Staff.create_role_profile(@valid_attrs)
+      assert role_profile.code == "some code"
+      assert role_profile.feature_ids == []
+      assert role_profile.label == "some label"
+    end
+
+    test "create_role_profile/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Staff.create_role_profile(@invalid_attrs)
+    end
+
+    test "update_role_profile/2 with valid data updates the role_profile" do
+      role_profile = role_profile_fixture()
+      assert {:ok, %RoleProfile{} = role_profile} = Staff.update_role_profile(role_profile, @update_attrs)
+      assert role_profile.code == "some updated code"
+      assert role_profile.feature_ids == []
+      assert role_profile.label == "some updated label"
+    end
+
+    test "update_role_profile/2 with invalid data returns error changeset" do
+      role_profile = role_profile_fixture()
+      assert {:error, %Ecto.Changeset{}} = Staff.update_role_profile(role_profile, @invalid_attrs)
+      assert role_profile == Staff.get_role_profile!(role_profile.id)
+    end
+
+    test "delete_role_profile/1 deletes the role_profile" do
+      role_profile = role_profile_fixture()
+      assert {:ok, %RoleProfile{}} = Staff.delete_role_profile(role_profile)
+      assert_raise Ecto.NoResultsError, fn -> Staff.get_role_profile!(role_profile.id) end
+    end
+
+    test "change_role_profile/1 returns a role_profile changeset" do
+      role_profile = role_profile_fixture()
+      assert %Ecto.Changeset{} = Staff.change_role_profile(role_profile)
+    end
+  end
 end

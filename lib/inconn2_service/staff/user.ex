@@ -7,7 +7,7 @@ defmodule Inconn2Service.Staff.User do
   schema "users" do
     field :username, :string
     field :password, :string, virtual: true
-    field :role_ids, {:array, :integer}
+    field :role_id, :integer
     field :password_hash, :string
     field :active, :boolean, default: false
     belongs_to :party, Party
@@ -18,8 +18,8 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :role_ids, :party_id, :active])
-    |> validate_required([:username, :password, :role_ids, :party_id])
+    |> cast(attrs, [:username, :password, :role_id, :party_id, :active])
+    |> validate_required([:username, :password, :role_id, :party_id])
     |> validate_format(:username, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
     # |> validate_length(:password, min: 6, max: 12)
@@ -32,8 +32,8 @@ defmodule Inconn2Service.Staff.User do
 
   def changeset_update(user, attrs) do
     user
-    |> cast(attrs, [:username, :role_ids, :party_id, :active])
-    |> validate_required([:username, :role_ids, :party_id])
+    |> cast(attrs, [:username, :role_id, :party_id, :active])
+    |> validate_required([:username, :role_id, :party_id])
     |> validate_format(:username, ~r/@/)
     |> unique_constraint(:username)
     |> assoc_constraint(:party)

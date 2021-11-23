@@ -363,7 +363,7 @@ defmodule Inconn2Service.Staff do
         %Employee{}
         |> Employee.changeset(attrs)
         |> validate_skill_ids(prefix)
-        |> validate_role_ids(prefix)
+        |> validate_role_id(prefix)
         |> Repo.insert(prefix: prefix)
 
        case employee_set do
@@ -521,7 +521,7 @@ defmodule Inconn2Service.Staff do
   def create_user(attrs \\ %{}, prefix) do
     %User{}
     |> User.changeset(attrs)
-    |> validate_role_ids(prefix)
+    |> validate_role_id(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -531,7 +531,7 @@ defmodule Inconn2Service.Staff do
         "password" => attrs["mobile_no"],
         "password_confirmation" => attrs["mobile_no"],
         "party_id" => attrs["party_id"],
-        "role_ids" => attrs["role_ids"]
+        "role_id" => attrs["role_id"]
       }
 
       %User{}
@@ -545,14 +545,12 @@ defmodule Inconn2Service.Staff do
     |> Repo.insert(prefix: prefix)
   end
 
-  defp validate_role_ids(cs, prefix) do
-    role_ids = get_field(cs, :role_ids, nil)
-    if role_ids != nil do
-      roles = from(r in Role, where: r.id in ^role_ids )
-                  |> Repo.all(prefix: prefix)
-      case length(role_ids) == length(roles) do
-        false -> add_error(cs, :role_ids, "role ids are not valid")
-        true -> cs
+  defp validate_role_id(cs, prefix) do
+    role_id = get_field(cs, :role_id, nil)
+    if role_id != nil do
+      case get_role(role_id, prefix) do
+        nil -> add_error(cs, :role_id, "role id is not valid")
+        _ -> cs
       end
     else
       cs
@@ -575,7 +573,7 @@ defmodule Inconn2Service.Staff do
   def update_user(%User{} = user, attrs, prefix) do
     user
     |> User.changeset_update(attrs)
-    |> validate_role_ids(prefix)
+    |> validate_role_id(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -647,13 +645,14 @@ defmodule Inconn2Service.Staff do
 
   """
   def list_roles(prefix) do
-    Repo.all(Role, prefix: prefix)
+    Repo.all(Role, prefix: prefix) |> Repo.preload(:role_profile)
   end
 
   def list_roles(query_params, prefix) do
     Role
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:role_profile)
   end
 
   @doc """
@@ -670,8 +669,13 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix)
-  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix)
+  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role_by_role_profile(role_profile_id, prefix) do
+    Role
+    |> where(role_profile_id: ^role_profile_id)
+    |> Repo.all(prefix: prefix)
+  end
 
   @doc """
   Creates a role.
@@ -686,12 +690,39 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_role(attrs \\ %{}, prefix) do
-    %Role{}
-    |> Role.changeset(attrs)
-    |> validate_feature_ids(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %Role{}
+            |> Role.changeset(attrs)
+            |> validate_feature_ids(prefix)
+            |> validate_feature_ids_within_role_profile(prefix)
+            |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, role} ->
+                {:ok, Repo.preload(role, :role_profile)}
+       _ ->
+          result
+    end
+
   end
 
+  defp validate_feature_ids_within_role_profile(cs, prefix) do
+    feature_ids = get_field(cs, :feature_ids, nil)
+    role_profile_id = get_field(cs, :role_profile_id, nil)
+    if feature_ids != nil and role_profile_id != nil do
+      role_profile = get_role_profile(role_profile_id, prefix)
+      if role_profile != nil do
+        role_features = MapSet.new(feature_ids)
+        role_profile_features = MapSet.new(role_profile.feature_ids)
+        case MapSet.subset?(role_features, role_profile_features) do
+          true -> cs
+          false -> add_error(cs, :feature_ids, "Features should be within the features of role profile")
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
   @doc """
   Updates a role.
 
@@ -704,10 +735,12 @@ defmodule Inconn2Service.Staff do
       {:error, %Ecto.Changeset{}}
 
   """
+
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
     |> validate_feature_ids(prefix)
+    |> validate_feature_ids_within_role_profile(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -999,5 +1032,147 @@ defmodule Inconn2Service.Staff do
   """
   def change_module(%Module{} = module, attrs \\ %{}) do
     Module.changeset(module, attrs)
+  end
+
+  alias Inconn2Service.Staff.RoleProfile
+
+  @doc """
+  Returns the list of role_profiles.
+
+  ## Examples
+
+      iex> list_role_profiles()
+      [%RoleProfile{}, ...]
+
+  """
+  def list_role_profiles(prefix) do
+    Repo.all(RoleProfile, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single role_profile.
+
+  Raises `Ecto.NoResultsError` if the Role profile does not exist.
+
+  ## Examples
+
+      iex> get_role_profile!(123)
+      %RoleProfile{}
+
+      iex> get_role_profile!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_role_profile!(id, prefix), do: Repo.get!(RoleProfile, id, prefix: prefix)
+  def get_role_profile(id, prefix), do: Repo.get(RoleProfile, id, prefix: prefix)
+  def get_role_profile_by_label!(label, prefix), do: Repo.get_by!(RoleProfile, [label: label], prefix: prefix)
+
+  @doc """
+  Creates a role_profile.
+
+  ## Examples
+
+      iex> create_role_profile(%{field: value})
+      {:ok, %RoleProfile{}}
+
+      iex> create_role_profile(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_role_profile(attrs \\ %{}, prefix) do
+    %RoleProfile{}
+    |> RoleProfile.changeset(attrs)
+    |> validate_feature_ids(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp inherit_features(role_profile, role_profile_new, prefix) do
+    feature_ids = role_profile.feature_ids
+    new_feature_ids = role_profile_new.feature_ids
+    check_for_addition(role_profile.id, feature_ids, new_feature_ids, prefix)
+    check_for_removal(role_profile.id, feature_ids, new_feature_ids, prefix)
+  end
+
+  defp check_for_addition(role_profile_id, feature_ids, new_feature_ids, prefix) do
+    added_ids = new_feature_ids -- feature_ids
+    if length(added_ids) > 0 do
+      roles = get_role_by_role_profile(role_profile_id, prefix)
+      Enum.map(roles, fn role ->
+                          feature_ids = role.feature_ids ++ added_ids
+                          update_role(role, %{"feature_ids" => feature_ids}, prefix)
+                        end)
+      new_feature_ids
+    else
+      new_feature_ids
+    end
+  end
+
+  defp check_for_removal(role_profile_id, feature_ids, new_feature_ids, prefix) do
+    removed_ids = feature_ids -- new_feature_ids
+    if length(removed_ids) > 0 do
+      roles = get_role_by_role_profile(role_profile_id, prefix)
+      Enum.map(roles, fn role ->
+                          feature_ids = role.feature_ids -- removed_ids
+                          update_role(role, %{"feature_ids" => feature_ids}, prefix)
+                        end)
+      new_feature_ids
+    else
+      new_feature_ids
+    end
+  end
+
+  @doc """
+  Updates a role_profile.
+
+  ## Examples
+
+      iex> update_role_profile(role_profile, %{field: new_value})
+      {:ok, %RoleProfile{}}
+
+      iex> update_role_profile(role_profile, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_role_profile(%RoleProfile{} = role_profile, attrs, prefix) do
+    result = role_profile
+            |> RoleProfile.changeset(attrs)
+            |> validate_feature_ids(prefix)
+            |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, role_profile_new} ->
+              inherit_features(role_profile, role_profile_new, prefix)
+              result
+       _ ->
+              result
+    end
+  end
+
+  @doc """
+  Deletes a role_profile.
+
+  ## Examples
+
+      iex> delete_role_profile(role_profile)
+      {:ok, %RoleProfile{}}
+
+      iex> delete_role_profile(role_profile)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_role_profile(%RoleProfile{} = role_profile, prefix) do
+    Repo.delete(role_profile, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking role_profile changes.
+
+  ## Examples
+
+      iex> change_role_profile(role_profile)
+      %Ecto.Changeset{data: %RoleProfile{}}
+
+  """
+  def change_role_profile(%RoleProfile{} = role_profile, attrs \\ %{}) do
+    RoleProfile.changeset(role_profile, attrs)
   end
 end
