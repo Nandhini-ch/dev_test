@@ -170,14 +170,14 @@ defmodule Inconn2Service.Ticket do
     |> requested_user_id(user)
     |> validate_assigned_user_id(prefix)
     |> Repo.insert(prefix: prefix)
-    
+
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-      
+
       _ ->
-        created_work_request  
-        
+        created_work_request
+
     end
   end
 
@@ -260,9 +260,9 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-       
+
       _ ->
-        updated_work_request  
+        updated_work_request
     end
 
 
@@ -270,7 +270,7 @@ defmodule Inconn2Service.Ticket do
 
   defp update_status_track(work_request, prefix) do
     case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status]) do
-      nil -> 
+      nil ->
         {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
         workrequest_status_track = %{
           "work_request_id" => work_request.id,
@@ -280,7 +280,7 @@ defmodule Inconn2Service.Ticket do
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
         {:ok, work_request}
-      
+
       _ ->
         {:ok, work_request}
 
