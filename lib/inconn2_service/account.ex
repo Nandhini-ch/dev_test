@@ -183,12 +183,16 @@ defmodule Inconn2Service.Account do
 
         IO.inspect(return_party)
         prefix = "inc_" <> attrs["sub_domain"]
-        role = CreateModuleFeatureRoles.seed_features(prefix)
-        #{:ok, role} = Staff.create_role(%{"name" => "Licensee Admin", "description" => "Super Admin for licensee. Has access to all features"}, prefix)
+        role_profile = CreateModuleFeatureRoles.seed_features(prefix)
+        {:ok, role} = Staff.create_role(%{"name" => "Licensee Admin",
+                                          "description" => "Super Admin for licensee. Has access to all features",
+                                          "role_profile_id" => role_profile.id,
+                                          "feature_ids" => role_profile.feature_ids},
+                                        prefix)
         Staff.create_licensee_admin(%{
           "username" => licensee.contact.email,
           "password" => licensee.contact.mobile,
-          "role_ids" => [role.id],
+          "role_id" => role.id,
           "party_id" => return_party.id
         }, prefix)
         {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}

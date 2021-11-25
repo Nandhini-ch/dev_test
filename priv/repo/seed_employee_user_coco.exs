@@ -17,13 +17,17 @@ org_ut1 = %{"name" => "House Keeping", "party_id" => 1}
 # {:ok, feat4c} = Staff.create_feature(feat4, "inc_uds")
 # {:ok, feat5c} = Staff.create_feature(feat5, "inc_uds")
 #
-# role1 = %{"name" => "Super admin", "description" => "Has all access", "feature_ids" => [feat1c.id, feat2c.id, feat3c.id]}
-# role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "feature_ids" => [feat2c.id, feat3c.id, feat4c.id]}
-# role3 = %{"name" => "supervisor", "description" => "Execution of work flows", "feature_ids" => [feat5c.id]}
-#
-# {:ok, role1c} = Staff.create_role(role1, "inc_uds")
-# {:ok, role2c} = Staff.create_role(role2, "inc_uds")
-# {:ok, role3c} = Staff.create_role(role3, "inc_uds")
+role_prof1 = Staff.get_role_profile_by_label!("Super Admin", "inc_uds")
+role_prof2 = Staff.get_role_profile_by_label!("Admin", "inc_uds")
+role_prof3 = Staff.get_role_profile_by_label!("Managers", "inc_uds")
+
+role1 = %{"name" => "Super admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "feature_ids" => role_prof1.feature_ids}
+role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "feature_ids" => role_prof2.feature_ids}
+role3 = %{"name" => "House Keeping Supervisor", "description" => "Execution of work flows", "role_profile_id" => role_prof3.id,  "feature_ids" => role_prof3.feature_ids}
+
+{:ok, role1c} = Staff.create_role(role1, "inc_uds")
+{:ok, role2c} = Staff.create_role(role2, "inc_uds")
+{:ok, role3c} = Staff.create_role(role3, "inc_uds")
 
 employee1 = %{
   "employee_id" => "Empid0001",
@@ -36,7 +40,7 @@ employee1 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "role_ids" => [1]
+  "role_id" => 1
 }
 {:ok, emp_cs1} = Staff.create_employee(employee1,"inc_uds")
 
@@ -51,7 +55,7 @@ employee2 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "role_ids" => [3]
+  "role_id" => 3
 }
 
 {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_uds")
@@ -67,7 +71,7 @@ employee3 = %{
   "skills" => [1],
   "org_unit_id" =>  1,
   "party_id" => 1,
-  "role_ids" => [4]
+  "role_id" => 4
 }
 
 {:ok, emp_cs3} = Staff.create_employee(employee3,"inc_uds")

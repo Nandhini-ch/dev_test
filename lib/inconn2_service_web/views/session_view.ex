@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.SessionView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.LicenseeView
+  alias Inconn2ServiceWeb.{LicenseeView, RoleView, FeatureView}
 
   def render("success.json", %{token: token}) do
     %{
@@ -17,19 +17,20 @@ defmodule Inconn2ServiceWeb.SessionView do
     %{errors: %{detail: [error_message]}}
   end
 
-  def render("current_user.json", %{current_user: current_user, licensee: licensee, party: party, employee: employee, features: features}) do
+  def render("current_user.json", %{current_user: current_user, licensee: licensee, party: party, employee: employee, role: role, features: features}) do
     %{
       data: %{
         id: current_user.id,
         first_name: employee.first_name,
         last_name: employee.last_name,
         username: current_user.username,
-        role_ids: current_user.role_ids,
+        role_id: current_user.role_id,
         party_id: current_user.party_id,
         party_type: party.party_type,
         is_licensee: party.licensee,
         licensee: render_one(licensee, LicenseeView, "licensee.json"),
-        features: features
+        role: render_one(role, RoleView, "role.json"),
+        features: render_many(features, FeatureView, "feature.json")
       }
     }
   end

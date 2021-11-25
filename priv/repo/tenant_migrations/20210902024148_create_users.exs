@@ -5,7 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
     create table(:users) do
       add :username, :string
       add :password_hash, :string
-      add :role_ids, {:array, :integer}
+      add :role_id, :integer
       add :party_id, references(:parties, on_delete: :nothing)
       add :active, :boolean
 

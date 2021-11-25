@@ -21,7 +21,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :active, :boolean, default: true
     belongs_to :org_unit, OrgUnit
     belongs_to :party, Party
-    field :role_ids, {:array, :integer}, virtual: true
+    field :role_id, :integer, virtual: true
 
     timestamps()
   end
@@ -45,7 +45,7 @@ defmodule Inconn2Service.Staff.Employee do
       :skills,
       :org_unit_id,
       :party_id,
-      :role_ids,
+      :role_id,
       :active
     ])
     |> validate_required([
@@ -68,7 +68,7 @@ defmodule Inconn2Service.Staff.Employee do
 
   defp validate_login(cs) do
     case get_field(cs, :has_login_credentials, false) do
-      true -> validate_required(cs, [:role_ids, :email])
+      true -> validate_required(cs, [:role_id, :email])
       false -> cs
     end
   end
