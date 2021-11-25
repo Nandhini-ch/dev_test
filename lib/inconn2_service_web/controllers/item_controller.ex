@@ -11,6 +11,23 @@ defmodule Inconn2ServiceWeb.ItemController do
     render(conn, "index.json", items: items)
   end
 
+  def index_spares(conn, _params) do
+    items= Inventory.list_items_by_type(conn.assigns.sub_domain_prefix, "spares")
+    render(conn, "index.json", items: items)
+  end
+
+
+  def index_consumables(conn, _params) do
+    items= Inventory.list_items_by_type(conn.assigns.sub_domain_prefix, "consumables")
+    render(conn, "index.json", items: items)
+  end
+
+  def index_tools(conn, _params) do
+    items= Inventory.list_items_by_type(conn.assigns.sub_domain_prefix, "tools")
+    render(conn, "index.json", items: items)
+  end
+
+
   def create(conn, %{"item" => item_params}) do
     with {:ok, %Item{} = item} <- Inventory.create_item(item_params, conn.assigns.sub_domain_prefix) do
       conn

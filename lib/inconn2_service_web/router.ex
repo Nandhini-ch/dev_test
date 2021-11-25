@@ -158,7 +158,11 @@ defmodule Inconn2ServiceWeb.Router do
     get "/uoms/cost", UOMController, :index_cost
     resources "/uom_conversions", UomConversionController, except: [:new, :edit]
     post "/uoms/convert/:value/from/:from_uom_id/to/:to_uom_id", UomConversionController, :convert
+    get "/items/spares", ItemController, :index_spares
+    get "/items/tools", ItemController, :index_tools
+    get "/items/consumables", ItemController, :index_consumables
     resources "/items", ItemController, except: [:new, :edit]
+
 
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
     get "/sites/:site_id/inventory_locations/", InventoryLocationController, :index

@@ -355,6 +355,12 @@ defmodule Inconn2Service.Inventory do
     Repo.all(Item, prefix: prefix)
   end
 
+  def list_items_by_type(prefix, type) do
+    Item
+    |> where(type: ^type)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single item.
 
