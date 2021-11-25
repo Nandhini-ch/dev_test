@@ -311,7 +311,7 @@ tsk3 = %{
   "label" => "Task 3",
   "task_type" => "MT",
   "estimated_time" => 15,
-  "config" => %{"UOM" => "ampere", "type" => "A"}
+  "config" => %{"UOM" => "ampere", "type" => "A", "min_value" => 10, "max_value" => 1000, "threshold_value" => 700}
 }
 
 tsk4 = %{
