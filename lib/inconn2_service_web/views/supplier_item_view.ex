@@ -15,7 +15,7 @@ defmodule Inconn2ServiceWeb.SupplierItemView do
       supplier_id: supplier_item.supplier_id,
       item_id: supplier_item.item_id,
       item: render_one(supplier_item.item, ItemView, "item.json"),
-      supplier: render_one(supplier_item.supplier, SupplierView, "supplierinventory.json"),
+      supplier: render_one(supplier_item.supplier, SupplierView, "supplier.json"),
       supplier_part_no: supplier_item.supplier_part_no,
       price: supplier_item.price,
       price_unit_uom_id: supplier_item.price_unit_uom_id}
