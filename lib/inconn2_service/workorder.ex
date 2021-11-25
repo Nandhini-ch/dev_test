@@ -17,6 +17,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Staff.{Employee, User}
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.EmployeeRoster
+  alias Inconn2Service.Inventory.Item
   @doc """
   Returns the list of workorder_templates.
 
@@ -69,6 +70,9 @@ defmodule Inconn2Service.Workorder do
     # |> validate_estimated_time(prefix)
     |> validate_workpermit_check_list_id(prefix)
     |> validate_loto_check_list_id(prefix)
+    |> validate_tools(prefix)
+    |> validate_spares(prefix)
+    |> validate_consumables(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -179,6 +183,70 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
+
+  defp validate_tools(cs, prefix) do
+    tools = get_field(cs, :tools)
+    if tools != [] do
+      tool_maps = validate_item_map_keys(tools)
+      if length(tool_maps) == length(tools) do
+        tool_ids = Enum.map(tools, fn x -> x["id"] end)
+        validate_item_ids(cs, tool_ids, prefix)
+      else
+        add_error(cs, :tools, "is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_spares(cs, prefix) do
+    spares = get_field(cs, :spares)
+    if spares != [] do
+      spare_maps = validate_item_map_keys(spares)
+      if length(spare_maps) == length(spares) do
+        spare_ids = Enum.map(spares, fn x -> x["id"] end)
+        validate_item_ids(cs, spare_ids, prefix)
+      else
+        add_error(cs, :spares, "is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_consumables(cs, prefix) do
+    consumables = get_field(cs, :consumables)
+    if consumables != [] do
+      consumable_maps = validate_item_map_keys(consumables)
+      if length(consumable_maps) == length(consumables) do
+        consumable_ids = Enum.map(consumables, fn x -> x["id"] end)
+        validate_item_ids(cs, consumable_ids, prefix)
+      else
+        add_error(cs, :consumables, "is invalid")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_item_map_keys(items) do
+    Enum.filter(items, fn item ->
+                    Map.keys(item) == ["id", "quantity", "uom_id"]
+                  end)
+  end
+
+  defp validate_item_ids(cs, item_ids, prefix) do
+    if item_ids != [] do
+      items = from(i in Item, where: i.id in ^item_ids)
+              |> Repo.all(prefix: prefix)
+      case length(item_ids) == length(items) do
+        true -> cs
+        false -> add_error(cs, :items, "Item IDs are invalid")
+      end
+    else
+      cs
+    end
+  end
   @doc """
   Updates a workorder_template.
 
@@ -201,6 +269,9 @@ defmodule Inconn2Service.Workorder do
     |> validate_estimated_time(prefix)
     |> validate_workpermit_check_list_id(prefix)
     |> validate_loto_check_list_id(prefix)
+    |> validate_tools(prefix)
+    |> validate_spares(prefix)
+    |> validate_consumables(prefix)
     |> Repo.update(prefix: prefix)
   end
 

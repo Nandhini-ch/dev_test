@@ -45,11 +45,18 @@ uom1 = %{
 uom2 = %{
 	"name" => "Kilo Gram",
 	"symbol" => "kg",
-	"uom_type" => "cost"
+	"uom_type" => "physical"
+}
+
+uom3 = %{
+	"name" => "Numerables",
+	"symbol" => "no",
+	"uom_type" => "physical"
 }
 
 {:ok, unit1} = Inventory.create_uom(uom1, "inc_bata")
 {:ok, unit2} = Inventory.create_uom(uom2, "inc_bata")
+{:ok, unit3} = Inventory.create_uom(uom3, "inc_bata")
 
 uom_conversion = %{
 	"from_uom_id" => unit2.id,
@@ -86,11 +93,59 @@ item2 = %{
 	"asset_categories_ids" => [1],
 	"aisle" => "1",
 	"row" => "a",
-	"bin" => "1"
+	"bin" => "2"
+}
+
+item3 = %{
+	"part_no" => "2e44",
+	"name" => "A Third Inventory Item",
+	"type" => "tools",
+	"purchase_unit_uom_id" => unit3.id,
+	"inventory_unit_uom_id" => unit3.id,
+	"consume_unit_uom_id" => unit3.id,
+	"reorder_quantity" => 10,
+	"min_order_quantity" => 5,
+	"asset_categories_ids" => [1],
+	"aisle" => "1",
+	"row" => "a",
+	"bin" => "3"
+}
+
+item4 = %{
+	"part_no" => "2e44",
+	"name" => "A Fourth Inventory Item",
+	"type" => "spares",
+	"purchase_unit_uom_id" => unit3.id,
+	"inventory_unit_uom_id" => unit3.id,
+	"consume_unit_uom_id" => unit3.id,
+	"reorder_quantity" => 10,
+	"min_order_quantity" => 5,
+	"asset_categories_ids" => [1],
+	"aisle" => "1",
+	"row" => "a",
+	"bin" => "4"
+}
+
+item5 = %{
+	"part_no" => "2e44",
+	"name" => "A Fifth Inventory Item",
+	"type" => "spares",
+	"purchase_unit_uom_id" => unit3.id,
+	"inventory_unit_uom_id" => unit3.id,
+	"consume_unit_uom_id" => unit3.id,
+	"reorder_quantity" => 10,
+	"min_order_quantity" => 5,
+	"asset_categories_ids" => [1],
+	"aisle" => "1",
+	"row" => "a",
+	"bin" => "5"
 }
 
 {:ok, item1} = Inventory.create_item(item1, "inc_bata")
 {:ok, item2} = Inventory.create_item(item2, "inc_bata")
+{:ok, item3} = Inventory.create_item(item3, "inc_bata")
+{:ok, item4} = Inventory.create_item(item4, "inc_bata")
+{:ok, item5} = Inventory.create_item(item5, "inc_bata")
 
 supplier_item = %{
 	"supplier_id" => supplier1.id,

@@ -19,6 +19,9 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :time_end, :time
     field :create_new, :string
     field :max_times, :integer
+    field :tools, {:array, :map}, default: []
+    field :spares, {:array, :map}, default: []
+    field :consumables, {:array, :map}, default: []
     field :workorder_prior_time, :integer
     field :workpermit_required, :boolean
     field :workpermit_check_list_id, :integer
@@ -33,7 +36,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   @doc false
   def changeset(workorder_template, attrs) do
     workorder_template
-    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
+    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_scheduled()
     |> validate_time_required()

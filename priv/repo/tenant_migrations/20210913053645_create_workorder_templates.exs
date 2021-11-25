@@ -18,6 +18,9 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkorderTemplates do
       add :time_end, :time
       add :create_new, :string
       add :max_times, :integer
+      add :tools, {:array, :map}
+      add :spares, {:array, :map}
+      add :consumables, {:array, :map}
       add :workorder_prior_time, :integer
       add :workpermit_required, :boolean
       add :workpermit_check_list_id, :integer
