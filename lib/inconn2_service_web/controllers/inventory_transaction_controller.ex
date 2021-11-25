@@ -11,8 +11,38 @@ defmodule Inconn2ServiceWeb.InventoryTransactionController do
     render(conn, "index.json", inventory_transactions: inventory_transactions)
   end
 
+  def index_by_transaction_type_purchase(conn, _params) do
+    inventory_transactions = Inventory.list_inventory_transactions_by_transaction_type(conn.assigns.sub_domain_prefix, "IN")
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
+  def index_by_transaction_type_issue(conn, _params) do
+    inventory_transactions = Inventory.list_inventory_transactions_by_transaction_type(conn.assigns.sub_domain_prefix, "IS")
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
+  def index_by_transaction_type_return(conn, _params) do
+    inventory_transactions = Inventory.list_inventory_transactions_by_transaction_type(conn.assigns.sub_domain_prefix, "RT")
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
   def loc_transaction(conn, %{"inventory_location_id"=> inventory_location_id}) do
     inventory_transactions = Inventory.list_inventory_transactions_for_inventory_location(inventory_location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
+  def loc_transaction_purchase(conn, %{"inventory_location_id"=> inventory_location_id}) do
+    inventory_transactions = Inventory.list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, conn.assigns.sub_domain_prefix, "IN")
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
+  def loc_transaction_issue(conn, %{"inventory_location_id"=> inventory_location_id}) do
+    inventory_transactions = Inventory.list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, conn.assigns.sub_domain_prefix, "IS")
+    render(conn, "index.json", inventory_transactions: inventory_transactions)
+  end
+
+  def loc_transaction_return(conn, %{"inventory_location_id"=> inventory_location_id}) do
+    inventory_transactions = Inventory.list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, conn.assigns.sub_domain_prefix, "RT")
     render(conn, "index.json", inventory_transactions: inventory_transactions)
   end
 

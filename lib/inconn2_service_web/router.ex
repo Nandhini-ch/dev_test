@@ -174,6 +174,14 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]
+    get "/inventory_transaction/purchase", InventoryTransactionController, :index_by_transaction_type_purchase
+    get "/inventory_transaction/issue", InventoryTransactionController, :index_by_transaction_type_issue
+    get "/inventory_transaction/return", InventoryTransactionController, :index_by_transaction_type_return
+
+    get "/inventory_locations/:inventory_location_id/inventory_transactions/purchase", InventoryTransactionController, :loc_transaction_purchase
+    get "/inventory_locations/:inventory_location_id/inventory_transactions/issue", InventoryTransactionController, :loc_transaction_issue
+    get "/inventory_locations/:inventory_location_id/inventory_transactions/return", InventoryTransactionController, :loc_transaction_purchase
+
     resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit]
     resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit]
   end

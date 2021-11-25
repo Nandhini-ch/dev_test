@@ -682,6 +682,12 @@ defmodule Inconn2Service.Inventory do
     Repo.all(InventoryTransaction, prefix: prefix)
   end
 
+  def list_inventory_transactions_by_transaction_type(prefix, transaction_type) do
+    InventoryTransaction
+    |> where(transaction_type: ^transaction_type)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single inventory_transaction.
 
@@ -1103,6 +1109,12 @@ defmodule Inconn2Service.Inventory do
   def list_inventory_transactions_for_inventory_location(inventory_location_id, prefix) do
     InventoryTransaction
     |> where(inventory_location_id: ^inventory_location_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, prefix, transaction_type) do
+    InventoryTransaction
+    |> where([inventory_location_id: ^inventory_location_id, transaction_type: ^transaction_type])
     |> Repo.all(prefix: prefix)
   end
 
