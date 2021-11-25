@@ -13,6 +13,7 @@ defmodule Inconn2Service.Inventory.Supplier do
     field :website, :string
     field :remarks, :string
     embeds_one :contact, ContactEmbed, on_replace: :delete
+    has_many :supplier_items, Inconn2Service.Inventory.SupplierItem
 
     timestamps()
   end

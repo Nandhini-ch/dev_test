@@ -1292,7 +1292,7 @@ defmodule Inconn2Service.Inventory do
 
   """
   def list_supplier_items(prefix) do
-    Repo.all(SupplierItem, prefix: prefix)
+    Repo.all(SupplierItem, prefix: prefix) |> Repo.preload([:item, :supplier])
   end
 
   @doc """

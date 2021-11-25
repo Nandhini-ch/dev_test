@@ -3,11 +3,13 @@ defmodule Inconn2Service.Inventory.SupplierItem do
   import Ecto.Changeset
 
   schema "supplier_items" do
-    field :item_id, :integer
     field :price, :float
     field :price_unit_uom_id, :integer
-    field :supplier_id, :integer
     field :supplier_part_no, :string
+    # field :supplier_id, :integer
+    # field :item_id, :integer
+    belongs_to :supplier, Inconn2Service.Inventory.Supplier
+    belongs_to :item, Inconn2Service.Inventory.Item
 
     timestamps()
   end
