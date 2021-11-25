@@ -584,6 +584,7 @@ defmodule Inconn2Service.Inventory do
     InventoryStock
     |> where(inventory_location_id: ^inventory_location_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload([:inventory_location, :item])
   end
 
   @doc """
@@ -600,7 +601,7 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix)
+  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, :item])
 
   @doc """
   Creates a inventory_stock.
