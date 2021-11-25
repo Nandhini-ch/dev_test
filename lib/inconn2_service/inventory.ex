@@ -1394,12 +1394,21 @@ defmodule Inconn2Service.Inventory do
 
   """
   def create_supplier_item(attrs \\ %{}, prefix) do
-    %SupplierItem{}
-    |> SupplierItem.changeset(attrs)
-    |> validate_record_existing(Supplier, :supplier_id, prefix, "Supplier does not exist")
-    |> validate_record_existing(Item, :item_id, prefix, "Item does not exist")
-    |> validate_record_existing(UOM, :price_unit_uom_id, prefix, "UOM does not exist")
-    |> Repo.insert(prefix: prefix)
+    result = %SupplierItem{}
+              |> SupplierItem.changeset(attrs)
+              |> validate_record_existing(Supplier, :supplier_id, prefix, "Supplier does not exist")
+              |> validate_record_existing(Item, :item_id, prefix, "Item does not exist")
+              |> validate_record_existing(UOM, :price_unit_uom_id, prefix, "UOM does not exist")
+              |> Repo.insert(prefix: prefix)
+
+
+    case result do
+      {:ok, supplier_item} ->
+        {:ok, supplier_item |> Repo.preload([:item, :supplier])}
+
+      _ ->
+        result
+    end
   end
 
   @doc """
