@@ -72,6 +72,12 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
       "PRT" ->
         validate_required(cs, [:gate_pass_reference, :gate_pass_date])
 
+      "OUT" ->
+        validate_required(cs, [:gate_pass_reference, :gate_pass_date])
+
+      "INTR" ->
+        validate_required(cs, [:gate_pass_reference, :gate_pass_date])
+
       _ ->
         cs
     end

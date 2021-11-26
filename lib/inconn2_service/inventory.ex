@@ -584,6 +584,7 @@ defmodule Inconn2Service.Inventory do
     InventoryStock
     |> where(inventory_location_id: ^inventory_location_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload([:inventory_location, :item])
   end
 
   @doc """
@@ -600,7 +601,7 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix)
+  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, :item])
 
   @doc """
   Creates a inventory_stock.
@@ -682,6 +683,12 @@ defmodule Inconn2Service.Inventory do
     Repo.all(InventoryTransaction, prefix: prefix)
   end
 
+  def list_inventory_transactions_by_transaction_type(prefix, transaction_type) do
+    InventoryTransaction
+    |> where(transaction_type: ^transaction_type)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single inventory_transaction.
 
@@ -729,6 +736,12 @@ defmodule Inconn2Service.Inventory do
 
         "PRT" ->
           handle_purchase_return_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
+
+        "OUT" ->
+          handle_out_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
+
+        "INTR" ->
+          handle_inward_transfer_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
       end
     end)
 
@@ -757,6 +770,26 @@ defmodule Inconn2Service.Inventory do
         inventory_stock
         |> InventoryStock.changeset(%{})
         |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "IN")
+        |> Repo.update(prefix: prefix)
+    end
+  end
+
+  def handle_inward_transfer_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+    # IO.inspect(item)
+    # convert_for_transaction(item.purchase_unit_uom_id, item.inventory_unit_uom_id, quantity)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "INTR")
+        |> Repo.insert(prefix: prefix)
+
+      inventory_stock ->
+        inventory_stock
+        |> InventoryStock.changeset(%{})
+        |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "INTR")
         |> Repo.update(prefix: prefix)
     end
   end
@@ -825,7 +858,13 @@ defmodule Inconn2Service.Inventory do
       "PRT" ->
         quantity - quantity * factor
 
+      "OUT" ->
+        quantity - quantity * factor
+
       "RT" ->
+        quantity + quantity * factor
+
+      "INTR" ->
         quantity + quantity * factor
     end
   end
@@ -850,6 +889,31 @@ defmodule Inconn2Service.Inventory do
           inventory_stock
           |> InventoryStock.changeset(%{})
           |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "PRT")
+          |> Repo.update(prefix: prefix)
+        end
+    end
+  end
+
+  def handle_out_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> force_error("No record found to return in stock")
+        |> Repo.insert(prefix: prefix)
+
+      inventory_stock ->
+        if inventory_stock.quantity < inventory_transaction.quantity do
+          InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+          "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+          |> force_error("Required Quantity Not found")
+          |> Repo.insert(prefix: prefix)
+        else
+          inventory_stock
+          |> InventoryStock.changeset(%{})
+          |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "OUT")
           |> Repo.update(prefix: prefix)
         end
     end
@@ -1106,6 +1170,12 @@ defmodule Inconn2Service.Inventory do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, prefix, transaction_type) do
+    InventoryTransaction
+    |> where([inventory_location_id: ^inventory_location_id, transaction_type: ^transaction_type])
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_inventory_transfer_for_inventory_location(inventory_location_id, prefix) do
     InventoryTransfer
     |> where(from_location_id: ^inventory_location_id)
@@ -1309,7 +1379,7 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_supplier_item!(id, prefix), do: Repo.get!(SupplierItem, id, prefix: prefix)
+  def get_supplier_item!(id, prefix), do: Repo.get!(SupplierItem, id, prefix: prefix) |> Repo.preload([:item, :supplier])
 
   @doc """
   Creates a supplier_item.
@@ -1324,12 +1394,21 @@ defmodule Inconn2Service.Inventory do
 
   """
   def create_supplier_item(attrs \\ %{}, prefix) do
-    %SupplierItem{}
-    |> SupplierItem.changeset(attrs)
-    |> validate_record_existing(Supplier, :supplier_id, prefix, "Supplier does not exist")
-    |> validate_record_existing(Item, :item_id, prefix, "Item does not exist")
-    |> validate_record_existing(UOM, :price_unit_uom_id, prefix, "UOM does not exist")
-    |> Repo.insert(prefix: prefix)
+    result = %SupplierItem{}
+              |> SupplierItem.changeset(attrs)
+              |> validate_record_existing(Supplier, :supplier_id, prefix, "Supplier does not exist")
+              |> validate_record_existing(Item, :item_id, prefix, "Item does not exist")
+              |> validate_record_existing(UOM, :price_unit_uom_id, prefix, "UOM does not exist")
+              |> Repo.insert(prefix: prefix)
+
+
+    case result do
+      {:ok, supplier_item} ->
+        {:ok, supplier_item |> Repo.preload([:item, :supplier])}
+
+      _ ->
+        result
+    end
   end
 
   @doc """
