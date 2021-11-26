@@ -645,13 +645,14 @@ defmodule Inconn2Service.Staff do
 
   """
   def list_roles(prefix) do
-    Repo.all(Role, prefix: prefix)
+    Repo.all(Role, prefix: prefix) |> Repo.preload(:role_profile)
   end
 
   def list_roles(query_params, prefix) do
     Role
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:role_profile)
   end
 
   @doc """
@@ -668,12 +669,13 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix)
-  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix)
+  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
   def get_role_by_role_profile(role_profile_id, prefix) do
     Role
     |> where(role_profile_id: ^role_profile_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:role_profile)
   end
 
   @doc """
@@ -689,9 +691,14 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_role(attrs \\ %{}, prefix) do
-    %Role{}
-        |> Role.changeset(attrs)
-        |> Repo.insert(prefix: prefix)
+    result = %Role{}
+              |> Role.changeset(attrs)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, role} -> {:ok, role |> Repo.preload(:role_profile)}
+      _ -> result
+
+    end
   end
 
   defp validate_feature_ids_within_role_profile(cs, prefix) do
