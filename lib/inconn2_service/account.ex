@@ -183,11 +183,11 @@ defmodule Inconn2Service.Account do
 
         IO.inspect(return_party)
         prefix = "inc_" <> attrs["sub_domain"]
-        role_profile = CreateModuleFeatureRoles.seed_features(prefix)
+        role_profile = CreateModuleFeatureRoles.seed_features(prefix) |> Staff.filter_permissions()
         {:ok, role} = Staff.create_role(%{"name" => "Licensee Admin",
                                           "description" => "Super Admin for licensee. Has access to all features",
                                           "role_profile_id" => role_profile.id,
-                                          "feature_ids" => role_profile.feature_ids},
+                                          "permissions" => role_profile.permissions},
                                         prefix)
         Staff.create_licensee_admin(%{
           "username" => licensee.contact.email,

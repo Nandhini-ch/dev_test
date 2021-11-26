@@ -17,13 +17,13 @@ org_ut1 = %{"name" => "House Keeping", "party_id" => 1}
 # {:ok, feat4c} = Staff.create_feature(feat4, "inc_uds")
 # {:ok, feat5c} = Staff.create_feature(feat5, "inc_uds")
 #
-role_prof1 = Staff.get_role_profile_by_label!("Super Admin", "inc_uds")
-role_prof2 = Staff.get_role_profile_by_label!("Admin", "inc_uds")
-role_prof3 = Staff.get_role_profile_by_label!("Managers", "inc_uds")
+role_prof1 = Staff.get_role_profile_by_name!("Super Admin", "inc_uds") |> Staff.filter_permissions()
+role_prof2 = Staff.get_role_profile_by_name!("Admin", "inc_uds") |> Staff.filter_permissions()
+role_prof3 = Staff.get_role_profile_by_name!("Manager", "inc_uds") |> Staff.filter_permissions()
 
-role1 = %{"name" => "Super admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "feature_ids" => role_prof1.feature_ids}
-role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "feature_ids" => role_prof2.feature_ids}
-role3 = %{"name" => "House Keeping Supervisor", "description" => "Execution of work flows", "role_profile_id" => role_prof3.id,  "feature_ids" => role_prof3.feature_ids}
+role1 = %{"name" => "Super admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "permissions" => role_prof1.permissions}
+role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "permissions" => role_prof2.permissions}
+role3 = %{"name" => "House Keeping Supervisor", "description" => "Execution of work flows", "role_profile_id" => role_prof3.id,  "permissions" => role_prof3.permissions}
 
 {:ok, role1c} = Staff.create_role(role1, "inc_uds")
 {:ok, role2c} = Staff.create_role(role2, "inc_uds")

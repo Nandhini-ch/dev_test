@@ -1,11 +1,12 @@
 defmodule Inconn2Service.Staff.Feature do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.Staff.Module
 
   schema "features" do
+    belongs_to :module, Module
     field :code, :string
     field :name, :string
-    field :description, :string
 
     timestamps()
   end
@@ -13,8 +14,8 @@ defmodule Inconn2Service.Staff.Feature do
   @doc false
   def changeset(feature, attrs) do
     feature
-    |> cast(attrs, [:name, :code, :description])
-    |> validate_required([:name, :code])
+    |> cast(attrs, [:name, :code, :module_id])
+    |> validate_required([:name, :code, :module_id])
     |> unique_constraint(:name)
     |> unique_constraint(:code)
     |> validate_code()

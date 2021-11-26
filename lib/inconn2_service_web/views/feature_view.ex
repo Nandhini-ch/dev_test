@@ -14,6 +14,6 @@ defmodule Inconn2ServiceWeb.FeatureView do
     %{id: feature.id,
       name: feature.name,
       code: feature.code,
-      description: feature.description}
+      module_id: feature.module_id}
   end
 end

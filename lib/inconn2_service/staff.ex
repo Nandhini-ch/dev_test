@@ -645,14 +645,13 @@ defmodule Inconn2Service.Staff do
 
   """
   def list_roles(prefix) do
-    Repo.all(Role, prefix: prefix) |> Repo.preload(:role_profile)
+    Repo.all(Role, prefix: prefix)
   end
 
   def list_roles(query_params, prefix) do
     Role
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
-    |> Repo.preload(:role_profile)
   end
 
   @doc """
@@ -669,8 +668,8 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
-  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix)
+  def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix)
   def get_role_by_role_profile(role_profile_id, prefix) do
     Role
     |> where(role_profile_id: ^role_profile_id)
@@ -690,18 +689,9 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_role(attrs \\ %{}, prefix) do
-    result = %Role{}
-            |> Role.changeset(attrs)
-            |> validate_feature_ids(prefix)
-            |> validate_feature_ids_within_role_profile(prefix)
-            |> Repo.insert(prefix: prefix)
-    case result do
-      {:ok, role} ->
-                {:ok, Repo.preload(role, :role_profile)}
-       _ ->
-          result
-    end
-
+    %Role{}
+        |> Role.changeset(attrs)
+        |> Repo.insert(prefix: prefix)
   end
 
   defp validate_feature_ids_within_role_profile(cs, prefix) do
@@ -739,8 +729,6 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
-    |> validate_feature_ids(prefix)
-    |> validate_feature_ids_within_role_profile(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -830,6 +818,12 @@ defmodule Inconn2Service.Staff do
   """
   def list_features(prefix) do
     Repo.all(Feature, prefix: prefix)
+  end
+
+  def list_features(module_id, prefix) do
+    Feature
+    |> where(module_id: ^module_id)
+    |> Repo.all(prefix: prefix)
   end
 
   def search_features(name_text, prefix) do
@@ -935,7 +929,7 @@ defmodule Inconn2Service.Staff do
 
   """
   def list_modules(prefix) do
-    Repo.all(Module, prefix: prefix)
+    Repo.all(Module, prefix: prefix) |> Repo.preload(:features)
   end
 
   @doc """
@@ -952,7 +946,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_module!(id, prefix), do: Repo.get!(Module, id, prefix: prefix)
+  def get_module!(id, prefix), do: Repo.get!(Module, id, prefix: prefix) |> Repo.preload(:features)
 
   @doc """
   Creates a module.
@@ -969,7 +963,6 @@ defmodule Inconn2Service.Staff do
   def create_module(attrs \\ %{}, prefix) do
     %Module{}
     |> Module.changeset(attrs)
-    |> validate_feature_ids(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -1001,7 +994,6 @@ defmodule Inconn2Service.Staff do
   def update_module(%Module{} = module, attrs, prefix) do
     module
     |> Module.changeset(attrs)
-    |> validate_feature_ids(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -1065,7 +1057,7 @@ defmodule Inconn2Service.Staff do
   """
   def get_role_profile!(id, prefix), do: Repo.get!(RoleProfile, id, prefix: prefix)
   def get_role_profile(id, prefix), do: Repo.get(RoleProfile, id, prefix: prefix)
-  def get_role_profile_by_label!(label, prefix), do: Repo.get_by!(RoleProfile, [label: label], prefix: prefix)
+  def get_role_profile_by_name!(name, prefix), do: Repo.get_by!(RoleProfile, [name: name], prefix: prefix)
 
   @doc """
   Creates a role_profile.
@@ -1082,8 +1074,17 @@ defmodule Inconn2Service.Staff do
   def create_role_profile(attrs \\ %{}, prefix) do
     %RoleProfile{}
     |> RoleProfile.changeset(attrs)
-    |> validate_feature_ids(prefix)
     |> Repo.insert(prefix: prefix)
+  end
+
+  def filter_permissions(role_profile) do
+    permissions = Enum.map(role_profile.permissions, fn module -> filter_features(module) end)
+    Map.put(role_profile, :permissions, permissions)
+  end
+
+  defp filter_features(module) do
+    features = Enum.filter(module["features"], fn feature -> feature["access"] == true end)
+    Map.put(module, "features", features)
   end
 
   defp inherit_features(role_profile, role_profile_new, prefix) do
@@ -1136,11 +1137,10 @@ defmodule Inconn2Service.Staff do
   def update_role_profile(%RoleProfile{} = role_profile, attrs, prefix) do
     result = role_profile
             |> RoleProfile.changeset(attrs)
-            |> validate_feature_ids(prefix)
             |> Repo.update(prefix: prefix)
     case result do
       {:ok, role_profile_new} ->
-              inherit_features(role_profile, role_profile_new, prefix)
+              #inherit_features(role_profile, role_profile_new, prefix)
               result
        _ ->
               result

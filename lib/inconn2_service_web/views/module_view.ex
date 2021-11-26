@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ModuleView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ModuleView
+  alias Inconn2ServiceWeb.{ModuleView, FeatureView}
 
   def render("index.json", %{modules: modules}) do
     %{data: render_many(modules, ModuleView, "module.json")}
@@ -13,7 +13,7 @@ defmodule Inconn2ServiceWeb.ModuleView do
   def render("module.json", %{module: module}) do
     %{id: module.id,
       name: module.name,
-      description: module.description,
-      feature_ids: module.feature_ids}
+      code: module.code,
+      features: render_many(module.features, FeatureView, "feature.json")}
   end
 end

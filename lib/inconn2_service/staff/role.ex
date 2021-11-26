@@ -7,7 +7,7 @@ defmodule Inconn2Service.Staff.Role do
     belongs_to :role_profile, RoleProfile
     field :name, :string
     field :description, :string
-    field :feature_ids, {:array, :integer}, default: []
+    field :permissions, {:array, :map}, default: []
     field :active, :boolean, default: true
 
     timestamps()
@@ -16,8 +16,8 @@ defmodule Inconn2Service.Staff.Role do
   @doc false
   def changeset(role, attrs) do
     role
-    |> cast(attrs, [:name, :description, :role_profile_id, :feature_ids, :active])
-    |> validate_required([:name, :feature_ids, :role_profile_id])
+    |> cast(attrs, [:name, :description, :role_profile_id, :permissions, :active])
+    |> validate_required([:name, :role_profile_id, :permissions])
     |> unique_constraint(:name)
     |> assoc_constraint(:role_profile)
   end

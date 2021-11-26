@@ -4,12 +4,12 @@ defmodule Inconn2Service.Repo.Migrations.CreateModules do
   def change do
     create table(:modules) do
       add :name, :string
-      add :description, :string
-      add :feature_ids, {:array, :integer}
+      add :code, :string
 
       timestamps()
     end
 
     create unique_index(:modules, [:name])
+    create unique_index(:modules, [:code])
   end
 end

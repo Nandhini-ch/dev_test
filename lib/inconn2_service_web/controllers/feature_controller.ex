@@ -6,15 +6,20 @@ defmodule Inconn2ServiceWeb.FeatureController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    case Map.get(conn.query_params, "name", nil) do
-      nil ->
-        features = Staff.list_features(conn.assigns.sub_domain_prefix)
-        render(conn, "index.json", features: features)
-      name ->
-        features = Staff.search_features(name, conn.assigns.sub_domain_prefix)
-        render(conn, "index.json", features: features)
-    end
+  # def index(conn, _params) do
+  #   case Map.get(conn.query_params, "name", nil) do
+  #     nil ->
+  #       features = Staff.list_features(conn.assigns.sub_domain_prefix)
+  #       render(conn, "index.json", features: features)
+  #     name ->
+  #       features = Staff.search_features(name, conn.assigns.sub_domain_prefix)
+  #       render(conn, "index.json", features: features)
+  #   end
+  # end
+
+  def index(conn, %{"module_id" => module_id}) do
+    features = Staff.list_features(module_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", features: features)
   end
 
   # def create(conn, %{"feature" => feature_params}) do
@@ -26,10 +31,10 @@ defmodule Inconn2ServiceWeb.FeatureController do
   #   end
   # end
 
-  def show(conn, %{"id" => id}) do
-    feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)
-    render(conn, "show.json", feature: feature)
-  end
+  # def show(conn, %{"id" => id}) do
+  #   feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)
+  #   render(conn, "show.json", feature: feature)
+  # end
 
   # def update(conn, %{"id" => id, "feature" => feature_params}) do
   #   feature = Staff.get_feature!(id, conn.assigns.sub_domain_prefix)

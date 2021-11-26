@@ -12,9 +12,8 @@ defmodule Inconn2ServiceWeb.RoleProfileView do
 
   def render("role_profile.json", %{role_profile: role_profile}) do
     %{id: role_profile.id,
-      label: role_profile.label,
-      description: role_profile.description,
-      feature_ids: role_profile.feature_ids,
-      code: role_profile.code}
+      name: role_profile.name,
+      code: role_profile.code,
+      permissions: role_profile.permissions}
   end
 end

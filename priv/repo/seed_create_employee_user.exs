@@ -8,11 +8,11 @@ alias Inconn2Service.{Staff, Assignment}
 # {:ok, feat2c} = Staff.create_feature(feat2, "inc_bata")
 # {:ok, feat3c} = Staff.create_feature(feat3, "inc_bata")
 
-role_prof1 = Staff.get_role_profile_by_label!("Super Admin", "inc_bata")
-role_prof2 = Staff.get_role_profile_by_label!("Admin", "inc_bata")
+role_prof1 = Staff.get_role_profile_by_name!("Super Admin", "inc_bata") |> Staff.filter_permissions()
+role_prof2 = Staff.get_role_profile_by_name!("Admin", "inc_bata") |> Staff.filter_permissions()
 
-role1 = %{"name" => "Super Admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "feature_ids" => role_prof1.feature_ids}
-role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "feature_ids" => role_prof2.feature_ids}
+role1 = %{"name" => "Super Admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "permissions" => role_prof1.permissions}
+role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "permissions" => role_prof2.permissions}
 
 {:ok, role1c} = Staff.create_role(role1, "inc_bata")
 {:ok, role2c} = Staff.create_role(role2, "inc_bata")
