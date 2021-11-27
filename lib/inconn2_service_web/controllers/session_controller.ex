@@ -35,11 +35,19 @@ defmodule Inconn2ServiceWeb.SessionController do
     current_user = conn.assigns.current_user
     party_id = current_user.party_id
     username = current_user.username
-    employee = Staff.get_employee_email!(username, conn.assigns.sub_domain_prefix)
+    employee = get_employee_current_user(username, conn.assigns.sub_domain_prefix)
     party = AssetConfig.get_party!(party_id, conn.assigns.sub_domain_prefix)
     sub_domain = String.replace_prefix(conn.assigns.sub_domain_prefix, "inc_", "")
     licensee = Account.get_licensee_by_sub_domain(sub_domain)
     role = Staff.get_role!(current_user.role_id, conn.assigns.sub_domain_prefix)
     render(conn, "current_user.json", current_user: current_user, licensee: licensee, party: party, employee: employee, role: role)
+  end
+
+  defp get_employee_current_user(username, prefix) do
+    employee = Staff.get_employee_email!(username, prefix)
+    case employee do
+      nil -> %{first_name: nil, last_name: nil}
+      _ -> employee
+    end
   end
 end

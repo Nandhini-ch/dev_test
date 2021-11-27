@@ -866,9 +866,570 @@ defmodule Inconn2Service.CreateModuleFeatureRoles do
                      ]
                   }
 
+    role_prof4 = %{"name" => "Supervisor", "code" => "SPVI",
+                    "permissions" => [
+                      %{"module_code" => md1c.code,
+                       "module_name" => md1c.name,
+                       "features" => [
+                             %{"feature_code" => ft1c.code, "feature_name" => ft1c.name, "access" => false},
+                             %{"feature_code" => ft2c.code, "feature_name" => ft2c.name, "access" => false},
+                             %{"feature_code" => ft3c.code, "feature_name" => ft3c.name, "access" => false},
+                             %{"feature_code" => ft4c.code, "feature_name" => ft4c.name, "access" => false},
+                             %{"feature_code" => ft5c.code, "feature_name" => ft5c.name, "access" => false},
+                             %{"feature_code" => ft6c.code, "feature_name" => ft6c.name, "access" => false},
+                             %{"feature_code" => ft7c.code, "feature_name" => ft7c.name, "access" => false},
+                             %{"feature_code" => ft8c.code, "feature_name" => ft8c.name, "access" => false},
+                             %{"feature_code" => ft9c.code, "feature_name" => ft9c.name, "access" => false},
+                             %{"feature_code" => ft10c.code, "feature_name" => ft10c.name, "access" => false},
+                             %{"feature_code" => ft11c.code, "feature_name" => ft11c.name, "access" => false},
+                             %{"feature_code" => ft12c.code, "feature_name" => ft12c.name, "access" => false},
+                             %{"feature_code" => ft13c.code, "feature_name" => ft13c.name, "access" => false},
+                             %{"feature_code" => ft14c.code, "feature_name" => ft14c.name, "access" => false},
+                             %{"feature_code" => ft15c.code, "feature_name" => ft15c.name, "access" => false},
+                             %{"feature_code" => ft16c.code, "feature_name" => ft16c.name, "access" => true}
+                           ]
+                       },
+
+                       %{"module_code" => md2c.code,
+                        "module_name" => md2c.name,
+                        "features" => [
+                              %{"feature_code" => ft17c.code, "feature_name" => ft17c.name, "access" => false},
+                              %{"feature_code" => ft18c.code, "feature_name" => ft18c.name, "access" => false},
+                              %{"feature_code" => ft19c.code, "feature_name" => ft19c.name, "access" => false},
+                              %{"feature_code" => ft20c.code, "feature_name" => ft20c.name, "access" => true},
+                              %{"feature_code" => ft21c.code, "feature_name" => ft21c.name, "access" => true},
+                              %{"feature_code" => ft22c.code, "feature_name" => ft22c.name, "access" => false},
+                              %{"feature_code" => ft23c.code, "feature_name" => ft23c.name, "access" => false},
+                              %{"feature_code" => ft24c.code, "feature_name" => ft24c.name, "access" => false},
+                              %{"feature_code" => ft25c.code, "feature_name" => ft25c.name, "access" => false},
+                              %{"feature_code" => ft26c.code, "feature_name" => ft26c.name, "access" => true},
+                              %{"feature_code" => ft27c.code, "feature_name" => ft27c.name, "access" => true},
+                              %{"feature_code" => ft28c.code, "feature_name" => ft28c.name, "access" => false},
+                              %{"feature_code" => ft29c.code, "feature_name" => ft29c.name, "access" => false},
+                              %{"feature_code" => ft30c.code, "feature_name" => ft30c.name, "access" => false},
+                              %{"feature_code" => ft31c.code, "feature_name" => ft31c.name, "access" => false},
+                              %{"feature_code" => ft32c.code, "feature_name" => ft32c.name, "access" => true},
+                              %{"feature_code" => ft33c.code, "feature_name" => ft33c.name, "access" => false}
+                            ]
+                        },
+
+                        %{"module_code" => md3c.code,
+                         "module_name" => md3c.name,
+                         "features" => [
+                                  %{"feature_code" => ft34c.code, "feature_name" => ft34c.name, "access" => false},
+                                  %{"feature_code" => ft35c.code, "feature_name" => ft35c.name, "access" => false},
+                                  %{"feature_code" => ft36c.code, "feature_name" => ft36c.name, "access" => false},
+                                  %{"feature_code" => ft37c.code, "feature_name" => ft37c.name, "access" => true},
+                                  %{"feature_code" => ft38c.code, "feature_name" => ft38c.name, "access" => true},
+                                  %{"feature_code" => ft39c.code, "feature_name" => ft39c.name, "access" => true},
+                                  %{"feature_code" => ft40c.code, "feature_name" => ft40c.name, "access" => true},
+                                  %{"feature_code" => ft41c.code, "feature_name" => ft41c.name, "access" => false},
+                                  %{"feature_code" => ft42c.code, "feature_name" => ft42c.name, "access" => true},
+                                  %{"feature_code" => ft43c.code, "feature_name" => ft43c.name, "access" => true},
+                                  %{"feature_code" => ft44c.code, "feature_name" => ft44c.name, "access" => true},
+                                  %{"feature_code" => ft45c.code, "feature_name" => ft45c.name, "access" => true},
+                                  %{"feature_code" => ft46c.code, "feature_name" => ft46c.name, "access" => true},
+                                  %{"feature_code" => ft47c.code, "feature_name" => ft47c.name, "access" => false},
+                                  %{"feature_code" => ft48c.code, "feature_name" => ft48c.name, "access" => true},
+                                  %{"feature_code" => ft49c.code, "feature_name" => ft49c.name, "access" => true},
+                                  %{"feature_code" => ft50c.code, "feature_name" => ft50c.name, "access" => true},
+                                  %{"feature_code" => ft51c.code, "feature_name" => ft51c.name, "access" => true},
+                                  %{"feature_code" => ft52c.code, "feature_name" => ft52c.name, "access" => true},
+                                  %{"feature_code" => ft53c.code, "feature_name" => ft53c.name, "access" => true},
+                                  %{"feature_code" => ft54c.code, "feature_name" => ft54c.name, "access" => true},
+                                  %{"feature_code" => ft55c.code, "feature_name" => ft55c.name, "access" => false},
+                                  %{"feature_code" => ft56c.code, "feature_name" => ft56c.name, "access" => true},
+                                  %{"feature_code" => ft57c.code, "feature_name" => ft57c.name, "access" => true},
+                                  %{"feature_code" => ft58c.code, "feature_name" => ft58c.name, "access" => true},
+                                  %{"feature_code" => ft59c.code, "feature_name" => ft59c.name, "access" => true},
+                                  %{"feature_code" => ft60c.code, "feature_name" => ft60c.name, "access" => true},
+                                  %{"feature_code" => ft61c.code, "feature_name" => ft61c.name, "access" => false},
+                                  %{"feature_code" => ft62c.code, "feature_name" => ft62c.name, "access" => true},
+                                  %{"feature_code" => ft63c.code, "feature_name" => ft63c.name, "access" => true},
+                                  %{"feature_code" => ft64c.code, "feature_name" => ft64c.name, "access" => true},
+                                  %{"feature_code" => ft65c.code, "feature_name" => ft65c.name, "access" => true},
+                                  %{"feature_code" => ft66c.code, "feature_name" => ft66c.name, "access" => true},
+                                  %{"feature_code" => ft67c.code, "feature_name" => ft67c.name, "access" => false},
+                                  %{"feature_code" => ft68c.code, "feature_name" => ft68c.name, "access" => true},
+                                  %{"feature_code" => ft69c.code, "feature_name" => ft69c.name, "access" => true},
+                                  %{"feature_code" => ft70c.code, "feature_name" => ft70c.name, "access" => true},
+                                  %{"feature_code" => ft71c.code, "feature_name" => ft71c.name, "access" => false},
+                                  %{"feature_code" => ft72c.code, "feature_name" => ft72c.name, "access" => true},
+                                  %{"feature_code" => ft73c.code, "feature_name" => ft73c.name, "access" => false},
+                                  %{"feature_code" => ft74c.code, "feature_name" => ft74c.name, "access" => true},
+                                  %{"feature_code" => ft75c.code, "feature_name" => ft75c.name, "access" => true},
+                                  %{"feature_code" => ft76c.code, "feature_name" => ft76c.name, "access" => true}
+                             ]
+                         },
+
+                         %{"module_code" => md4c.code,
+                          "module_name" => md4c.name,
+                          "features" => [
+                                %{"feature_code" => ft77c.code, "feature_name" => ft77c.name, "access" => false},
+                                %{"feature_code" => ft78c.code, "feature_name" => ft78c.name, "access" => false},
+                                %{"feature_code" => ft79c.code, "feature_name" => ft79c.name, "access" => false},
+                                %{"feature_code" => ft80c.code, "feature_name" => ft80c.name, "access" => true},
+                                %{"feature_code" => ft81c.code, "feature_name" => ft81c.name, "access" => true},
+                                %{"feature_code" => ft82c.code, "feature_name" => ft82c.name, "access" => false},
+                                %{"feature_code" => ft83c.code, "feature_name" => ft83c.name, "access" => false},
+                                %{"feature_code" => ft84c.code, "feature_name" => ft84c.name, "access" => false},
+                                %{"feature_code" => ft85c.code, "feature_name" => ft85c.name, "access" => true},
+                                %{"feature_code" => ft86c.code, "feature_name" => ft86c.name, "access" => true},
+                                %{"feature_code" => ft87c.code, "feature_name" => ft87c.name, "access" => false},
+                                %{"feature_code" => ft88c.code, "feature_name" => ft88c.name, "access" => true},
+                                %{"feature_code" => ft89c.code, "feature_name" => ft89c.name, "access" => false},
+                                %{"feature_code" => ft90c.code, "feature_name" => ft90c.name, "access" => true},
+                                %{"feature_code" => ft91c.code, "feature_name" => ft91c.name, "access" => true},
+                                %{"feature_code" => ft92c.code, "feature_name" => ft92c.name, "access" => false},
+                                %{"feature_code" => ft93c.code, "feature_name" => ft93c.name, "access" => false},
+                                %{"feature_code" => ft94c.code, "feature_name" => ft94c.name, "access" => false},
+                                %{"feature_code" => ft95c.code, "feature_name" => ft95c.name, "access" => true},
+                                %{"feature_code" => ft96c.code, "feature_name" => ft96c.name, "access" => true}
+                              ]
+                          },
+
+                          %{"module_code" => md5c.code,
+                           "module_name" => md5c.name,
+                           "features" => [
+                                %{"feature_code" => ft97c.code, "feature_name" => ft97c.name, "access" => true},
+                                %{"feature_code" => ft98c.code, "feature_name" => ft98c.name, "access" => true},
+                                %{"feature_code" => ft99c.code, "feature_name" => ft99c.name, "access" => true},
+                                %{"feature_code" => ft100c.code, "feature_name" => ft100c.name, "access" => true},
+                                %{"feature_code" => ft101c.code, "feature_name" => ft101c.name, "access" => true},
+                                %{"feature_code" => ft102c.code, "feature_name" => ft102c.name, "access" => true},
+                                %{"feature_code" => ft103c.code, "feature_name" => ft103c.name, "access" => true},
+                                %{"feature_code" => ft104c.code, "feature_name" => ft104c.name, "access" => true},
+                                %{"feature_code" => ft105c.code, "feature_name" => ft105c.name, "access" => true},
+                                %{"feature_code" => ft106c.code, "feature_name" => ft106c.name, "access" => true}
+                               ]
+                           },
+
+                           %{"module_code" => md6c.code,
+                            "module_name" => md6c.name,
+                            "features" => [
+                                %{"feature_code" => ft107c.code, "feature_name" => ft107c.name, "access" => true},
+                                %{"feature_code" => ft108c.code, "feature_name" => ft108c.name, "access" => true},
+                                %{"feature_code" => ft109c.code, "feature_name" => ft109c.name, "access" => false},
+                                %{"feature_code" => ft110c.code, "feature_name" => ft110c.name, "access" => true},
+                                %{"feature_code" => ft111c.code, "feature_name" => ft111c.name, "access" => true},
+                                %{"feature_code" => ft112c.code, "feature_name" => ft112c.name, "access" => true},
+                                %{"feature_code" => ft113c.code, "feature_name" => ft113c.name, "access" => true},
+                                %{"feature_code" => ft114c.code, "feature_name" => ft114c.name, "access" => true},
+                                %{"feature_code" => ft115c.code, "feature_name" => ft115c.name, "access" => true}
+                                ]
+                            },
+
+                            %{"module_code" => md7c.code,
+                             "module_name" => md7c.name,
+                             "features" => [
+                                 %{"feature_code" => ft116c.code, "feature_name" => ft116c.name, "access" => true},
+                                 %{"feature_code" => ft117c.code, "feature_name" => ft117c.name, "access" => false},
+                                 %{"feature_code" => ft118c.code, "feature_name" => ft118c.name, "access" => true},
+                                 %{"feature_code" => ft119c.code, "feature_name" => ft119c.name, "access" => true},
+                                 %{"feature_code" => ft120c.code, "feature_name" => ft120c.name, "access" => false},
+                                 %{"feature_code" => ft121c.code, "feature_name" => ft121c.name, "access" => true},
+                                 %{"feature_code" => ft122c.code, "feature_name" => ft122c.name, "access" => true},
+                                 %{"feature_code" => ft123c.code, "feature_name" => ft123c.name, "access" => false},
+                                 %{"feature_code" => ft124c.code, "feature_name" => ft124c.name, "access" => false},
+                                 %{"feature_code" => ft125c.code, "feature_name" => ft125c.name, "access" => false},
+                                 %{"feature_code" => ft126c.code, "feature_name" => ft126c.name, "access" => false},
+                                 %{"feature_code" => ft127c.code, "feature_name" => ft127c.name, "access" => true},
+                                 %{"feature_code" => ft128c.code, "feature_name" => ft128c.name, "access" => true},
+                                 %{"feature_code" => ft129c.code, "feature_name" => ft129c.name, "access" => true}
+                                 ]
+                             },
+
+                             %{"module_code" => md8c.code,
+                              "module_name" => md8c.name,
+                              "features" => [
+                                  %{"feature_code" => ft130c.code, "feature_name" => ft130c.name, "access" => true},
+                                  %{"feature_code" => ft131c.code, "feature_name" => ft131c.name, "access" => true},
+                                  %{"feature_code" => ft132c.code, "feature_name" => ft132c.name, "access" => false},
+                                  %{"feature_code" => ft133c.code, "feature_name" => ft133c.name, "access" => false},
+                                  %{"feature_code" => ft134c.code, "feature_name" => ft134c.name, "access" => true},
+                                  ]
+                                }
+                     ]
+                  }
+
+    role_prof5 = %{"name" => "Technician", "code" => "TECH",
+                    "permissions" => [
+                      %{"module_code" => md1c.code,
+                       "module_name" => md1c.name,
+                       "features" => [
+                             %{"feature_code" => ft1c.code, "feature_name" => ft1c.name, "access" => false},
+                             %{"feature_code" => ft2c.code, "feature_name" => ft2c.name, "access" => false},
+                             %{"feature_code" => ft3c.code, "feature_name" => ft3c.name, "access" => false},
+                             %{"feature_code" => ft4c.code, "feature_name" => ft4c.name, "access" => false},
+                             %{"feature_code" => ft5c.code, "feature_name" => ft5c.name, "access" => false},
+                             %{"feature_code" => ft6c.code, "feature_name" => ft6c.name, "access" => false},
+                             %{"feature_code" => ft7c.code, "feature_name" => ft7c.name, "access" => false},
+                             %{"feature_code" => ft8c.code, "feature_name" => ft8c.name, "access" => false},
+                             %{"feature_code" => ft9c.code, "feature_name" => ft9c.name, "access" => false},
+                             %{"feature_code" => ft10c.code, "feature_name" => ft10c.name, "access" => false},
+                             %{"feature_code" => ft11c.code, "feature_name" => ft11c.name, "access" => false},
+                             %{"feature_code" => ft12c.code, "feature_name" => ft12c.name, "access" => false},
+                             %{"feature_code" => ft13c.code, "feature_name" => ft13c.name, "access" => false},
+                             %{"feature_code" => ft14c.code, "feature_name" => ft14c.name, "access" => false},
+                             %{"feature_code" => ft15c.code, "feature_name" => ft15c.name, "access" => false},
+                             %{"feature_code" => ft16c.code, "feature_name" => ft16c.name, "access" => true}
+                           ]
+                       },
+
+                       %{"module_code" => md2c.code,
+                        "module_name" => md2c.name,
+                        "features" => [
+                              %{"feature_code" => ft17c.code, "feature_name" => ft17c.name, "access" => false},
+                              %{"feature_code" => ft18c.code, "feature_name" => ft18c.name, "access" => false},
+                              %{"feature_code" => ft19c.code, "feature_name" => ft19c.name, "access" => false},
+                              %{"feature_code" => ft20c.code, "feature_name" => ft20c.name, "access" => true},
+                              %{"feature_code" => ft21c.code, "feature_name" => ft21c.name, "access" => true},
+                              %{"feature_code" => ft22c.code, "feature_name" => ft22c.name, "access" => false},
+                              %{"feature_code" => ft23c.code, "feature_name" => ft23c.name, "access" => false},
+                              %{"feature_code" => ft24c.code, "feature_name" => ft24c.name, "access" => false},
+                              %{"feature_code" => ft25c.code, "feature_name" => ft25c.name, "access" => false},
+                              %{"feature_code" => ft26c.code, "feature_name" => ft26c.name, "access" => true},
+                              %{"feature_code" => ft27c.code, "feature_name" => ft27c.name, "access" => true},
+                              %{"feature_code" => ft28c.code, "feature_name" => ft28c.name, "access" => false},
+                              %{"feature_code" => ft29c.code, "feature_name" => ft29c.name, "access" => false},
+                              %{"feature_code" => ft30c.code, "feature_name" => ft30c.name, "access" => false},
+                              %{"feature_code" => ft31c.code, "feature_name" => ft31c.name, "access" => false},
+                              %{"feature_code" => ft32c.code, "feature_name" => ft32c.name, "access" => true},
+                              %{"feature_code" => ft33c.code, "feature_name" => ft33c.name, "access" => false}
+                            ]
+                        },
+
+                        %{"module_code" => md3c.code,
+                         "module_name" => md3c.name,
+                         "features" => [
+                                  %{"feature_code" => ft34c.code, "feature_name" => ft34c.name, "access" => false},
+                                  %{"feature_code" => ft35c.code, "feature_name" => ft35c.name, "access" => false},
+                                  %{"feature_code" => ft36c.code, "feature_name" => ft36c.name, "access" => false},
+                                  %{"feature_code" => ft37c.code, "feature_name" => ft37c.name, "access" => true},
+                                  %{"feature_code" => ft38c.code, "feature_name" => ft38c.name, "access" => true},
+                                  %{"feature_code" => ft39c.code, "feature_name" => ft39c.name, "access" => false},
+                                  %{"feature_code" => ft40c.code, "feature_name" => ft40c.name, "access" => false},
+                                  %{"feature_code" => ft41c.code, "feature_name" => ft41c.name, "access" => false},
+                                  %{"feature_code" => ft42c.code, "feature_name" => ft42c.name, "access" => true},
+                                  %{"feature_code" => ft43c.code, "feature_name" => ft43c.name, "access" => true},
+                                  %{"feature_code" => ft44c.code, "feature_name" => ft44c.name, "access" => false},
+                                  %{"feature_code" => ft45c.code, "feature_name" => ft45c.name, "access" => false},
+                                  %{"feature_code" => ft46c.code, "feature_name" => ft46c.name, "access" => false},
+                                  %{"feature_code" => ft47c.code, "feature_name" => ft47c.name, "access" => false},
+                                  %{"feature_code" => ft48c.code, "feature_name" => ft48c.name, "access" => true},
+                                  %{"feature_code" => ft49c.code, "feature_name" => ft49c.name, "access" => true},
+                                  %{"feature_code" => ft50c.code, "feature_name" => ft50c.name, "access" => true},
+                                  %{"feature_code" => ft51c.code, "feature_name" => ft51c.name, "access" => true},
+                                  %{"feature_code" => ft52c.code, "feature_name" => ft52c.name, "access" => true},
+                                  %{"feature_code" => ft53c.code, "feature_name" => ft53c.name, "access" => false},
+                                  %{"feature_code" => ft54c.code, "feature_name" => ft54c.name, "access" => false},
+                                  %{"feature_code" => ft55c.code, "feature_name" => ft55c.name, "access" => false},
+                                  %{"feature_code" => ft56c.code, "feature_name" => ft56c.name, "access" => true},
+                                  %{"feature_code" => ft57c.code, "feature_name" => ft57c.name, "access" => true},
+                                  %{"feature_code" => ft58c.code, "feature_name" => ft58c.name, "access" => false},
+                                  %{"feature_code" => ft59c.code, "feature_name" => ft59c.name, "access" => false},
+                                  %{"feature_code" => ft60c.code, "feature_name" => ft60c.name, "access" => false},
+                                  %{"feature_code" => ft61c.code, "feature_name" => ft61c.name, "access" => false},
+                                  %{"feature_code" => ft62c.code, "feature_name" => ft62c.name, "access" => true},
+                                  %{"feature_code" => ft63c.code, "feature_name" => ft63c.name, "access" => true},
+                                  %{"feature_code" => ft64c.code, "feature_name" => ft64c.name, "access" => false},
+                                  %{"feature_code" => ft65c.code, "feature_name" => ft65c.name, "access" => false},
+                                  %{"feature_code" => ft66c.code, "feature_name" => ft66c.name, "access" => false},
+                                  %{"feature_code" => ft67c.code, "feature_name" => ft67c.name, "access" => false},
+                                  %{"feature_code" => ft68c.code, "feature_name" => ft68c.name, "access" => true},
+                                  %{"feature_code" => ft69c.code, "feature_name" => ft69c.name, "access" => true},
+                                  %{"feature_code" => ft70c.code, "feature_name" => ft70c.name, "access" => false},
+                                  %{"feature_code" => ft71c.code, "feature_name" => ft71c.name, "access" => false},
+                                  %{"feature_code" => ft72c.code, "feature_name" => ft72c.name, "access" => false},
+                                  %{"feature_code" => ft73c.code, "feature_name" => ft73c.name, "access" => false},
+                                  %{"feature_code" => ft74c.code, "feature_name" => ft74c.name, "access" => true},
+                                  %{"feature_code" => ft75c.code, "feature_name" => ft75c.name, "access" => true},
+                                  %{"feature_code" => ft76c.code, "feature_name" => ft76c.name, "access" => false}
+                             ]
+                         },
+
+                         %{"module_code" => md4c.code,
+                          "module_name" => md4c.name,
+                          "features" => [
+                                %{"feature_code" => ft77c.code, "feature_name" => ft77c.name, "access" => false},
+                                %{"feature_code" => ft78c.code, "feature_name" => ft78c.name, "access" => false},
+                                %{"feature_code" => ft79c.code, "feature_name" => ft79c.name, "access" => false},
+                                %{"feature_code" => ft80c.code, "feature_name" => ft80c.name, "access" => false},
+                                %{"feature_code" => ft81c.code, "feature_name" => ft81c.name, "access" => true},
+                                %{"feature_code" => ft82c.code, "feature_name" => ft82c.name, "access" => false},
+                                %{"feature_code" => ft83c.code, "feature_name" => ft83c.name, "access" => false},
+                                %{"feature_code" => ft84c.code, "feature_name" => ft84c.name, "access" => false},
+                                %{"feature_code" => ft85c.code, "feature_name" => ft85c.name, "access" => false},
+                                %{"feature_code" => ft86c.code, "feature_name" => ft86c.name, "access" => true},
+                                %{"feature_code" => ft87c.code, "feature_name" => ft87c.name, "access" => false},
+                                %{"feature_code" => ft88c.code, "feature_name" => ft88c.name, "access" => false},
+                                %{"feature_code" => ft89c.code, "feature_name" => ft89c.name, "access" => false},
+                                %{"feature_code" => ft90c.code, "feature_name" => ft90c.name, "access" => false},
+                                %{"feature_code" => ft91c.code, "feature_name" => ft91c.name, "access" => true},
+                                %{"feature_code" => ft92c.code, "feature_name" => ft92c.name, "access" => false},
+                                %{"feature_code" => ft93c.code, "feature_name" => ft93c.name, "access" => false},
+                                %{"feature_code" => ft94c.code, "feature_name" => ft94c.name, "access" => false},
+                                %{"feature_code" => ft95c.code, "feature_name" => ft95c.name, "access" => false},
+                                %{"feature_code" => ft96c.code, "feature_name" => ft96c.name, "access" => true}
+                              ]
+                          },
+
+                          %{"module_code" => md5c.code,
+                           "module_name" => md5c.name,
+                           "features" => [
+                                %{"feature_code" => ft97c.code, "feature_name" => ft97c.name, "access" => false},
+                                %{"feature_code" => ft98c.code, "feature_name" => ft98c.name, "access" => false},
+                                %{"feature_code" => ft99c.code, "feature_name" => ft99c.name, "access" => false},
+                                %{"feature_code" => ft100c.code, "feature_name" => ft100c.name, "access" => true},
+                                %{"feature_code" => ft101c.code, "feature_name" => ft101c.name, "access" => true},
+                                %{"feature_code" => ft102c.code, "feature_name" => ft102c.name, "access" => false},
+                                %{"feature_code" => ft103c.code, "feature_name" => ft103c.name, "access" => false},
+                                %{"feature_code" => ft104c.code, "feature_name" => ft104c.name, "access" => false},
+                                %{"feature_code" => ft105c.code, "feature_name" => ft105c.name, "access" => true},
+                                %{"feature_code" => ft106c.code, "feature_name" => ft106c.name, "access" => true}
+                               ]
+                           },
+
+                           %{"module_code" => md6c.code,
+                            "module_name" => md6c.name,
+                            "features" => [
+                                %{"feature_code" => ft107c.code, "feature_name" => ft107c.name, "access" => true},
+                                %{"feature_code" => ft108c.code, "feature_name" => ft108c.name, "access" => false},
+                                %{"feature_code" => ft109c.code, "feature_name" => ft109c.name, "access" => false},
+                                %{"feature_code" => ft110c.code, "feature_name" => ft110c.name, "access" => false},
+                                %{"feature_code" => ft111c.code, "feature_name" => ft111c.name, "access" => true},
+                                %{"feature_code" => ft112c.code, "feature_name" => ft112c.name, "access" => true},
+                                %{"feature_code" => ft113c.code, "feature_name" => ft113c.name, "access" => false},
+                                %{"feature_code" => ft114c.code, "feature_name" => ft114c.name, "access" => false},
+                                %{"feature_code" => ft115c.code, "feature_name" => ft115c.name, "access" => true}
+                                ]
+                            },
+
+                            %{"module_code" => md7c.code,
+                             "module_name" => md7c.name,
+                             "features" => [
+                                 %{"feature_code" => ft116c.code, "feature_name" => ft116c.name, "access" => true},
+                                 %{"feature_code" => ft117c.code, "feature_name" => ft117c.name, "access" => false},
+                                 %{"feature_code" => ft118c.code, "feature_name" => ft118c.name, "access" => false},
+                                 %{"feature_code" => ft119c.code, "feature_name" => ft119c.name, "access" => true},
+                                 %{"feature_code" => ft120c.code, "feature_name" => ft120c.name, "access" => false},
+                                 %{"feature_code" => ft121c.code, "feature_name" => ft121c.name, "access" => true},
+                                 %{"feature_code" => ft122c.code, "feature_name" => ft122c.name, "access" => true},
+                                 %{"feature_code" => ft123c.code, "feature_name" => ft123c.name, "access" => false},
+                                 %{"feature_code" => ft124c.code, "feature_name" => ft124c.name, "access" => false},
+                                 %{"feature_code" => ft125c.code, "feature_name" => ft125c.name, "access" => false},
+                                 %{"feature_code" => ft126c.code, "feature_name" => ft126c.name, "access" => false},
+                                 %{"feature_code" => ft127c.code, "feature_name" => ft127c.name, "access" => false},
+                                 %{"feature_code" => ft128c.code, "feature_name" => ft128c.name, "access" => true},
+                                 %{"feature_code" => ft129c.code, "feature_name" => ft129c.name, "access" => true}
+                                 ]
+                             },
+
+                             %{"module_code" => md8c.code,
+                              "module_name" => md8c.name,
+                              "features" => [
+                                  %{"feature_code" => ft130c.code, "feature_name" => ft130c.name, "access" => false},
+                                  %{"feature_code" => ft131c.code, "feature_name" => ft131c.name, "access" => false},
+                                  %{"feature_code" => ft132c.code, "feature_name" => ft132c.name, "access" => false},
+                                  %{"feature_code" => ft133c.code, "feature_name" => ft133c.name, "access" => false},
+                                  %{"feature_code" => ft134c.code, "feature_name" => ft134c.name, "access" => true},
+                                  ]
+                                }
+                     ]
+                  }
+
+    role_prof6 = %{"name" => "Others", "code" => "OTHR",
+                    "permissions" => [
+                      %{"module_code" => md1c.code,
+                       "module_name" => md1c.name,
+                       "features" => [
+                             %{"feature_code" => ft1c.code, "feature_name" => ft1c.name, "access" => false},
+                             %{"feature_code" => ft2c.code, "feature_name" => ft2c.name, "access" => false},
+                             %{"feature_code" => ft3c.code, "feature_name" => ft3c.name, "access" => false},
+                             %{"feature_code" => ft4c.code, "feature_name" => ft4c.name, "access" => false},
+                             %{"feature_code" => ft5c.code, "feature_name" => ft5c.name, "access" => false},
+                             %{"feature_code" => ft6c.code, "feature_name" => ft6c.name, "access" => false},
+                             %{"feature_code" => ft7c.code, "feature_name" => ft7c.name, "access" => false},
+                             %{"feature_code" => ft8c.code, "feature_name" => ft8c.name, "access" => false},
+                             %{"feature_code" => ft9c.code, "feature_name" => ft9c.name, "access" => false},
+                             %{"feature_code" => ft10c.code, "feature_name" => ft10c.name, "access" => false},
+                             %{"feature_code" => ft11c.code, "feature_name" => ft11c.name, "access" => false},
+                             %{"feature_code" => ft12c.code, "feature_name" => ft12c.name, "access" => false},
+                             %{"feature_code" => ft13c.code, "feature_name" => ft13c.name, "access" => false},
+                             %{"feature_code" => ft14c.code, "feature_name" => ft14c.name, "access" => false},
+                             %{"feature_code" => ft15c.code, "feature_name" => ft15c.name, "access" => false},
+                             %{"feature_code" => ft16c.code, "feature_name" => ft16c.name, "access" => true}
+                           ]
+                       },
+
+                       %{"module_code" => md2c.code,
+                        "module_name" => md2c.name,
+                        "features" => [
+                              %{"feature_code" => ft17c.code, "feature_name" => ft17c.name, "access" => false},
+                              %{"feature_code" => ft18c.code, "feature_name" => ft18c.name, "access" => false},
+                              %{"feature_code" => ft19c.code, "feature_name" => ft19c.name, "access" => false},
+                              %{"feature_code" => ft20c.code, "feature_name" => ft20c.name, "access" => true},
+                              %{"feature_code" => ft21c.code, "feature_name" => ft21c.name, "access" => true},
+                              %{"feature_code" => ft22c.code, "feature_name" => ft22c.name, "access" => false},
+                              %{"feature_code" => ft23c.code, "feature_name" => ft23c.name, "access" => false},
+                              %{"feature_code" => ft24c.code, "feature_name" => ft24c.name, "access" => false},
+                              %{"feature_code" => ft25c.code, "feature_name" => ft25c.name, "access" => false},
+                              %{"feature_code" => ft26c.code, "feature_name" => ft26c.name, "access" => true},
+                              %{"feature_code" => ft27c.code, "feature_name" => ft27c.name, "access" => true},
+                              %{"feature_code" => ft28c.code, "feature_name" => ft28c.name, "access" => false},
+                              %{"feature_code" => ft29c.code, "feature_name" => ft29c.name, "access" => false},
+                              %{"feature_code" => ft30c.code, "feature_name" => ft30c.name, "access" => false},
+                              %{"feature_code" => ft31c.code, "feature_name" => ft31c.name, "access" => false},
+                              %{"feature_code" => ft32c.code, "feature_name" => ft32c.name, "access" => true},
+                              %{"feature_code" => ft33c.code, "feature_name" => ft33c.name, "access" => false}
+                            ]
+                        },
+
+                        %{"module_code" => md3c.code,
+                         "module_name" => md3c.name,
+                         "features" => [
+                                  %{"feature_code" => ft34c.code, "feature_name" => ft34c.name, "access" => false},
+                                  %{"feature_code" => ft35c.code, "feature_name" => ft35c.name, "access" => false},
+                                  %{"feature_code" => ft36c.code, "feature_name" => ft36c.name, "access" => false},
+                                  %{"feature_code" => ft37c.code, "feature_name" => ft37c.name, "access" => true},
+                                  %{"feature_code" => ft38c.code, "feature_name" => ft38c.name, "access" => true},
+                                  %{"feature_code" => ft39c.code, "feature_name" => ft39c.name, "access" => false},
+                                  %{"feature_code" => ft40c.code, "feature_name" => ft40c.name, "access" => false},
+                                  %{"feature_code" => ft41c.code, "feature_name" => ft41c.name, "access" => false},
+                                  %{"feature_code" => ft42c.code, "feature_name" => ft42c.name, "access" => true},
+                                  %{"feature_code" => ft43c.code, "feature_name" => ft43c.name, "access" => true},
+                                  %{"feature_code" => ft44c.code, "feature_name" => ft44c.name, "access" => false},
+                                  %{"feature_code" => ft45c.code, "feature_name" => ft45c.name, "access" => false},
+                                  %{"feature_code" => ft46c.code, "feature_name" => ft46c.name, "access" => false},
+                                  %{"feature_code" => ft47c.code, "feature_name" => ft47c.name, "access" => false},
+                                  %{"feature_code" => ft48c.code, "feature_name" => ft48c.name, "access" => true},
+                                  %{"feature_code" => ft49c.code, "feature_name" => ft49c.name, "access" => false},
+                                  %{"feature_code" => ft50c.code, "feature_name" => ft50c.name, "access" => false},
+                                  %{"feature_code" => ft51c.code, "feature_name" => ft51c.name, "access" => false},
+                                  %{"feature_code" => ft52c.code, "feature_name" => ft52c.name, "access" => true},
+                                  %{"feature_code" => ft53c.code, "feature_name" => ft53c.name, "access" => false},
+                                  %{"feature_code" => ft54c.code, "feature_name" => ft54c.name, "access" => false},
+                                  %{"feature_code" => ft55c.code, "feature_name" => ft55c.name, "access" => false},
+                                  %{"feature_code" => ft56c.code, "feature_name" => ft56c.name, "access" => true},
+                                  %{"feature_code" => ft57c.code, "feature_name" => ft57c.name, "access" => true},
+                                  %{"feature_code" => ft58c.code, "feature_name" => ft58c.name, "access" => false},
+                                  %{"feature_code" => ft59c.code, "feature_name" => ft59c.name, "access" => false},
+                                  %{"feature_code" => ft60c.code, "feature_name" => ft60c.name, "access" => false},
+                                  %{"feature_code" => ft61c.code, "feature_name" => ft61c.name, "access" => false},
+                                  %{"feature_code" => ft62c.code, "feature_name" => ft62c.name, "access" => true},
+                                  %{"feature_code" => ft63c.code, "feature_name" => ft63c.name, "access" => true},
+                                  %{"feature_code" => ft64c.code, "feature_name" => ft64c.name, "access" => false},
+                                  %{"feature_code" => ft65c.code, "feature_name" => ft65c.name, "access" => false},
+                                  %{"feature_code" => ft66c.code, "feature_name" => ft66c.name, "access" => false},
+                                  %{"feature_code" => ft67c.code, "feature_name" => ft67c.name, "access" => false},
+                                  %{"feature_code" => ft68c.code, "feature_name" => ft68c.name, "access" => true},
+                                  %{"feature_code" => ft69c.code, "feature_name" => ft69c.name, "access" => true},
+                                  %{"feature_code" => ft70c.code, "feature_name" => ft70c.name, "access" => false},
+                                  %{"feature_code" => ft71c.code, "feature_name" => ft71c.name, "access" => false},
+                                  %{"feature_code" => ft72c.code, "feature_name" => ft72c.name, "access" => false},
+                                  %{"feature_code" => ft73c.code, "feature_name" => ft73c.name, "access" => false},
+                                  %{"feature_code" => ft74c.code, "feature_name" => ft74c.name, "access" => true},
+                                  %{"feature_code" => ft75c.code, "feature_name" => ft75c.name, "access" => true},
+                                  %{"feature_code" => ft76c.code, "feature_name" => ft76c.name, "access" => false}
+                             ]
+                         },
+
+                         %{"module_code" => md4c.code,
+                          "module_name" => md4c.name,
+                          "features" => [
+                                %{"feature_code" => ft77c.code, "feature_name" => ft77c.name, "access" => false},
+                                %{"feature_code" => ft78c.code, "feature_name" => ft78c.name, "access" => false},
+                                %{"feature_code" => ft79c.code, "feature_name" => ft79c.name, "access" => false},
+                                %{"feature_code" => ft80c.code, "feature_name" => ft80c.name, "access" => true},
+                                %{"feature_code" => ft81c.code, "feature_name" => ft81c.name, "access" => true},
+                                %{"feature_code" => ft82c.code, "feature_name" => ft82c.name, "access" => false},
+                                %{"feature_code" => ft83c.code, "feature_name" => ft83c.name, "access" => false},
+                                %{"feature_code" => ft84c.code, "feature_name" => ft84c.name, "access" => false},
+                                %{"feature_code" => ft85c.code, "feature_name" => ft85c.name, "access" => true},
+                                %{"feature_code" => ft86c.code, "feature_name" => ft86c.name, "access" => true},
+                                %{"feature_code" => ft87c.code, "feature_name" => ft87c.name, "access" => false},
+                                %{"feature_code" => ft88c.code, "feature_name" => ft88c.name, "access" => false},
+                                %{"feature_code" => ft89c.code, "feature_name" => ft89c.name, "access" => false},
+                                %{"feature_code" => ft90c.code, "feature_name" => ft90c.name, "access" => true},
+                                %{"feature_code" => ft91c.code, "feature_name" => ft91c.name, "access" => true},
+                                %{"feature_code" => ft92c.code, "feature_name" => ft92c.name, "access" => false},
+                                %{"feature_code" => ft93c.code, "feature_name" => ft93c.name, "access" => false},
+                                %{"feature_code" => ft94c.code, "feature_name" => ft94c.name, "access" => false},
+                                %{"feature_code" => ft95c.code, "feature_name" => ft95c.name, "access" => true},
+                                %{"feature_code" => ft96c.code, "feature_name" => ft96c.name, "access" => true}
+                              ]
+                          },
+
+                          %{"module_code" => md5c.code,
+                           "module_name" => md5c.name,
+                           "features" => [
+                                %{"feature_code" => ft97c.code, "feature_name" => ft97c.name, "access" => false},
+                                %{"feature_code" => ft98c.code, "feature_name" => ft98c.name, "access" => false},
+                                %{"feature_code" => ft99c.code, "feature_name" => ft99c.name, "access" => false},
+                                %{"feature_code" => ft100c.code, "feature_name" => ft100c.name, "access" => true},
+                                %{"feature_code" => ft101c.code, "feature_name" => ft101c.name, "access" => false},
+                                %{"feature_code" => ft102c.code, "feature_name" => ft102c.name, "access" => false},
+                                %{"feature_code" => ft103c.code, "feature_name" => ft103c.name, "access" => false},
+                                %{"feature_code" => ft104c.code, "feature_name" => ft104c.name, "access" => false},
+                                %{"feature_code" => ft105c.code, "feature_name" => ft105c.name, "access" => true},
+                                %{"feature_code" => ft106c.code, "feature_name" => ft106c.name, "access" => false}
+                               ]
+                           },
+
+                           %{"module_code" => md6c.code,
+                            "module_name" => md6c.name,
+                            "features" => [
+                                %{"feature_code" => ft107c.code, "feature_name" => ft107c.name, "access" => true},
+                                %{"feature_code" => ft108c.code, "feature_name" => ft108c.name, "access" => false},
+                                %{"feature_code" => ft109c.code, "feature_name" => ft109c.name, "access" => false},
+                                %{"feature_code" => ft110c.code, "feature_name" => ft110c.name, "access" => false},
+                                %{"feature_code" => ft111c.code, "feature_name" => ft111c.name, "access" => false},
+                                %{"feature_code" => ft112c.code, "feature_name" => ft112c.name, "access" => false},
+                                %{"feature_code" => ft113c.code, "feature_name" => ft113c.name, "access" => false},
+                                %{"feature_code" => ft114c.code, "feature_name" => ft114c.name, "access" => false},
+                                %{"feature_code" => ft115c.code, "feature_name" => ft115c.name, "access" => true}
+                                ]
+                            },
+
+                            %{"module_code" => md7c.code,
+                             "module_name" => md7c.name,
+                             "features" => [
+                                 %{"feature_code" => ft116c.code, "feature_name" => ft116c.name, "access" => true},
+                                 %{"feature_code" => ft117c.code, "feature_name" => ft117c.name, "access" => false},
+                                 %{"feature_code" => ft118c.code, "feature_name" => ft118c.name, "access" => false},
+                                 %{"feature_code" => ft119c.code, "feature_name" => ft119c.name, "access" => false},
+                                 %{"feature_code" => ft120c.code, "feature_name" => ft120c.name, "access" => false},
+                                 %{"feature_code" => ft121c.code, "feature_name" => ft121c.name, "access" => false},
+                                 %{"feature_code" => ft122c.code, "feature_name" => ft122c.name, "access" => true},
+                                 %{"feature_code" => ft123c.code, "feature_name" => ft123c.name, "access" => false},
+                                 %{"feature_code" => ft124c.code, "feature_name" => ft124c.name, "access" => false},
+                                 %{"feature_code" => ft125c.code, "feature_name" => ft125c.name, "access" => false},
+                                 %{"feature_code" => ft126c.code, "feature_name" => ft126c.name, "access" => false},
+                                 %{"feature_code" => ft127c.code, "feature_name" => ft127c.name, "access" => false},
+                                 %{"feature_code" => ft128c.code, "feature_name" => ft128c.name, "access" => false},
+                                 %{"feature_code" => ft129c.code, "feature_name" => ft129c.name, "access" => true}
+                                 ]
+                             },
+
+                             %{"module_code" => md8c.code,
+                              "module_name" => md8c.name,
+                              "features" => [
+                                  %{"feature_code" => ft130c.code, "feature_name" => ft130c.name, "access" => true},
+                                  %{"feature_code" => ft131c.code, "feature_name" => ft131c.name, "access" => true},
+                                  %{"feature_code" => ft132c.code, "feature_name" => ft132c.name, "access" => false},
+                                  %{"feature_code" => ft133c.code, "feature_name" => ft133c.name, "access" => false},
+                                  %{"feature_code" => ft134c.code, "feature_name" => ft134c.name, "access" => true},
+                                  ]
+                                }
+                     ]
+                  }
+
 {:ok, _role_prof1c} = Staff.create_role_profile(role_prof1, prefix)
 {:ok, role_prof2c} = Staff.create_role_profile(role_prof2, prefix)
 {:ok, _role_prof3c} = Staff.create_role_profile(role_prof3, prefix)
+{:ok, _role_prof4c} = Staff.create_role_profile(role_prof4, prefix)
+{:ok, _role_prof5c} = Staff.create_role_profile(role_prof5, prefix)
+{:ok, _role_prof6c} = Staff.create_role_profile(role_prof6, prefix)
 
 role_prof2c
   end
