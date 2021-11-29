@@ -721,7 +721,7 @@ defmodule Inconn2Service.Inventory do
   def create_inventory_transaction(attrs \\ %{}, prefix) do
     # inventory_transaction = %InventoryTransaction{} |> InventoryTransaction.changeset(attrs)
     multi = Multi.new()
-    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> validate_presence_in_database(prefix), prefix: prefix)
+    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> calculate_cost(prefix) |> validate_presence_in_database(prefix), prefix: prefix)
     |> Multi.run(:inventory_stock, fn repo, %{inventory_transaction: inventory_transaction} ->
       inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
       case inventory_transaction.transaction_type do
@@ -1012,7 +1012,7 @@ defmodule Inconn2Service.Inventory do
 
             supplier_item ->
               IO.inspect("Supplier Item price: #{supplier_item.price * quantity}")
-              changeset = change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id})
+              changeset = change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id, remaining: quantity})
               IO.inspect(changeset)
           end
         else
@@ -1024,7 +1024,8 @@ defmodule Inconn2Service.Inventory do
         query = from(u in InventoryTransaction,
                     where: u.item_id == ^item_id and
                            u.transaction_type == "IN" and
-                           u.remaining > ^quantity)
+                           u.remaining > ^quantity,
+                           order_by: [desc: u.inserted_at], limit: 1)
         required_issue_transaction = Repo.get_by(query, prefix: prefix)
         supplier_id = required_issue_transaction.supplier_id
         item_id = get_field(cs, :item_id, nil)
@@ -1049,7 +1050,7 @@ defmodule Inconn2Service.Inventory do
                     where: u.item_id == ^item_id and
                            u.transaction_type == "IS" and
                            u.remaining > ^quantity,
-                           order_by: [desc: u.inserted_at])
+                           order_by: [desc: u.inserted_at], limit: 1)
         required_issue_transaction = Repo.one(query, prefix: prefix)
         supplier_id = required_issue_transaction.supplier_id
         item_id = get_field(cs, :item_id, nil)
@@ -1073,9 +1074,10 @@ defmodule Inconn2Service.Inventory do
           query = from(u in InventoryTransaction,
                       where: u.item_id == ^item_id and
                              u.transaction_type == "IN" and
-                             u.remaining > ^quantity)
+                             u.remaining > ^quantity, order_by: [desc: u.inserted_at],
+                             limit: 1)
+          IO.inspect(Repo.one(query, prefix: prefix))
           required_issue_transaction = Repo.one(query, prefix: prefix)
-          IO.inspect(required_issue_transaction)
           supplier_id = required_issue_transaction.supplier_id
           item_id = get_field(cs, :item_id, nil)
           if supplier_id != nil && item_id != nil do
