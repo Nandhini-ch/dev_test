@@ -36,7 +36,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     |> cast(attrs, [:transaction_type, :price, :supplier_id, :quantity, :reference, :inventory_location_id, :item_id, :uom_id, :workorder_id, :remarks,
             :dc_attachment, :dc_attachment_type, :dc_reference, :dc_date, :gate_pass_attachment, :gate_pass_attachment_type, :gate_pass_reference, :gate_pass_date,
             :remaining])
-    |> validate_inclusion(:transaction_type, ["IN", "IS", "RT", "PRT", "INTR"])
+    |> validate_inclusion(:transaction_type, ["IN", "IS", "RT", "PRT", "INTR", "OUT"])
     |> validate_required([:transaction_type, :quantity, :inventory_location_id, :item_id, :uom_id])
     |> validate_for_transaction_type()
     |> set_remaining()
