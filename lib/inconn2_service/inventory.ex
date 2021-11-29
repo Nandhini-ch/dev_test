@@ -721,7 +721,7 @@ defmodule Inconn2Service.Inventory do
   def create_inventory_transaction(attrs \\ %{}, prefix) do
     # inventory_transaction = %InventoryTransaction{} |> InventoryTransaction.changeset(attrs)
     multi = Multi.new()
-    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> calculate_cost(prefix) |> validate_presence_in_database(prefix), prefix: prefix)
+    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> validate_presence_in_database(prefix), prefix: prefix)
     |> Multi.run(:inventory_stock, fn repo, %{inventory_transaction: inventory_transaction} ->
       inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
       case inventory_transaction.transaction_type do
@@ -1075,6 +1075,7 @@ defmodule Inconn2Service.Inventory do
                              u.transaction_type == "IN" and
                              u.remaining > ^quantity)
           required_issue_transaction = Repo.one(query, prefix: prefix)
+          IO.inspect(required_issue_transaction)
           supplier_id = required_issue_transaction.supplier_id
           item_id = get_field(cs, :item_id, nil)
           if supplier_id != nil && item_id != nil do

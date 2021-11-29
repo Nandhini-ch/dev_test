@@ -204,13 +204,13 @@ inventory_transaction2 = %{
 {:ok, inventory_transaction2} = Inventory.create_inventory_transaction(inventory_transaction2, "inc_bata")
 
 
-inventory_transfer = %{
-	"from_location_id" => inventory_location1.id,
-	"to_location_id" => inventory_location2.id,
-	"quantity" => 5,
-	"uom_id" => unit2.id,
-	"item_id" => item1.id,
-	"reference" => "Test"
-}
+# inventory_transfer = %{
+# 	"from_location_id" => inventory_location1.id,
+# 	"to_location_id" => inventory_location2.id,
+# 	"quantity" => 5,
+# 	"uom_id" => unit2.id,
+# 	"item_id" => item1.id,
+# 	"reference" => "Test"
+# }
 
-{:ok, inventory_transfer} = Inventory.create_inventory_transfer(inventory_transfer, "inc_bata")
+# {:ok, inventory_transfer} = Inventory.create_inventory_transfer(inventory_transfer, "inc_bata")
