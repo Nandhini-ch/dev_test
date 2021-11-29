@@ -33,6 +33,11 @@ defmodule Inconn2ServiceWeb.SupplierItemController do
     end
   end
 
+  def get_suppliers_for_item(conn, %{"item_id" => item_id}) do
+    supplier_items = Inventory.get_supplier_for_item(item_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", supplier_items: supplier_items)
+  end
+
   def delete(conn, %{"id" => id}) do
     supplier_item = Inventory.get_supplier_item!(id, conn.assigns.sub_domain_prefix)
 

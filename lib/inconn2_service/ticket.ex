@@ -232,6 +232,8 @@ defmodule Inconn2Service.Ticket do
         _ ->  change(cs, %{status: "AS"})
               cs
       end
+    else
+      cs
     end
   end
   @doc """

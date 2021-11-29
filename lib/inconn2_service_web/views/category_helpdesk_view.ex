@@ -12,6 +12,8 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskView do
 
   def render("category_helpdesk.json", %{category_helpdesk: category_helpdesk}) do
     %{id: category_helpdesk.id,
-      user_id: category_helpdesk.user_id}
+      user_id: category_helpdesk.user_id,
+      site_id: category_helpdesk.site_id,
+      workrequest_category_id: category_helpdesk.workrequest_category_id}
   end
 end

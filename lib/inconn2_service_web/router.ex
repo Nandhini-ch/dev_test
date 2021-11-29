@@ -154,6 +154,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]
+    get "/items/:item_id/suppliers", SupplierItemController, :get_suppliers_for_item
     resources "/uoms", UOMController, except: [:new, :edit]
     get "/uoms/physical", UOMController, :index_physical
     get "/uoms/cost", UOMController, :index_cost

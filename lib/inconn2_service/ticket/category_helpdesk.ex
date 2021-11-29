@@ -15,6 +15,7 @@ defmodule Inconn2Service.Ticket.CategoryHelpdesk do
     category_helpdesk
     |> cast(attrs, [:user_id, :site_id, :workrequest_category_id])
     |> validate_required([:user_id, :site_id, :workrequest_category_id])
-    |> assoc_constraint([:site, :workorder_category])
+    |> assoc_constraint(:site)
+    |> assoc_constraint(:workrequest_category)
   end
 end

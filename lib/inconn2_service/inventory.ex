@@ -1365,6 +1365,13 @@ defmodule Inconn2Service.Inventory do
     Repo.all(SupplierItem, prefix: prefix) |> Repo.preload([:item, :supplier])
   end
 
+  def get_supplier_for_item(item_id, prefix) do
+    SupplierItem
+    |> where(item_id: ^item_id)
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:item, :supplier])
+  end
+
   @doc """
   Gets a single supplier_item.
 
