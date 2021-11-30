@@ -1173,6 +1173,11 @@ defmodule Inconn2Service.Inventory do
     |> Repo.all(prefix: prefix)
   end
 
+  def get_item_for_transaction(inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+    Map.put(inventory_transaction, :item, item)
+  end
+
   def list_inventory_transactions_for_inventory_location_and_type(inventory_location_id, prefix, transaction_type) do
     InventoryTransaction
     |> where([inventory_location_id: ^inventory_location_id, transaction_type: ^transaction_type])

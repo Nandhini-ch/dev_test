@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.InventoryTransactionView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.InventoryTransactionView
+  alias Inconn2ServiceWeb.{InventoryTransactionView, ItemView}
 
   def render("index.json", %{inventory_transactions: inventory_transactions}) do
     %{data: render_many(inventory_transactions, InventoryTransactionView, "inventory_transaction.json")}
@@ -18,7 +18,8 @@ defmodule Inconn2ServiceWeb.InventoryTransactionView do
       quantity: inventory_transaction.quantity,
       reference: inventory_transaction.reference,
       inventory_location_id: inventory_transaction.inventory_location_id,
-      item_id: inventory_transaction.item_id,
+      # item_id: inventory_transaction.item_id,
+      item: render_one(inventory_transaction.item, ItemView, "item.json"),
       uom_id: inventory_transaction.uom_id,
       workorder_id: inventory_transaction.workorder_id,
       remarks: inventory_transaction.remarks,
