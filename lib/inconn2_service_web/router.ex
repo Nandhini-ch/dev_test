@@ -137,11 +137,15 @@ defmodule Inconn2ServiceWeb.Router do
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
 
-    get "/sessions/current_user", SessionController, :current_user
-
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
+
+    get "/employees", EmployeeRosterController, :employees
+    resources "/attendances", AttendanceController, only: [:index, :create, :show]
+
+    get "/sessions/current_user", SessionController, :current_user
+
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category

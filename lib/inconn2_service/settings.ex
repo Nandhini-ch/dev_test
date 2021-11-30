@@ -36,17 +36,18 @@ defmodule Inconn2Service.Settings do
   end
 
   def list_shifts_for_a_day(site_id, shiftdate, prefix) do
+    day = Date.day_of_week(shiftdate)
     query =
       from(s in Shift,
         where:
           s.site_id == ^site_id and
-            fragment("? BETWEEN ? AND ?", ^shiftdate, s.start_date, s.end_date)
+          fragment("? BETWEEN ? AND ?", ^shiftdate, s.start_date, s.end_date) and
+          ^day in s.applicable_days
       )
 
     IO.inspect(query)
     Repo.all(query, prefix: prefix)
   end
-
   def list_shifts_between_dates(site_id, start_shiftdate, end_shiftdate, prefix) do
     # constructing a query like below
     # SELECT s0."id", s0."applicable_days", s0."end_date",

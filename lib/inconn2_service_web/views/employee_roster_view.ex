@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.EmployeeRosterView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.EmployeeRosterView
+  alias Inconn2ServiceWeb.{EmployeeRosterView, EmployeeView}
 
   def render("index.json", %{employee_rosters: employee_rosters}) do
     %{data: render_many(employee_rosters, EmployeeRosterView, "employee_roster.json")}
@@ -18,4 +18,9 @@ defmodule Inconn2ServiceWeb.EmployeeRosterView do
       start_date: employee_roster.start_date,
       end_date: employee_roster.end_date}
   end
+
+  def render("employee_index.json", %{employees: employees}) do
+    %{data: render_many(employees, EmployeeView, "employee.json")}
+  end
+
 end

@@ -103,8 +103,8 @@ defmodule Inconn2ServiceWeb.ShiftController do
 
   defp date_convert(date_to_convert) do
     date_to_convert
-    |> String.split("/")
+    |> String.split("-")
     |> Enum.map(&String.to_integer/1)
-    |> (fn [day, month, year] -> Date.new(year, month, day) end).()
+    |> (fn [year, month, day] -> Date.new(year, month, day) end).()
   end
 end

@@ -1,9 +1,10 @@
 defmodule Inconn2Service.Assignment.EmployeeRoster do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.Staff.Employee
 
   schema "employee_rosters" do
-    field :employee_id, :integer
+    belongs_to :employee, Employee
     field :site_id, :integer
     field :shift_id, :integer
     field :start_date, :date
@@ -19,6 +20,7 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
     |> cast(attrs, [:employee_id, :site_id, :shift_id, :start_date, :end_date, :active])
     |> validate_required([:employee_id, :site_id, :shift_id, :start_date, :end_date])
     |> validate_date_order()
+    |> assoc_constraint(:employee)
   end
 
   defp validate_date_order(cs) do
