@@ -134,6 +134,11 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkRequest, prefix: prefix)
   end
 
+  def list_work_requests_for_approval(current_user, prefix) do
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required
+    Repo.all(query, prefix: prefix)
+  end
+
   @doc """
   Gets a single work_request.
 
@@ -593,5 +598,107 @@ defmodule Inconn2Service.Ticket do
   """
   def change_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, attrs \\ %{}) do
     WorkrequestStatusTrack.changeset(workrequest_status_track, attrs)
+  end
+
+  alias Inconn2Service.Ticket.Approval
+
+  @doc """
+  Returns the list of approvals.
+
+  ## Examples
+
+      iex> list_approvals()
+      [%Approval{}, ...]
+
+  """
+  def list_approvals(prefix) do
+    Repo.all(Approval, prefix: prefix)
+  end
+
+  def list_approvals_for_work_order(work_request_id, prefix) do
+    Approval
+    |> where(work_request_id: ^work_request_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  @doc """
+  Gets a single approval.
+
+  Raises `Ecto.NoResultsError` if the Approval does not exist.
+
+  ## Examples
+
+      iex> get_approval!(123)
+      %Approval{}
+
+      iex> get_approval!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_approval!(id, prefix), do: Repo.get!(Approval, id, prefix: prefix)
+
+  @doc """
+  Creates a approval.
+
+  ## Examples
+
+      iex> create_approval(%{field: value})
+      {:ok, %Approval{}}
+
+      iex> create_approval(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_approval(attrs \\ %{}, prefix) do
+    %Approval{}
+    |> Approval.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a approval.
+
+  ## Examples
+
+      iex> update_approval(approval, %{field: new_value})
+      {:ok, %Approval{}}
+
+      iex> update_approval(approval, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_approval(%Approval{} = approval, attrs, prefix) do
+    approval
+    |> Approval.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a approval.
+
+  ## Examples
+
+      iex> delete_approval(approval)
+      {:ok, %Approval{}}
+
+      iex> delete_approval(approval)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_approval(%Approval{} = approval, prefix) do
+    Repo.delete(approval, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking approval changes.
+
+  ## Examples
+
+      iex> change_approval(approval)
+      %Ecto.Changeset{data: %Approval{}}
+
+  """
+  def change_approval(%Approval{} = approval, attrs \\ %{}) do
+    Approval.changeset(approval, attrs)
   end
 end
