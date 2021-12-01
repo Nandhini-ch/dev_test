@@ -248,4 +248,67 @@ defmodule Inconn2Service.TicketTest do
       assert %Ecto.Changeset{} = Ticket.change_workrequest_status_track(workrequest_status_track)
     end
   end
+
+  describe "approvals" do
+    alias Inconn2Service.Ticket.Approval
+
+    @valid_attrs %{approved: true, remarks: "some remarks", user_id: 42}
+    @update_attrs %{approved: false, remarks: "some updated remarks", user_id: 43}
+    @invalid_attrs %{approved: nil, remarks: nil, user_id: nil}
+
+    def approval_fixture(attrs \\ %{}) do
+      {:ok, approval} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ticket.create_approval()
+
+      approval
+    end
+
+    test "list_approvals/0 returns all approvals" do
+      approval = approval_fixture()
+      assert Ticket.list_approvals() == [approval]
+    end
+
+    test "get_approval!/1 returns the approval with given id" do
+      approval = approval_fixture()
+      assert Ticket.get_approval!(approval.id) == approval
+    end
+
+    test "create_approval/1 with valid data creates a approval" do
+      assert {:ok, %Approval{} = approval} = Ticket.create_approval(@valid_attrs)
+      assert approval.approved == true
+      assert approval.remarks == "some remarks"
+      assert approval.user_id == 42
+    end
+
+    test "create_approval/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ticket.create_approval(@invalid_attrs)
+    end
+
+    test "update_approval/2 with valid data updates the approval" do
+      approval = approval_fixture()
+      assert {:ok, %Approval{} = approval} = Ticket.update_approval(approval, @update_attrs)
+      assert approval.approved == false
+      assert approval.remarks == "some updated remarks"
+      assert approval.user_id == 43
+    end
+
+    test "update_approval/2 with invalid data returns error changeset" do
+      approval = approval_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ticket.update_approval(approval, @invalid_attrs)
+      assert approval == Ticket.get_approval!(approval.id)
+    end
+
+    test "delete_approval/1 deletes the approval" do
+      approval = approval_fixture()
+      assert {:ok, %Approval{}} = Ticket.delete_approval(approval)
+      assert_raise Ecto.NoResultsError, fn -> Ticket.get_approval!(approval.id) end
+    end
+
+    test "change_approval/1 returns a approval changeset" do
+      approval = approval_fixture()
+      assert %Ecto.Changeset{} = Ticket.change_approval(approval)
+    end
+  end
 end

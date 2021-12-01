@@ -153,8 +153,12 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/category_helpdesks", CategoryHelpdeskController, except: [:new, :edit]
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
+    get "/work_request_approvals", WorkRequestController, :index_approval_required
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
     resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
+
+    resources "/approvals", ApprovalController, except: [:new, :edit]
+    get "/work_request/:work_request_id/approvals", ApprovalController, :approvals_for_work_request
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]
