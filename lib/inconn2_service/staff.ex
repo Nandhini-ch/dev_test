@@ -701,25 +701,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  defp validate_feature_ids_within_role_profile(cs, prefix) do
-    feature_ids = get_field(cs, :feature_ids, nil)
-    role_profile_id = get_field(cs, :role_profile_id, nil)
-    if feature_ids != nil and role_profile_id != nil do
-      role_profile = get_role_profile(role_profile_id, prefix)
-      if role_profile != nil do
-        role_features = MapSet.new(feature_ids)
-        role_profile_features = MapSet.new(role_profile.feature_ids)
-        case MapSet.subset?(role_features, role_profile_features) do
-          true -> cs
-          false -> add_error(cs, :feature_ids, "Features should be within the features of role profile")
-        end
-      else
-        cs
-      end
-    else
-      cs
-    end
-  end
   @doc """
   Updates a role.
 
@@ -973,19 +954,6 @@ defmodule Inconn2Service.Staff do
     |> Repo.insert(prefix: prefix)
   end
 
-  defp validate_feature_ids(cs, prefix) do
-    ids = get_change(cs, :feature_ids, nil)
-    if ids != nil do
-      features = from(f in Feature, where: f.id in ^ids )
-              |> Repo.all(prefix: prefix)
-      case length(ids) == length(features) do
-        true -> cs
-        false -> add_error(cs, :feature_ids, "Feature IDs are invalid")
-      end
-    else
-      cs
-    end
-  end
   @doc """
   Updates a module.
 
@@ -1094,40 +1062,40 @@ defmodule Inconn2Service.Staff do
     Map.put(module, "features", features)
   end
 
-  defp inherit_features(role_profile, role_profile_new, prefix) do
-    feature_ids = role_profile.feature_ids
-    new_feature_ids = role_profile_new.feature_ids
-    check_for_addition(role_profile.id, feature_ids, new_feature_ids, prefix)
-    check_for_removal(role_profile.id, feature_ids, new_feature_ids, prefix)
-  end
+  # defp inherit_features(role_profile, role_profile_new, prefix) do
+  #   feature_ids = role_profile.feature_ids
+  #   new_feature_ids = role_profile_new.feature_ids
+  #   check_for_addition(role_profile.id, feature_ids, new_feature_ids, prefix)
+  #   check_for_removal(role_profile.id, feature_ids, new_feature_ids, prefix)
+  # end
 
-  defp check_for_addition(role_profile_id, feature_ids, new_feature_ids, prefix) do
-    added_ids = new_feature_ids -- feature_ids
-    if length(added_ids) > 0 do
-      roles = get_role_by_role_profile(role_profile_id, prefix)
-      Enum.map(roles, fn role ->
-                          feature_ids = role.feature_ids ++ added_ids
-                          update_role(role, %{"feature_ids" => feature_ids}, prefix)
-                        end)
-      new_feature_ids
-    else
-      new_feature_ids
-    end
-  end
+  # defp check_for_addition(role_profile_id, feature_ids, new_feature_ids, prefix) do
+  #   added_ids = new_feature_ids -- feature_ids
+  #   if length(added_ids) > 0 do
+  #     roles = get_role_by_role_profile(role_profile_id, prefix)
+  #     Enum.map(roles, fn role ->
+  #                         feature_ids = role.feature_ids ++ added_ids
+  #                         update_role(role, %{"feature_ids" => feature_ids}, prefix)
+  #                       end)
+  #     new_feature_ids
+  #   else
+  #     new_feature_ids
+  #   end
+  # end
 
-  defp check_for_removal(role_profile_id, feature_ids, new_feature_ids, prefix) do
-    removed_ids = feature_ids -- new_feature_ids
-    if length(removed_ids) > 0 do
-      roles = get_role_by_role_profile(role_profile_id, prefix)
-      Enum.map(roles, fn role ->
-                          feature_ids = role.feature_ids -- removed_ids
-                          update_role(role, %{"feature_ids" => feature_ids}, prefix)
-                        end)
-      new_feature_ids
-    else
-      new_feature_ids
-    end
-  end
+  # defp check_for_removal(role_profile_id, feature_ids, new_feature_ids, prefix) do
+  #   removed_ids = feature_ids -- new_feature_ids
+  #   if length(removed_ids) > 0 do
+  #     roles = get_role_by_role_profile(role_profile_id, prefix)
+  #     Enum.map(roles, fn role ->
+  #                         feature_ids = role.feature_ids -- removed_ids
+  #                         update_role(role, %{"feature_ids" => feature_ids}, prefix)
+  #                       end)
+  #     new_feature_ids
+  #   else
+  #     new_feature_ids
+  #   end
+  # end
 
   @doc """
   Updates a role_profile.
@@ -1146,7 +1114,7 @@ defmodule Inconn2Service.Staff do
             |> RoleProfile.changeset(attrs)
             |> Repo.update(prefix: prefix)
     case result do
-      {:ok, role_profile_new} ->
+      {:ok, _role_profile_new} ->
               #inherit_features(role_profile, role_profile_new, prefix)
               result
        _ ->
