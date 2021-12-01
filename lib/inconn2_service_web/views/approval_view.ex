@@ -14,6 +14,8 @@ defmodule Inconn2ServiceWeb.ApprovalView do
     %{id: approval.id,
       user_id: approval.user_id,
       approved: approval.approved,
-      remarks: approval.remarks}
+      work_request_id: approval.work_request_id,
+      remarks: approval.remarks,
+      action_at: approval.action_at}
   end
 end

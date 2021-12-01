@@ -154,7 +154,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
 
     resources "/approvals", ApprovalController, except: [:new, :edit]
-    get "/work_request/:work_request_id/approvals", ApprovalsController, :approvals_for_work_request
+    get "/work_request/:work_request_id/approvals", ApprovalController, :approvals_for_work_request
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]

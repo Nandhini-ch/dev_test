@@ -57,7 +57,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     approvals_required = get_field(cs, :is_approvals_required, nil)
     if approvals_required != nil do
       case approvals_required do
-        true -> validate_required(cs, approvals_required)
+        true -> validate_required(cs, [:approvals_required])
            _ -> cs
       end
     else

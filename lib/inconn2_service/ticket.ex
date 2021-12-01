@@ -253,7 +253,7 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user) do
+  def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
     wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
     updated_work_request = work_request
@@ -284,7 +284,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   defp update_status_track(work_request, prefix) do
-    case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status]) do
+    case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
       nil ->
         {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
         workrequest_status_track = %{
@@ -318,7 +318,7 @@ defmodule Inconn2Service.Ticket do
 
   defp is_approvals_required(cs, user, prefix) do
     site_id = get_field(cs, :site_id)
-    category_id = get_field(cs, :workorder_category_id)
+    category_id = get_field(cs, :workrequest_category_id)
     helpdesks = CategoryHelpdesk
                 |> where(site_id: ^site_id)
                 |> where(workrequest_category_id: ^category_id)
@@ -650,9 +650,58 @@ defmodule Inconn2Service.Ticket do
 
   """
   def create_approval(attrs \\ %{}, prefix) do
-    %Approval{}
-    |> Approval.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    result = %Approval{}
+              |> Approval.changeset(attrs)
+              |> Repo.insert(prefix: prefix)
+
+    update_status_for_work_request(result, prefix)
+  end
+
+  def update_status_for_work_request({:error, reason}, _),  do: {:error, reason}
+
+  def update_status_for_work_request({:ok, approval}, prefix) do
+    approvals = Approval |> where(work_request_id: ^approval.work_request_id) |> Repo.all(prefix: prefix)
+    work_request = Repo.get(WorkRequest, approval.work_request_id, prefix: prefix)
+    IO.inspect(work_request)
+    comparison_result = compare_length(length(approvals), length(work_request.approvals_required))
+    case comparison_result do
+      {:ok, _} ->
+        approved = Enum.filter(approvals, fn a -> a.approved == true end)
+        if length(approvals) == length(approved) do
+          update_work_request(work_request, %{"status" => "AP"}, prefix)
+        else
+          update_work_request(work_request, %{"status" => "RJ"}, prefix)
+        end
+        {:ok, approval}
+
+      _ ->
+        {:ok, approval}
+    end
+  end
+
+  def compare_length(num1, num2) when num1 == num2, do: {:ok, "equal"}
+  def compare_length(num1, num2), do: {:error, "not_equal"}
+
+  def update_status_for_work_request(result, prefix) do
+    case result do
+      {:ok, approval} ->
+        query = from a in Approval, where: a.work_request_id == ^approval.work_request_id
+        approvals = Repo.all(query, prefix: prefix)
+        work_request = Repo.get(WorkRequest, approval.work_request_id)
+        if length(approvals) == length(work_request.approvals_required) do
+          approved = Enum.filter(approvals, fn a -> a.approved == true end)
+          if length(approvals) == length(approved) do
+            update_work_request(work_request, %{"status" => "AP"}, prefix)
+          else
+            update_work_request(work_request, %{"status" => "RJ"}, prefix)
+          end
+          {:ok, approval}
+        else
+          {:ok, approval}
+        end
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -668,9 +717,10 @@ defmodule Inconn2Service.Ticket do
 
   """
   def update_approval(%Approval{} = approval, attrs, prefix) do
-    approval
-    |> Approval.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result = approval
+              |> Approval.changeset(attrs)
+              |> Repo.update(prefix: prefix)
+    update_status_for_work_request(result, prefix)
   end
 
   @doc """
