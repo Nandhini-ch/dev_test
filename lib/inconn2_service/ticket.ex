@@ -255,7 +255,7 @@ defmodule Inconn2Service.Ticket do
   """
   def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
-    wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
+    # wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
     updated_work_request = work_request
     |> WorkRequest.changeset(payload)
     |> attachment_format(attrs)
@@ -268,20 +268,21 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-        # create_workorder_from_ticket(work_request, user, prefix, wr_status)
 
       _ ->
         updated_work_request
+
     end
+
   end
 
-  defp create_workorder_from_ticket(work_request, user, prefix, "AS") do
-    {:ok, work_request}
-  end
+  # defp create_workorder_from_ticket(work_request, user, prefix, "AS") do
+  #   {:ok, work_request}
+  # end
 
-  defp create_workorder_from_ticket(work_request, _user, _prefix, _) do
-    {:ok, work_request}
-  end
+  # defp create_workorder_from_ticket(work_request, _user, _prefix, _) do
+  #   {:ok, work_request}
+  # end
 
   defp update_status_track(work_request, prefix) do
     case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
@@ -519,6 +520,12 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkrequestStatusTrack, prefix: prefix)
   end
 
+  def list_workrequest_status_track_for_work_request(work_request_id, prefix) do
+    WorkrequestStatusTrack
+    |> where(work_request_id: ^work_request_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single workrequest_status_track.
 
@@ -680,29 +687,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   def compare_length(num1, num2) when num1 == num2, do: {:ok, "equal"}
-  def compare_length(num1, num2), do: {:error, "not_equal"}
-
-  def update_status_for_work_request(result, prefix) do
-    case result do
-      {:ok, approval} ->
-        query = from a in Approval, where: a.work_request_id == ^approval.work_request_id
-        approvals = Repo.all(query, prefix: prefix)
-        work_request = Repo.get(WorkRequest, approval.work_request_id)
-        if length(approvals) == length(work_request.approvals_required) do
-          approved = Enum.filter(approvals, fn a -> a.approved == true end)
-          if length(approvals) == length(approved) do
-            update_work_request(work_request, %{"status" => "AP"}, prefix)
-          else
-            update_work_request(work_request, %{"status" => "RJ"}, prefix)
-          end
-          {:ok, approval}
-        else
-          {:ok, approval}
-        end
-      _ ->
-        result
-    end
-  end
+  def compare_length(_num1, _num2), do: {:error, "not_equal"}
 
   @doc """
   Updates a approval.

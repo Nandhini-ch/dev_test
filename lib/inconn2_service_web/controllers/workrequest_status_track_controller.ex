@@ -7,7 +7,12 @@ defmodule Inconn2ServiceWeb.WorkrequestStatusTrackController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-  workrequest_status_track = Ticket.list_workrequest_status_track(conn.assigns.sub_domain_prefix)
+    workrequest_status_track = Ticket.list_workrequest_status_track(conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", workrequest_status_track: workrequest_status_track)
+  end
+
+  def index_for_work_request(conn, %{"work_request_id" => work_request_id}) do
+    workrequest_status_track = Ticket.list_workrequest_status_track_for_work_request(work_request_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", workrequest_status_track: workrequest_status_track)
   end
 
