@@ -22,6 +22,9 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :gate_pass_reference, :string
     field :gate_pass_date, :date
     field :remaining, :float
+    field :issue_reference, :text
+    field :user_id, :integer
+
     # field :inventory_location_id, :integer
     belongs_to :inventory_location, Inconn2Service.Inventory.InventoryLocation
     # field :item_id, :integer
@@ -35,8 +38,8 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     inventory_transaction
     |> cast(attrs, [:transaction_type, :price, :supplier_id, :quantity, :reference, :inventory_location_id, :item_id, :uom_id, :workorder_id, :remarks,
             :dc_attachment, :dc_attachment_type, :dc_reference, :dc_date, :gate_pass_attachment, :gate_pass_attachment_type, :gate_pass_reference, :gate_pass_date,
-            :remaining])
-    |> validate_inclusion(:transaction_type, ["IN", "IS", "RT", "PRT", "INTR", "OUT"])
+            :remaining, :issue_reference, :work_request_id])
+    |> validate_inclusion(:transaction_type, ["IN", "IS", "RT", "PRT", "INTR", "OUT", "INIS"])
     |> validate_required([:transaction_type, :quantity, :inventory_location_id, :item_id, :uom_id])
     |> validate_for_transaction_type()
     |> set_remaining()
@@ -77,6 +80,10 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
 
       "INTR" ->
         validate_required(cs, [:gate_pass_reference, :gate_pass_date])
+
+      "INIS" ->
+        validate_required(cs, [:issue_reference, :user_id])
+
 
       _ ->
         cs

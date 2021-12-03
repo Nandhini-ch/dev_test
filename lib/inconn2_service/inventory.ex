@@ -721,7 +721,9 @@ defmodule Inconn2Service.Inventory do
   def create_inventory_transaction(attrs \\ %{}, prefix) do
     # inventory_transaction = %InventoryTransaction{} |> InventoryTransaction.changeset(attrs)
     multi = Multi.new()
-    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs) |> calculate_cost(prefix) |> validate_presence_in_database(prefix), prefix: prefix)
+    |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs)
+    |> calculate_cost(prefix)
+    |> validate_presence_in_database(prefix), prefix: prefix)
     |> Multi.run(:inventory_stock, fn repo, %{inventory_transaction: inventory_transaction} ->
       inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
       case inventory_transaction.transaction_type do
@@ -742,6 +744,9 @@ defmodule Inconn2Service.Inventory do
 
         "INTR" ->
           handle_inward_transfer_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
+
+        "INIS" ->
+          handle_inward_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix)
       end
     end)
 
@@ -866,6 +871,9 @@ defmodule Inconn2Service.Inventory do
 
       "INTR" ->
         quantity + quantity * factor
+
+      "INIS" ->
+        quantity - quantity * factor
     end
   end
 
@@ -938,6 +946,31 @@ defmodule Inconn2Service.Inventory do
   end
 
   def handle_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
+    item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
+
+    case inventory_stock do
+      nil ->
+        InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+        "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+        |> force_error("No record found to return in stock")
+        |> Repo.insert(prefix: prefix)
+
+      inventory_stock ->
+        if inventory_stock.quantity < inventory_transaction.quantity do
+          InventoryStock.changeset(%InventoryStock{}, %{"inventory_location_id" => inventory_transaction.inventory_location_id,
+          "item_id" => inventory_transaction.item_id, "quantity" => inventory_transaction.quantity})
+          |> force_error("Required Quantity Not found")
+          |> Repo.insert(prefix: prefix)
+        else
+          inventory_stock
+          |> InventoryStock.changeset(%{})
+          |> convert_for_transaction_forward(inventory_transaction.uom_id, item.inventory_unit_uom_id, inventory_transaction.quantity, prefix, "IS")
+          |> Repo.update(prefix: prefix)
+        end
+    end
+  end
+
+  def handle_inward_issue_for_inventory_transaction(inventory_stock, inventory_transaction, prefix) do
     item = Repo.get(Item, inventory_transaction.item_id, prefix: prefix)
 
     case inventory_stock do
@@ -1043,7 +1076,31 @@ defmodule Inconn2Service.Inventory do
         else
           cs
         end
-      "RT" ->
+      "INIS" ->
+        item_id = get_field(cs, :item_id, nil)
+        quantity = get_field(cs, :quantity, nil)
+        query = from(u in InventoryTransaction,
+                    where: u.item_id == ^item_id and
+                           u.transaction_type == "IS" and
+                           u.remaining > ^quantity,
+                           order_by: [desc: u.inserted_at], limit: 1)
+        required_issue_transaction = Repo.one(query, prefix: prefix)
+        supplier_id = required_issue_transaction.supplier_id
+        item_id = get_field(cs, :item_id, nil)
+        if supplier_id != nil && item_id != nil do
+          case Repo.get_by(SupplierItem, [supplier_id: supplier_id, item_id: item_id], prefix: prefix) do
+            nil ->
+              add_error(cs, :supplier_id, "Item Not Found for selected supplier")
+
+            supplier_item ->
+              IO.inspect("Supplier Item price: #{supplier_item.price * quantity}")
+              update_inventory_transaction(required_issue_transaction, %{"remaining" => required_issue_transaction.remaining - quantity}, prefix)
+              change(cs, %{cost: supplier_item.price * quantity, cost_unit_uom_id: supplier_item.price_unit_uom_id, supplier_id: required_issue_transaction.supplier_id})
+              # IO.inspect(changeset)
+          end
+        else
+          cs
+        end
         item_id = get_field(cs, :item_id, nil)
         quantity = get_field(cs, :quantity, nil)
         query = from(u in InventoryTransaction,
