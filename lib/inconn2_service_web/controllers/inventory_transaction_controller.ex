@@ -63,6 +63,43 @@ defmodule Inconn2ServiceWeb.InventoryTransactionController do
     end
   end
 
+  def create_inward_transaction_list(conn, %{"transaction_type" => transaction_type, "dc_reference" => dc_reference, "dc_date" => dc_date, "transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_inward_transaction_list(transaction_type, dc_date, dc_reference, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+  def create_issue_transaction_list(conn, %{"transaction_type" => transaction_type, "workorder_id" => workorder_id,"transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_issue_transaction_list(transaction_type, workorder_id, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+  def create_purchase_return_transaction_list(conn, %{"transaction_type" => transaction_type, "gate_pass_reference" => gate_pass_reference, "gate_pass_date" => gate_pass_date, "transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_inward_transaction_list(transaction_type, gate_pass_reference, gate_pass_date, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+  def create_out_transaction_list(conn, %{"transaction_type" => transaction_type, "gate_pass_reference" => gate_pass_reference, "gate_pass_date" => gate_pass_date, "transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_out_transaction_list(transaction_type, gate_pass_reference, gate_pass_date, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+  def create_intr_transaction_list(conn, %{"transaction_type" => transaction_type, "gate_pass_reference" => gate_pass_reference, "gate_pass_date" => gate_pass_date, "transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_intr_transaction_list(transaction_type, gate_pass_reference, gate_pass_date, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+  def create_inis_transaction_list(conn, %{"transaction_type" => transaction_type, "issue_reference" => issue_reference, "user_id" => user_id, "transactions" => transactions}) do
+    with {:ok, inventory_transactions} <- Inventory.create_intr_transaction_list(transaction_type, issue_reference, user_id, transactions, conn.assigns.sub_domain_prefix) do
+      render(conn, "index.json", inventory_transactions: inventory_transactions)
+    end
+  end
+
+
   def show(conn, %{"id" => id}) do
     inventory_transaction = Inventory.get_inventory_transaction!(id, conn.assigns.sub_domain_prefix)
                             |> Inventory.get_item_for_transaction(conn.assigns.sub_domain_prefix)

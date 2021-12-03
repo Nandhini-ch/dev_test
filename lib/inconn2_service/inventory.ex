@@ -717,6 +717,62 @@ defmodule Inconn2Service.Inventory do
       {:error, %Ecto.Changeset{}}
 
   """
+  def create_inward_transaction_list("IN", dc_date, dc_reference, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t
+                              |> Map.put("dc_reference", dc_reference)
+                              |> Map.put("dc_date", dc_date)
+                              |> Map.put("transaction_type", "IN")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
+
+  def create_issue_transaction_list("IS", workorder_id, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t |> Map.put("work_order_id", workorder_id) |> Map.put("transaction_type", "IS")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
+
+  def create_purchase_return_transaction_list("PRT", gate_pass_reference, gate_pass_date, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t
+                              |> Map.put("gate_pass_reference", gate_pass_reference)
+                              |> Map.put("gate_pass_date", gate_pass_date)
+                              |> Map.put("transaction_type", "PRT")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
+
+  def create_out_transaction_list("OUT", gate_pass_reference, gate_pass_date, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t
+                              |> Map.put("gate_pass_reference", gate_pass_reference)
+                              |> Map.put("gate_pass_date", gate_pass_date)
+                              |> Map.put("transaction_type", "OUR")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
+
+  def create_intr_transaction_list("INTR", gate_pass_reference, gate_pass_date, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t
+                              |> Map.put("gate_pass_reference", gate_pass_reference)
+                              |> Map.put("gate_pass_date", gate_pass_date)
+                              |> Map.put("transaction_type", "INTR")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
+
+  def create_inis_transaction_list("INIS", issue_reference, user_id, transactions, prefix) do
+    Enum.each(transactions, fn(t) ->
+      modified_transaction = t
+                              |> Map.put("issue_reference", issue_reference)
+                              |> Map.put("user_id", user_id)
+                              |> Map.put("transaction_type", "INIS")
+      create_inventory_transaction(modified_transaction, prefix)
+    end)
+  end
 
   def create_inventory_transaction(attrs \\ %{}, prefix) do
     # inventory_transaction = %InventoryTransaction{} |> InventoryTransaction.changeset(attrs)
