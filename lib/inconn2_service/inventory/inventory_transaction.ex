@@ -22,7 +22,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :gate_pass_reference, :string
     field :gate_pass_date, :date
     field :remaining, :float
-    field :issue_reference, :text
+    field :issue_reference, :string
     field :user_id, :integer
 
     # field :inventory_location_id, :integer
