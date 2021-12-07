@@ -21,6 +21,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       description: location.description,
       location_code: location.location_code,
       site_id: location.site_id,
+      status: location.status,
       asset_category_id: location.asset_category_id,
       parent_id: List.last(location.path)
     }
@@ -33,6 +34,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       description: location.description,
       location_code: location.location_code,
       site_id: location.site_id,
+      status: location.status,
       asset_category_id: location.asset_category_id,
       parent_id: List.last(location.path),
       children: render_many(location.children, LocationView, "location_node.json")

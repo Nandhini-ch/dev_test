@@ -52,20 +52,53 @@ employee2 = %{
 
 {:ok, emp_cs2} = Staff.create_employee(employee2,"inc_bata")
 
+employee3 = %{
+  "employee_id" => "Empid0003",
+  "landline_no" => "123",
+  "mobile_no" => "hello123",
+  "salary" =>  20000.00,
+  "designation" => "Technician",
+  "email" => "tech@c.com",
+  "first_name" => "John",
+  "last_name" =>  "Clerkman",
+  "has_login_credentials" => false,
+  "skills" => [1],
+  "org_unit_id" =>  1,
+  "party_id" => 1
+}
+
+{:ok, emp_cs3} = Staff.create_employee(employee3,"inc_bata")
+
 emp_rst1 = %{
-  "employee_id" => 1,
+  "employee_id" => emp_cs1.id,
   "site_id" => 1,
   "shift_id" => 1,
   "start_date" => "2021-08-17",
   "end_date" => "2021-08-30"
 }
 emp_rst2 = %{
-  "employee_id" => 2,
+  "employee_id" => emp_cs2.id,
   "site_id" => 1,
   "shift_id" => 2,
   "start_date" => "2021-08-20",
   "end_date" => "2021-08-21"
 }
+emp_rst3 = %{
+  "employee_id" => emp_cs3.id,
+  "site_id" => 1,
+  "shift_id" => 1,
+  "start_date" => "2021-08-10",
+  "end_date" => "2021-08-30"
+}
+emp_rst4 = %{
+  "employee_id" => emp_cs1.id,
+  "site_id" => 1,
+  "shift_id" => 4,
+  "start_date" => "2021-08-20",
+  "end_date" => "2021-08-30"
+}
 
  {:ok, emp_rst1c} = Assignment.create_employee_roster(emp_rst1, "inc_bata")
  {:ok, emp_rst2c} = Assignment.create_employee_roster(emp_rst2, "inc_bata")
+ {:ok, emp_rst3c} = Assignment.create_employee_roster(emp_rst3, "inc_bata")
+ {:ok, emp_rst4c} = Assignment.create_employee_roster(emp_rst4, "inc_bata")

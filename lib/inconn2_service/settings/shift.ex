@@ -61,7 +61,7 @@ defmodule Inconn2Service.Settings.Shift do
     # 1 - Monday, 2 - Tuesday ... 7 Sunday
     case MapSet.subset?(MapSet.new(applicable_days), MapSet.new(check_days)) do
       true -> changeset
-      _ -> add_error(changeset, :applicable_days, "cannot be anything other than 1,2,3,4,5,6,7,")
+      _ -> add_error(changeset, :applicable_days, "cannot be anything other than 1,2,3,4,5,6,7")
     end
 
     # Date.day_of_week returns 1,2,3,4,5,6,7 depending on the start default date

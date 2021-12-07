@@ -31,6 +31,26 @@ defmodule Inconn2Service.Assignment do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_employee_from_roster(query_params, prefix) do
+    {:ok, date} = date_convert(query_params["date"])
+    query =
+      from(e in EmployeeRoster,
+        where:
+          e.shift_id == ^query_params["shift_id"] and
+          fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
+      )
+    Repo.all(query, prefix: prefix)
+    |> Repo.preload(:employee)
+    |> Enum.map(fn employee_roster -> employee_roster.employee end)
+  end
+
+  defp date_convert(date_to_convert) do
+    date_to_convert
+    |> String.split("-")
+    |> Enum.map(&String.to_integer/1)
+    |> (fn [year, month, day] -> Date.new(year, month, day) end).()
+  end
+
   @doc """
   Gets a single employee_roster.
 
@@ -183,5 +203,108 @@ defmodule Inconn2Service.Assignment do
   """
   def change_employee_roster(%EmployeeRoster{} = employee_roster, attrs \\ %{}) do
     EmployeeRoster.changeset(employee_roster, attrs)
+  end
+
+  alias Inconn2Service.Assignment.Attendance
+
+  @doc """
+  Returns the list of attendances.
+
+  ## Examples
+
+      iex> list_attendances()
+      [%Attendance{}, ...]
+
+  """
+  def list_attendances(query_params, prefix) do
+    {:ok, date} = date_convert(query_params["date"])
+    query =
+      from(a in Attendance,
+        where:
+          a.shift_id == ^query_params["shift_id"] and
+          a.date == ^date
+      )
+    Repo.all(query, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single attendance.
+
+  Raises `Ecto.NoResultsError` if the Attendance does not exist.
+
+  ## Examples
+
+      iex> get_attendance!(123)
+      %Attendance{}
+
+      iex> get_attendance!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix)
+
+  @doc """
+  Creates a attendance.
+
+  ## Examples
+
+      iex> create_attendance(%{field: value})
+      {:ok, %Attendance{}}
+
+      iex> create_attendance(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_attendance(attrs \\ %{}, prefix) do
+    %Attendance{}
+    |> Attendance.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a attendance.
+
+  ## Examples
+
+      iex> update_attendance(attendance, %{field: new_value})
+      {:ok, %Attendance{}}
+
+      iex> update_attendance(attendance, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_attendance(%Attendance{} = attendance, attrs, prefix) do
+    attendance
+    |> Attendance.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a attendance.
+
+  ## Examples
+
+      iex> delete_attendance(attendance)
+      {:ok, %Attendance{}}
+
+      iex> delete_attendance(attendance)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_attendance(%Attendance{} = attendance, prefix) do
+    Repo.delete(attendance, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking attendance changes.
+
+  ## Examples
+
+      iex> change_attendance(attendance)
+      %Ecto.Changeset{data: %Attendance{}}
+
+  """
+  def change_attendance(%Attendance{} = attendance, attrs \\ %{}) do
+    Attendance.changeset(attendance, attrs)
   end
 end

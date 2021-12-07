@@ -26,6 +26,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryTransactions do
       add :cost_unit_uom_id, :integer
       add :critical, :boolean
       add :approved, :boolean
+      add :issue_reference, :text
+      add :user_id, :text
 
       timestamps()
     end

@@ -137,11 +137,15 @@ defmodule Inconn2ServiceWeb.Router do
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
 
-    get "/sessions/current_user", SessionController, :current_user
-
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
+
+    get "/employees", EmployeeRosterController, :employees
+    resources "/attendances", AttendanceController, only: [:index, :create, :show]
+
+    get "/sessions/current_user", SessionController, :current_user
+
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
@@ -195,6 +199,14 @@ defmodule Inconn2ServiceWeb.Router do
     get "/inventory_locations/:inventory_location_id/inventory_transactions/return", InventoryTransactionController, :loc_transaction_purchase
 
     resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit]
+    post "/inventory_transactions/inventory_list/inward", InventoryTransactionController, :create_inward_transaction_list
+    post "/inventory_transactions/inventory_list/issue", InventoryTransactionController, :create_issue_transaction_list
+    post "/inventory_transactions/inventory_list/purchase_return", InventoryTransactionController, :create_purchase_return_transaction_list
+    post "/inventory_transactions/inventory_list/out", InventoryTransactionController, :create_out_transaction_list
+    post "/inventory_transactions/inventory_upload/intr", InventoryTransactionController, :create_intr_transaction_list
+    post "/inventory_transactions/inventory_upload/inis", InventoryTransactionController, :create_inis_transaction_list
+
+
     resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit]
 
     get "/reports/work_orders", ReportsController, :get_work_order_report

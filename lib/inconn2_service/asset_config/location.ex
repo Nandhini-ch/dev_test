@@ -11,6 +11,7 @@ defmodule Inconn2Service.AssetConfig.Location do
     field :name, :string
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
+    field :status, :string, default: "On"
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
     field :active, :boolean, default: true
@@ -21,8 +22,9 @@ defmodule Inconn2Service.AssetConfig.Location do
   @doc false
   def changeset(location, attrs) do
     location
-    |> cast(attrs, [:name, :description, :location_code, :asset_category_id, :site_id, :parent_id, :active])
+    |> cast(attrs, [:name, :description, :location_code, :asset_category_id, :site_id, :status, :parent_id, :active])
     |> validate_required([:name, :location_code, :asset_category_id, :site_id])
+    |> validate_inclusion(:status, ["On", "Off", "Breakdown", "Preserved", "Transferred", "Written off"])
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
   end

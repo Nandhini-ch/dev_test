@@ -635,12 +635,14 @@ defmodule Inconn2Service.Workorder do
   """
   def list_work_orders(prefix) do
     Repo.all(WorkOrder, prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def list_work_orders_of_user(prefix, user \\ %{id: nil}) do
     WorkOrder
     |> where(user_id: ^user.id)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   @doc """
@@ -657,8 +659,15 @@ defmodule Inconn2Service.Workorder do
       ** (Ecto.NoResultsError)
 
   """
-  def get_work_order!(id, prefix), do: Repo.get!(WorkOrder, id, prefix: prefix)
-
+  def get_work_order!(id, prefix) do
+    work_order = Repo.get!(WorkOrder, id, prefix: prefix)
+    case is_struct(work_order) do
+      true ->
+        get_work_order_with_asset(work_order, prefix)
+      false ->
+        work_order
+    end
+  end
   @doc """
   Creates a work_order.
 
@@ -767,6 +776,38 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
+
+
+  def get_work_order_with_asset(work_order, prefix) do
+    work_order = add_overdue_flag(work_order, prefix)
+    workorder_template_id = work_order.workorder_template_id
+    asset_id = work_order.asset_id
+    workorder_template = get_workorder_template(workorder_template_id, prefix)
+    if workorder_template != nil and asset_id != nil do
+      asset_type = workorder_template.asset_type
+      case asset_type do
+        "L" ->
+          location = AssetConfig.get_location(asset_id, prefix)
+          Map.put_new(work_order, :asset_type, "L") |> Map.put_new(:asset_name, location.name)
+        "E" ->
+          equipment = AssetConfig.get_equipment(asset_id, prefix)
+          Map.put_new(work_order, :asset_type, "E") |> Map.put_new(:asset_name, equipment.name)
+      end
+    else
+      Map.put_new(work_order, :asset_type, nil) |> Map.put_new(:asset_name, nil)
+    end
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
+    end
+  end
   @doc """
   Updates a work_order.
 
@@ -833,7 +874,7 @@ defmodule Inconn2Service.Workorder do
             date = Date.new!(date_time.year, date_time.month, date_time.day)
             time = Time.new!(date_time.hour, date_time.minute, date_time.second)
             create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+            {:ok, get_work_order!(work_order.id, prefix)}
       "as" ->
             site = Repo.get!(Site, work_order.site_id, prefix: prefix)
             date_time = DateTime.now!(site.time_zone)
@@ -841,7 +882,7 @@ defmodule Inconn2Service.Workorder do
             time = Time.new!(date_time.hour, date_time.minute, date_time.second)
             create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
             create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, Repo.get!(WorkOrder, work_order.id, prefix: prefix)}
+            {:ok, get_work_order!(work_order.id, prefix)}
     end
   end
 
