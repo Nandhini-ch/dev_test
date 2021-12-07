@@ -14,6 +14,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateItems do
       add :aisle, :string
       add :row, :string
       add :bin, :string
+      add :critical, :boolean
       add :asset_categories_ids, {:array, :integer}
 
       timestamps()

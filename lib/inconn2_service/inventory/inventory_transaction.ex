@@ -22,7 +22,6 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :gate_pass_reference, :string
     field :gate_pass_date, :date
     field :remaining, :float
-    field :critical, :boolean
     field :approved, :boolean
     field :issue_reference, :string
     field :user_id, :integer
