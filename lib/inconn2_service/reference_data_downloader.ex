@@ -149,11 +149,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_users(prefix) do
     check = Staff.list_users(prefix)
 
-    header = [["id", "reference", "Username", "Role Id", "Party Id"]]
+    header = [["id", "reference", "Email", "Mobile No", "Username", "Role Id", "Party Id"]]
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.username, convert_array_of_integers_to_string(r.role_id), r.party_id]
+        [r.id, "", r.email, r.mobile_no, r.username, convert_array_of_integers_to_string(r.role_id), r.party_id]
       end)
 
       final_report = header ++ body
@@ -311,6 +311,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     header ++ body
   end
 
+  @spec download_supplier_items(any) :: [...]
   def download_supplier_items(prefix) do
     supplier_items = Inventory.list_supplier_items(prefix)
     header = [["id", "reference", "Supplier Id", "Item Id", "Price", "Price Unit Uom Id",
@@ -323,6 +324,22 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     header ++ body
   end
 
+  def download_roles(prefix) do
+    roles = Staff.list_roles(prefix)
+    header = [["id", "reference", "Name", "Description"]]
+
+    body = Enum.map(roles, fn r ->
+      [[r.id, "", r.name, r.description]]
+    end)
+
+    header ++ body
+  end
+
+  # defp convert_array_of_objects_to_string(array_of_objects) do
+  #   array_of_objects
+  #   |> Enum.map(fn x -> IO.inspect(x) end)
+  #   |> Enum.join(",")
+  # end
 
 
   defp convert_array_of_integers_to_string(array_of_ids) do

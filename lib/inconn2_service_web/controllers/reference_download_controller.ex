@@ -253,4 +253,17 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
+  def download_roles(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_roles(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"roles.csv\"")
+    |> send_resp(200, data)
+  end
+
 end

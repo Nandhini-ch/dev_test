@@ -134,6 +134,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/modules/:module_id/features", FeatureController, :index
     resources "/role_profiles", RoleProfileController, only: [:index, :show]
     resources "/roles", RoleController, except: [:new, :edit]
+    get "/download_roles", ReferenceDownloadController, :download_roles
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
 
