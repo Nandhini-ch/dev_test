@@ -22,13 +22,14 @@ defmodule Inconn2Service.Assignment do
 
   """
   def list_employee_rosters(prefix) do
-    Repo.all(EmployeeRoster,prefix: prefix)
+    Repo.all(EmployeeRoster,prefix: prefix) |> Repo.preload([:site, :employee, :shift])
   end
 
   def list_employee_rosters(query_params, prefix) do
     EmployeeRoster
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload([:site, :employee, :shift])
   end
 
   def list_employee_from_roster(query_params, prefix) do
@@ -40,7 +41,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
       )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload(:employee)
+    |> Repo.preload([:employee, :site, :shift])
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
@@ -65,7 +66,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix)
+  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix) |> Repo.preload([:employee, :site, :shift])
 
   @doc """
   Creates a employee_roster.
@@ -80,13 +81,17 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_employee_roster(attrs \\ %{}, prefix) do
-    %EmployeeRoster{}
-    |> EmployeeRoster.changeset(attrs)
-    |> validate_employee_id(prefix)
-    |> validate_site_id(prefix)
-    |> validate_shift_id(prefix)
-    |> validate_within_shift_dates(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %EmployeeRoster{}
+      |> EmployeeRoster.changeset(attrs)
+      |> validate_employee_id(prefix)
+      |> validate_site_id(prefix)
+      |> validate_shift_id(prefix)
+      |> validate_within_shift_dates(prefix)
+      |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee])}
+      _ -> result
+    end
   end
 
   defp validate_employee_id(cs, prefix) do
