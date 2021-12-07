@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -152,13 +152,17 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_request_approvals", WorkRequestController, :index_approval_required
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
     # resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
-    get "work_requests/:work_request_id/workrequest_status_tracks", WorkrequestStatusTrackController, :index_for_work_request
+    get "/work_requests/:work_request_id/workrequest_status_tracks", WorkrequestStatusTrackController, :index_for_work_request
 
     resources "/approvals", ApprovalController, except: [:new, :edit]
     get "/work_request/:work_request_id/approvals", ApprovalController, :approvals_for_work_request
 
     resources "/suppliers", SupplierController, except: [:new, :edit]
+    get "/download_suppliers/", ReferenceDownloadController, :download_suppliers
+
     resources "/supplier_items", SupplierItemController, except: [:new, :edit]
+    get "/download_supplier_items", ReferenceDownloadController, :download_supplier_items
+
     get "/items/:item_id/suppliers", SupplierItemController, :get_suppliers_for_item
     resources "/uoms", UOMController, except: [:new, :edit]
     get "/uoms/physical", UOMController, :index_physical
@@ -169,9 +173,11 @@ defmodule Inconn2ServiceWeb.Router do
     get "/items/tools", ItemController, :index_tools
     get "/items/consumables", ItemController, :index_consumables
     resources "/items", ItemController, except: [:new, :edit]
+    get "/download_items", ReferenceDownloadController, :download_items
 
 
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
+    get "/download_inventory_locations/", ReferenceDownloadController, :download_inventory_locations
     get "/sites/:site_id/inventory_locations/", InventoryLocationController, :index
 
     get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
@@ -190,5 +196,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/inventory_transactions", InventoryTransactionController, except: [:new, :edit]
     resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit]
+
+    get "/reports/work_orders", ReportsController, :get_work_order_report
   end
 end

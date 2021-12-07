@@ -214,4 +214,43 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
+  def download_inventory_locations(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_inventory_locations(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"inventory_locations.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_suppliers(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_suppliers(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"suppliers.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_supplier_items(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_supplier_items(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"suplier_items.csv\"")
+    |> send_resp(200, data)
+  end
+
 end

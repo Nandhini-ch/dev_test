@@ -7,6 +7,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   alias Inconn2Service.Staff
   alias Inconn2Service.Assignment
   alias Inconn2Service.Settings
+  alias Inconn2Service.Inventory
 
   def download_locations(prefix) do
     locations = AssetConfig.list_active_locations(prefix)
@@ -258,6 +259,71 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     final_report = header ++ body
     final_report
   end
+
+  def download_inventory_locations(prefix) do
+    inventory_locations = Inventory.list_inventory_locations(prefix)
+    header = [["id", "reference", "Description", "Name", "Site Id", "Site Location Id"]]
+
+    body = Enum.map(inventory_locations, fn l ->
+      [[l.id, "", l.description, l.name, l.site_id, l.site_location_id]]
+    end)
+
+    header ++ body
+  end
+
+  def download_inventory_stocks(prefix) do
+    inventory_stocks = Inventory.list_inventory_stocks(prefix)
+    header = [["id", "reference", "Inventory Location Id", "Item Id", "Quantity"]]
+
+    body = Enum.map(inventory_stocks, fn s ->
+      [[s.id, "", s.inventory_location_id, s.item_id, s.quantity]]
+    end)
+
+    header ++ body
+  end
+
+  def download_items(prefix) do
+    items = Inventory.list_items(prefix)
+    header = [["id", "Name", "Part No", "Asset Category Ids", "Consume Unit Uom Id", "Inventory Unit Uom Id",
+               "Purchase Unit Uom Id", "Min Order Quantity", "Reorder Quantity", "Type", "Aisle", "Row", "Bin"]]
+
+    body = Enum.map(items, fn i ->
+      [[i.id, "", i.name, i.part_no, convert_array_of_integers_to_string(i.asset_cateogry_ids), i.comsume_unit_uom_id,
+        i.inventory_unit_uom_id, i.purchase_unit_uom_id, i.min_orderquantity, i.reorder_quantity, i.type, i.aisle,
+        i.row, i.bin]]
+    end)
+
+    header ++ body
+  end
+
+  def download_suppliers(prefix) do
+    suppliers = Inventory.list_suppliers(prefix)
+    header = [["id", "reference", "Name", "Description", "Nature of Business", "Registration No",
+               "GST No", "Website", "Remarks", "Contact First Name", "Contact Last Name",
+               "Contact Designation", "Contact Email", "Contact Mobile", "Contact Land Line"]]
+
+    body = Enum.map(suppliers, fn s ->
+      [[s.id, "", s.name, s.description, s.nature_of_business, s.registration_no, s.gst_no,
+        s.website, s.remarks, s.contact.first_name, s.contact.last_name, s.contact.designation,
+        s.contact.email, s.contact.mobile, s.contact.land_line]]
+    end)
+
+    header ++ body
+  end
+
+  def download_supplier_items(prefix) do
+    supplier_items = Inventory.list_supplier_items(prefix)
+    header = [["id", "reference", "Supplier Id", "Item Id", "Price", "Price Unit Uom Id",
+               "Supplier Part No"]]
+
+    body = Enum.map(supplier_items, fn s ->
+      [[s.id, "", s.supplier_id, s.item_id, s.price, s.price_unit_uom_id, s.supplier_part_no]]
+    end)
+
+    header ++ body
+  end
+
+
 
   defp convert_array_of_integers_to_string(array_of_ids) do
     if array_of_ids != nil do

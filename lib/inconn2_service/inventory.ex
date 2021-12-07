@@ -580,6 +580,10 @@ defmodule Inconn2Service.Inventory do
       [%InventoryStock{}, ...]
 
   """
+  def list_inventory_stocks(prefix) do
+    Repo.all(InventoryStock, prefix: prefix)
+  end
+
   def list_inventory_stocks(inventory_location_id, prefix) do
     InventoryStock
     |> where(inventory_location_id: ^inventory_location_id)

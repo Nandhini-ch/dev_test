@@ -20,7 +20,7 @@ defmodule Inconn2Service.MixProject do
   def application do
     [
       mod: {Inconn2Service.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :pdf_generator]
     ]
   end
 
@@ -49,7 +49,8 @@ defmodule Inconn2Service.MixProject do
       {:comeonin, "~> 5.1.2"},
       {:argon2_elixir, "~> 2.0"},
       {:guardian, "~> 1.0"},
-      {:csv, "~> 2.4"}
+      {:csv, "~> 2.4"},
+      {:pdf_generator, ">=0.6.0"}
     ]
   end
 

@@ -22,6 +22,8 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :gate_pass_reference, :string
     field :gate_pass_date, :date
     field :remaining, :float
+    field :critical, :boolean
+    field :approved, :boolean
     # field :inventory_location_id, :integer
     belongs_to :inventory_location, Inconn2Service.Inventory.InventoryLocation
     # field :item_id, :integer
