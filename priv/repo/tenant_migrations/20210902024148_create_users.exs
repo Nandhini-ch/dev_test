@@ -14,6 +14,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
       timestamps()
     end
     create unique_index(:users, [:username])
+    create unique_index(:users, [:email])
     create index(:users, [:party_id])
   end
 end

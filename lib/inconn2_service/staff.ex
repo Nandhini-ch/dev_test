@@ -528,6 +528,8 @@ defmodule Inconn2Service.Staff do
   def create_employee_user(attrs \\ %{}, prefix) do
       user_map = %{
         "username" => attrs["email"],
+        "email" => attrs["email"],
+        "mobile_no" => attrs["mobile_no"],
         "password" => attrs["mobile_no"],
         "password_confirmation" => attrs["mobile_no"],
         "party_id" => attrs["party_id"],

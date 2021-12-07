@@ -21,13 +21,14 @@ defmodule Inconn2Service.Staff.User do
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:username, :password, :email, :mobile_no, :role_id, :party_id, :active])
-    |> validate_required([:username, :password, :role_id, :party_id])
-    |> validate_format(:username, ~r/@/)
+    |> validate_required([:username, :password, :email, :mobile_no, :role_id, :party_id])
+    |> validate_format(:email, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
     # |> validate_length(:password, min: 6, max: 12)
     #  |> validate_confirmation(:password,
     #   message: "does not match password" )
     |> unique_constraint(:username)
+    |> unique_constraint(:email)
     |> hash_password()
     |> assoc_constraint(:party)
   end
