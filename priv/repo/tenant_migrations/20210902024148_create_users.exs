@@ -4,6 +4,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
   def change do
     create table(:users) do
       add :username, :string
+      add :email, :string
+      add :mobile_no, :string
       add :password_hash, :string
       add :role_id, :integer
       add :party_id, references(:parties, on_delete: :nothing)

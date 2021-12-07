@@ -16,7 +16,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :first_name, :string
     field :has_login_credentials, :boolean
     field :last_name, :string
-    field :reports_to, :string
+    field :reports_to, :integer
     field :skills, {:array, :integer}
     field :active, :boolean, default: true
     belongs_to :org_unit, OrgUnit
