@@ -11,6 +11,18 @@ defmodule Inconn2ServiceWeb.LocationController do
     render(conn, "index.json", locations: locations)
   end
 
+  def display_qr_code(conn, %{"id" => id}) do
+    {png, location} = AssetConfig.get_location_qr_code(id, conn.assigns.sub_domain_prefix)
+    conn
+    |> put_resp_content_type("image/jpeg")
+    |> send_resp(200, png)
+  end
+
+  def get_location_from_qr_code(conn, %{"qr_code" => qr_code}) do
+    location = AssetConfig.get_location_by_qr_code(qr_code, conn.assigns.sub_domain_prefix)
+    render(conn, "show.json", location: location)
+  end
+
   def tree(conn, %{"site_id" => site_id}) do
     locations = AssetConfig.list_locations_tree(site_id, conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", locations: locations)

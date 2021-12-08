@@ -42,6 +42,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
     resources "/locations", LocationController, except: [:new, :edit, :index]
+    get "/locations/:id/qr_code", LocationController, :display_qr_code
+    get "/locations/qr_code/:qr_code", LocationController, :get_location_from_qr_code
     put "/locations/:id/activate", LocationController, :activate_location
     put "/locations/:id/deactivate", LocationController, :deactivate_location
     get "/sites/:site_id/locations", LocationController, :index
@@ -51,6 +53,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
     resources "/equipments", EquipmentController, except: [:new, :edit, :index]
+    get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
+    get "/equipments/qr_code/:qr_code", EquipmentController, :get_equipment_from_qr_code
     get "/sites/:site_id/equipments", EquipmentController, :index
     get "/sites/:site_id/equipments_tree", EquipmentController, :tree
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves

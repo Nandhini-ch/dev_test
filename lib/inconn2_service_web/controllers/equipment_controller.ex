@@ -11,6 +11,19 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     render(conn, "index.json", equipments: equipments)
   end
 
+  def display_qr_code(conn, %{"id" => id}) do
+    {png, _equipment} = AssetConfig.get_equipment_qr_code(id, conn.assigns.sub_domain_prefix)
+    conn
+    |> put_resp_content_type("image/jpeg")
+    |> send_resp(200, png)
+  end
+
+  def get_equipment_from_qr_code(conn, %{"qr_code" => qr_code}) do
+    equipment = AssetConfig.get_equipment_by_qr_code(qr_code, conn.assigns.sub_domain_prefix)
+    render(conn, "show.json", equipment: equipment)
+  end
+
+  @spec tree(Plug.Conn.t(), map) :: Plug.Conn.t()
   def tree(conn, %{"site_id" => site_id}) do
     equipments = AssetConfig.list_equipments_tree(site_id, conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", equipments: equipments)
