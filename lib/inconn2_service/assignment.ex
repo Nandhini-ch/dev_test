@@ -32,6 +32,21 @@ defmodule Inconn2Service.Assignment do
     |> Repo.preload([:site, :employee, :shift])
   end
 
+  def list_employees_for_date_range(%{"site_id" => site_id, "start_date" => start_date, "end_date" => end_date}, prefix) do
+    {:ok, start_date} = date_convert(start_date)
+    {:ok, end_date} = date_convert(end_date)
+    query =
+      from(e in EmployeeRoster,
+        where:
+          e.site_id == ^site_id and
+          fragment("? BETWEEN ? AND ?", ^start_date, e.start_date, e.end_date) or
+          fragment("? BETWEEN ? AND ?", ^end_date, e.start_date, e.end_date)
+    )
+    Repo.all(query, prefix: prefix)
+    |> Repo.preload([:employee])
+    |> Enum.map(fn employee_roster -> employee_roster.employee end)
+  end
+
   def list_employee_from_roster(query_params, prefix) do
     {:ok, date} = date_convert(query_params["date"])
     query =
