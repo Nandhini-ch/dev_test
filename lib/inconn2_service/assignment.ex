@@ -166,13 +166,19 @@ defmodule Inconn2Service.Assignment do
 
   """
   def update_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do
-    employee_roster
+    result =
+      employee_roster
     |> EmployeeRoster.changeset(attrs)
     |> validate_employee_id(prefix)
     |> validate_site_id(prefix)
     |> validate_shift_id(prefix)
     |> validate_within_shift_dates(prefix)
     |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee], force: true)}
+      _ -> result
+    end
   end
 
   def update_active_status_for_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do
