@@ -14,7 +14,7 @@ defmodule Inconn2Service.Inventory.UOM do
   def changeset(uom, attrs) do
     uom
     |> cast(attrs, [:name, :symbol, :uom_type])
-    |> validate_required([:name, :symbol, :uom_type])
+    |> validate_required([:name, :symbol])
     |> validate_inclusion(:uom_type, ["physical", "cost"])
   end
 end

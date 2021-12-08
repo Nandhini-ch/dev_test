@@ -10,6 +10,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
       add :location_id, references(:locations, on_delete: :nothing)
       add :connections_in, {:array, :integer}
       add :connections_out, {:array, :integer}
+      add :qr_code, :uuid, null: false
       add :active, :boolean
 
 
@@ -17,6 +18,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
       add :path, {:array, :integer}, null: false
     end
 
+    create unique_index(:equipments, [:qr_code])
     create index(:equipments, [:site_id])
     create index(:equipments, [:asset_category_id])
     create index(:equipments, [:location_id])

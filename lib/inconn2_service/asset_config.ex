@@ -824,6 +824,9 @@ defmodule Inconn2Service.AssetConfig do
   def get_equipment!(id, prefix), do: Repo.get!(Equipment, id, prefix: prefix)
   def get_equipment(id, prefix), do: Repo.get(Equipment, id, prefix: prefix)
 
+  def get_equipment_by_qr_code(qr_code, prefix), do: Repo.get_by(Equipment, [qr_code: qr_code], prefix: prefix)
+
+  @spec get_root_equipments(any, any) :: any
   def get_root_equipments(site_id, prefix) do
     root_path = []
 

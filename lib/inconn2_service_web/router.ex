@@ -169,14 +169,21 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_supplier_items", ReferenceDownloadController, :download_supplier_items
 
     get "/items/:item_id/suppliers", SupplierItemController, :get_suppliers_for_item
+    # get "/download_items", ReferenceDownloadController, :download_items
+
     resources "/uoms", UOMController, except: [:new, :edit]
     get "/uoms/physical", UOMController, :index_physical
     get "/uoms/cost", UOMController, :index_cost
+    get "/download_uoms", ReferenceDownloadController, :download_uoms
+
     resources "/uom_conversions", UomConversionController, except: [:new, :edit]
+    get "/download_uom_conversions", ReferenceDownloadController, :download_uom_conversions
     post "/uoms/convert/:value/from/:from_uom_id/to/:to_uom_id", UomConversionController, :convert
     get "/items/spares", ItemController, :index_spares
     get "/items/tools", ItemController, :index_tools
     get "/items/consumables", ItemController, :index_consumables
+
+
     resources "/items", ItemController, except: [:new, :edit]
     get "/download_items", ReferenceDownloadController, :download_items
 
@@ -188,6 +195,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
     get "/inventory_locations/:inventory_location_id/inventory_transactions", InventoryTransactionController, :loc_transaction
     get "/inventory_locations/:inventory_location_id/inventory_transfers", InventoryTransferController, :loc_transfer
+    get "/download_inventory_stocks/", ReferenceDownloadController, :download_inventory_stocks
 
 
     # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]
