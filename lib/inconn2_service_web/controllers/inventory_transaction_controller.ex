@@ -76,7 +76,7 @@ defmodule Inconn2ServiceWeb.InventoryTransactionController do
   end
 
   def create_purchase_return_transaction_list(conn, %{"transaction_type" => transaction_type, "gate_pass_reference" => gate_pass_reference, "gate_pass_date" => gate_pass_date, "transactions" => transactions}) do
-    with {:ok, inventory_transactions} <- Inventory.create_inward_transaction_list(transaction_type, gate_pass_reference, gate_pass_date, transactions, conn.assigns.sub_domain_prefix) do
+    with {:ok, inventory_transactions} <- Inventory.create_purchase_return_transaction_list(transaction_type, gate_pass_reference, gate_pass_date, transactions, conn.assigns.sub_domain_prefix) do
       render(conn, "index.json", inventory_transactions: inventory_transactions)
     end
   end

@@ -22,13 +22,29 @@ defmodule Inconn2Service.Assignment do
 
   """
   def list_employee_rosters(prefix) do
-    Repo.all(EmployeeRoster,prefix: prefix)
+    Repo.all(EmployeeRoster,prefix: prefix) |> Repo.preload([:site, :employee, :shift])
   end
 
   def list_employee_rosters(query_params, prefix) do
     EmployeeRoster
     |> Repo.add_active_filter(query_params)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload([:site, :employee, :shift])
+  end
+
+  def list_employees_for_date_range(%{"site_id" => site_id, "start_date" => start_date, "end_date" => end_date}, prefix) do
+    {:ok, start_date} = date_convert(start_date)
+    {:ok, end_date} = date_convert(end_date)
+    query =
+      from(e in EmployeeRoster,
+        where:
+          e.site_id == ^site_id and
+          fragment("? BETWEEN ? AND ?", ^start_date, e.start_date, e.end_date) or
+          fragment("? BETWEEN ? AND ?", ^end_date, e.start_date, e.end_date)
+    )
+    Repo.all(query, prefix: prefix)
+    |> Repo.preload([:employee])
+    |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
   def list_employee_from_roster(query_params, prefix) do
@@ -40,7 +56,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
       )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload(:employee)
+    |> Repo.preload([:employee, :site, :shift])
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
@@ -65,7 +81,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix)
+  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix) |> Repo.preload([:employee, :site, :shift])
 
   @doc """
   Creates a employee_roster.
@@ -80,13 +96,17 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_employee_roster(attrs \\ %{}, prefix) do
-    %EmployeeRoster{}
-    |> EmployeeRoster.changeset(attrs)
-    |> validate_employee_id(prefix)
-    |> validate_site_id(prefix)
-    |> validate_shift_id(prefix)
-    |> validate_within_shift_dates(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %EmployeeRoster{}
+      |> EmployeeRoster.changeset(attrs)
+      |> validate_employee_id(prefix)
+      |> validate_site_id(prefix)
+      |> validate_shift_id(prefix)
+      |> validate_within_shift_dates(prefix)
+      |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee])}
+      _ -> result
+    end
   end
 
   defp validate_employee_id(cs, prefix) do
@@ -161,13 +181,19 @@ defmodule Inconn2Service.Assignment do
 
   """
   def update_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do
-    employee_roster
+    result =
+      employee_roster
     |> EmployeeRoster.changeset(attrs)
     |> validate_employee_id(prefix)
     |> validate_site_id(prefix)
     |> validate_shift_id(prefix)
     |> validate_within_shift_dates(prefix)
     |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee], force: true)}
+      _ -> result
+    end
   end
 
   def update_active_status_for_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do

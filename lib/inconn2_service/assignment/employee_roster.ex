@@ -5,8 +5,10 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
 
   schema "employee_rosters" do
     belongs_to :employee, Employee
-    field :site_id, :integer
-    field :shift_id, :integer
+    # field :site_id, :integer
+    belongs_to :site, Inconn2Service.AssetConfig.Site
+    # field :shift_id, :integer
+    belongs_to :shift, Inconn2Service.Settings.Shift
     field :start_date, :date
     field :end_date, :date
     field :active, :boolean, default: true
@@ -21,6 +23,8 @@ defmodule Inconn2Service.Assignment.EmployeeRoster do
     |> validate_required([:employee_id, :site_id, :shift_id, :start_date, :end_date])
     |> validate_date_order()
     |> assoc_constraint(:employee)
+    |> assoc_constraint(:site)
+    |> assoc_constraint(:shift)
   end
 
   defp validate_date_order(cs) do

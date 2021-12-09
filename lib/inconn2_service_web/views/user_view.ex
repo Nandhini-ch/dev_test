@@ -14,6 +14,8 @@ defmodule Inconn2ServiceWeb.UserView do
     %{
       id: user.id,
       username: user.username,
+      email: user.email,
+      mobile_no: user.mobile_no,
       party_id: user.party_id,
       role_id: user.role_id
     }

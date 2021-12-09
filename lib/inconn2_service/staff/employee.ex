@@ -3,6 +3,7 @@ defmodule Inconn2Service.Staff.Employee do
   import Ecto.Changeset
   alias Inconn2Service.Staff.OrgUnit
   alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.Staff.Employee
 
   schema "employees" do
     field :employee_id, :string
@@ -16,7 +17,9 @@ defmodule Inconn2Service.Staff.Employee do
     field :first_name, :string
     field :has_login_credentials, :boolean
     field :last_name, :string
-    field :reports_to, :string
+    # field :reports_to, :integer
+    belongs_to :employee, Employee, foreign_key: :reports_to
+    # belongs_to :employee, Employee, foreign_key: :reports_to,references: :id,type: :integer
     field :skills, {:array, :integer}
     field :active, :boolean, default: true
     belongs_to :org_unit, OrgUnit
@@ -64,11 +67,12 @@ defmodule Inconn2Service.Staff.Employee do
     |> validate_format(:email, ~r/@/)
     |> assoc_constraint(:org_unit)
     |> assoc_constraint(:party)
+    |> assoc_constraint(:employee)
   end
 
   defp validate_login(cs) do
     case get_field(cs, :has_login_credentials, false) do
-      true -> validate_required(cs, [:role_id, :email])
+      true -> validate_required(cs, [:email])
       false -> cs
     end
   end

@@ -227,6 +227,32 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
+  def download_inventory_stocks(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_inventory_stocks(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"inventory_stocks.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_items(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_items(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"items.csv\"")
+    |> send_resp(200, data)
+  end
+
   def download_suppliers(conn, _params) do
     data =
       ReferenceDataDownloader.download_suppliers(conn.assigns.sub_domain_prefix)
@@ -250,6 +276,47 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"suplier_items.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_uoms(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_uoms(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"uoms.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_uom_conversions(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_uom_conversions(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"uom_conversions.csv\"")
+    |> send_resp(200, data)
+  end
+
+
+
+  def download_roles(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_roles(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"roles.csv\"")
     |> send_resp(200, data)
   end
 

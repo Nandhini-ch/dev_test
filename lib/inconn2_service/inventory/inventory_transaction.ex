@@ -22,7 +22,6 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :gate_pass_reference, :string
     field :gate_pass_date, :date
     field :remaining, :float
-    field :critical, :boolean
     field :approved, :boolean
     field :issue_reference, :string
     field :user_id, :integer
@@ -69,7 +68,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
         validate_required(cs, [:price, :supplier_id, :dc_reference, :dc_date])
 
       "IS" ->
-        validate_required(cs, [:workorder_id])
+        validate_required(cs, [:workorder_id, :user_id])
 
       "RT" ->
         validate_required(cs, [:workorder_id])

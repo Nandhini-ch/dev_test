@@ -11,6 +11,7 @@ defmodule Inconn2Service.AssetConfig.Location do
     field :name, :string
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
+    field :qr_code, Ecto.UUID, autogenerate: true
     field :status, :string, default: "On"
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []

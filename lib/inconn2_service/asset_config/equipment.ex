@@ -14,6 +14,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     field :connections_in, {:array, :integer}
     field :connections_out, {:array, :integer}
     field :active, :boolean, default: true
+    field :qr_code, Ecto.UUID, autogenerate: true
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
     belongs_to :location, Location

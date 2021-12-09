@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -42,6 +42,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
     resources "/locations", LocationController, except: [:new, :edit, :index]
+    get "/locations/:id/qr_code", LocationController, :display_qr_code
+    get "/locations/qr_code/:qr_code", LocationController, :get_location_from_qr_code
     put "/locations/:id/activate", LocationController, :activate_location
     put "/locations/:id/deactivate", LocationController, :deactivate_location
     get "/sites/:site_id/locations", LocationController, :index
@@ -51,6 +53,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
     resources "/equipments", EquipmentController, except: [:new, :edit, :index]
+    get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
+    get "/equipments/qr_code/:qr_code", EquipmentController, :get_equipment_from_qr_code
     get "/sites/:site_id/equipments", EquipmentController, :index
     get "/sites/:site_id/equipments_tree", EquipmentController, :tree
     get "/sites/:site_id/equipments/leaves", EquipmentController, :leaves
@@ -134,6 +138,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/modules/:module_id/features", FeatureController, :index
     resources "/role_profiles", RoleProfileController, only: [:index, :show]
     resources "/roles", RoleController, except: [:new, :edit]
+    get "/download_roles", ReferenceDownloadController, :download_roles
     put "/roles/:id/activate", RoleController, :active_role
     put "/roles/:id/deactivate", RoleController, :deactivate_role
 
@@ -171,14 +176,21 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_supplier_items", ReferenceDownloadController, :download_supplier_items
 
     get "/items/:item_id/suppliers", SupplierItemController, :get_suppliers_for_item
+    # get "/download_items", ReferenceDownloadController, :download_items
+
     resources "/uoms", UOMController, except: [:new, :edit]
     get "/uoms/physical", UOMController, :index_physical
     get "/uoms/cost", UOMController, :index_cost
+    get "/download_uoms", ReferenceDownloadController, :download_uoms
+
     resources "/uom_conversions", UomConversionController, except: [:new, :edit]
+    get "/download_uom_conversions", ReferenceDownloadController, :download_uom_conversions
     post "/uoms/convert/:value/from/:from_uom_id/to/:to_uom_id", UomConversionController, :convert
     get "/items/spares", ItemController, :index_spares
     get "/items/tools", ItemController, :index_tools
     get "/items/consumables", ItemController, :index_consumables
+
+
     resources "/items", ItemController, except: [:new, :edit]
     get "/download_items", ReferenceDownloadController, :download_items
 
@@ -190,6 +202,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
     get "/inventory_locations/:inventory_location_id/inventory_transactions", InventoryTransactionController, :loc_transaction
     get "/inventory_locations/:inventory_location_id/inventory_transfers", InventoryTransferController, :loc_transfer
+    get "/download_inventory_stocks/", ReferenceDownloadController, :download_inventory_stocks
 
 
     # resources "/inventory_stocks", InventoryStockController, except: [:new, :edit, :create, :update]

@@ -14,7 +14,9 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
       add :mobile_no, :string
       add :salary, :float
       add :has_login_credentials, :boolean, default: false, null: false
-      add :reports_to, :string
+      # add :reports_to, :integer
+      add :reports_to, references(:employees, on_delete: :nothing)
+      # add :reports_to, references(:employees, column: "id", type: :integer)
       add :skills, {:array, :integer}
       add :org_unit_id, references(:org_units, on_delete: :nothing)
       add :party_id, references(:parties, on_delete: :nothing)
@@ -23,6 +25,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateEmployees do
     end
 
     create index(:employees, [:org_unit_id])
+    create index(:employees, [:reports_to])
     create unique_index(:employees, [:employee_id])
     create unique_index(:employees, [:email])
     create index(:employees, [:party_id])

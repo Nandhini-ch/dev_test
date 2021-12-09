@@ -7,18 +7,45 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Staff.User
   alias Inconn2Service.Staff.Employee
   alias Inconn2Service.Inventory.Item
+  alias Inconn2Service.AssetConfig.Location
+  alias Inconn2Service.AssetConfig.Equipment
+
+  # def get_work_worder_report(prefix) do
+  #   query = from w in WorkOrder,
+  #           join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
+  #           join: u in User, on: u.id == w.user_id,
+  #           select: %{ w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
+
+
+
+
+  # end
 
   def get_work_order_report(prefix) do
     query = from w in WorkOrder,
             join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
-            # join: u in User, on: u.id == w.user_id,
-            select: { w.type, w.status, wt.spares, w.start_time, w.completed_time }
+            join: u in User, on: u.id == w.user_id,
+            select: { w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
     work_orders = Repo.all(query, prefix: prefix)
 
-    header = "<table border=1><tr><th>WO Category</th><th>Status</th><th>Spares Consumed</th></tr>"
+    header = "<table border=1><tr><th>Asset Name</th><th>Asset Code</th><th>WO Category</th><th>Status</th><th>Assigned To</th><th>Spares Consumed</th></tr>"
 
 
     data = Enum.map(work_orders, fn work_order ->
+
+      # manhours_consumed = elem(work_order, 4) - elem(work_order, 4)
+
+      {asset_name, asset_code} =
+        case elem(work_order, 6) do
+          "L" ->
+            asset = Repo.get!(Location, elem(work_order, 5), prefix: prefix)
+            {asset.name, asset.location_code}
+
+          "E" ->
+            asset = Repo.get!(Equipment, elem(work_order, 5), prefix: prefix)
+            {asset.name, asset.equipment_code}
+        end
+
       {rowspan, first_spare, spares_row} =
         case get_items_for_report(elem(work_order, 2), prefix) do
         [] ->
@@ -33,7 +60,7 @@ defmodule Inconn2Service.Report do
           {rowspan, first_spare, spares_row}
         end
 
-      "<tr><td rowspan=#{rowspan}>#{elem(work_order, 0)}</td><td rowspan=#{rowspan}>#{elem(work_order, 1)}</td><td>#{first_spare}</td></tr>" <> spares_row
+      "<tr><td rowspan=#{rowspan}>#{asset_name}</td><td rowspan=#{rowspan}>#{asset_code}</td><td rowspan=#{rowspan}>#{elem(work_order, 0)}</td><td rowspan=#{rowspan}>#{elem(work_order, 1)}</td><td rowspan=#{rowspan}>#{elem(work_order, 7)}</td><td>#{first_spare}</td></tr>" <> spares_row
     end) |> Enum.join()
 
     IO.inspect(header <> data)

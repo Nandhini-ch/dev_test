@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
     render(conn, "index.json", employee_rosters: employee_rosters)
   end
 
+  def index_employess_for_date_range(conn, _params) do
+    employee_rosters = Assignment.list_employees_for_date_range(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", employee_rosters: employee_rosters)
+  end
+
   def employees(conn, _params) do
     employees = Assignment.list_employee_from_roster(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "employee_index.json", employees: employees)
