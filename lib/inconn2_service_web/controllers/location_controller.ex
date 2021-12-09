@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.LocationController do
   end
 
   def display_qr_code(conn, %{"id" => id}) do
-    {png, location} = AssetConfig.get_location_qr_code(id, conn.assigns.sub_domain_prefix)
+    {png, _location} = AssetConfig.get_location_qr_code(id, conn.assigns.sub_domain_prefix)
     conn
     |> put_resp_content_type("image/jpeg")
     |> send_resp(200, png)

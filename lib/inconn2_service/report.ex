@@ -10,6 +10,17 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.AssetConfig.Equipment
 
+  # def get_work_worder_report(prefix) do
+  #   query = from w in WorkOrder,
+  #           join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
+  #           join: u in User, on: u.id == w.user_id,
+  #           select: %{ w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
+
+
+
+
+  # end
+
   def get_work_order_report(prefix) do
     query = from w in WorkOrder,
             join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
