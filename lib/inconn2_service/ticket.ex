@@ -736,4 +736,106 @@ defmodule Inconn2Service.Ticket do
   def change_approval(%Approval{} = approval, attrs \\ %{}) do
     Approval.changeset(approval, attrs)
   end
+
+  alias Inconn2Service.Ticket.WorkrequestSubcategory
+
+  @doc """
+  Returns the list of workrequest_subcategories.
+
+  ## Examples
+
+      iex> list_workrequest_subcategories()
+      [%WorkrequestSubcategory{}, ...]
+
+  """
+  def list_workrequest_subcategories(prefix) do
+    Repo.all(WorkrequestSubcategory, prefix: prefix)
+  end
+
+  def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
+    WorkrequestSubcategory
+    |> where(workrequest_category_id: ^workrequest_category_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workrequest_subcategory.
+
+  Raises `Ecto.NoResultsError` if the Workrequest subcategory does not exist.
+
+  ## Examples
+
+      iex> get_workrequest_subcategory!(123)
+      %WorkrequestSubcategory{}
+
+      iex> get_workrequest_subcategory!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workrequest_subcategory!(id, prefix), do: Repo.get!(WorkrequestSubcategory, id, prefix: prefix)
+
+  @doc """
+  Creates a workrequest_subcategory.
+
+  ## Examples
+
+      iex> create_workrequest_subcategory(%{field: value})
+      {:ok, %WorkrequestSubcategory{}}
+
+      iex> create_workrequest_subcategory(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workrequest_subcategory(attrs \\ %{}, prefix) do
+    %WorkrequestSubcategory{}
+    |> WorkrequestSubcategory.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a workrequest_subcategory.
+
+  ## Examples
+
+      iex> update_workrequest_subcategory(workrequest_subcategory, %{field: new_value})
+      {:ok, %WorkrequestSubcategory{}}
+
+      iex> update_workrequest_subcategory(workrequest_subcategory, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs, prefix) do
+    workrequest_subcategory
+    |> WorkrequestSubcategory.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workrequest_subcategory.
+
+  ## Examples
+
+      iex> delete_workrequest_subcategory(workrequest_subcategory)
+      {:ok, %WorkrequestSubcategory{}}
+
+      iex> delete_workrequest_subcategory(workrequest_subcategory)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
+    Repo.delete(workrequest_subcategory, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workrequest_subcategory changes.
+
+  ## Examples
+
+      iex> change_workrequest_subcategory(workrequest_subcategory)
+      %Ecto.Changeset{data: %WorkrequestSubcategory{}}
+
+  """
+  def change_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs \\ %{}) do
+    WorkrequestSubcategory.changeset(workrequest_subcategory, attrs)
+  end
 end

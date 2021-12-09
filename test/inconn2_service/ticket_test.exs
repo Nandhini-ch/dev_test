@@ -311,4 +311,65 @@ defmodule Inconn2Service.TicketTest do
       assert %Ecto.Changeset{} = Ticket.change_approval(approval)
     end
   end
+
+  describe "workrequest_subcategories" do
+    alias Inconn2Service.Ticket.WorkrequestSubcategory
+
+    @valid_attrs %{description: "some description", name: "some name"}
+    @update_attrs %{description: "some updated description", name: "some updated name"}
+    @invalid_attrs %{description: nil, name: nil}
+
+    def workrequest_subcategory_fixture(attrs \\ %{}) do
+      {:ok, workrequest_subcategory} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ticket.create_workrequest_subcategory()
+
+      workrequest_subcategory
+    end
+
+    test "list_workrequest_subcategories/0 returns all workrequest_subcategories" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert Ticket.list_workrequest_subcategories() == [workrequest_subcategory]
+    end
+
+    test "get_workrequest_subcategory!/1 returns the workrequest_subcategory with given id" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert Ticket.get_workrequest_subcategory!(workrequest_subcategory.id) == workrequest_subcategory
+    end
+
+    test "create_workrequest_subcategory/1 with valid data creates a workrequest_subcategory" do
+      assert {:ok, %WorkrequestSubcategory{} = workrequest_subcategory} = Ticket.create_workrequest_subcategory(@valid_attrs)
+      assert workrequest_subcategory.description == "some description"
+      assert workrequest_subcategory.name == "some name"
+    end
+
+    test "create_workrequest_subcategory/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ticket.create_workrequest_subcategory(@invalid_attrs)
+    end
+
+    test "update_workrequest_subcategory/2 with valid data updates the workrequest_subcategory" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert {:ok, %WorkrequestSubcategory{} = workrequest_subcategory} = Ticket.update_workrequest_subcategory(workrequest_subcategory, @update_attrs)
+      assert workrequest_subcategory.description == "some updated description"
+      assert workrequest_subcategory.name == "some updated name"
+    end
+
+    test "update_workrequest_subcategory/2 with invalid data returns error changeset" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ticket.update_workrequest_subcategory(workrequest_subcategory, @invalid_attrs)
+      assert workrequest_subcategory == Ticket.get_workrequest_subcategory!(workrequest_subcategory.id)
+    end
+
+    test "delete_workrequest_subcategory/1 deletes the workrequest_subcategory" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert {:ok, %WorkrequestSubcategory{}} = Ticket.delete_workrequest_subcategory(workrequest_subcategory)
+      assert_raise Ecto.NoResultsError, fn -> Ticket.get_workrequest_subcategory!(workrequest_subcategory.id) end
+    end
+
+    test "change_workrequest_subcategory/1 returns a workrequest_subcategory changeset" do
+      workrequest_subcategory = workrequest_subcategory_fixture()
+      assert %Ecto.Changeset{} = Ticket.change_workrequest_subcategory(workrequest_subcategory)
+    end
+  end
 end

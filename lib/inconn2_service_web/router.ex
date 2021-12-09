@@ -150,6 +150,9 @@ defmodule Inconn2ServiceWeb.Router do
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
 
+    get "/workrequest_categories/:workrequest_category_id/workrequest_subcategories", WorkrequestSubcategoryController, :index_for_category
+    resources "/workrequest_subcategories", WorkrequestSubcategoryController, except: [:index, :new, :edit]
+
     resources "/category_helpdesks", CategoryHelpdeskController, except: [:new, :edit]
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]

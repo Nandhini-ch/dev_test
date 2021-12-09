@@ -6,6 +6,7 @@ defmodule Inconn2Service.Ticket.WorkrequestCategory do
     field :description, :string
     field :name, :string
     field :active, :boolean, default: true
+    has_many :workrequest_subcategories, Inconn2Service.Ticket.WorkrequestSubcategory
 
     timestamps()
   end
