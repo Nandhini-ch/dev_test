@@ -175,6 +175,20 @@ wkreq_cat2 = %{"name" => "Mechanical", "description" => "Deals with mechanical w
 {:ok, wkreq_cat1c} = Ticket.create_workrequest_category(wkreq_cat1, "inc_bata")
 {:ok, wkreq_cat2c} = Ticket.create_workrequest_category(wkreq_cat2, "inc_bata")
 
+wkreq_subcat1 = %{"name" => "Electrical Subcategory 1", "workrequest_category_id" => wkreq_cat1c.id}
+wkreq_subcat2 = %{"name" => "Electrical Subcategory 2", "workrequest_category_id" => wkreq_cat1c.id}
+wkreq_subcat3 = %{"name" => "Electrical Subcategory 3", "workrequest_category_id" => wkreq_cat1c.id}
+wkreq_subcat4 = %{"name" => "Mechnical Subcategory 1", "workrequest_category_id" => wkreq_cat2c.id}
+wkreq_subcat5 = %{"name" => "Mechnical Subcategory 2", "workrequest_category_id" => wkreq_cat2c.id}
+wkreq_subcat6 = %{"name" => "Mechnical Subcategory 3", "workrequest_category_id" => wkreq_cat2c.id}
+
+{:ok, wkreq_subcat1c} = Ticket.create_workrequest_subcategory(wkreq_subcat1, "inc_bata")
+{:ok, wkreq_subcat2c} = Ticket.create_workrequest_subcategory(wkreq_subcat2, "inc_bata")
+{:ok, wkreq_subcat3c} = Ticket.create_workrequest_subcategory(wkreq_subcat3, "inc_bata")
+{:ok, wkreq_subcat4c} = Ticket.create_workrequest_subcategory(wkreq_subcat4, "inc_bata")
+{:ok, wkreq_subcat5c} = Ticket.create_workrequest_subcategory(wkreq_subcat5, "inc_bata")
+{:ok, wkreq_subcat6c} = Ticket.create_workrequest_subcategory(wkreq_subcat6, "inc_bata")
+
 cat_help1 = %{
   "user_id" => 1,
   "site_id" => 1,
@@ -193,24 +207,26 @@ cat_help2 = %{
 
 work_request1 = %{
   "site_id" => 1,
-  "workrequest_category_id" => wkreq_cat1c.id,
+  "workrequest_subcategory_id" => wkreq_subcat1c.id,
   "description" => "Test",
   "priority" => "CR",
   "request_type" => "CO",
   "status" => "RS",
-  "asset_ids" => [1]
+  "location_id" => 1
 }
 
 {:ok, work_request1c} = Ticket.create_work_request(work_request1, "inc_bata", %{id: 1})
 
 work_request2 = %{
   "site_id" => 1,
-  "workrequest_category_id" => wkreq_cat2c.id,
+  "workrequest_subcategory_id" => wkreq_subcat5c.id,
   "description" => "Test",
   "priority" => "CR",
   "request_type" => "RE",
   "status" => "RS",
-  "asset_ids" => [1],
+  "location_id" => 1,
+  "asset_id" => 1,
+  "asset_type" => "E",
   "approvals_required" => [2]
 }
 

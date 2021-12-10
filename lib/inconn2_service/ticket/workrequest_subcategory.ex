@@ -14,7 +14,7 @@ defmodule Inconn2Service.Ticket.WorkrequestSubcategory do
   def changeset(workrequest_subcategory, attrs) do
     workrequest_subcategory
     |> cast(attrs, [:name, :description, :workrequest_category_id])
-    |> validate_required([:name, :description])
+    |> validate_required([:name, :workrequest_category_id])
     |> assoc_constraint(:workrequest_category)
   end
 end

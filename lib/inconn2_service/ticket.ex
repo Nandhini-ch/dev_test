@@ -9,6 +9,7 @@ defmodule Inconn2Service.Ticket do
 
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
   alias Inconn2Service.Staff.User
+  alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Site
 
   @doc """
@@ -171,6 +172,8 @@ defmodule Inconn2Service.Ticket do
     payload = read_attachment(attrs)
     created_work_request = %WorkRequest{}
     |> WorkRequest.changeset(payload)
+    |> auto_fill_wr_category(prefix)
+    |> validate_asset_id(prefix)
     |> attachment_format(attrs)
     |> requested_user_id(user)
     |> validate_assigned_user_id(prefix)
@@ -184,6 +187,40 @@ defmodule Inconn2Service.Ticket do
         created_work_request
 
     end
+  end
+
+  defp auto_fill_wr_category(cs, prefix) do
+    wr_sbc_id = get_change(cs, :workrequest_subcategory_id)
+    if wr_sbc_id != nil do
+      wr_subcategory = get_workrequest_subcategory(wr_sbc_id, prefix)
+      case wr_subcategory do
+        nil -> cs
+        _ -> change(cs, %{workrequest_category_id: wr_subcategory.workrequest_category_id})
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_asset_id(cs, prefix) do
+    asset_type = get_change(cs, :asset_type)
+    asset_id = get_change(cs, :asset_id)
+    if asset_type in ["L", "E"] and asset_id != nil do
+      case asset_type do
+        "L" ->
+          case AssetConfig.get_location(asset_id, prefix) do
+            nil -> add_error(cs, :asset_id, "Asset ID is invalid")
+            _ -> cs
+          end
+        "E" ->
+          case AssetConfig.get_location(asset_id, prefix) do
+            nil -> add_error(cs, :asset_id, "Asset ID is invalid")
+            _ -> cs
+          end
+        end
+      else
+        cs
+      end
   end
 
   defp get_date_time_in_required_time_zone(work_request, prefix) do
@@ -258,11 +295,13 @@ defmodule Inconn2Service.Ticket do
     # wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
     updated_work_request = work_request
     |> WorkRequest.changeset(payload)
+    |> auto_fill_wr_category(prefix)
+    |> validate_asset_id(prefix)
     |> attachment_format(attrs)
     |> validate_assigned_user_id(prefix)
     |> validate_approvals_required_ids(prefix)
     |> is_approvals_required(user, prefix)
-    |> approval()
+    # |> approval()
     |> Repo.update(prefix: prefix)
 
     case updated_work_request do
@@ -773,7 +812,7 @@ defmodule Inconn2Service.Ticket do
 
   """
   def get_workrequest_subcategory!(id, prefix), do: Repo.get!(WorkrequestSubcategory, id, prefix: prefix)
-
+  def get_workrequest_subcategory(id, prefix), do: Repo.get(WorkrequestSubcategory, id, prefix: prefix)
   @doc """
   Creates a workrequest_subcategory.
 

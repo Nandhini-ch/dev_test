@@ -4,7 +4,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkrequestCategories do
   def change do
     create table(:workrequest_categories) do
       add :name, :string
-      add :description, :string
+      add :description, :text
       add :active, :boolean, default: true
 
       timestamps()

@@ -14,7 +14,10 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
     %{id: work_request.id,
       site_id: work_request.site_id,
       workrequest_category_id: work_request.workrequest_category_id,
-      asset_ids: work_request.asset_ids,
+      workrequest_subcategory_id: work_request.workrequest_subcategory_id,
+      location_id: work_request.location_id,
+      asset_id: work_request.asset_id,
+      asset_type: work_request.asset_type,
       description: work_request.description,
       priority: work_request.priority,
       request_type: work_request.request_type,
@@ -27,6 +30,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       is_approvals_required: work_request.is_approvals_required,
       approvals_required: work_request.approvals_required,
       approved_user_ids: work_request.approved_user_ids,
-      rejected_user_ids: work_request.rejected_user_ids}
+      rejected_user_ids: work_request.rejected_user_ids,
+      work_order_id: work_request.work_order_id}
   end
 end
