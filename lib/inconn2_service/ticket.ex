@@ -443,7 +443,7 @@ defmodule Inconn2Service.Ticket do
 
   """
   def list_category_helpdesks(prefix) do
-    Repo.all(CategoryHelpdesk, prefix: prefix)
+    Repo.all(CategoryHelpdesk, prefix: prefix) |> Repo.preload([:user, :site, :workrequest_category])
   end
 
   @doc """
@@ -460,7 +460,7 @@ defmodule Inconn2Service.Ticket do
       ** (Ecto.NoResultsError)
 
   """
-  def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix)
+  def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:user, :site, :workrequest_category])
 
   @doc """
   Creates a category_helpdesk.
@@ -475,10 +475,14 @@ defmodule Inconn2Service.Ticket do
 
   """
   def create_category_helpdesk(attrs \\ %{}, prefix) do
-    %CategoryHelpdesk{}
-    |> CategoryHelpdesk.changeset(attrs)
-    |> validate_user_id(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %CategoryHelpdesk{}
+              |> CategoryHelpdesk.changeset(attrs)
+              |> validate_user_id(prefix)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:user, :site, :workrequest_category])}
+       _ -> result
+    end
   end
 
   defp validate_user_id(cs, prefix) do
@@ -509,10 +513,14 @@ defmodule Inconn2Service.Ticket do
 
   """
   def update_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs, prefix) do
-    category_helpdesk
-    |> CategoryHelpdesk.changeset(attrs)
-    |> validate_user_id(prefix)
-    |> Repo.update(prefix: prefix)
+    result = category_helpdesk
+              |> CategoryHelpdesk.changeset(attrs)
+              |> validate_user_id(prefix)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:user, :site, :workrequest_category], force: true)}
+      _ -> result
+    end
   end
 
   @doc """
@@ -787,14 +795,15 @@ defmodule Inconn2Service.Ticket do
       [%WorkrequestSubcategory{}, ...]
 
   """
-  def list_workrequest_subcategories(prefix) do
-    Repo.all(WorkrequestSubcategory, prefix: prefix)
-  end
+  # def list_workrequest_subcategories(prefix) do
+  #   Repo.all(WorkrequestSubcategory, prefix: prefix)
+  # end
 
   def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
     WorkrequestSubcategory
     |> where(workrequest_category_id: ^workrequest_category_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:workrequest_category)
   end
 
   @doc """
@@ -811,8 +820,8 @@ defmodule Inconn2Service.Ticket do
       ** (Ecto.NoResultsError)
 
   """
-  def get_workrequest_subcategory!(id, prefix), do: Repo.get!(WorkrequestSubcategory, id, prefix: prefix)
-  def get_workrequest_subcategory(id, prefix), do: Repo.get(WorkrequestSubcategory, id, prefix: prefix)
+  def get_workrequest_subcategory!(id, prefix), do: Repo.get!(WorkrequestSubcategory, id, prefix: prefix) |> Repo.preload(:workrequest_category)
+  def get_workrequest_subcategory(id, prefix), do: Repo.get(WorkrequestSubcategory, id, prefix: prefix) |> Repo.preload(:workrequest_category)
   @doc """
   Creates a workrequest_subcategory.
 
@@ -826,9 +835,13 @@ defmodule Inconn2Service.Ticket do
 
   """
   def create_workrequest_subcategory(attrs \\ %{}, prefix) do
-    %WorkrequestSubcategory{}
-    |> WorkrequestSubcategory.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    result = %WorkrequestSubcategory{}
+              |> WorkrequestSubcategory.changeset(attrs)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, workrequest_subcategory} -> {:ok, workrequest_subcategory |> Repo.preload(:workrequest_category)}
+      _ -> result
+    end
   end
 
   @doc """
@@ -844,9 +857,13 @@ defmodule Inconn2Service.Ticket do
 
   """
   def update_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs, prefix) do
-    workrequest_subcategory
-    |> WorkrequestSubcategory.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result = workrequest_subcategory
+              |> WorkrequestSubcategory.changeset(attrs)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, workrequest_subcategory} -> {:ok, workrequest_subcategory |> Repo.preload(:workrequest_category, force: true)}
+      _ -> result
+    end
   end
 
   @doc """
