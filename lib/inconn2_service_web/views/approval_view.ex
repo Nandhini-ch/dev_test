@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ApprovalView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ApprovalView
+  alias Inconn2ServiceWeb.{ApprovalView, WorkRequestView}
 
   def render("index.json", %{approvals: approvals}) do
     %{data: render_many(approvals, ApprovalView, "approval.json")}
@@ -14,7 +14,6 @@ defmodule Inconn2ServiceWeb.ApprovalView do
     %{id: approval.id,
       user_id: approval.user_id,
       approved: approval.approved,
-      work_request_id: approval.work_request_id,
       remarks: approval.remarks,
       action_at: approval.action_at}
   end

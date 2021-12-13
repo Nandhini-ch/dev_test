@@ -5,8 +5,10 @@ defmodule Inconn2Service.Ticket.Approval do
   schema "approvals" do
     field :approved, :boolean, default: false
     field :remarks, :string
-    field :user_id, :integer
-    field :work_request_id, :integer
+    # field :user_id, :integer
+    belongs_to :user, Inconn2Service.Staff.User
+    # field :work_request_id, :integer
+    belongs_to :work_request, Inconn2Service.Ticket.WorkRequest
     field :action_at, :naive_datetime
 
     timestamps()
@@ -18,6 +20,8 @@ defmodule Inconn2Service.Ticket.Approval do
     |> cast(attrs, [:user_id, :approved, :remarks, :work_request_id, :action_at])
     |> validate_required([:user_id, :approved, :work_request_id, :action_at])
     |> validate_remarks()
+    |> assoc_constraint(:user)
+    |> assoc_constraint(:work_request)
   end
 
   def validate_remarks(cs) do

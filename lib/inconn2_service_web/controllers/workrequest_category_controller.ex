@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    workrequest_categories = Ticket.list_workrequest_categories(conn.query_params, conn.assigns.sub_domain_prefix)
+    workrequest_categories = Ticket.list_workrequest_categories(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", workrequest_categories: workrequest_categories)
   end
 

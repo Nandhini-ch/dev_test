@@ -13,13 +13,13 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkRequests do
       add :priority, :string
       add :request_type, :string
       add :time_of_requirement, :naive_datetime
-      add :requested_user_id, :integer
-      add :assigned_user_id, :integer
+      add :requested_user_id, references(:users, on_delete: :nothing)
+      add :assigned_user_id, references(:users, on_delete: :nothing)
       add :attachment, :binary
       add :attachment_type, :string
       add :status, :string
       add :is_approvals_required, :boolean
-      # add :approvals_required, {:array, :integer}
+      add :approvals_required, {:array, :integer}
       # add :approved_user_ids, {:array, :integer}
       # add :rejected_user_ids, {:array, :integer}
       add :work_order_id, :integer
