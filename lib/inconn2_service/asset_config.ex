@@ -804,6 +804,18 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments_qr(site_id, prefix) do
+    equipment = list_equipments(site_id, prefix)
+    Enum.map(equipment, fn e ->
+      %{
+        id: e.id,
+        asset_name: e.name,
+        asset_code: e.equipment_code,
+        asset_qr_url: "/api/equipments/#{e.id}/qr_code"
+      }
+    end)
+  end
+
   def location_path_of_equipments(equipment_id, prefix) do
     equipment = get_equipment!(equipment_id, prefix)
     site = get_site!(equipment.site_id, prefix)

@@ -14,6 +14,19 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{data: render_one(equipment, EquipmentView, "equipment.json")}
   end
 
+  def render("asset_qrs.json", %{equipments: equipments}) do
+    %{data: render_many(equipments, EquipmentView, "asset_qr.json")}
+  end
+
+  def render("asset_qr.json", %{equipment: equipment}) do
+    %{
+      id: equipment.id,
+      asset_name: equipment.asset_name,
+      asset_code: equipment.asset_code,
+      asset_qr_ul: equipment.asset_qr_url
+    }
+  end
+
   def render("equipment.json", %{equipment: equipment}) do
     %{
       id: equipment.id,
