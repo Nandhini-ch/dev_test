@@ -12,8 +12,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateWorkRequests do
       add :description, :string
       add :priority, :string
       add :request_type, :string
-      add :date_of_requirement, :date
-      add :time_of_requirement, :time
+      add :time_of_requirement, :naive_datetime
       add :requested_user_id, :integer
       add :assigned_user_id, :integer
       add :attachment, :binary

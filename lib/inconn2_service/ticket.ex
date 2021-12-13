@@ -371,38 +371,38 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  defp approval(cs) do
-    case get_field(cs, :is_approvals_required) do
-      true ->
-            if get_field(cs, :rejected_user_ids, []) == [] do
-              approved(cs)
-            else
-              rejected(cs)
-            end
-      _ -> cs
-    end
-  end
+  # defp approval(cs) do
+  #   case get_field(cs, :is_approvals_required) do
+  #     true ->
+  #           if get_field(cs, :rejected_user_ids, []) == [] do
+  #             approved(cs)
+  #           else
+  #             rejected(cs)
+  #           end
+  #     _ -> cs
+  #   end
+  # end
 
-  defp approved(cs) do
-    all_users = MapSet.new(get_field(cs, :approvals_required, []))
-    approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
-    if all_users == approved_users do
-      change(cs, %{status: "AP"})
-    else
-      cs
-    end
-  end
+  # defp approved(cs) do
+  #   all_users = MapSet.new(get_field(cs, :approvals_required, []))
+  #   approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
+  #   if all_users == approved_users do
+  #     change(cs, %{status: "AP"})
+  #   else
+  #     cs
+  #   end
+  # end
 
-  defp rejected(cs) do
-    all_users = MapSet.new(get_field(cs, :approvals_required, []))
-    approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
-    rejected_users = MapSet.new(get_field(cs, :rejected_user_ids, []))
-    if all_users == MapSet.union(approved_users, rejected_users) do
-      change(cs, %{status: "RJ"})
-    else
-      cs
-    end
-  end
+  # defp rejected(cs) do
+  #   all_users = MapSet.new(get_field(cs, :approvals_required, []))
+  #   approved_users = MapSet.new(get_field(cs, :approved_user_ids, []))
+  #   rejected_users = MapSet.new(get_field(cs, :rejected_user_ids, []))
+  #   if all_users == MapSet.union(approved_users, rejected_users) do
+  #     change(cs, %{status: "RJ"})
+  #   else
+  #     cs
+  #   end
+  # end
   @doc """
   Deletes a work_request.
 

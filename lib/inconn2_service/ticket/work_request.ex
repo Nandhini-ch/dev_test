@@ -14,8 +14,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :description, :string
     field :priority, :string
     field :request_type, :string
-    field :date_of_requirement, :date
-    field :time_of_requirement, :time
+    field :time_of_requirement, :naive_datetime
     field :requested_user_id, :integer
     field :assigned_user_id, :integer
     field :attachment, :string
@@ -34,7 +33,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
   def changeset(work_request, attrs) do
     work_request
     |> cast(attrs, [:site_id, :workrequest_category_id, :workrequest_subcategory_id, :location_id, :asset_id, :asset_type, :description, :priority, :request_type,
-                    :date_of_requirement, :time_of_requirement, :requested_user_id, :assigned_user_id,
+                    :time_of_requirement, :requested_user_id, :assigned_user_id,
                     :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id])
     |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type])
     |> validate_inclusion(:asset_type, ["L", "E"])

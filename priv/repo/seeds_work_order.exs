@@ -226,8 +226,7 @@ work_request2 = %{
   "status" => "RS",
   "location_id" => 1,
   "asset_id" => 1,
-  "asset_type" => "E",
-  "approvals_required" => [2]
+  "asset_type" => "E"
 }
 
 {:ok, work_request2c} = Ticket.create_work_request(work_request2, "inc_bata")
