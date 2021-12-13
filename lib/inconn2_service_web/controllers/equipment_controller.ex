@@ -18,6 +18,11 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     |> send_resp(200, png)
   end
 
+  def list_equipments_qr(conn, %{"site_id" => site_id}) do
+    equipments = AssetConfig.list_equipments_qr(site_id, conn.assigns.sub_domain_prefix)
+    render(conn, "asset_qrs.json", equipments: equipments)
+  end
+
   def get_equipment_from_qr_code(conn, %{"qr_code" => qr_code}) do
     equipment = AssetConfig.get_equipment_by_qr_code(qr_code, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", equipment: equipment)
