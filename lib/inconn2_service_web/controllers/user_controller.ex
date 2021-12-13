@@ -15,10 +15,10 @@ defmodule Inconn2ServiceWeb.UserController do
     username = Map.get(conn.query_params, "username", nil)
 
     if username != nil do
-      user = Staff.get_user_by_username(username, conn.assigns.sub_domain_prefix)
+      user = Staff.get_user_by_username(username, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", user: user)
     else
-      users = Staff.list_users(conn.assigns.sub_domain_prefix)
+      users = Staff.list_users(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
       render(conn, "index.json", users: users)
     end
   end

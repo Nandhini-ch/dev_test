@@ -12,6 +12,7 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Util.HierarchyManager
   import Comeonin
   alias Inconn2Service.Staff.Role
+  alias Inconn2Service.AssetConfig
 
   @doc """
   Returns the list of org_units.
@@ -311,6 +312,20 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_employees(user, prefix) do
+    filters = check_user_is_licensee(user, prefix)
+    Employee
+    |> where(^filters)
+    |> Repo.all(prefix: prefix)
+  end
+
+  defp check_user_is_licensee(user, prefix) do
+    case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
+      false -> [party_id: user.party_id]
+      true -> []
+    end
+  end
+
   def list_employees(party_id, query_params, prefix) do
     Employee
     |> where(party_id: ^party_id)
@@ -318,6 +333,22 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def get_reportees_for_logged_in_user(user, prefix) do
+    employee = user.employee
+    if employee != nil do
+      Employee
+      |> where(reports_to: ^employee.id)
+      |> Repo.all(prefix: prefix)
+    else
+      []
+    end
+  end
+
+  def get_reportees_for_employee(employee_id, prefix) do
+    Employee
+    |> where(reports_to: ^employee_id)
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Gets a single employee.
 
@@ -368,7 +399,7 @@ defmodule Inconn2Service.Staff do
 
        case employee_set do
          {:ok, emp_set} ->
-                 case create_employee_user(attrs, prefix) do
+                 case create_employee_user(emp_set, attrs, prefix) do
                    {:ok, _user} ->
                        employee_set
 
@@ -416,10 +447,28 @@ defmodule Inconn2Service.Staff do
 
   """
   def update_employee(%Employee{} = employee, attrs, prefix) do
-    employee
-    |> Employee.changeset(attrs)
-    |> validate_skill_ids(prefix)
-    |> Repo.update(prefix: prefix)
+    has_login_credentials = Map.get(attrs, "has_login_credentials", false)
+
+    if has_login_credentials == true do
+      employee_set = employee
+                      |> Employee.changeset(attrs)
+                      |> validate_skill_ids(prefix)
+                      |> validate_role_id(prefix)
+                      |> Repo.update(prefix: prefix)
+        case employee_set do
+          {:ok, emp_set} ->
+                  create_employee_user(emp_set, attrs, prefix)
+                  employee_set
+          _ ->
+                  employee_set
+        end
+
+    else
+        employee
+        |> Employee.changeset(attrs)
+        |> validate_skill_ids(prefix)
+        |> Repo.update(prefix: prefix)
+    end
   end
 
   def update_active_status_for_employee(%Employee{} = employee, attrs, prefix) do
@@ -441,8 +490,6 @@ defmodule Inconn2Service.Staff do
 
   """
   def delete_employee(%Employee{} = employee, prefix) do
-    user = get_user_by_username(employee.email, prefix)
-    Repo.delete(user, prefix: prefix)
     Repo.delete(employee, prefix: prefix)
   end
 
@@ -474,13 +521,21 @@ defmodule Inconn2Service.Staff do
   """
   def list_users(prefix) do
     Repo.all(User, prefix: prefix)
+    |> Repo.preload(:employee)
   end
 
-  def list_users(query_params, prefix) do
+  def list_users(user, prefix) do
     User
-    |> Repo.add_active_filter(query_params)
+    |> where(party_id: ^user.party_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:employee)
   end
+
+  # def list_users(query_params, prefix) do
+  #   User
+  #   |> Repo.add_active_filter(query_params)
+  #   |> Repo.all(prefix: prefix)
+  # end
 
   @doc """
   Gets a single user.
@@ -496,7 +551,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix)
+  def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(:employee)
 
   def get_user_by_username(username, prefix) do
     query =
@@ -505,6 +560,17 @@ defmodule Inconn2Service.Staff do
       )
 
       Repo.one(query, prefix: prefix)
+      |> Repo.preload(:employee)
+  end
+
+  def get_user_by_username(username, user, prefix) do
+    query =
+      from(u in User,
+      where: u.username == ^username and u.party_id == ^user.party_id
+      )
+
+      Repo.one(query, prefix: prefix)
+      |> Repo.preload(:employee)
     end
   @doc """
   Creates a user.
@@ -519,20 +585,25 @@ defmodule Inconn2Service.Staff do
 
   """
   def create_user(attrs \\ %{}, prefix) do
-    %User{}
-    |> User.changeset(attrs)
-    |> validate_role_id(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %User{}
+              |> User.changeset(attrs)
+              |> validate_role_id(prefix)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, user} -> {:ok, user |> Repo.preload(:employee)}
+      _ -> result
+    end
   end
 
-  def create_employee_user(attrs \\ %{}, prefix) do
+  def create_employee_user(employee, attrs \\ %{}, prefix) do
       user_map = %{
-        "username" => attrs["email"],
-        "email" => attrs["email"],
-        "mobile_no" => attrs["mobile_no"],
-        "password" => attrs["mobile_no"],
-        "password_confirmation" => attrs["mobile_no"],
-        "party_id" => attrs["party_id"],
+        "username" => employee.email,
+        "email" => employee.email,
+        "mobile_no" => employee.mobile_no,
+        "password" => employee.mobile_no,
+        "password_confirmation" => employee.mobile_no,
+        "party_id" => employee.party_id,
+        "employee_id" => employee.id,
         "role_id" => attrs["role_id"]
       }
 
@@ -573,10 +644,14 @@ defmodule Inconn2Service.Staff do
 
   """
   def update_user(%User{} = user, attrs, prefix) do
-    user
-    |> User.changeset_update(attrs)
-    |> validate_role_id(prefix)
-    |> Repo.update(prefix: prefix)
+    result = user
+              |> User.changeset_update(attrs)
+              |> validate_role_id(prefix)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, user} -> {:ok, user |> Repo.preload(:employee, force: true)}
+      _ -> result
+    end
   end
 
   def update_active_status_for_user(%User{} = user, attrs, prefix) do

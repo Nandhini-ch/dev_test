@@ -1,9 +1,10 @@
 defmodule Inconn2Service.Assignment.Attendance do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.Settings.Shift
 
   schema "attendances" do
-    field :shift_id, :integer
+    belongs_to :shift, Shift
     field :date, :date
     field :attendance_record, {:array, :map}
 
@@ -16,6 +17,7 @@ defmodule Inconn2Service.Assignment.Attendance do
     |> cast(attrs, [:shift_id, :date, :attendance_record])
     |> validate_required([:shift_id, :date, :attendance_record])
     |> validate_attendance_params()
+    |> assoc_constraint(:shift)
   end
 
   defp validate_attendance_params(cs) do

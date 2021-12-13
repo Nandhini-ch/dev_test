@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.UserView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.UserView
+  alias Inconn2ServiceWeb.{UserView, EmployeeView}
 
   def render("index.json", %{users: users}) do
     %{data: render_many(users, UserView, "user.json")}
@@ -17,7 +17,8 @@ defmodule Inconn2ServiceWeb.UserView do
       email: user.email,
       mobile_no: user.mobile_no,
       party_id: user.party_id,
-      role_id: user.role_id
+      role_id: user.role_id,
+      employee: render_one(user.employee, EmployeeView, "employee.json")
     }
   end
 

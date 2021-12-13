@@ -7,7 +7,7 @@ alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, St
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
 
-bt2 = %{"name" => "Carbonated Drinks"}
+bt2 = %{"name" => "Facility Management"}
 {:ok, btrec2} = Account.create_business_type(bt2)
 
 
@@ -41,6 +41,19 @@ client = %{
 # end
 IO.inspect(Account.create_licensee(client))
 # IO.inspect(Account.create_licensee(client2))
+
+party = %{
+  "company_name" => "UDS",
+  "party_type" => "SP",
+  "licensee" => false
+}
+
+pc =
+  case IO.inspect(AssetConfig.create_party(party, "inc_bata")) do
+    {:ok, party_created} -> IO.inspect(party_created)
+    {:error, cs} -> IO.inspect(cs)
+    nil -> IO.puts("null value returned")
+  end
 
 site = %{
   "name" => "Mountroad",
