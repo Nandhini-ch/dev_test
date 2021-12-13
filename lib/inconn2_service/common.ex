@@ -353,4 +353,100 @@ defmodule Inconn2Service.Common do
   def change_iot_metering(%IotMetering{} = iot_metering, attrs \\ %{}) do
     IotMetering.changeset(iot_metering, attrs)
   end
+
+  alias Inconn2Service.Common.ListOfValue
+
+  @doc """
+  Returns the list of list_of_values.
+
+  ## Examples
+
+      iex> list_list_of_values()
+      [%ListOfValue{}, ...]
+
+  """
+  def list_list_of_values(prefix) do
+    Repo.all(ListOfValue, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single list_of_value.
+
+  Raises `Ecto.NoResultsError` if the List of value does not exist.
+
+  ## Examples
+
+      iex> get_list_of_value!(123)
+      %ListOfValue{}
+
+      iex> get_list_of_value!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_list_of_value!(id, prefix), do: Repo.get!(ListOfValue, id, prefix: prefix)
+
+  @doc """
+  Creates a list_of_value.
+
+  ## Examples
+
+      iex> create_list_of_value(%{field: value})
+      {:ok, %ListOfValue{}}
+
+      iex> create_list_of_value(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_list_of_value(attrs \\ %{}, prefix) do
+    %ListOfValue{}
+    |> ListOfValue.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a list_of_value.
+
+  ## Examples
+
+      iex> update_list_of_value(list_of_value, %{field: new_value})
+      {:ok, %ListOfValue{}}
+
+      iex> update_list_of_value(list_of_value, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_list_of_value(%ListOfValue{} = list_of_value, attrs, prefix) do
+    list_of_value
+    |> ListOfValue.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a list_of_value.
+
+  ## Examples
+
+      iex> delete_list_of_value(list_of_value)
+      {:ok, %ListOfValue{}}
+
+      iex> delete_list_of_value(list_of_value)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_list_of_value(%ListOfValue{} = list_of_value, prefix) do
+    Repo.delete(list_of_value, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking list_of_value changes.
+
+  ## Examples
+
+      iex> change_list_of_value(list_of_value)
+      %Ecto.Changeset{data: %ListOfValue{}}
+
+  """
+  def change_list_of_value(%ListOfValue{} = list_of_value, attrs \\ %{}) do
+    ListOfValue.changeset(list_of_value, attrs)
+  end
 end

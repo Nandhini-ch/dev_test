@@ -136,4 +136,65 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_iot_metering(iot_metering)
     end
   end
+
+  describe "list_of_values" do
+    alias Inconn2Service.Common.ListOfValue
+
+    @valid_attrs %{name: "some name", values: []}
+    @update_attrs %{name: "some updated name", values: []}
+    @invalid_attrs %{name: nil, values: nil}
+
+    def list_of_value_fixture(attrs \\ %{}) do
+      {:ok, list_of_value} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_list_of_value()
+
+      list_of_value
+    end
+
+    test "list_list_of_values/0 returns all list_of_values" do
+      list_of_value = list_of_value_fixture()
+      assert Common.list_list_of_values() == [list_of_value]
+    end
+
+    test "get_list_of_value!/1 returns the list_of_value with given id" do
+      list_of_value = list_of_value_fixture()
+      assert Common.get_list_of_value!(list_of_value.id) == list_of_value
+    end
+
+    test "create_list_of_value/1 with valid data creates a list_of_value" do
+      assert {:ok, %ListOfValue{} = list_of_value} = Common.create_list_of_value(@valid_attrs)
+      assert list_of_value.name == "some name"
+      assert list_of_value.values == []
+    end
+
+    test "create_list_of_value/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_list_of_value(@invalid_attrs)
+    end
+
+    test "update_list_of_value/2 with valid data updates the list_of_value" do
+      list_of_value = list_of_value_fixture()
+      assert {:ok, %ListOfValue{} = list_of_value} = Common.update_list_of_value(list_of_value, @update_attrs)
+      assert list_of_value.name == "some updated name"
+      assert list_of_value.values == []
+    end
+
+    test "update_list_of_value/2 with invalid data returns error changeset" do
+      list_of_value = list_of_value_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_list_of_value(list_of_value, @invalid_attrs)
+      assert list_of_value == Common.get_list_of_value!(list_of_value.id)
+    end
+
+    test "delete_list_of_value/1 deletes the list_of_value" do
+      list_of_value = list_of_value_fixture()
+      assert {:ok, %ListOfValue{}} = Common.delete_list_of_value(list_of_value)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_list_of_value!(list_of_value.id) end
+    end
+
+    test "change_list_of_value/1 returns a list_of_value changeset" do
+      list_of_value = list_of_value_fixture()
+      assert %Ecto.Changeset{} = Common.change_list_of_value(list_of_value)
+    end
+  end
 end
