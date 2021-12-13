@@ -6,8 +6,18 @@ defmodule Inconn2ServiceWeb.EmployeeController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, %{"party_id" => party_id}) do
-    employees = Staff.list_employees(party_id, conn.query_params, conn.assigns.sub_domain_prefix)
+  def index(conn, _params) do
+    employees = Staff.list_employees(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", employees: employees)
+  end
+
+  def reportees_for_logged_in_user(conn, _params) do
+    employees = Staff.get_reportees_for_logged_in_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", employees: employees)
+  end
+
+  def reportees_for_employee(conn, %{"employee_id" => employee_id}) do
+    employees = Staff.get_reportees_for_employee(employee_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", employees: employees)
   end
 

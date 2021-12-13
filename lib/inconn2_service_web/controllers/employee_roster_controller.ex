@@ -6,18 +6,34 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    employee_rosters = Assignment.list_employee_rosters(conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", employee_rosters: employee_rosters)
-  end
+  # def index(conn, _params) do
+  #   employee_rosters = Assignment.list_employee_rosters(conn.query_params, conn.assigns.sub_domain_prefix)
+  #   render(conn, "index.json", employee_rosters: employee_rosters)
+  # end
 
-  def index_employess_for_date_range(conn, _params) do
-    employee_rosters = Assignment.list_employees_for_date_range(conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", employee_rosters: employee_rosters)
+  def index(conn, _params) do
+    query_params = Map.keys(conn.query_params)
+    case query_params do
+       [] ->
+              employee_rosters = Assignment.list_employee_rosters(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+              render(conn, "index.json", employee_rosters: employee_rosters)
+
+       ["date", "shift_id"] ->
+              employee_rosters = Assignment.list_employee_roster_for_shift_and_date(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+              render(conn, "index.json", employee_rosters: employee_rosters)
+
+       ["date", "site_id"] ->
+              employee_rosters = Assignment.list_employee_roster_for_site_and_date(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+              render(conn, "index.json", employee_rosters: employee_rosters)
+
+       ["from_date", "site_id", "to_date"] ->
+              employees = Assignment.list_employees_for_date_range(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+              render(conn, "employee_index.json", employees: employees)
+    end
   end
 
   def employees(conn, _params) do
-    employees = Assignment.list_employee_from_roster(conn.query_params, conn.assigns.sub_domain_prefix)
+    employees = Assignment.list_employee_for_attendance(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "employee_index.json", employees: employees)
   end
 

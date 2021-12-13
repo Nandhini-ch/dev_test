@@ -94,6 +94,7 @@ defmodule Inconn2Service.Settings do
 
   """
   def get_shift!(id, prefix), do: Repo.get!(Shift, id, prefix: prefix)
+  def get_shift(id, prefix), do: Repo.get(Shift, id, prefix: prefix)
 
   @doc """
   Creates a shift.

@@ -8,10 +8,10 @@ alias Inconn2Service.{Staff, Assignment}
 # {:ok, feat2c} = Staff.create_feature(feat2, "inc_bata")
 # {:ok, feat3c} = Staff.create_feature(feat3, "inc_bata")
 
-role_prof1 = Staff.get_role_profile_by_name!("Super Admin", "inc_bata") |> Staff.filter_permissions()
-role_prof2 = Staff.get_role_profile_by_name!("Admin", "inc_bata") |> Staff.filter_permissions()
+role_prof1 = Staff.get_role_profile_by_name!("Admin", "inc_bata") |> Staff.filter_permissions()
+role_prof2 = Staff.get_role_profile_by_name!("Manager", "inc_bata") |> Staff.filter_permissions()
 
-role1 = %{"name" => "Super Admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "permissions" => role_prof1.permissions}
+role1 = %{"name" => "Admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "permissions" => role_prof1.permissions}
 role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "permissions" => role_prof2.permissions}
 
 {:ok, role1c} = Staff.create_role(role1, "inc_bata")
@@ -45,6 +45,7 @@ employee2 = %{
   "last_name" =>  "Clerkman",
   "has_login_credentials" => true,
   "skills" => [1],
+  "reports_to" => emp_cs1.id,
   "org_unit_id" =>  1,
   "party_id" => 1,
   "role_id" => 3
@@ -63,36 +64,51 @@ employee3 = %{
   "last_name" =>  "Clerkman",
   "has_login_credentials" => false,
   "skills" => [1],
+  "reports_to" => emp_cs1.id,
   "org_unit_id" =>  1,
   "party_id" => 1
 }
 
 {:ok, emp_cs3} = Staff.create_employee(employee3,"inc_bata")
 
+employee4 = %{
+  "employee_id" => "Empid0004",
+  "landline_no" => "123",
+  "mobile_no" => "hello123",
+  "salary" =>  20000.00,
+  "designation" => "Head of School",
+  "email" => "xyz@c.com",
+  "first_name" => "Rebecca",
+  "last_name" =>  "Clerkman",
+  "has_login_credentials" => true,
+  "skills" => [1],
+  "org_unit_id" =>  1,
+  "party_id" => 2,
+  "role_id" => 3
+}
+
+{:ok, emp_cs4} = Staff.create_employee(employee4,"inc_bata")
+
 emp_rst1 = %{
   "employee_id" => emp_cs1.id,
-  "site_id" => 1,
   "shift_id" => 1,
   "start_date" => "2021-08-17",
   "end_date" => "2021-08-30"
 }
 emp_rst2 = %{
   "employee_id" => emp_cs2.id,
-  "site_id" => 1,
   "shift_id" => 2,
   "start_date" => "2021-08-20",
   "end_date" => "2021-08-21"
 }
 emp_rst3 = %{
   "employee_id" => emp_cs3.id,
-  "site_id" => 1,
   "shift_id" => 1,
   "start_date" => "2021-08-10",
   "end_date" => "2021-08-30"
 }
 emp_rst4 = %{
   "employee_id" => emp_cs1.id,
-  "site_id" => 1,
   "shift_id" => 4,
   "start_date" => "2021-08-20",
   "end_date" => "2021-08-30"
