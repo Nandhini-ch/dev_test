@@ -128,8 +128,9 @@ defmodule Inconn2ServiceWeb.Router do
     put "/org_units/:id/deactivate", OrgUnitController, :deactivate_org_unit
 
 
-    get "/parties/:party_id/employees", EmployeeController, :index
-    resources "/employees", EmployeeController, except: [:new, :edit, :index]
+    resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/reportees", EmployeeController, :reportees_for_logged_in_user
+    get "/employees/:employee_id/reportees", EmployeeController, :reportees_for_employee
     put "/employees/:id/activate", EmployeeController, :activate_employee
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
@@ -151,7 +152,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
 
-    get "/employees", EmployeeRosterController, :employees
+    get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]
 
     get "/sessions/current_user", SessionController, :current_user

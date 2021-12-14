@@ -9,7 +9,8 @@ defmodule Inconn2Service.Assignment do
 
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Staff.Employee
-  alias Inconn2Service.AssetConfig.Site
+  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
 
   @doc """
@@ -22,32 +23,67 @@ defmodule Inconn2Service.Assignment do
 
   """
   def list_employee_rosters(prefix) do
-    Repo.all(EmployeeRoster,prefix: prefix) |> Repo.preload([:site, :employee, :shift])
-  end
-
-  def list_employee_rosters(query_params, prefix) do
     EmployeeRoster
-    |> Repo.add_active_filter(query_params)
-    |> Repo.all(prefix: prefix)
-    |> Repo.preload([:site, :employee, :shift])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :employee, :shift])
   end
 
-  def list_employees_for_date_range(%{"site_id" => site_id, "start_date" => start_date, "end_date" => end_date}, prefix) do
-    {:ok, start_date} = date_convert(start_date)
-    {:ok, end_date} = date_convert(end_date)
+  def list_employee_rosters(user, prefix) do
+    EmployeeRoster
+    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :employee, :shift])
+    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+  end
+
+  # def list_employee_rosters(query_params, prefix) do
+  #   EmployeeRoster
+  #   |> Repo.add_active_filter(query_params)
+  #   |> Repo.all(prefix: prefix)
+  #   |> Repo.preload([:site, :employee, :shift])
+  # end
+
+  def list_employee_roster_for_shift_and_date(%{"shift_id" => shift_id, "date" => date}, user, prefix) do
+    {:ok, date} = date_convert(date)
+    query =
+      from(e in EmployeeRoster,
+        where:
+          e.shift_id == ^shift_id and
+          fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
+    )
+    Repo.all(query, prefix: prefix)
+    |> Repo.preload([:site, :employee, :shift])
+    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+  end
+
+  def list_employee_roster_for_site_and_date(%{"site_id" => site_id, "date" => date}, user, prefix) do
+    {:ok, date} = date_convert(date)
     query =
       from(e in EmployeeRoster,
         where:
           e.site_id == ^site_id and
-          fragment("? BETWEEN ? AND ?", ^start_date, e.start_date, e.end_date) or
-          fragment("? BETWEEN ? AND ?", ^end_date, e.start_date, e.end_date)
+          fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
+    )
+    Repo.all(query, prefix: prefix)
+    |> Repo.preload([:site, :employee, :shift])
+    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+  end
+
+  def list_employees_for_date_range(%{"site_id" => site_id, "from_date" => from_date, "to_date" => to_date}, user, prefix) do
+    {:ok, from_date} = date_convert(from_date)
+    {:ok, to_date} = date_convert(to_date)
+    query =
+      from(e in EmployeeRoster,
+        where:
+          e.site_id == ^site_id and
+          fragment("? BETWEEN ? AND ?", ^from_date, e.start_date, e.end_date) or
+          fragment("? BETWEEN ? AND ?", ^to_date, e.start_date, e.end_date)
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([:employee])
+    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
+    |> Enum.uniq()
   end
 
-  def list_employee_from_roster(query_params, prefix) do
+  def list_employee_for_attendance(query_params, user, prefix) do
     {:ok, date} = date_convert(query_params["date"])
     query =
       from(e in EmployeeRoster,
@@ -56,8 +92,18 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
       )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload([:employee, :site, :shift])
+    |> Repo.preload([:employee])
+    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
+  end
+
+  defp check_user_is_licensee(emp_roster, user, prefix) do
+    case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
+      false ->
+              user.party_id == emp_roster.employee.party_id
+      true ->
+              true
+    end
   end
 
   defp date_convert(date_to_convert) do
@@ -99,8 +145,8 @@ defmodule Inconn2Service.Assignment do
     result = %EmployeeRoster{}
       |> EmployeeRoster.changeset(attrs)
       |> validate_employee_id(prefix)
-      |> validate_site_id(prefix)
       |> validate_shift_id(prefix)
+      |> auto_fill_site_id(prefix)
       |> validate_within_shift_dates(prefix)
       |> Repo.insert(prefix: prefix)
     case result do
@@ -109,23 +155,24 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
-  defp validate_employee_id(cs, prefix) do
-    emp_id = get_change(cs, :employee_id, nil)
-    if emp_id != nil do
-      case Repo.get(Employee, emp_id, prefix: prefix) do
-        nil -> add_error(cs, :employee_id, "Employee ID is invalid")
-        _ -> cs
+  def auto_fill_site_id(cs, prefix) do
+    shift_id = get_change(cs, :shift_id, nil)
+    if shift_id != nil do
+      shift = Settings.get_shift(shift_id, prefix)
+      case shift do
+        nil -> cs
+        _ -> change(cs, %{site_id: shift.site_id})
       end
     else
       cs
     end
   end
 
-  defp validate_site_id(cs, prefix) do
-    site_id = get_change(cs, :site_id, nil)
-    if site_id != nil do
-      case Repo.get(Site, site_id, prefix: prefix) do
-        nil -> add_error(cs, :site_id, "Site Id is invalid")
+  defp validate_employee_id(cs, prefix) do
+    emp_id = get_change(cs, :employee_id, nil)
+    if emp_id != nil do
+      case Repo.get(Employee, emp_id, prefix: prefix) do
+        nil -> add_error(cs, :employee_id, "Employee ID is invalid")
         _ -> cs
       end
     else
@@ -185,8 +232,8 @@ defmodule Inconn2Service.Assignment do
       employee_roster
     |> EmployeeRoster.changeset(attrs)
     |> validate_employee_id(prefix)
-    |> validate_site_id(prefix)
     |> validate_shift_id(prefix)
+    |> auto_fill_site_id(prefix)
     |> validate_within_shift_dates(prefix)
     |> Repo.update(prefix: prefix)
 
@@ -251,6 +298,7 @@ defmodule Inconn2Service.Assignment do
           a.date == ^date
       )
     Repo.all(query, prefix: prefix)
+    |> Repo.preload(:shift)
   end
 
   @doc """
@@ -267,7 +315,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix)
+  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> Repo.preload(:shift)
 
   @doc """
   Creates a attendance.
@@ -282,9 +330,13 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_attendance(attrs \\ %{}, prefix) do
-    %Attendance{}
-    |> Attendance.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    result = %Attendance{}
+            |> Attendance.changeset(attrs)
+            |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, attendance} -> {:ok, attendance |> Repo.preload(:shift)}
+      _ -> result
+    end
   end
 
   @doc """

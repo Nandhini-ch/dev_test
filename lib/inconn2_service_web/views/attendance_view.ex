@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.AttendanceView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.AttendanceView
+  alias Inconn2ServiceWeb.{AttendanceView, ShiftView}
 
   def render("index.json", %{attendances: attendances}) do
     %{data: render_many(attendances, AttendanceView, "attendance.json")}
@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.AttendanceView do
 
   def render("attendance.json", %{attendance: attendance}) do
     %{id: attendance.id,
-      shift_id: attendance.shift_id,
+      shift: render_one(attendance.shift, ShiftView, "shift.json"),
       date: attendance.date,
       attendance_record: attendance.attendance_record}
   end

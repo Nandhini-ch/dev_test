@@ -9,6 +9,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
       add :password_hash, :string
       add :role_id, :integer
       add :party_id, references(:parties, on_delete: :nothing)
+      add :employee_id, references(:employees, on_delete: :delete_all)
       add :active, :boolean
 
       timestamps()
@@ -16,5 +17,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateUsers do
     create unique_index(:users, [:username])
     create unique_index(:users, [:email])
     create index(:users, [:party_id])
+    create index(:users, [:employee_id])
   end
 end

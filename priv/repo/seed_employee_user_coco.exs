@@ -17,9 +17,9 @@ org_ut1 = %{"name" => "House Keeping", "party_id" => 1}
 # {:ok, feat4c} = Staff.create_feature(feat4, "inc_uds")
 # {:ok, feat5c} = Staff.create_feature(feat5, "inc_uds")
 #
-role_prof1 = Staff.get_role_profile_by_name!("Super Admin", "inc_uds") |> Staff.filter_permissions()
-role_prof2 = Staff.get_role_profile_by_name!("Admin", "inc_uds") |> Staff.filter_permissions()
-role_prof3 = Staff.get_role_profile_by_name!("Manager", "inc_uds") |> Staff.filter_permissions()
+role_prof1 = Staff.get_role_profile_by_name!("Admin", "inc_uds") |> Staff.filter_permissions()
+role_prof2 = Staff.get_role_profile_by_name!("Manager", "inc_uds") |> Staff.filter_permissions()
+role_prof3 = Staff.get_role_profile_by_name!("Supervisor", "inc_uds") |> Staff.filter_permissions()
 
 role1 = %{"name" => "Super admin", "description" => "Has all access", "role_profile_id" => role_prof1.id, "permissions" => role_prof1.permissions}
 role2 = %{"name" => "Site Admin", "description" => "Has access to assets", "role_profile_id" => role_prof2.id,  "permissions" => role_prof2.permissions}
@@ -95,14 +95,12 @@ shift4 = %{"name" => "shift4", "start_date" => "2021-01-01", "end_date" => "2023
 
 emp_rst1 = %{
   "employee_id" => 3,
-  "site_id" => 1,
   "shift_id" => shift2_c.id,
   "start_date" => "2021-01-01",
   "end_date" => "2021-12-31"
 }
 emp_rst2 = %{
   "employee_id" => 3,
-  "site_id" => 1,
   "shift_id" => shift1_c.id,
   "start_date" => "2021-01-01",
   "end_date" => "2021-12-31"
@@ -110,7 +108,6 @@ emp_rst2 = %{
 
 emp_rst3 = %{
   "employee_id" => 3,
-  "site_id" => 1,
   "shift_id" => shift2_c.id,
   "start_date" => "2022-01-01",
   "end_date" => "2023-12-31"

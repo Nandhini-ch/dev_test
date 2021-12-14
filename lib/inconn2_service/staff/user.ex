@@ -3,6 +3,7 @@ defmodule Inconn2Service.Staff.User do
   import Ecto.Changeset
   import Comeonin
   alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.Staff.Employee
 
   schema "users" do
     field :username, :string
@@ -11,8 +12,9 @@ defmodule Inconn2Service.Staff.User do
     field :email, :string
     field :mobile_no, :string
     field :password_hash, :string
-    field :active, :boolean, default: false
+    belongs_to :employee, Employee
     belongs_to :party, Party
+    field :active, :boolean, default: false
     timestamps()
   end
 
@@ -20,7 +22,7 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :email, :mobile_no, :role_id, :party_id, :active])
+    |> cast(attrs, [:username, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :password, :email, :mobile_no, :role_id, :party_id])
     |> validate_format(:email, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
@@ -31,6 +33,7 @@ defmodule Inconn2Service.Staff.User do
     |> unique_constraint(:email)
     |> hash_password()
     |> assoc_constraint(:party)
+    |> assoc_constraint(:employee)
   end
 
   def changeset_update(user, attrs) do
