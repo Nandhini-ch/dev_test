@@ -5,77 +5,54 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.Staff.User
-  alias Inconn2Service.Staff.Employee
-  alias Inconn2Service.Inventory.Item
-  alias Inconn2Service.AssetConfig.Location
-  alias Inconn2Service.AssetConfig.Equipment
+  alias Inconn2Service.Inventory
+  # alias Inconn2Service.Staff.Employee
+  # alias Inconn2Service.Inventory.Item
+  # alias Inconn2Service.AssetConfig.Location
+  # alias Inconn2Service.AssetConfig.Equipment
 
-  # def get_work_worder_report(prefix) do
-  #   query = from w in WorkOrder,
-  #           join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
-  #           join: u in User, on: u.id == w.user_id,
-  #           select: %{ w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
-
-
-
-
-  # end
 
   def get_work_order_report(prefix) do
     query = from w in WorkOrder,
             join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
             join: u in User, on: u.id == w.user_id,
             select: { w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
+
     work_orders = Repo.all(query, prefix: prefix)
 
-    header = "<table border=1><tr><th>Asset Name</th><th>Asset Code</th><th>WO Category</th><th>Status</th><th>Assigned To</th><th>Spares Consumed</th></tr>"
 
+    Enum.map(work_orders, fn work_order ->
 
-    data = Enum.map(work_orders, fn work_order ->
-
-      # manhours_consumed = elem(work_order, 4) - elem(work_order, 4)
-
-      {asset_name, asset_code} =
+      asset =
         case elem(work_order, 6) do
           "L" ->
-            asset = Repo.get!(Location, elem(work_order, 5), prefix: prefix)
-            {asset.name, asset.location_code}
-
+            location = Inconn2Service.AssetConfig.get_location!(elem(work_order, 5), prefix)
+            %{name: location.name, type: "Location", code: location.location_code}
           "E" ->
-            asset = Repo.get!(Equipment, elem(work_order, 5), prefix: prefix)
-            {asset.name, asset.equipment_code}
+            equipment = Inconn2Service.AssetConfig.get_equipment!(elem(work_order, 5), prefix)
+            %{name: equipment.name, type: "Equipment", code: equipment.equipment_code}
         end
 
-      {rowspan, first_spare, spares_row} =
-        case get_items_for_report(elem(work_order, 2), prefix) do
-        [] ->
-          {1, "", ""}
-
-        list_of_spares ->
-          [first_spare | spares] = list_of_spares
-          rowspan = length(list_of_spares)
-          spares_row = Enum.map(spares, fn s->
-            "<tr><td>#{s}</td></tr>"
-          end) |> Enum.join()
-          {rowspan, first_spare, spares_row}
-        end
-
-      "<tr><td rowspan=#{rowspan}>#{asset_name}</td><td rowspan=#{rowspan}>#{asset_code}</td><td rowspan=#{rowspan}>#{elem(work_order, 0)}</td><td rowspan=#{rowspan}>#{elem(work_order, 1)}</td><td rowspan=#{rowspan}>#{elem(work_order, 7)}</td><td>#{first_spare}</td></tr>" <> spares_row
-    end) |> Enum.join()
-
-    IO.inspect(header <> data)
-
-    PdfGenerator.generate(header <> data <> "</table>", page_size: "A3")
-  end
+        spares =
+          Enum.map(elem(work_order, 2), fn s ->
+            spare = Inventory.get_item!(s["id"], prefix)
+            uom = Inventory.get_uom!(s["uom_id"], prefix)
+            %{name: spare.name, uom: uom.symbol, quantity: s["quantity"]}
+          end)
 
 
-  def get_items_for_report(tools_list, prefix) do
-    Enum.map(tools_list, fn t->
-      item = Repo.get(Item, t["id"], prefix: prefix)
-      ~s(#{item.name}-#{t["quantity"]})
+      %{
+        work_order_type: elem(work_order, 0),
+        work_order_status: elem(work_order, 1),
+        spares_consumed: spares,
+        start_time: elem(work_order, 3),
+        completed_time: elem(work_order, 4),
+        asset_name: asset.name,
+        asset_code: asset.code,
+        asset_type: asset.type,
+        employee_user_name: elem(work_order, 7),
+      }
     end)
+
   end
-
-
-  def create_rowspan_columns([]), do: []
 end

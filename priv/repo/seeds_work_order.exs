@@ -32,8 +32,8 @@ wkord_tp1 = %{
   "create_new" => "at",
   "max_times" => 5,
   "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
-  "spares" => [%{"id" => 4, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
-  "tools" => [%{"id" => 3, "uom_id" => 1, "quantity" => 10}],
+  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
+  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "workpermit_required" => false,
   "loto_required" => false
