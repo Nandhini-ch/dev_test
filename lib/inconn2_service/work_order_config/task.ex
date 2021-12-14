@@ -27,25 +27,25 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     config = get_field(changeset, :config)
     case task_type do
       "IO"  ->
-            if Map.keys(config) == ["options"] and length(config["options"]) >= 2 do
+            if Map.has_key?(config, "options") and length(config["options"]) >= 2 do
               validate_options(changeset, config)
             else
               add_error(changeset, :config, "Config is invalid")
             end
       "IM" ->
-            if Map.keys(config) == ["options"] and length(config["options"]) >= 2 do
+            if Map.has_key?(config, "options") and length(config["options"]) >= 2 do
               validate_options(changeset, config)
             else
               add_error(changeset, :config, "Config is invalid")
             end
       "MT" ->
-            if Map.keys(config) == ["UOM", "max_value", "min_value", "threshold_value", "type"] and config["type"] in ["C","A"] do
+            if (["UOM", "max_value", "min_value", "threshold_value", "type"] -- Map.keys(config) == []) and config["type"] in ["C","A"] do
               changeset
             else
               add_error(changeset, :config, "Config is invalid")
             end
       "OB" ->
-            if Map.keys(config) == ["max_length", "min_length"] do
+            if (["max_length", "min_length"] -- Map.keys(config) == []) do
               validate_lengths(changeset, config["min_length"], config["max_length"])
             else
               add_error(changeset, :config, "Config is invalid")
