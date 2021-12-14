@@ -5,7 +5,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.Staff.User
-  alias Inconn2Service.Inventory
+  alias Inconn2Service.{Inventory, Staff}
   # alias Inconn2Service.Staff.Employee
   # alias Inconn2Service.Inventory.Item
   # alias Inconn2Service.AssetConfig.Location
@@ -16,7 +16,7 @@ defmodule Inconn2Service.Report do
     query = from w in WorkOrder,
             join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
             join: u in User, on: u.id == w.user_id,
-            select: { w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.username }
+            select: { w.type, w.status, wt.spares, w.start_time, w.completed_time, w.asset_id, wt.asset_type, u.id }
 
     work_orders = Repo.all(query, prefix: prefix)
 
@@ -40,6 +40,8 @@ defmodule Inconn2Service.Report do
             %{name: spare.name, uom: uom.symbol, quantity: s["quantity"]}
           end)
 
+        user = Staff.get_user!(elem(work_order, 7), prefix)
+
 
       %{
         work_order_type: elem(work_order, 0),
@@ -50,7 +52,7 @@ defmodule Inconn2Service.Report do
         asset_name: asset.name,
         asset_code: asset.code,
         asset_type: asset.type,
-        employee_user_name: elem(work_order, 7),
+        employee_name: user.employee.first_name <> " " <> user.employee.last_name,
       }
     end)
 
