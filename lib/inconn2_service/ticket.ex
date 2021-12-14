@@ -60,9 +60,15 @@ defmodule Inconn2Service.Ticket do
 
   """
   def create_workrequest_category(attrs \\ %{}, prefix) do
-    %WorkrequestCategory{}
-    |> WorkrequestCategory.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    result = %WorkrequestCategory{}
+              |> WorkrequestCategory.changeset(attrs)
+              |> Repo.insert(prefix: prefix)
+
+    case result do
+      {:ok, workrequest_category} -> {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
+      _ -> result
+    end
+
   end
 
   @doc """
@@ -78,9 +84,13 @@ defmodule Inconn2Service.Ticket do
 
   """
   def update_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
-    workrequest_category
-    |> WorkrequestCategory.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result = workrequest_category
+             |> WorkrequestCategory.changeset(attrs)
+             |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, workrequest_category} -> {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories, force: true)}
+      _ -> result
+    end
   end
 
   def update_active_status_for_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do

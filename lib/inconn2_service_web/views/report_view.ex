@@ -7,4 +7,10 @@ defmodule Inconn2ServiceWeb.ReportView do
       data: work_order_info
     }
   end
+
+  def render("inventory_report.json", %{inventory_info: inventory_info}) do
+    %{
+      data: inventory_info
+    }
+  end
 end
