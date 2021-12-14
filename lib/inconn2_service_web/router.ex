@@ -234,5 +234,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/list_of_values", ListOfValueController, except: [:new, :edit]
 
     get "/reports/work_orders", ReportController, :get_work_order_report
+    get "/reports/inventory", ReportController, :get_inventory_report
   end
 end

@@ -1139,7 +1139,7 @@ defmodule Inconn2Service.Inventory do
                            u.transaction_type == "IN" and
                            u.remaining > ^quantity,
                            order_by: [desc: u.inserted_at], limit: 1)
-        required_issue_transaction = Repo.get_by(query, prefix: prefix)
+        required_issue_transaction = Repo.one(query, prefix: prefix)
         supplier_id = required_issue_transaction.supplier_id
         item_id = get_field(cs, :item_id, nil)
         if supplier_id != nil && item_id != nil do
