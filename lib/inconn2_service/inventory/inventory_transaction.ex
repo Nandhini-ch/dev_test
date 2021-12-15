@@ -25,6 +25,8 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :approved, :boolean
     field :issue_reference, :string
     field :user_id, :integer
+    field :reference_no, :string
+    field :authorized_by_user_id, :integer
 
     # field :inventory_location_id, :integer
     belongs_to :inventory_location, Inconn2Service.Inventory.InventoryLocation
@@ -68,7 +70,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
         validate_required(cs, [:price, :supplier_id, :dc_reference, :dc_date])
 
       "IS" ->
-        validate_required(cs, [:workorder_id, :user_id])
+        validate_workorder_or_reference_no(cs) |> validate_required([:user_id])
 
       "RT" ->
         validate_required(cs, [:workorder_id])
@@ -88,6 +90,17 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
 
       _ ->
         cs
+    end
+  end
+
+  def validate_workorder_or_reference_no(cs) do
+    reference_no = get_field(cs, :reference_no, nil)
+    workorder_id = get_field(cs, :workorder_id, nil)
+    if reference_no == nil and workorder_id == nil do
+      add_error(cs, :workorder_id, "Issue Needs workorder Id or Reference Number")
+      add_error(cs, :reference_no, "Issue Needs workorder Id or Reference Number")
+    else
+      cs
     end
   end
 end

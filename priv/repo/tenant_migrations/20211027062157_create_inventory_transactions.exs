@@ -27,6 +27,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryTransactions do
       add :approved, :boolean
       add :issue_reference, :text
       add :user_id, :text
+      add :reference_no, :string
+      add :authorized_by_user_id, :integer
 
       timestamps()
     end

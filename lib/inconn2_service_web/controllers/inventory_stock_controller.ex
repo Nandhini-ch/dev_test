@@ -25,6 +25,11 @@ defmodule Inconn2ServiceWeb.InventoryStockController do
     render(conn, "show.json", inventory_stock: inventory_stock)
   end
 
+  def stock_for_item(conn, %{"item_id" => item_id}) do
+    inventory_stock = Inventory.get_stock_for_item(item_id, conn.assigns.sub_domain_prefix)
+    render(conn, "show.json", inventory_stock: inventory_stock)
+  end
+
   def update(conn, %{"id" => id, "inventory_stock" => inventory_stock_params}) do
     inventory_stock = Inventory.get_inventory_stock!(id, conn.assigns.sub_domain_prefix)
 

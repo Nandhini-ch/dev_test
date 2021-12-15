@@ -607,6 +607,10 @@ defmodule Inconn2Service.Inventory do
   """
   def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, :item])
 
+  def get_stock_for_item(item_id, prefix) do
+    Repo.get_by(InventoryStock, [item_id: item_id], prefix: prefix) |> Repo.preload([:inventory_location, :item])
+  end
+
   @doc """
   Creates a inventory_stock.
 
