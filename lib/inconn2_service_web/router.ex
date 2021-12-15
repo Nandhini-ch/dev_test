@@ -207,6 +207,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/inventory_locations/", InventoryLocationController, :index
 
     get "/inventory_locations/:inventory_location_id/inventory_stocks", InventoryStockController, :index
+    get "/items/:item_id/inventory_stocks/", InventoryStockController, :stock_for_item
     get "/inventory_locations/:inventory_location_id/inventory_transactions", InventoryTransactionController, :loc_transaction
     get "/inventory_locations/:inventory_location_id/inventory_transfers", InventoryTransferController, :loc_transfer
     get "/download_inventory_stocks/", ReferenceDownloadController, :download_inventory_stocks

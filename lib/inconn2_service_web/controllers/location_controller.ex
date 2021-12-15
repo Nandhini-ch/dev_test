@@ -18,6 +18,11 @@ defmodule Inconn2ServiceWeb.LocationController do
     |> send_resp(200, png)
   end
 
+  def list_locations_qr(conn, %{"site_id" => site_id}) do
+    locations = AssetConfig.list_locations_qr(site_id, conn.assigns.sub_domain_prefix)
+    render(conn, "asset_qrs.json", locations: locations)
+  end
+
   def get_location_from_qr_code(conn, %{"qr_code" => qr_code}) do
     location = AssetConfig.get_location_by_qr_code(qr_code, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", location: location)

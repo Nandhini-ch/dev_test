@@ -17,7 +17,7 @@ defmodule Inconn2Service.Inventory.Item do
     field :aisle, :string
     field :row, :string
     field :bin, :string
-    field :critical, :boolean
+    field :critical, :boolean, default: false
     has_many :inventory_transactions, Inconn2Service.Inventory.InventoryTransaction
     has_many :supplier_items, Inconn2Service.Inventory.SupplierItem
 
