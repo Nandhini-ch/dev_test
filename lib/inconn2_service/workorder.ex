@@ -1116,7 +1116,7 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_io(cs, response) do
     answer = response["answers"]
-    if is_bitstring(answer) do
+    if is_bitstring(answer) or answer == nil do
       cs
     else
       add_error(cs, :response, "answer should be string")
@@ -1125,7 +1125,7 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_im(cs, response) do
     answer = response["answers"]
-    if is_list(answer) do
+    if is_list(answer) or answer == nil do
       cs
     else
       add_error(cs, :response, "answer should be list")
@@ -1134,7 +1134,7 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_mt(cs, response) do
     answer = response["answers"]
-    if is_integer(answer) do
+    if is_integer(answer) or answer == nil do
       cs
     else
       add_error(cs, :response, "answer should be integer")
@@ -1143,7 +1143,7 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_ob(cs, response) do
     answer = response["answers"]
-    if is_bitstring(answer) do
+    if is_bitstring(answer) or answer == nil do
       cs
     else
       add_error(cs, :response, "answer should be string")
@@ -1476,6 +1476,7 @@ defmodule Inconn2Service.Workorder do
                             "work_order_id" => work_order.id,
                             "task_id" => task["id"],
                             "sequence" => task["order"],
+                            # "response" => %{"answers" => nil},
                             "expected_start_time" => start_dt,
                             "expected_end_time" => end_dt
                           }
@@ -1495,6 +1496,7 @@ defmodule Inconn2Service.Workorder do
                             "work_order_id" => work_order.id,
                             "task_id" => task["id"],
                             "sequence" => task["order"],
+                            # "response" => %{"answers" => nil},
                             "expected_start_time" => start_dt,
                             "expected_end_time" => end_dt
                           }
