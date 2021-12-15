@@ -317,6 +317,7 @@ defmodule Inconn2Service.Staff do
     Employee
     |> where(^filters)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:org_unit)
   end
 
   defp check_user_is_licensee(user, prefix) do
@@ -339,6 +340,7 @@ defmodule Inconn2Service.Staff do
       Employee
       |> where(reports_to: ^employee.id)
       |> Repo.all(prefix: prefix)
+      |> Repo.preload(:org_unit)
     else
       []
     end
@@ -348,6 +350,7 @@ defmodule Inconn2Service.Staff do
     Employee
     |> where(reports_to: ^employee_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(:org_unit)
   end
   @doc """
   Gets a single employee.
@@ -363,7 +366,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee!(id, prefix), do: Repo.get!(Employee, id, prefix: prefix)
+  def get_employee!(id, prefix), do: Repo.get!(Employee, id, prefix: prefix) |> Repo.preload(:org_unit)
 
   def get_employee_email!(email, prefix) do
     query =
@@ -372,6 +375,7 @@ defmodule Inconn2Service.Staff do
       )
 
     Repo.one(query, prefix: prefix)
+    |> Repo.preload(:org_unit)
   end
 
   @doc """
@@ -401,7 +405,7 @@ defmodule Inconn2Service.Staff do
          {:ok, emp_set} ->
                  case create_employee_user(emp_set, attrs, prefix) do
                    {:ok, _user} ->
-                       employee_set
+                       {:ok, emp_set |> Repo.preload(:org_unit)}
 
                    {:error, _changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
@@ -412,10 +416,14 @@ defmodule Inconn2Service.Staff do
        end
 
     else
-         %Employee{}
-         |> Employee.changeset(attrs)
-         |> validate_skill_ids(prefix)
-         |> Repo.insert(prefix: prefix)
+      employee_set = %Employee{}
+                      |> Employee.changeset(attrs)
+                      |> validate_skill_ids(prefix)
+                      |> Repo.insert(prefix: prefix)
+      case employee_set do
+        {:ok, emp_set} -> {:ok, emp_set |> Repo.preload(:org_unit)}
+        _ -> employee_set
+      end
     end
   end
 
@@ -458,16 +466,22 @@ defmodule Inconn2Service.Staff do
         case employee_set do
           {:ok, emp_set} ->
                   create_employee_user(emp_set, attrs, prefix)
-                  employee_set
+                  {:ok, emp_set |> Repo.preload(:org_unit)}
           _ ->
                   employee_set
         end
 
     else
-        employee
-        |> Employee.changeset(attrs)
-        |> validate_skill_ids(prefix)
-        |> Repo.update(prefix: prefix)
+      employee_set = employee
+                    |> Employee.changeset(attrs)
+                    |> validate_skill_ids(prefix)
+                    |> Repo.update(prefix: prefix)
+      case employee_set do
+          {:ok, emp_set} ->
+                  {:ok, emp_set |> Repo.preload(:org_unit)}
+          _ ->
+                  employee_set
+      end
     end
   end
 
