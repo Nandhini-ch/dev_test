@@ -535,14 +535,14 @@ defmodule Inconn2Service.Staff do
   """
   def list_users(prefix) do
     Repo.all(User, prefix: prefix)
-    |> Repo.preload(:employee)
+    |> Repo.preload(employee: :org_unit)
   end
 
   def list_users(user, prefix) do
     User
     |> where(party_id: ^user.party_id)
     |> Repo.all(prefix: prefix)
-    |> Repo.preload(:employee)
+    |> Repo.preload(employee: :org_unit)
   end
 
   # def list_users(query_params, prefix) do
@@ -565,7 +565,7 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(:employee)
+  def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
 
   def get_user_by_username(username, prefix) do
     query =
@@ -574,7 +574,7 @@ defmodule Inconn2Service.Staff do
       )
 
       Repo.one(query, prefix: prefix)
-      |> Repo.preload(:employee)
+      |> Repo.preload(employee: :org_unit)
   end
 
   def get_user_by_username(username, user, prefix) do
@@ -584,7 +584,7 @@ defmodule Inconn2Service.Staff do
       )
 
       Repo.one(query, prefix: prefix)
-      |> Repo.preload(:employee)
+      |> Repo.preload(employee: :org_unit)
     end
   @doc """
   Creates a user.
@@ -604,7 +604,7 @@ defmodule Inconn2Service.Staff do
               |> validate_role_id(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
-      {:ok, user} -> {:ok, user |> Repo.preload(:employee)}
+      {:ok, user} -> {:ok, user |> Repo.preload(employee: :org_unit)}
       _ -> result
     end
   end
