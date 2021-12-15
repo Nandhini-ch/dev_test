@@ -808,6 +808,17 @@ defmodule Inconn2Service.Workorder do
       _ -> Map.put_new(work_order, :overdue, false)
     end
   end
+
+  def update_asset_status(work_order, attrs, prefix) do
+    case work_order.asset_type do
+      "L" ->
+          location = AssetConfig.get_location(work_order.asset_id, prefix)
+          AssetConfig.update_location(location, attrs, prefix)
+      "E" ->
+          equipment = AssetConfig.get_equipment(work_order.asset_id, prefix)
+          AssetConfig.update_equipment(equipment, attrs, prefix)
+    end
+  end
   @doc """
   Updates a work_order.
 

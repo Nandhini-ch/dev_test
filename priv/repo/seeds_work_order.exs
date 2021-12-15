@@ -125,23 +125,49 @@ wkord_tp5 = %{
   "loto_release_check_list_id" => chk_lst2c.id
 }
 
+wkord_tp6 = %{
+  "asset_category_id" => 1,
+  "name" => "Hourly maintenance",
+  "task_list_id" => 1,
+  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 4, "order" => 2}],
+  "estimated_time" => 286,
+  "scheduled" => true,
+  "repeat_every" => 4,
+  "repeat_unit" => "H",
+  "applicable_start" => "2021-10-21",
+  "applicable_end" => "2021-10-23",
+  "time_start" => "09:00:00",
+  "time_end" => "17:00:00",
+  "create_new" => "at",
+  "max_times" => 5,
+  "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
+  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
+  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
+  "workorder_prior_time" => 180,
+  "workpermit_required" => false,
+  "loto_required" => false
+}
+
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
 {:ok, wkord_tp2c} = Workorder.create_workorder_template(wkord_tp2, "inc_bata")
 {:ok, wkord_tp3c} = Workorder.create_workorder_template(wkord_tp3, "inc_bata")
 {:ok, wkord_tp4c} = Workorder.create_workorder_template(wkord_tp4, "inc_bata")
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
+{:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_bata")
 
 wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
+wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_bata")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_bata")
 {:ok, wkord_sc3c} = Workorder.create_workorder_schedule(wkord_sc3, "inc_bata")
 {:ok, wkord_sc4c} = Workorder.create_workorder_schedule(wkord_sc4, "inc_bata")
 {:ok, wkord_sc5c} = Workorder.create_workorder_schedule(wkord_sc5, "inc_bata")
+{:ok, wkord_sc6c} = Workorder.create_workorder_schedule(wkord_sc6, "inc_bata")
 
 wk_ord1 = %{
   "site_id" => 1,

@@ -8,6 +8,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateEquipments do
       add :asset_category_id, references(:asset_categories, on_delete: :nothing)
       add :site_id, references(:sites, on_delete: :nothing)
       add :location_id, references(:locations, on_delete: :nothing)
+      add :status, :string
+      add :criticality, :integer
       add :connections_in, {:array, :integer}
       add :connections_out, {:array, :integer}
       add :qr_code, :uuid, null: false

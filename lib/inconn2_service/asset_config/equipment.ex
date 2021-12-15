@@ -15,6 +15,8 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     field :connections_out, {:array, :integer}
     field :active, :boolean, default: true
     field :qr_code, Ecto.UUID, autogenerate: true
+    field :status, :string, default: "ON"
+    field :criticality, :integer, default: 5
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
     belongs_to :location, Location
@@ -25,8 +27,10 @@ defmodule Inconn2Service.AssetConfig.Equipment do
   @doc false
   def changeset(equipment, attrs) do
     equipment
-    |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :site_id, :location_id, :connections_in, :connections_out, :active])
+    |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :status, :criticality, :site_id, :location_id, :connections_in, :connections_out, :active])
     |> validate_required([:name, :equipment_code, :asset_category_id, :site_id, :location_id])
+    |> validate_inclusion(:status, ["ON", "OFF", "BRK", "PRS", "TRN", "WRO"])
+    |> validate_inclusion(:criticality, [1, 2, 3, 4, 5])
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
     |> assoc_constraint(:location)

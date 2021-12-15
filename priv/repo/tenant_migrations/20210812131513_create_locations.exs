@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateLocations do
       add :description, :string
       add :location_code, :string
       add :status, :string
+      add :criticality, :integer
       add :qr_code, :uuid, null: false
       add :asset_category_id, references(:asset_categories, on_delete: :nothing)
       add :site_id, references(:sites, on_delete: :nothing)

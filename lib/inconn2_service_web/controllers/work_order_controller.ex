@@ -46,4 +46,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def update_asset_status(conn, %{"work_order_id" => work_order_id, "asset" => asset_params}) do
+    work_order = Workorder.get_work_order!(work_order_id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, asset} <- Workorder.update_asset_status(work_order, asset_params, conn.assigns.sub_domain_prefix) do
+      render(conn, "asset.json", asset: asset, asset_type: work_order.asset_type)
+    end
+  end
 end

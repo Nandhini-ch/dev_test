@@ -35,6 +35,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       location_id: equipment.location_id,
       site_id: equipment.site_id,
       asset_category_id: equipment.asset_category_id,
+      status: equipment.status,
+      criticality: equipment.criticality,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
       parent_id: List.last(equipment.path)
@@ -49,6 +51,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       location_id: equipment.location_id,
       site_id: equipment.site_id,
       asset_category_id: equipment.asset_category_id,
+      status: equipment.status,
+      criticality: equipment.criticality,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
       parent_id: List.last(equipment.path),
