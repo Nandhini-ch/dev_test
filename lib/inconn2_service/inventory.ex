@@ -375,7 +375,17 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_item!(id, prefix), do: Repo.get!(Item, id, prefix: prefix)
+  def get_item!(id, prefix) do
+    item = Repo.get!(Item, id, prefix: prefix)
+    stock = get_stock_for_item(item.id, prefix)
+    IO.inspect(stock)
+    case stock do
+      nil ->
+        Map.put_new(item, :quantity, 0)
+      stock ->
+        Map.put_new(item, :quantity, stock.quantity)
+    end
+  end
 
   @doc """
   Creates a item.
