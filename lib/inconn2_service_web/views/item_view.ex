@@ -23,6 +23,7 @@ defmodule Inconn2ServiceWeb.ItemView do
       asset_categories_ids: item.asset_categories_ids,
       aisle: item.aisle,
       bin: item.bin,
-      row: item.row}
+      row: item.row,
+      critical: item.critical}
   end
 end

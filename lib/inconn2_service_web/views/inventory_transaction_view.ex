@@ -28,6 +28,10 @@ defmodule Inconn2ServiceWeb.InventoryTransactionView do
       gate_pass_reference: inventory_transaction.gate_pass_reference,
       gate_pass_date: inventory_transaction.gate_pass_date,
       cost: inventory_transaction.cost,
-      cost_unit_uom_id: inventory_transaction.cost_unit_uom_id}
+      cost_unit_uom_id: inventory_transaction.cost_unit_uom_id,
+      reference_no: inventory_transaction.reference_no,
+      authorized_by: inventory_transaction.authorized_by,
+      approved: inventory_transaction.approved
+    }
   end
 end
