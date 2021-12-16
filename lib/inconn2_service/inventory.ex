@@ -352,13 +352,14 @@ defmodule Inconn2Service.Inventory do
 
   """
   def list_items(prefix) do
-    Repo.all(Item, prefix: prefix)
+    Repo.all(Item, prefix: prefix) |> Repo.preload(inventory_stock: [:item, :inventory_location])
   end
 
   def list_items_by_type(prefix, type) do
     Item
     |> where(type: ^type)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload(inventory_stock: [:item, :inventory_location])
   end
 
   @doc """
@@ -376,15 +377,7 @@ defmodule Inconn2Service.Inventory do
 
   """
   def get_item!(id, prefix) do
-    item = Repo.get!(Item, id, prefix: prefix)
-    stock = get_stock_for_item(item.id, prefix)
-    IO.inspect(stock)
-    case stock do
-      nil ->
-        Map.put_new(item, :quantity, 0)
-      stock ->
-        Map.put_new(item, :quantity, stock.quantity)
-    end
+    Repo.get!(Item, id, prefix: prefix) |> Repo.preload(inventory_stock: [:item, :inventory_location])
   end
 
   @doc """

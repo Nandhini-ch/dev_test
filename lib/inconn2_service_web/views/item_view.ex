@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ItemView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ItemView
+  alias Inconn2ServiceWeb.{ItemView, InventoryStockView}
 
   def render("index.json", %{items: items}) do
     %{data: render_many(items, ItemView, "item.json")}
@@ -11,7 +11,6 @@ defmodule Inconn2ServiceWeb.ItemView do
   end
 
   def render("item.json", %{item: item}) do
-    IO.inspect(item)
     %{id: item.id,
       part_no: item.part_no,
       name: item.name,
@@ -24,7 +23,6 @@ defmodule Inconn2ServiceWeb.ItemView do
       asset_categories_ids: item.asset_categories_ids,
       aisle: item.aisle,
       bin: item.bin,
-      row: item.row,
-      quantity: item.quantity}
+      row: item.row}
   end
 end
