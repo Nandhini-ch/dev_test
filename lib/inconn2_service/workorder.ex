@@ -266,7 +266,7 @@ defmodule Inconn2Service.Workorder do
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
-    |> validate_estimated_time(prefix)
+    # |> validate_estimated_time(prefix)
     |> validate_workpermit_check_list_id(prefix)
     |> validate_loto_check_list_id(prefix)
     |> validate_tools(prefix)
