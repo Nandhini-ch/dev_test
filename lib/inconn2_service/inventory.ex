@@ -604,7 +604,7 @@ defmodule Inconn2Service.Inventory do
     InventoryStock
     |> where(inventory_location_id: ^inventory_location_id)
     |> Repo.all(prefix: prefix)
-    |> Repo.preload([:inventory_location, :item])
+    |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
   end
 
   @doc """
@@ -621,10 +621,20 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, :item])
+  def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
 
   def get_stock_for_item(item_id, prefix) do
-    Repo.get_by(InventoryStock, [item_id: item_id], prefix: prefix) |> Repo.preload([:inventory_location, :item])
+    supplier_items =
+      SupplierItem
+      |> where(item_id: ^item_id)
+      |> Repo.all(prefix: prefix)
+
+    sum = Enum.map(supplier_items, fn s -> s.price end) |> Enum.sum()
+    IO.inspect(sum)
+    IO.inspect(length(supplier_items))
+    average = sum / length(supplier_items)
+    stock = Repo.get_by(InventoryStock, [item_id: item_id], prefix: prefix) |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
+    Map.put_new(stock, :price, average)
   end
 
   @doc """

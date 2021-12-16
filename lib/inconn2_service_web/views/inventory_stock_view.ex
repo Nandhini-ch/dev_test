@@ -18,4 +18,14 @@ defmodule Inconn2ServiceWeb.InventoryStockView do
       item: render_one(inventory_stock.item, ItemView, "item.json"),
       quantity: inventory_stock.quantity}
   end
+
+  def render("show_with_price.json", %{inventory_stock: inventory_stock}) do
+    %{id: inventory_stock.id,
+      inventory_location_id: inventory_stock.inventory_location_id,
+      item_id: inventory_stock.item_id,
+      inventory_location: render_one(inventory_stock.inventory_location, InventoryLocationView, "inventory_location.json"),
+      item: render_one(inventory_stock.item, ItemView, "item.json"),
+      price: inventory_stock.price,
+      quantity: inventory_stock.quantity}
+  end
 end
