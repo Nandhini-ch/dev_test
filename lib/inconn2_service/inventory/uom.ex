@@ -6,6 +6,10 @@ defmodule Inconn2Service.Inventory.UOM do
     field :name, :string
     field :symbol, :string
     field :uom_type, :string
+    has_many :inventory_items, Inconn2Service.Inventory.Item, foreign_key: :inventory_unit_uom_id
+    has_many :consume_items, Inconn2Service.Inventory.Item, foreign_key: :consume_unit_uom_id
+    has_many :purchase_items, Inconn2Service.Inventory.Item, foreign_key: :purchase_unit_uom_id
+
 
     timestamps()
   end

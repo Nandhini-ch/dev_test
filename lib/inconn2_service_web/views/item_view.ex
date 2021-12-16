@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ItemView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{ItemView, InventoryStockView}
+  alias Inconn2ServiceWeb.{ItemView, UOMView}
 
   def render("index.json", %{items: items}) do
     %{data: render_many(items, ItemView, "item.json")}
@@ -11,12 +11,16 @@ defmodule Inconn2ServiceWeb.ItemView do
   end
 
   def render("item.json", %{item: item}) do
+    IO.inspect(item)
     %{id: item.id,
       part_no: item.part_no,
       name: item.name,
       type: item.type,
       purchase_unit_uom_id: item.purchase_unit_uom_id,
       inventory_unit_uom_id: item.inventory_unit_uom_id,
+      inventory_unit_uom: render_one(item.inventory_unit_uom, UOMView, "uom.json"),
+      consume_unit_uom: render_one(item.consume_unit_uom, UOMView, "uom.json"),
+      purchase_unit_uom: render_one(item.purchase_unit_uom, UOMView, "uom.json"),
       consume_unit_uom_id: item.consume_unit_uom_id,
       reorder_quantity: item.reorder_quantity,
       min_order_quantity: item.min_order_quantity,

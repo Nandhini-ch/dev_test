@@ -352,14 +352,14 @@ defmodule Inconn2Service.Inventory do
 
   """
   def list_items(prefix) do
-    Repo.all(Item, prefix: prefix) |> Repo.preload(inventory_stock: [:item, :inventory_location])
+    Repo.all(Item, prefix: prefix) |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
 
   def list_items_by_type(prefix, type) do
     Item
     |> where(type: ^type)
     |> Repo.all(prefix: prefix)
-    |> Repo.preload(inventory_stock: [:item, :inventory_location])
+    |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
 
   @doc """
@@ -377,7 +377,7 @@ defmodule Inconn2Service.Inventory do
 
   """
   def get_item!(id, prefix) do
-    Repo.get!(Item, id, prefix: prefix) |> Repo.preload(inventory_stock: [:item, :inventory_location])
+    Repo.get!(Item, id, prefix: prefix) |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
 
   @doc """
@@ -393,13 +393,20 @@ defmodule Inconn2Service.Inventory do
 
   """
   def create_item(attrs \\ %{}, prefix) do
-    %Item{}
-    |> Item.changeset(attrs)
-    |> validate_asset_categories_ids(prefix)
-    |> validate_uom_for_key(prefix, :purchase_unit_uom_id)
-    |> validate_uom_for_key(prefix, :inventory_unit_uom_id)
-    |> validate_uom_for_key(prefix, :consume_unit_uom_id)
-    |> Repo.insert(prefix: prefix)
+    result =
+      %Item{}
+      |> Item.changeset(attrs)
+      |> validate_asset_categories_ids(prefix)
+      # |> validate_uom_for_key(prefix, :purchase_unit_uom_id)
+      # |> validate_uom_for_key(prefix, :inventory_unit_uom_id)
+      # |> validate_uom_for_key(prefix, :consume_unit_uom_id)
+      |> Repo.insert(prefix: prefix)
+
+    case result do
+      {:ok, item} -> {:ok, item |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])}
+      _ -> result
+    end
+
   end
 
   defp validate_asset_categories_ids(cs, prefix) do
@@ -442,9 +449,15 @@ defmodule Inconn2Service.Inventory do
 
   """
   def update_item(%Item{} = item, attrs, prefix) do
-    item
-    |> Item.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result =
+      item
+      |> Item.changeset(attrs)
+      |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, item} -> {:ok, item |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom], force: true)}
+      _ -> result
+    end
   end
 
   @doc """

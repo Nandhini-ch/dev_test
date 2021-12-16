@@ -6,12 +6,15 @@ defmodule Inconn2Service.Inventory.Item do
 
   schema "items" do
     field :asset_categories_ids, {:array, :integer}
-    field :consume_unit_uom_id, :integer
-    field :inventory_unit_uom_id, :integer
+    # field :consume_unit_uom_id, :integer
+    belongs_to :consume_unit_uom, Inconn2Service.Inventory.UOM, foreign_key: :consume_unit_uom_id
+    # field :inventory_unit_uom_id, :integer
+    belongs_to :inventory_unit_uom, Inconn2Service.Inventory.UOM, foreign_key: :inventory_unit_uom_id
     field :min_order_quantity, :float
     field :name, :string
     field :part_no, :string
-    field :purchase_unit_uom_id, :integer
+    # field :purchase_unit_uom_id, :integer
+    belongs_to :purchase_unit_uom, Inconn2Service.Inventory.UOM, foreign_key: :purchase_unit_uom_id
     field :reorder_quantity, :float
     field :type, :string
     field :aisle, :string
