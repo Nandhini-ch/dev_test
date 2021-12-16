@@ -67,7 +67,7 @@ defmodule Inconn2Service.Workorder do
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
-    # |> validate_estimated_time(prefix)
+    |> validate_estimated_time(prefix)
     |> validate_workpermit_check_list_id(prefix)
     |> validate_loto_check_list_id(prefix)
     |> validate_tools(prefix)
@@ -130,13 +130,10 @@ defmodule Inconn2Service.Workorder do
   end
 
   defp validate_estimated_time(cs, prefix) do
-    task_list_id = get_field(cs, :task_list_id)
     tasks_list_of_map = get_field(cs, :tasks)
     estimated_time = get_field(cs, :estimated_time)
-    task_ids_1 =  Repo.get(TaskList, task_list_id, prefix: prefix).task_ids
-    task_ids_2 = Enum.map(tasks_list_of_map, fn x -> Map.fetch!(x, "id") end)
-    ids = task_ids_1 ++ task_ids_2
-    tasks = from(t in Task, where: t.id in ^ids ) |> Repo.all(prefix: prefix)
+    task_ids = Enum.map(tasks_list_of_map, fn x -> Map.fetch!(x, "id") end)
+    tasks = from(t in Task, where: t.id in ^task_ids ) |> Repo.all(prefix: prefix)
     estimated_time_list = Enum.map(tasks, fn x -> x.estimated_time end)
     estimated_time_of_all_tasks = Enum.reduce(estimated_time_list, fn x, acc -> x + acc end)
     if estimated_time >= estimated_time_of_all_tasks do
@@ -266,7 +263,7 @@ defmodule Inconn2Service.Workorder do
     |> validate_asset_category_id(prefix)
     |> validate_task_list_id(prefix)
     |> validate_task_ids(prefix)
-    # |> validate_estimated_time(prefix)
+    |> validate_estimated_time(prefix)
     |> validate_workpermit_check_list_id(prefix)
     |> validate_loto_check_list_id(prefix)
     |> validate_tools(prefix)
