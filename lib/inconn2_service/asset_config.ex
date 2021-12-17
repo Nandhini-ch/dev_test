@@ -538,7 +538,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_location_qr_code(id, prefix) do
     location = get_location(id, prefix)
-    {EQRCode.encode("location:" <> location.qr_code) |> EQRCode.png, location}
+    {EQRCode.encode("L:" <> location.qr_code) |> EQRCode.png, location}
   end
 
   def get_location_by_qr_code(qr_code, prefix), do: Repo.get_by(Location, [qr_code: qr_code], prefix: prefix)
@@ -860,7 +860,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_equipment_qr_code(id, prefix) do
     equipment = get_equipment(id, prefix)
-    {EQRCode.encode("equipment:" <> equipment.qr_code) |> EQRCode.png, equipment}
+    {EQRCode.encode("E:" <> equipment.qr_code) |> EQRCode.png, equipment}
   end
 
   def get_equipment_by_qr_code(qr_code, prefix), do: Repo.get_by(Equipment, [qr_code: qr_code], prefix: prefix)

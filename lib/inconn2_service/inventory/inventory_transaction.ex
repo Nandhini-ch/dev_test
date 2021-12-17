@@ -70,7 +70,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
         validate_required(cs, [:price, :supplier_id, :dc_reference, :dc_date])
 
       "IS" ->
-        validate_workorder_or_reference_no(cs) |> validate_required([:user_id])
+        validate_required(cs, [:user_id])
 
       "RT" ->
         validate_required(cs, [:workorder_id])
@@ -96,7 +96,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
   def validate_workorder_or_reference_no(cs) do
     reference_no = get_field(cs, :reference_no, nil)
     workorder_id = get_field(cs, :workorder_id, nil)
-    if reference_no == nil and workorder_id == nil do
+    if reference_no == nil && workorder_id == nil do
       add_error(cs, :workorder_id, "Issue Needs workorder Id or Reference Number")
       add_error(cs, :reference_no, "Issue Needs workorder Id or Reference Number")
     else

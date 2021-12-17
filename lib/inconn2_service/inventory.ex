@@ -773,6 +773,7 @@ defmodule Inconn2Service.Inventory do
           |> Map.put("work_order_id", workorder_id)
           |> Map.put("transaction_type", "IS")
           |> Map.put("reference_no", reference_no)
+          |> Map.put("reference_no", authorized_by)
         {:ok, transaction} = create_inventory_transaction(modified_transaction, prefix)
         transaction
       end)

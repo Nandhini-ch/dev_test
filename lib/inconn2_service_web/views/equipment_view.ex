@@ -34,6 +34,7 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       equipment_code: equipment.equipment_code,
       location_id: equipment.location_id,
       site_id: equipment.site_id,
+      qr_code: equipment.qr_code,
       asset_category_id: equipment.asset_category_id,
       status: equipment.status,
       criticality: equipment.criticality,

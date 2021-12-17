@@ -635,6 +635,18 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
+    [asset_type, uuid] = String.split(qr_string, ":")
+    case asset_type do
+      "L" ->
+        location = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
+        WorkOrder
+        |> where([asset_id: ^location.id, user_id: ^user.id])
+        |> Repo.all(prefix: prefix)
+        |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+    end
+  end
+
   def list_work_orders_of_user(prefix, user \\ %{id: nil}) do
     WorkOrder
     |> where(user_id: ^user.id)
