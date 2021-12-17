@@ -765,10 +765,14 @@ defmodule Inconn2Service.Inventory do
 
   end
 
-  def create_issue_transaction_list("IS", workorder_id, transactions, prefix) do
+  def create_issue_transaction_list("IS", workorder_id, reference_no, authorized_by, transactions, prefix) do
     {:ok,
       Enum.map(transactions, fn(t) ->
-        modified_transaction = t |> Map.put("work_order_id", workorder_id) |> Map.put("transaction_type", "IS")
+        modified_transaction =
+          t
+          |> Map.put("work_order_id", workorder_id)
+          |> Map.put("transaction_type", "IS")
+          |> Map.put("reference_no", reference_no)
         {:ok, transaction} = create_inventory_transaction(modified_transaction, prefix)
         transaction
       end)

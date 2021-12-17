@@ -147,7 +147,7 @@ item5 = %{
 {:ok, item4} = Inventory.create_item(item4, "inc_bata")
 {:ok, item5} = Inventory.create_item(item5, "inc_bata")
 
-supplier_item = %{
+supplier_item1 = %{
 	"supplier_id" => supplier1.id,
 	"item_id" => item1.id,
 	"supplier_part_no" => "1234",
@@ -155,7 +155,44 @@ supplier_item = %{
 	"price_unit_uom_id" => unit2.id
 }
 
-{:ok, supplier_item} = Inventory.create_supplier_item(supplier_item, "inc_bata")
+supplier_item2 = %{
+	"supplier_id" => supplier1.id,
+	"item_id" => item2.id,
+	"supplier_part_no" => "1234",
+	"price" => 10,
+	"price_unit_uom_id" => unit2.id
+}
+
+supplier_item3 = %{
+	"supplier_id" => supplier1.id,
+	"item_id" => item3.id,
+	"supplier_part_no" => "1234",
+	"price" => 10,
+	"price_unit_uom_id" => unit2.id
+}
+
+supplier_item4 = %{
+	"supplier_id" => supplier1.id,
+	"item_id" => item4.id,
+	"supplier_part_no" => "1234",
+	"price" => 10,
+	"price_unit_uom_id" => unit2.id
+}
+
+supplier_item5 = %{
+	"supplier_id" => supplier1.id,
+	"item_id" => item5.id,
+	"supplier_part_no" => "1234",
+	"price" => 10,
+	"price_unit_uom_id" => unit2.id
+}
+
+{:ok, supplier_item1} = Inventory.create_supplier_item(supplier_item1, "inc_bata")
+{:ok, supplier_item2} = Inventory.create_supplier_item(supplier_item2, "inc_bata")
+{:ok, supplier_item3} = Inventory.create_supplier_item(supplier_item3, "inc_bata")
+{:ok, supplier_item4} = Inventory.create_supplier_item(supplier_item4, "inc_bata")
+{:ok, supplier_item5} = Inventory.create_supplier_item(supplier_item5, "inc_bata")
+
 
 inventory_location1 = %{
 	"name" => "Location 1",
@@ -190,7 +227,7 @@ inventory_transaction1 = %{
 
 inventory_transaction2 = %{
 	"inventory_location_id" => inventory_location1.id,
-	"item_id" => item1.id,
+	"item_id" => item2.id,
 	"transaction_type" => "IN",
 	"price" => 10,
 	"supplier_id" => supplier1.id,
