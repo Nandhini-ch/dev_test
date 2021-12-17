@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.CategoryHelpdeskView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{CategoryHelpdeskView, UserView, SiteView, WorkrequestCategoryView}
+  alias Inconn2ServiceWeb.{CategoryHelpdeskView, SiteView, WorkrequestCategoryView}
 
   def render("index.json", %{category_helpdesks: category_helpdesks}) do
     %{data: render_many(category_helpdesks, CategoryHelpdeskView, "category_helpdesk.json")}
@@ -13,10 +13,7 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskView do
   def render("category_helpdesk.json", %{category_helpdesk: category_helpdesk}) do
     %{id: category_helpdesk.id,
       user_id: category_helpdesk.user_id,
-      user: render_one(category_helpdesk.user, UserView, "user.json"),
-      site_id: category_helpdesk.site_id,
       site: render_one(category_helpdesk.site, SiteView, "site.json"),
-      workrequest_category_id: category_helpdesk.workrequest_category_id,
       workrequest_category: render_one(category_helpdesk.workrequest_category, WorkrequestCategoryView, "workrequest_category.json")}
   end
 end
