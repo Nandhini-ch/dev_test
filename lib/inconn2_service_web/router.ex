@@ -227,8 +227,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/inventory_transactions/inventory_list/IS", InventoryTransactionController, :create_issue_transaction_list
     post "/inventory_transactions/inventory_list/PRT", InventoryTransactionController, :create_purchase_return_transaction_list
     post "/inventory_transactions/inventory_list/OUT", InventoryTransactionController, :create_out_transaction_list
-    post "/inventory_transactions/inventory_upload/INTR", InventoryTransactionController, :create_intr_transaction_list
-    post "/inventory_transactions/inventory_upload/INIS", InventoryTransactionController, :create_inis_transaction_list
+    post "/inventory_transactions/inventory_list/INTR", InventoryTransactionController, :create_intr_transaction_list
+    post "/inventory_transactions/inventory_list/INIS", InventoryTransactionController, :create_inis_transaction_list
 
 
     resources "/inventory_transfers", InventoryTransferController, except: [:new, :edit]
