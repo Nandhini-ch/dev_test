@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
+  def index_for_user_by_qr(conn, %{"qr_string" => qr_string}) do
+    work_requests = Ticket.list_work_requests_for_user_by_qr(qr_string, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
   def index_approval_required(conn, _params) do
     work_requests = Ticket.list_work_requests_for_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_requests: work_requests)

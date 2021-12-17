@@ -145,6 +145,23 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])
   end
 
+  def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
+    [asset_type, uuid] = String.split(qr_string, ":")
+    case asset_type do
+      "L" ->
+        location = Inconn2Service.AssetConfig.get_location_by_qr_code(uuid, prefix)
+        WorkRequest
+        |> where([asset_id: ^location.id, assigned_user_id: ^user.id])
+        |> Repo.all(prefix: prefix)
+
+      "E" ->
+        equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
+        WorkRequest
+        |> where([asset_id: ^equipment.id, assigned_user_id: ^user.id])
+        |> Repo.all(prefix: prefix)
+    end
+  end
+
   def list_work_requests_for_approval(current_user, prefix) do
     query = from w in WorkRequest, where: ^current_user.id in w.approvals_required
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])
