@@ -558,7 +558,7 @@ defmodule Inconn2Service.Workorder do
       nil ->
               cs
       _ ->
-              next_occurrence_date = Date.add(holiday["end_date"], 1)
+              next_occurrence_date = Date.add(holiday.end_date, 1)
               cs = change(cs, next_occurrence_date: next_occurrence_date)
               check_for_bank_holidays(cs, site_id, applicable_start, applicable_end, prefix)
     end
@@ -566,7 +566,7 @@ defmodule Inconn2Service.Workorder do
 
   defp check_which_bank_holidays(next_occurrence_date, holidays) do
     holidays_boolean = Enum.map(holidays, fn holiday ->
-                                                if holiday["start_date"] <= next_occurrence_date and next_occurrence_date <= holiday["end_date"] do
+                                                if (holiday.start_date) <= next_occurrence_date and next_occurrence_date <= (holiday.end_date) do
                                                   true
                                                 else
                                                   false
