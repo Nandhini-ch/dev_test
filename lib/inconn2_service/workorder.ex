@@ -642,6 +642,7 @@ defmodule Inconn2Service.Workorder do
         location = Inconn2Service.AssetConfig.get_location_by_qr_code(uuid, prefix)
         WorkOrder
         |> where([asset_id: ^location.id, user_id: ^user.id])
+        |> where([w], w.status != "cp")
         |> Repo.all(prefix: prefix)
         |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
 
@@ -649,6 +650,7 @@ defmodule Inconn2Service.Workorder do
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
         WorkOrder
         |> where([asset_id: ^equipment.id, user_id: ^user.id])
+        |> where([w], w.status != "cp")
         |> Repo.all(prefix: prefix)
         |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
     end
