@@ -874,7 +874,7 @@ defmodule Inconn2Service.Inventory do
 
     case Repo.transaction(multi) do
       {:ok, %{inventory_transaction: inventory_transaction, inventory_stock: _inventory_stock}} ->
-        {:ok, inventory_transaction |> get_item_for_transaction(prefix)}
+        {:ok, inventory_transaction |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])}
 
       {:error, :inventory_transaction, inventory_transaction_changeset, _} ->
         {:error, inventory_transaction_changeset}
