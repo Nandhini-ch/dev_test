@@ -737,7 +737,7 @@ defmodule Inconn2Service.Inventory do
       ** (Ecto.NoResultsError)
 
   """
-  def get_inventory_transaction!(id, prefix), do: Repo.get!(InventoryTransaction, id, prefix: prefix)
+  def get_inventory_transaction!(id, prefix), do: Repo.get!(InventoryTransaction, id, prefix: prefix)|> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
 
   @doc """
   Creates a inventory_transaction.
