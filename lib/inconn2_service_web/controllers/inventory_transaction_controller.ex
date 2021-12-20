@@ -69,8 +69,8 @@ defmodule Inconn2ServiceWeb.InventoryTransactionController do
     end
   end
 
-  def create_issue_transaction_list(conn, %{"inventory_transactions" => %{"transaction_type" => transaction_type, "workorder_id" => workorder_id, "reference_no" => reference_no, "authorized_by" => authorized_by, "transactions" => transactions}}) do
-    with {:ok, inventory_transactions} <- Inventory.create_issue_transaction_list(transaction_type, workorder_id, reference_no, authorized_by, transactions, conn.assigns.sub_domain_prefix) do
+  def create_issue_transaction_list(conn, %{"inventory_transactions" => %{"transaction_type" => transaction_type, "workorder_id" => workorder_id, "reference_no" => reference_no, "authorized_by" => authorized_by, "transactions" => transactions, "user_id" => user_id}}) do
+    with {:ok, inventory_transactions} <- Inventory.create_issue_transaction_list(transaction_type, workorder_id, reference_no, authorized_by, user_id, transactions, conn.assigns.sub_domain_prefix) do
       render(conn, "index.json", inventory_transactions: inventory_transactions)
     end
   end
