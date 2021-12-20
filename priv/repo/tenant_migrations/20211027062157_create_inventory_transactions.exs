@@ -26,7 +26,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryTransactions do
       add :cost_unit_uom_id, :integer
       add :approved, :boolean
       add :issue_reference, :text
-      add :user_id, :text
+      add :user_id, :integer
       add :reference_no, :string
       add :authorized_by_user_id, :integer
 

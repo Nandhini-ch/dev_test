@@ -770,7 +770,6 @@ defmodule Inconn2Service.Inventory do
     IO.inspect("authorized_by: #{authorized_by}")
     IO.inspect("reference_no: #{reference_no}")
     IO.inspect("user_id: #{user_id}")
-    IO.inspect("workorder: #{workorder_id}")
 
     {:ok,
       Enum.map(transactions, fn(t) ->
@@ -1180,7 +1179,7 @@ defmodule Inconn2Service.Inventory do
         query = from(u in InventoryTransaction,
                     where: u.item_id == ^item_id and
                            u.transaction_type == "IN" and
-                           u.remaining > ^quantity,
+                           u.remaining >= ^quantity,
                            order_by: [desc: u.inserted_at], limit: 1)
         required_issue_transaction = Repo.one(query, prefix: prefix)
         supplier_id = required_issue_transaction.supplier_id

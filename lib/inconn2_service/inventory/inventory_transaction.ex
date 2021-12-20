@@ -57,6 +57,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     transaction_type = get_field(cs, :trasaction_type, nil)
     case transaction_type do
       "IN" ->
+        IO.inspect(get_field(cs, :quantity, 0))
         change(cs, %{remaining: get_field(cs, :quantity, 0)})
 
       _ ->
