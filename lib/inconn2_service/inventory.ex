@@ -770,11 +770,12 @@ defmodule Inconn2Service.Inventory do
       Enum.map(transactions, fn(t) ->
         modified_transaction =
           t
-          |> Map.put("work_order_id", workorder_id)
+          |> Map.put("workorder_id", workorder_id)
           |> Map.put("transaction_type", "IS")
           |> Map.put("reference_no", reference_no)
-          |> Map.put("reference_no", authorized_by)
+          |> Map.put("authorized_by", authorized_by)
           |> Map.put("user_id", user_id)
+        IO.inspect(modified_transaction)
         {:ok, transaction} = create_inventory_transaction(modified_transaction, prefix)
         transaction
       end)
