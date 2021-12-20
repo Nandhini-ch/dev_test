@@ -30,7 +30,7 @@ defmodule Inconn2ServiceWeb.InventoryTransactionView do
       cost: inventory_transaction.cost,
       cost_unit_uom_id: inventory_transaction.cost_unit_uom_id,
       reference_no: inventory_transaction.reference_no,
-      authorized_by: inventory_transaction.authorized_by,
+      authorized_by_user_id: inventory_transaction.authorized_by_user_id,
       approved: inventory_transaction.approved
     }
   end

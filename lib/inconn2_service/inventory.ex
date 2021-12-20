@@ -751,13 +751,14 @@ defmodule Inconn2Service.Inventory do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_inward_transaction_list("IN", dc_date, dc_reference, transactions, prefix) do
+  def create_inward_transaction_list("IN", dc_date, dc_reference, supplier_id, transactions, prefix) do
     {:ok,
       Enum.map(transactions, fn(t) ->
         modified_transaction = t
                                 |> Map.put("dc_reference", dc_reference)
                                 |> Map.put("dc_date", dc_date)
                                 |> Map.put("transaction_type", "IN")
+                                |> Map.put("supplier_id", supplier_id)
         {:ok, transaction} = create_inventory_transaction(modified_transaction, prefix)
         transaction
       end)

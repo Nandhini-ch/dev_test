@@ -63,8 +63,8 @@ defmodule Inconn2ServiceWeb.InventoryTransactionController do
     end
   end
 
-  def create_inward_transaction_list(conn, %{ "inventory_transactions" => %{"transaction_type" => transaction_type, "dc_reference" => dc_reference, "dc_date" => dc_date, "transactions" => transactions} }) do
-    with {:ok, inventory_transactions} <- Inventory.create_inward_transaction_list(transaction_type, dc_date, dc_reference, transactions, conn.assigns.sub_domain_prefix) do
+  def create_inward_transaction_list(conn, %{ "inventory_transactions" => %{"transaction_type" => transaction_type, "dc_reference" => dc_reference, "dc_date" => dc_date, "supplier_id" => supplier_id, "transactions" => transactions} }) do
+    with {:ok, inventory_transactions} <- Inventory.create_inward_transaction_list(transaction_type, dc_date, dc_reference, supplier_id, transactions, conn.assigns.sub_domain_prefix) do
       render(conn, "index.json", inventory_transactions: inventory_transactions)
     end
   end
