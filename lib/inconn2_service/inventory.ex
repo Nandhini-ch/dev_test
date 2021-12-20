@@ -766,6 +766,12 @@ defmodule Inconn2Service.Inventory do
   end
 
   def create_issue_transaction_list("IS", workorder_id, reference_no, authorized_by, user_id ,transactions, prefix) do
+    IO.inspect("workorder: #{workorder_id}")
+    IO.inspect("authorized_by: #{authorized_by}")
+    IO.inspect("reference_no: #{reference_no}")
+    IO.inspect("user_id: #{user_id}")
+    IO.inspect("workorder: #{workorder_id}")
+
     {:ok,
       Enum.map(transactions, fn(t) ->
         modified_transaction =
@@ -773,7 +779,7 @@ defmodule Inconn2Service.Inventory do
           |> Map.put("workorder_id", workorder_id)
           |> Map.put("transaction_type", "IS")
           |> Map.put("reference_no", reference_no)
-          |> Map.put("authorized_by", authorized_by)
+          |> Map.put("authorized_by_user_id", authorized_by)
           |> Map.put("user_id", user_id)
         IO.inspect(modified_transaction)
         {:ok, transaction} = create_inventory_transaction(modified_transaction, prefix)
