@@ -12,6 +12,7 @@ defmodule Inconn2ServiceWeb.ShiftView do
 
   def render("shift.json", %{shift: shift}) do
     %{id: shift.id,
+      site_id: shift.site_id,
       name: shift.name,
       start_time: shift.start_time,
       end_time: shift.end_time,
