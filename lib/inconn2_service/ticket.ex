@@ -142,7 +142,7 @@ defmodule Inconn2Service.Ticket do
 
   """
   def list_work_requests(prefix) do
-    Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])
+    Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_subcategory])
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
@@ -153,18 +153,20 @@ defmodule Inconn2Service.Ticket do
         WorkRequest
         |> where([asset_id: ^location.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
+        |> Repo.preload([:workrequest_subcategory])
 
       "E" ->
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
         WorkRequest
         |> where([asset_id: ^equipment.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
+        |> Repo.preload([:workrequest_subcategory])
     end
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
     query = from w in WorkRequest, where: ^current_user.id in w.approvals_required
-    Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])
+    Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_subcategory])
   end
 
   @doc """
@@ -181,7 +183,7 @@ defmodule Inconn2Service.Ticket do
       ** (Ecto.NoResultsError)
 
   """
-  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])
+  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix) |> Repo.preload([:workrequest_subcategory])
 
   @doc """
   Creates a work_request.
@@ -209,7 +211,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])}
+        {:ok, work_request |> Repo.preload([:workrequest_subcategory])}
 
       _ ->
         created_work_request
@@ -335,7 +337,7 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])}
+        {:ok, work_request |> Repo.preload([:workrequest_subcategory], force: true)}
       _ ->
         updated_work_request
 
@@ -362,10 +364,10 @@ defmodule Inconn2Service.Ticket do
           "status" => work_request.status
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])}
+        {:ok, work_request |> Repo.preload([:workrequest_subcategory])}
 
       _ ->
-        {:ok, work_request |> Repo.preload([:workrequest_subcategory, :requested_user, :assigned_user])}
+        {:ok, work_request |> Repo.preload([:workrequest_subcategory])}
 
     end
   end
