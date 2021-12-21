@@ -1,7 +1,7 @@
 defmodule Inconn2Service.ReferenceDataUploader do
 
   alias Inconn2Service.{AssetConfig, FileLoader, WorkOrderConfig, CheckListConfig, Workorder}
-  alias Inconn2Service.{Staff, Settings, Assignment}
+  alias Inconn2Service.{Staff, Settings, Assignment, Inventory}
 
   def upload_locations(content, prefix) do
     req_fields = ["id", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]
@@ -127,11 +127,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
        content,
        req_fields,
        special_fields,
-       &FileLoader.make_uoms/1,
+       &FileLoader.make_items/1,
        Inventory,
-       :get_uom,
-       :create_uom,
-       :update_uom,
+       :get_item,
+       :create_item,
+       :update_item,
        prefix
      )
   end
