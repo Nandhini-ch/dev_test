@@ -191,6 +191,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/uoms/physical", UOMController, :index_physical
     get "/uoms/cost", UOMController, :index_cost
     get "/download_uoms", ReferenceDownloadController, :download_uoms
+    post "/upload_uoms", ReferenceUploadController, :upload_uoms
 
     resources "/uom_conversions", UomConversionController, except: [:new, :edit]
     get "/download_uom_conversions", ReferenceDownloadController, :download_uom_conversions
@@ -202,6 +203,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/items", ItemController, except: [:new, :edit]
     get "/download_items", ReferenceDownloadController, :download_items
+    post "/upload_items", ReferenceUploadController, :upload_items
 
 
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]

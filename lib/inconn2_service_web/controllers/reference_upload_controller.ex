@@ -112,6 +112,27 @@ defmodule Inconn2ServiceWeb.ReferenceUploadController do
     render_response_json(conn, data)
   end
 
+  def upload_uoms(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_uoms(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  def upload_items(conn, params) do
+    file = params["csv_file"]
+    data = ReferenceDataUploader.upload_items(file, conn.assigns.sub_domain_prefix)
+
+    render_response_json(conn, data)
+  end
+
+  # def upload_supplier_items(conn, params) do
+  #   file = params["csv_file"]
+  #   data = ReferenceDataUploader.upload_supplier_items(file, conn.assigns.sub_domain_prefix)
+
+  #   render_response_json(conn, data)
+  # end
+
   def upload_equipments(conn, params) do
     file = params["csv_file"]
     data = ReferenceDataUploader.upload_equipments(file, conn.assigns.sub_domain_prefix)
