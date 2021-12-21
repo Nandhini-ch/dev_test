@@ -32,7 +32,7 @@ defmodule Inconn2Service.Inventory.Item do
   @doc false
   def changeset(item, attrs) do
     item
-    |> cast(attrs, [:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids, :aisle, :row, :bin])
+    |> cast(attrs, [:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids, :aisle, :row, :bin, :critical])
     |> validate_required([:part_no, :name, :type, :purchase_unit_uom_id, :inventory_unit_uom_id, :consume_unit_uom_id, :reorder_quantity, :min_order_quantity, :asset_categories_ids, :aisle, :row, :bin])
     |> validate_inclusion(:type, ["tools", "spares", "consumables"])
   end

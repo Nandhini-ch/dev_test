@@ -100,6 +100,43 @@ defmodule Inconn2Service.ReferenceDataUploader do
      )
   end
 
+  def upload_uoms(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Symbol"]
+    # special_fields = [{"Check Ids", "array_of_integers", []}]
+
+     upload_content(
+       content,
+       req_fields,
+       [],
+       &FileLoader.make_uoms/1,
+       CheckListConfig,
+       :get_uom,
+       :create_uom,
+       :update_uom,
+       prefix
+     )
+  end
+
+
+  def upload_items(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Part No", "Asset Category Ids", "Consume Unit Uom Id", "Inventory Unit Uom Id",
+    "Purchase Unit Uom Id", "Min Order Quantity", "Reorder Quantity", "Type", "Aisle", "Row", "Bin"]
+    special_fields = [{"Asset Category Ids", "array_of_integers", []}]
+
+     upload_content(
+       content,
+       req_fields,
+       special_fields,
+       &FileLoader.make_uoms/1,
+       CheckListConfig,
+       :get_uom,
+       :create_uom,
+       :update_uom,
+       prefix
+     )
+  end
+
+
   def upload_workorder_templates(content, prefix) do
     req_fields = ["id", "reference", "Name", "Asset Category Id", "Asset Type", "Task List Id", "Tasks",
     "Estimated Time", "Scheduled", "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End",
@@ -406,7 +443,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
                 result = apply(context_module, insert_func, [attrs, prefix])
                 case result do
                   {:ok, result} -> Map.put(r, "id", result.id)
-                  {:error, cs} -> 
+                  {:error, cs} ->
                     IO.inspect(cs)
                     r
                 end

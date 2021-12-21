@@ -165,6 +165,35 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("end_date", Map.get(record, "End Date"))
   end
 
+  def make_uoms(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("symbol", Map.get(record, "Symbol"))
+  end
+
+  def make_items(record) do
+    %{}
+    |> Map.put("asset_categories_ids", Map.get(record, "Asset Category Ids"))
+    |> Map.put("consume_unit_uom_id", Map.get(record, "Consume Unit Uom Id"))
+    |> Map.put("purchase_unit_uom_id", Map.get(record, "Purchase Unit Uom Id"))
+    |> Map.put("inventory_unit_uom_id", Map.get(record, "Inventory Unit Uom Id"))
+    |> Map.put("reorder_quantity", Map.get(record, "Reorder Quantity"))
+    |> Map.put("min_order_quantity", Map.get(record, "Min Order Quantity"))
+    |> Map.put("type", Map.get(record, "Type"))
+    |> Map.put("aisle", Map.get(record, "Aisle"))
+    |> Map.put("row", Map.get(record, "Row"))
+    |> Map.put("bin", Map.get(record, "Bin"))
+  end
+
+  def make_supplier_items(record) do
+    %{}
+    |> Map.put("supplier_id", Map.get(record, "Supplier Id"))
+    |> Map.put("item_id", Map.get(record, "Item Id"))
+    |> Map.put("price", Map.get(record, "Price"))
+    |> Map.put("price_unit_uom_id", Map.get(record, "Price Unit Uom Id"))
+    |> Map.put("supplier_part_no", Map.get(record, "Supplier Part No"))
+  end
+
   def convert_special_keys_to_required_type([], map), do: map
 
   def convert_special_keys_to_required_type(keys, map) do
