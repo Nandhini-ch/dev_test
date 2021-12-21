@@ -37,6 +37,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       status: location.status,
       criticality: location.criticality,
       asset_category_id: location.asset_category_id,
+      qr_code: location.qr_code,
       parent_id: List.last(location.path)
     }
   end
@@ -51,6 +52,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       status: location.status,
       criticality: location.criticality,
       asset_category_id: location.asset_category_id,
+      qr_code: location.qr_code,
       parent_id: List.last(location.path),
       children: render_many(location.children, LocationView, "location_node.json")
     }

@@ -41,7 +41,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     |> validate_inclusion(:asset_type, ["L", "E"])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])
     |> validate_inclusion(:request_type, ["CO", "RE"])
-    |> validate_inclusion(:status, ["RS", "AP", "AS", "RJ", "CL"])
+    |> validate_inclusion(:status, ["RS", "AP", "AS", "RJ", "CL", "CS"])
     |> assoc_constraint(:site)
     |> assoc_constraint(:workrequest_category)
     |> assoc_constraint(:workrequest_subcategory)

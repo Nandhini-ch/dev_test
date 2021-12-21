@@ -56,6 +56,7 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       criticality: equipment.criticality,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
+      qr_code: equipment.qr_code,
       parent_id: List.last(equipment.path),
       children: render_many(equipment.children, EquipmentView, "equipment_node.json")
     }

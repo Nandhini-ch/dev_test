@@ -663,7 +663,7 @@ defmodule Inconn2Service.Staff do
               |> validate_role_id(prefix)
               |> Repo.update(prefix: prefix)
     case result do
-      {:ok, user} -> {:ok, user |> Repo.preload(:employee, force: true)}
+      {:ok, user} -> {:ok, user |> Repo.preload([employee: :org_unit], force: true)}
       _ -> result
     end
   end
