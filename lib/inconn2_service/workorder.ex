@@ -13,7 +13,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.{AssetConfig, WorkOrderConfig}
   alias Inconn2Service.AssetConfig.{Site, AssetCategory, Location, Equipment}
   alias Inconn2Service.WorkOrderConfig.{Task, TaskList}
-  alias Inconn2Service.CheckListConfig.CheckList
+  alias Inconn2Service.CheckListConfig.{Check, CheckList}
   alias Inconn2Service.Staff.{Employee, User}
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.EmployeeRoster
@@ -1541,4 +1541,137 @@ defmodule Inconn2Service.Workorder do
       NaiveDateTime.add(start_dt, estimated_time*60)
   end
 
+
+  alias Inconn2Service.Workorder.WorkorderCheck
+
+  @doc """
+  Returns the list of workorder_checks.
+
+  ## Examples
+
+      iex> list_workorder_checks()
+      [%WorkorderCheck{}, ...]
+
+  """
+  def list_workorder_checks(prefix) do
+    Repo.all(WorkorderCheck, prefix: prefix)
+  end
+
+  def list_workorder_checks_by_type(check_type, user, prefix) do
+    WorkorderCheck
+    |> where([type: ^check_type, approved_by_user_id: ^user.id])
+    |> Repo.all(prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workorder_check.
+
+  Raises `Ecto.NoResultsError` if the Workorder check does not exist.
+
+  ## Examples
+
+      iex> get_workorder_check!(123)
+      %WorkorderCheck{}
+
+      iex> get_workorder_check!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix)
+
+  @doc """
+  Creates a workorder_check.
+
+  ## Examples
+
+      iex> create_workorder_check(%{field: value})
+      {:ok, %WorkorderCheck{}}
+
+      iex> create_workorder_check(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_check(attrs \\ %{}, prefix) do
+    %WorkorderCheck{}
+    |> WorkorderCheck.changeset(attrs)
+    |> validate_approved_by_user_id(prefix)
+    |> validate_check_id(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_approved_by_user_id(cs, prefix) do
+    user_id = get_change(cs, :approved_by_user_id, nil)
+    if user_id != nil do
+      case Repo.get(User, user_id, prefix: prefix) do
+        nil ->
+          add_error(cs, :user_id, "User does not exist")
+
+        _ ->
+          cs
+      end
+    end
+  end
+
+
+  defp validate_check_id(cs, prefix) do
+    check_id = get_change(cs, :check_id, nil)
+    if check_id != nil do
+      case Repo.get(Check, check_id, prefix: prefix) do
+        nil ->
+          add_error(cs, :check_id, "Enter valid check id")
+
+        _ ->
+          cs
+      end
+    end
+  end
+
+  @doc """
+  Updates a workorder_check.
+
+  ## Examples
+
+      iex> update_workorder_check(workorder_check, %{field: new_value})
+      {:ok, %WorkorderCheck{}}
+
+      iex> update_workorder_check(workorder_check, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_check(%WorkorderCheck{} = workorder_check, attrs, prefix) do
+    workorder_check
+    |> WorkorderCheck.changeset(attrs)
+    |> validate_approved_by_user_id(prefix)
+    |> validate_check_id(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_check.
+
+  ## Examples
+
+      iex> delete_workorder_check(workorder_check)
+      {:ok, %WorkorderCheck{}}
+
+      iex> delete_workorder_check(workorder_check)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_check(%WorkorderCheck{} = workorder_check, prefix) do
+    Repo.delete(workorder_check, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_check changes.
+
+  ## Examples
+
+      iex> change_workorder_check(workorder_check)
+      %Ecto.Changeset{data: %WorkorderCheck{}}
+
+  """
+  def change_workorder_check(%WorkorderCheck{} = workorder_check, attrs \\ %{}) do
+    WorkorderCheck.changeset(workorder_check, attrs)
+  end
 end

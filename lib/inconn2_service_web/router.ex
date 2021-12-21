@@ -239,5 +239,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/reports/work_orders", ReportController, :get_work_order_report
     get "/reports/inventory", ReportController, :get_inventory_report
+
+    resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
+    get "/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
   end
 end

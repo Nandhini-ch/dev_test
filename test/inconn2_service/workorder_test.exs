@@ -390,4 +390,71 @@ defmodule Inconn2Service.WorkorderTest do
       assert %Ecto.Changeset{} = Workorder.change_workrequest_status_track(workrequest_status_track)
     end
   end
+
+  describe "workorder_checks" do
+    alias Inconn2Service.Workorder.WorkorderCheck
+
+    @valid_attrs %{approved: true, approved_by_user_id: 42, check_id: 42, remarks: "some remarks", type: "some type"}
+    @update_attrs %{approved: false, approved_by_user_id: 43, check_id: 43, remarks: "some updated remarks", type: "some updated type"}
+    @invalid_attrs %{approved: nil, approved_by_user_id: nil, check_id: nil, remarks: nil, type: nil}
+
+    def workorder_check_fixture(attrs \\ %{}) do
+      {:ok, workorder_check} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_check()
+
+      workorder_check
+    end
+
+    test "list_workorder_checks/0 returns all workorder_checks" do
+      workorder_check = workorder_check_fixture()
+      assert Workorder.list_workorder_checks() == [workorder_check]
+    end
+
+    test "get_workorder_check!/1 returns the workorder_check with given id" do
+      workorder_check = workorder_check_fixture()
+      assert Workorder.get_workorder_check!(workorder_check.id) == workorder_check
+    end
+
+    test "create_workorder_check/1 with valid data creates a workorder_check" do
+      assert {:ok, %WorkorderCheck{} = workorder_check} = Workorder.create_workorder_check(@valid_attrs)
+      assert workorder_check.approved == true
+      assert workorder_check.approved_by_user_id == 42
+      assert workorder_check.check_id == 42
+      assert workorder_check.remarks == "some remarks"
+      assert workorder_check.type == "some type"
+    end
+
+    test "create_workorder_check/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_check(@invalid_attrs)
+    end
+
+    test "update_workorder_check/2 with valid data updates the workorder_check" do
+      workorder_check = workorder_check_fixture()
+      assert {:ok, %WorkorderCheck{} = workorder_check} = Workorder.update_workorder_check(workorder_check, @update_attrs)
+      assert workorder_check.approved == false
+      assert workorder_check.approved_by_user_id == 43
+      assert workorder_check.check_id == 43
+      assert workorder_check.remarks == "some updated remarks"
+      assert workorder_check.type == "some updated type"
+    end
+
+    test "update_workorder_check/2 with invalid data returns error changeset" do
+      workorder_check = workorder_check_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_check(workorder_check, @invalid_attrs)
+      assert workorder_check == Workorder.get_workorder_check!(workorder_check.id)
+    end
+
+    test "delete_workorder_check/1 deletes the workorder_check" do
+      workorder_check = workorder_check_fixture()
+      assert {:ok, %WorkorderCheck{}} = Workorder.delete_workorder_check(workorder_check)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_check!(workorder_check.id) end
+    end
+
+    test "change_workorder_check/1 returns a workorder_check changeset" do
+      workorder_check = workorder_check_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_check(workorder_check)
+    end
+  end
 end
