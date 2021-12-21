@@ -24,12 +24,12 @@ defmodule Inconn2Service.Assignment do
   """
   def list_employee_rosters(prefix) do
     EmployeeRoster
-    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :employee, :shift])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
   end
 
   def list_employee_rosters(user, prefix) do
     EmployeeRoster
-    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :employee, :shift])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
   end
 
@@ -49,7 +49,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
     )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload([:site, :employee, :shift])
+    |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
   end
 
@@ -62,7 +62,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
     )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload([:site, :employee, :shift])
+    |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
   end
 
@@ -77,7 +77,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^to_date, e.start_date, e.end_date)
     )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload([:employee])
+    |> Repo.preload([employee: :org_unit])
     |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
     |> Enum.uniq()
@@ -92,7 +92,7 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
       )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload([:employee])
+    |> Repo.preload([employee: :org_unit])
     |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
@@ -127,7 +127,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix) |> Repo.preload([:employee, :site, :shift])
+  def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
 
   @doc """
   Creates a employee_roster.
@@ -150,7 +150,7 @@ defmodule Inconn2Service.Assignment do
       |> validate_within_shift_dates(prefix)
       |> Repo.insert(prefix: prefix)
     case result do
-      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee])}
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, employee: :org_unit])}
       _ -> result
     end
   end
@@ -238,7 +238,7 @@ defmodule Inconn2Service.Assignment do
     |> Repo.update(prefix: prefix)
 
     case result do
-      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, :employee], force: true)}
+      {:ok, employee_roster} -> {:ok, employee_roster |> Repo.preload([:site, :shift, employee: :org_unit], force: true)}
       _ -> result
     end
   end
