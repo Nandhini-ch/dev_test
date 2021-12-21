@@ -28,6 +28,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       attachment_type: work_request.attachment_type,
       status: work_request.status,
       is_approvals_required: work_request.is_approvals_required,
+      approvals_required: work_request.approvals_required,
       work_order_id: work_request.work_order_id}
   end
 end
