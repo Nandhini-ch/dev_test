@@ -169,6 +169,17 @@ defmodule Inconn2Service.Ticket do
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_subcategory, :location, :site])
   end
 
+  def list_work_requests_for_helpdesk_user(current_user, prefix) do
+    helpdesk = get_category_helpdesk_by_user(current_user.id, prefix)
+    if helpdesk != [] do
+      workrequest_category_ids = Enum.map(helpdesk, fn x -> x.workrequest_category_id end)
+      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids)
+      |> Repo.all(prefix: prefix)
+      |> Repo.preload([:workrequest_subcategory, :location, :site])
+    else
+      []
+    end
+  end
   @doc """
   Gets a single work_request.
 
@@ -491,7 +502,11 @@ defmodule Inconn2Service.Ticket do
 
   """
   def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories])
-
+  def get_category_helpdesk_by_user(user_id, prefix) do
+    CategoryHelpdesk
+    |> where(user_id: ^user_id)
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Creates a category_helpdesk.
 
