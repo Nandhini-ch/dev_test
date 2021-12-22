@@ -17,4 +17,11 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryView do
       workrequest_subcategories: render_many(workrequest_category.workrequest_subcategories, WorkrequestSubcategoryView, "workrequest_subcategory.json")
     }
   end
+
+  def render("workrequest_category_without_preload.json", %{workrequest_category: workrequest_category}) do
+    %{id: workrequest_category.id,
+      name: workrequest_category.name,
+      description: workrequest_category.description
+    }
+  end
 end

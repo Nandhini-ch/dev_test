@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.WorkRequestView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{WorkRequestView, WorkrequestSubcategoryView, LocationView, SiteView}
+  alias Inconn2ServiceWeb.{WorkRequestView, WorkrequestCategoryView, WorkrequestSubcategoryView, LocationView, SiteView}
 
   def render("index.json", %{work_requests: work_requests}) do
     %{data: render_many(work_requests, WorkRequestView, "work_request.json")}
@@ -12,12 +12,9 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
 
   def render("work_request.json", %{work_request: work_request}) do
     %{id: work_request.id,
-      site_id: work_request.site_id,
       site: render_one(work_request.site, SiteView, "site.json"),
-      workrequest_category_id: work_request.workrequest_category_id,
+      workrequest_category: render_one(work_request.workrequest_category, WorkrequestCategoryView, "workrequest_category_without_preload.json"),
       workrequest_subcategory: render_one(work_request.workrequest_subcategory, WorkrequestSubcategoryView, "workrequest_subcategory.json"),
-      workrequest_subcategory_id: work_request.workrequest_subcategory_id,
-      location_id: work_request.location_id,
       location: render_one(work_request.location, LocationView, "location.json"),
       asset_id: work_request.asset_id,
       asset_type: work_request.asset_type,
