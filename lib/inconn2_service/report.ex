@@ -3,9 +3,71 @@ defmodule Inconn2Service.Report do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack}
-  alias Inconn2Service.Staff.User
+  alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
+
+  def put_sr_no(list) do
+    IO.inspect(list)
+    Enum.with_index(list, 1) |> Enum.map(fn {v, i} -> "<tr/><td>" <> Integer.to_string(i) <> "</td>" <> v end)
+  end
+
+  def ppm_report_query(%{"from_date" => from_date, "to_date" => to_date}, prefix) do
+    query = from w in WorkOrder, where: w.type == "PRV" and w.start_date >= ^from_date or w.completed_date <= ^from_date and w.start_date >= ^to_date or w.completed_date <= ^to_date,
+            join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
+            select: %{
+              wo_type: w.type,
+              status: w.status,
+              spares: wt.spares,
+              start_date: w.start_date,
+              scheduled_date: w.scheduled_date,
+              scheduled_time: w.scheduled_time,
+              completed_date: w.completed_date,
+              asset_id: w.asset_id,
+              asset_type: wt.asset_type,
+              start_time: w.start_time,
+              completed_time: w.completed_time,
+              status: w.status,
+              user_id: w.user_id,
+              id: w.id }
+
+    work_orders = Repo.all(query, prefix: prefix) |> Enum.uniq
+
+    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><tr><th>SI. No</th><th>Asset Name</th><th>Asset Details</th><th>Status</th><th>Planned Date & Time</th><th>Actual Start Date & Time</th><th>Completed Date & Time</th><th>Assigned User</th></tr>)
+
+    data =
+      Enum.map(work_orders, fn w ->
+
+        asset =
+          case w.asset_type do
+            "L" ->
+              location = Inconn2Service.AssetConfig.get_location!(w.asset_id, prefix)
+              %{name: location.name, type: "Location", code: location.location_code, description: location.description}
+
+            "E" ->
+              equipment = Inconn2Service.AssetConfig.get_equipment!(w.asset_id, prefix)
+              location = Inconn2Service.AssetConfig.get_location!(equipment.location_id, prefix)
+              %{name: equipment.name, type: "Equipment", code: equipment.equipment_code, description: "Eqiupment prsent in " <> location.name}
+          end
+
+          user = Repo.get(User, w.user_id, prefix: prefix) |> Repo.preload(:employee)
+          assigned_user =
+            case user.employee do
+              nil -> user.username
+              _ -> user.employee.first_name
+            end
+
+        "<td>#{asset.name}</td><td>#{asset.description}</td><td>#{w.status}</td><td>#{w.scheduled_date}, #{w.scheduled_time}</td><td>#{w.start_date}, #{w.start_time}</td><td>#{w.completed_date}, #{w.completed_time}</td><td>#{assigned_user}</td></tr>"
+
+    end) |> put_sr_no() |> Enum.join
+
+    IO.inspect(data)
+
+    {:ok, filename} = PdfGenerator.generate(report_heading("Workorder Preventive maintainance Report") <> heading <> data <> "</table>", page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+
+  end
 
   def work_order_report(prefix) do
     query = from w in WorkOrder,
@@ -109,5 +171,9 @@ defmodule Inconn2Service.Report do
         transaction_type: elem(inventory_item, 13)
       }
     end)
+  end
+
+  def report_heading(heading) do
+    "<center><h1>#{heading}</h1></center>"
   end
 end
