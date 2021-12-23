@@ -92,6 +92,12 @@ defmodule Inconn2Service.Report do
               Time.diff(created_time, status_track.status_update_time, :minute)
           end
 
+        completion_time =
+          case get_work_request_status_track_for_type(w.id, "CL", prefix) do
+            nil -> "not yet complete"
+            status_track ->
+              Time.diff(created_time, status_track.status_update_time, :minute)
+          end
       end)
   end
 

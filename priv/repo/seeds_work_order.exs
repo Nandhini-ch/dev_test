@@ -249,7 +249,7 @@ wkreq_subcat6 = %{"name" => "Mechnical Subcategory 3", "workrequest_category_id"
 {:ok, wkreq_subcat6c} = Ticket.create_workrequest_subcategory(wkreq_subcat6, "inc_bata")
 
 cat_help1 = %{
-  "user_id" => 1,
+  "user_id" => 2,
   "site_id" => 1,
   "workrequest_category_id" => wkreq_cat1c.id
 }
@@ -257,7 +257,7 @@ cat_help1 = %{
 {:ok, cat_help1c} = Ticket.create_category_helpdesk(cat_help1, "inc_bata")
 
 cat_help2 = %{
-  "user_id" => 1,
+  "user_id" => 2,
   "site_id" => 1,
   "workrequest_category_id" => wkreq_cat2c.id
 }
