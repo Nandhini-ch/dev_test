@@ -75,7 +75,9 @@ defmodule Inconn2Service.Report do
       |> where(request_type: ^"CO")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([requested_user: :employee, assigned_user: :employee])
-      |> Repo.preload([:work_request_subcategory])
+      |> Repo.preload([:workrequest_subcategory])
+
+    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th>SI.No</th><th>Date</th><th>Time</th><th>Given By</th><th>Attended By</th><th>Response Time</th><th>Close Time</th><th>Complaint type</th><th>Complaint Status</th><th>Time Taken</th>)
 
     data =
       Enum.map(work_request, fn w ->
@@ -94,17 +96,33 @@ defmodule Inconn2Service.Report do
 
         completion_time =
           case get_work_request_status_track_for_type(w.id, "CL", prefix) do
+            nil -> "not yet attended"
+            status_track ->
+              status_track.updated_status_tome
+          end
+
+        completion_time_taken =
+          case get_work_request_status_track_for_type(w.id, "CL", prefix) do
             nil -> "not yet complete"
             status_track ->
               Time.diff(created_time, status_track.status_update_time, :minute)
           end
-      end)
+
+          "<td>#{raised_status.status_update_date}</td><td>#{created_time}</td><td>#{requested_user}</td><td>#{assigned_user}</td><td>#{response_time}</td><td>#{completion_time}</td><td>#{w.workrequest_subcategory.name}</td><td>#{w.status}</td><td>#{completion_time_taken}</td></tr>"
+      end)  |> put_sr_no() |> Enum.join
+
+      IO.inspect(data)
+
+      {:ok, filename} = PdfGenerator.generate(report_heading("Complaint Reports") <> heading <> data <> "</table>", page_size: "A4")
+      {:ok, pdf_content} = File.read(filename)
+      pdf_content
   end
 
   def get_work_request_status_track_for_type(work_request_id, status, prefix) do
-    WorkrequestStatusTrack
-    |> where(work_request_id: ^work_request_id, status: ^status)
-    |> Repo.get(prefix: prefix)
+    # WorkrequestStatusTrack
+    # |> where([work_request_id: ^work_request_id, status: ^status])
+    # |> Repo.get(prefix: prefix)
+    Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request_id, status: status], prefix: prefix)
   end
 
 
@@ -220,7 +238,7 @@ defmodule Inconn2Service.Report do
   def get_name_from_user(user) do
     case user.employee do
       nil -> user.username
-      _ -> user.employee_first_name
+      _ -> user.employee.first_name
     end
   end
 end
