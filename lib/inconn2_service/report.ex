@@ -2,8 +2,8 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack}
-  alias Inconn2Service.Staff.{User, Employee}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkRequest, WorkrequestStatusTeack}
+  # alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
 
@@ -66,8 +66,23 @@ defmodule Inconn2Service.Report do
     {:ok, filename} = PdfGenerator.generate(report_heading("Workorder Preventive maintainance Report") <> heading <> data <> "</table>", page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
-
   end
+
+  def complaints_report(prefix) do
+    work_request =
+      WorkRequest
+      |> where(request_type: ^"CO")
+      |> Repo.all(prefix: prefix)
+      |> Repo.preload([requested_user: :employee, assigned_user: :employee])
+
+    data =
+      Enum.map(work_request, fn w ->
+        requested_user = get_name_from_user(w.requested_user)
+
+      end)
+  end
+
+
 
   def work_order_report(prefix) do
     query = from w in WorkOrder,
@@ -175,5 +190,12 @@ defmodule Inconn2Service.Report do
 
   def report_heading(heading) do
     "<center><h1>#{heading}</h1></center>"
+  end
+
+  def get_name_from_user(user) do
+    case user.employee do
+      nil -> user.username
+      _ -> user.employee_first_name
+    end
   end
 end
