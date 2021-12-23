@@ -271,7 +271,8 @@ work_request1 = %{
   "priority" => "CR",
   "request_type" => "CO",
   "status" => "RS",
-  "location_id" => 1
+  "location_id" => 1,
+  "assigned_user_id" => 2
 }
 
 {:ok, work_request1c} = Ticket.create_work_request(work_request1, "inc_bata", %{id: 1})

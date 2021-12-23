@@ -2,7 +2,8 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkRequest, WorkrequestStatusTeack}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack}
+  alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   # alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
@@ -74,12 +75,30 @@ defmodule Inconn2Service.Report do
       |> where(request_type: ^"CO")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([requested_user: :employee, assigned_user: :employee])
+      |> Repo.preload([:work_request_subcategory])
 
     data =
       Enum.map(work_request, fn w ->
         requested_user = get_name_from_user(w.requested_user)
+        assigned_user = get_name_from_user(w.assigned_user)
+
+        raised_status = get_work_request_status_track_for_type(w.id, "RS", prefix)
+        created_time = raised_status.status_update_time
+
+        response_time =
+          case get_work_request_status_track_for_type(w.id, "AS", prefix) do
+             nil -> "not yet attended"
+             status_track ->
+              Time.diff(created_time, status_track.status_update_time, :minute)
+          end
 
       end)
+  end
+
+  def get_work_request_status_track_for_type(work_request_id, status, prefix) do
+    WorkrequestStatusTrack
+    |> where(work_request_id: ^work_request_id, status: ^status)
+    |> Repo.get(prefix: prefix)
   end
 
 
