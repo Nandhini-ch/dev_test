@@ -4,7 +4,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack}
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
-  # alias Inconn2Service.Staff.{User, Employee}
+  alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
 
@@ -77,7 +77,7 @@ defmodule Inconn2Service.Report do
       |> Repo.preload([requested_user: :employee, assigned_user: :employee])
       |> Repo.preload([:workrequest_subcategory])
 
-    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th>SI.No</th><th>Date</th><th>Time</th><th>Given By</th><th>Attended By</th><th>Response Time</th><th>Close Time</th><th>Complaint type</th><th>Complaint Status</th><th>Time Taken</th>)
+    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th>SI.No</th><th>Date</th><th>Time</th><th>Given By</th><th>Attended By</th><th>Response Time</th><th>Reason</th><th>ActionTaken</th><th>Close Time</th><th>Complaint type</th><th>Complaint Status</th><th>Time Taken</th>)
 
     data =
       Enum.map(work_request, fn w ->
@@ -108,7 +108,7 @@ defmodule Inconn2Service.Report do
               Time.diff(created_time, status_track.status_update_time, :minute)
           end
 
-          "<td>#{raised_status.status_update_date}</td><td>#{created_time}</td><td>#{requested_user}</td><td>#{assigned_user}</td><td>#{response_time}</td><td>#{completion_time}</td><td>#{w.workrequest_subcategory.name}</td><td>#{w.status}</td><td>#{completion_time_taken}</td></tr>"
+          "<td>#{raised_status.status_update_date}</td><td>#{created_time}</td><td>#{requested_user}</td><td>#{assigned_user}</td><td>#{response_time}</td><td>#{w.reason}</td><td>#{w.action_taken}</td><td>#{completion_time}</td><td>#{w.workrequest_subcategory.name}</td><td>#{w.status}</td><td>#{completion_time_taken}</td></tr>"
       end)  |> put_sr_no() |> Enum.join
 
       IO.inspect(data)

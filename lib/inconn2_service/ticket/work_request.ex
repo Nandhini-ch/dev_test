@@ -24,6 +24,8 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :status, :string, default: "RS"
     field :is_approvals_required, :boolean
     field :approvals_required, {:array, :integer}
+    field :reason, :string
+    field :action_taken, :string
     # field :approved_user_ids, {:array, :integer}, default: []
     # field :rejected_user_ids, {:array, :integer}, default: []
     field :work_order_id, :integer
