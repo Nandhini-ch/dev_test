@@ -2,7 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
@@ -118,10 +118,12 @@ defmodule Inconn2Service.Report do
       pdf_content
   end
 
+  def csg_workorder_report(prefix) do
+    date = Date.utc_today |> Date.add(-1)
+    work_order_groups = WorkOrder |> where(scheduled_date: ^date) |> group_by([w], w.asset_id) |> Repo.all(prefix: prefix)
+  end
+
   def get_work_request_status_track_for_type(work_request_id, status, prefix) do
-    # WorkrequestStatusTrack
-    # |> where([work_request_id: ^work_request_id, status: ^status])
-    # |> Repo.get(prefix: prefix)
     Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request_id, status: status], prefix: prefix)
   end
 
@@ -199,6 +201,7 @@ defmodule Inconn2Service.Report do
     end)
 
   end
+
 
   def inventory_report(prefix) do
     query = from it in InventoryTransaction,
