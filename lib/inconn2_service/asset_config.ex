@@ -823,7 +823,7 @@ defmodule Inconn2Service.AssetConfig do
         id: l.id,
         asset_name: l.name,
         asset_code: l.location_code,
-        asset_qr_url: "/api/equipments/#{l.id}/qr_code"
+        asset_qr_url: "/api/locations/#{l.id}/qr_code"
       }
     end)
   end

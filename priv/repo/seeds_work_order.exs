@@ -191,8 +191,41 @@ wk_ord2 = %{
   "work_request_id" => 1
 }
 
+
+
+wk_ord3 = %{
+  "site_id" => 1,
+  "asset_id" => 1,
+  "user_id" => 1,
+  "type" => "PRV",
+  "scheduled_date" => "2021-09-14",
+  "scheduled_time" => "09:00:00",
+  "start_date" => "2021-12-22",
+  "completed_date" => "2021-12-22",
+  "workorder_template_id" => 1,
+  "work_request_id" => 1,
+  "workorder_schedule_id" => 1
+}
+
+wk_ord4 = %{
+  "site_id" => 1,
+  "asset_id" => 2,
+  "user_id" => 1,
+  "type" => "PRV",
+  "start_date" => "2021-12-22",
+  "completed_date" => "2021-12-22",
+  "scheduled_date" => "2021-09-15",
+  "scheduled_time" => "09:00:00",
+  "workorder_template_id" => 2,
+  "work_request_id" => 1,
+  "workorder_schedule_id" => 1
+}
+
 {:ok, wk_ord1c} = Workorder.create_work_order(wk_ord1, "inc_bata", %{id: 1})
 {:ok, wk_ord2c} = Workorder.create_work_order(wk_ord2, "inc_bata", %{id: 1})
+{:ok, wk_ord3c} = Workorder.create_work_order(wk_ord3, "inc_bata", %{id: 1})
+{:ok, wk_ord4c} = Workorder.create_work_order(wk_ord4, "inc_bata", %{id: 1})
+
 
 
 wkreq_cat1 = %{"name" => "Electrical", "description" => "Deals with electrical work"}
@@ -216,7 +249,7 @@ wkreq_subcat6 = %{"name" => "Mechnical Subcategory 3", "workrequest_category_id"
 {:ok, wkreq_subcat6c} = Ticket.create_workrequest_subcategory(wkreq_subcat6, "inc_bata")
 
 cat_help1 = %{
-  "user_id" => 1,
+  "user_id" => 2,
   "site_id" => 1,
   "workrequest_category_id" => wkreq_cat1c.id
 }
@@ -224,7 +257,7 @@ cat_help1 = %{
 {:ok, cat_help1c} = Ticket.create_category_helpdesk(cat_help1, "inc_bata")
 
 cat_help2 = %{
-  "user_id" => 1,
+  "user_id" => 2,
   "site_id" => 1,
   "workrequest_category_id" => wkreq_cat2c.id
 }
@@ -238,7 +271,8 @@ work_request1 = %{
   "priority" => "CR",
   "request_type" => "CO",
   "status" => "RS",
-  "location_id" => 1
+  "location_id" => 1,
+  "assigned_user_id" => 2
 }
 
 {:ok, work_request1c} = Ticket.create_work_request(work_request1, "inc_bata", %{id: 1})

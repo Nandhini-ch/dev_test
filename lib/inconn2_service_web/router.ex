@@ -44,7 +44,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
-    get "/locations/qr_codes", LocationController, :list_locations_qr
+    get "sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
     resources "/locations", LocationController, except: [:new, :edit, :index]
     # get "/locations/:id/qr_code", LocationController, :display_qr_code
     get "/locations/qr_code/:qr_code", LocationController, :get_location_from_qr_code
@@ -172,6 +172,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
     get "/work_request_approvals", WorkRequestController, :index_approval_required
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
+    get "/work_requests_for_category_helpdesk_user", WorkRequestController, :index_tickets_of_helpdesk_user
     # resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
     get "/work_requests/:work_request_id/workrequest_status_tracks", WorkrequestStatusTrackController, :index_for_work_request
 
@@ -240,7 +241,10 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/list_of_values", ListOfValueController, except: [:new, :edit]
 
     get "/reports/work_orders", ReportController, :get_work_order_report
+    get "/reports/complaints", ReportController, :get_complaint_report
     get "/reports/inventory", ReportController, :get_inventory_report
+    get "/reports/:site_id/locations_qr_code", ReportController, :get_locations_qr
+    get "/reports/work_order_status", ReportController, :get_workorder_status_report
 
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
     get "/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
