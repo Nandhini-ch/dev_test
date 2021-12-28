@@ -18,12 +18,12 @@ defmodule Inconn2ServiceWeb.LocationView do
     %{data: render_many(locations, LocationView, "asset_qr.json")}
   end
 
-  def render("asset_qr.json", %{equipment: equipment}) do
+  def render("asset_qr.json", %{location: location}) do
     %{
-      id: equipment.id,
-      asset_name: equipment.asset_name,
-      asset_code: equipment.asset_code,
-      asset_qr_ul: equipment.asset_qr_url
+      id: location.id,
+      asset_name: location.asset_name,
+      asset_code: location.asset_code,
+      asset_qr_ul: location.asset_qr_url
     }
   end
 

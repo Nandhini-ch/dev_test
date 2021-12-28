@@ -2,6 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
+  alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   alias Inconn2Service.Staff.{User, Employee}
@@ -118,9 +119,51 @@ defmodule Inconn2Service.Report do
       pdf_content
   end
 
+  def generate_qr_code_for_assets(site_id, prefix) do
+    locations_qr = Inconn2Service.AssetConfig.list_locations_qr(site_id, prefix)
+
+    body =
+      Enum.map(locations_qr, fn x ->
+        "inc_" <> sub_domain = prefix
+        IO.inspect("http://#{sub_domain}.localhost:4000#{x.asset_qr_url}")
+        ~s(<div class="col-4"><img src="#{sub_domain}.localhost:4000#{x.asset_qr_url}" height="200px" width="200px"/><h3>#{x.asset_name}</h3></div>)
+      end) |> Enum.join()
+
+    IO.inspect(body)
+
+    {:ok, filename} = PdfGenerator.generate( ~s(<div class="row">) <> body <> "</div>", page_size: "A4", shell_params: ["--enable-local-file-access"])
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+  end
+
   def csg_workorder_report(prefix) do
     date = Date.utc_today |> Date.add(-1)
-    work_order_groups = WorkOrder |> where(scheduled_date: ^date) |> group_by([w], w.asset_id) |> Repo.all(prefix: prefix)
+
+    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>8:00</th><th>9:00</th><th>10:00</th><th>11:00</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>17:00</th><th>18:00</th>)
+
+    work_order_groups = WorkOrder |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
+    IO.inspect(work_order_groups)
+
+    data =
+      Enum.map(work_order_groups, fn {key, work_orders} ->
+        # asset = Repo.get(Location, key)
+        work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
+        complete_status_string =
+          Enum.map(work_orders, fn w ->
+            case w.status do
+              "cp" -> "Y"
+              _ -> "N"
+            end
+          end) |> Enum.join("<td>")
+        "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
+      end) |> put_sr_no() |> Enum.join()
+
+    IO.inspect(data)
+
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> heading <> data <> "</table></landscape>", page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+
   end
 
   def get_work_request_status_track_for_type(work_request_id, status, prefix) do
