@@ -141,11 +141,11 @@ defmodule Inconn2Service.Report do
 
     heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>8:00</th><th>9:00</th><th>10:00</th><th>11:00</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>17:00</th><th>18:00</th>)
 
-    work_order_groups = WorkOrder |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
+    work_order_groups = WorkOrder |> where(scheduled_date: ^date) |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
     IO.inspect(work_order_groups)
 
     data =
-      Enum.map(work_order_groups, fn {key, work_orders} ->
+      Enum.map(work_order_groups, fn {_, work_orders} ->
         # asset = Repo.get(Location, key)
         work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
         complete_status_string =
@@ -160,7 +160,10 @@ defmodule Inconn2Service.Report do
 
     IO.inspect(data)
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> heading <> data <> "</table></landscape>", page_size: "A4", shell_params: ["--orientation", "landscape"])
+    heading = ~s(<span style="float:left">CONTINENTAL AUTOMOTIVE COMPONENTS INDIA PVT. LTD.</span><span style="float:right">Date: #{Date.utc_today}</span><br/><br/>)
+    footer = ~s(<span style="float:right">Powered By Inconn</span>)
+
+    {:ok, filename} = PdfGenerator.generate(heading <> report_heading("Work order completion reports") <> data <> "</table></landscape>" <> footer, page_size: "A4", shell_params: ["--orientation", "landscape"])
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 
@@ -278,7 +281,7 @@ defmodule Inconn2Service.Report do
   end
 
   def report_heading(heading) do
-    "<center><h1>#{heading}</h1></center>"
+    "</b><center><h1>#{heading}</h1></center>"
   end
 
   def get_name_from_user(user) do

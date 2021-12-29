@@ -357,6 +357,22 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     header ++ body
   end
 
+  def download_asset_qrs(prefix) do
+    locations_qr = Inconn2Service.AssetConfig.list_locations_qr(1, prefix)
+
+    data =
+      Enum.map(locations_qr, fn x ->
+        "inc_" <> sub_domain = prefix
+        IO.inspect("http://#{sub_domain}.inconn.com:4000#{x.asset_qr_url}")
+        ~s(<div class="col-4"><img src="#{sub_domain}.localhost:4000#{x.asset_qr_url}" height="200px" width="200px"/><h3>#{x.asset_name}</h3></div>)
+      end) |> Enum.join()
+
+      header = [["divs"]]
+      body = [[data]]
+
+      header ++ body
+  end
+
   # defp convert_array_of_objects_to_string(array_of_objects) do
   #   array_of_objects
   #   |> Enum.map(fn x -> IO.inspect(x) end)
