@@ -145,7 +145,7 @@ defmodule Inconn2Service.Report do
     IO.inspect(work_order_groups)
 
     data =
-      Enum.map(work_order_groups, fn {key, work_orders} ->
+      Enum.map(work_order_groups, fn {_key, work_orders} ->
         # asset = Repo.get(Location, key)
         work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
         complete_status_string =
@@ -158,9 +158,21 @@ defmodule Inconn2Service.Report do
         "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
       end) |> put_sr_no() |> Enum.join()
 
+      remarks_data =
+        Enum.map(work_order_groups, fn {_key, work_orders} ->
+          # asset = Repo.get(Location, key)
+          work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
+          complete_status_string =
+            Enum.map(work_orders, fn w ->
+              tasks = WorkorderTask |> where([work_order_id: ^w.id]) |> Repo.all(prefix: prefix)
+              Enum.map(tasks, fn t -> t.remarks end) |> Enum.join(",")
+            end) |> Enum.join("<td>")
+          "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
+        end) |> put_sr_no() |> Enum.join()
+
     IO.inspect(data)
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> heading <> data <> "</table></landscape>", page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table>", page_size: "A4", shell_params: ["--orientation", "landscape"])
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 

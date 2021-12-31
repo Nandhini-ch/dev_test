@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -44,7 +44,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
-    get "sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
+    get "/sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
     resources "/locations", LocationController, except: [:new, :edit, :index]
     # get "/locations/:id/qr_code", LocationController, :display_qr_code
     get "/locations/qr_code/:qr_code", LocationController, :get_location_from_qr_code
