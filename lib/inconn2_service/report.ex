@@ -139,13 +139,16 @@ defmodule Inconn2Service.Report do
   def csg_workorder_report(prefix) do
     date = Date.utc_today |> Date.add(-1)
 
+    header = ~s(<p style="float:left">Site:CACIPL-Continental South Gate</p><p style="float:right">Date: #{Date.utc_today}</p>)
+
     heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>8:00</th><th>9:00</th><th>10:00</th><th>11:00</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>17:00</th><th>18:00</th>)
 
     work_order_groups = WorkOrder |> where(scheduled_date: ^date) |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
     IO.inspect(work_order_groups)
 
     data =
-      Enum.map(work_order_groups, fn {_, work_orders} ->
+
+      Enum.map(work_order_groups, fn {_key, work_orders} ->
         # asset = Repo.get(Location, key)
         work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
         complete_status_string =
@@ -158,12 +161,22 @@ defmodule Inconn2Service.Report do
         "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
       end) |> put_sr_no() |> Enum.join()
 
+      remarks_data =
+        Enum.map(work_order_groups, fn {_key, work_orders} ->
+          # asset = Repo.get(Location, key)
+          work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
+          complete_status_string =
+            Enum.map(work_orders, fn w ->
+              tasks = WorkorderTask |> where([work_order_id: ^w.id]) |> Repo.all(prefix: prefix)
+              Enum.map(tasks, fn t -> t.remarks end) |> Enum.join(",")
+            end) |> Enum.join("<td>")
+          "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
+        end) |> put_sr_no() |> Enum.join()
+
     IO.inspect(data)
 
-    heading = ~s(<span style="float:left">CONTINENTAL AUTOMOTIVE COMPONENTS INDIA PVT. LTD.</span><span style="float:right">Date: #{Date.utc_today}</span><br/><br/>)
-    footer = ~s(<span style="float:right">Powered By Inconn</span>)
 
-    {:ok, filename} = PdfGenerator.generate(heading <> report_heading("Work order completion reports") <> data <> "</table></landscape>" <> footer, page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"])
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 
