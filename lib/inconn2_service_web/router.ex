@@ -243,6 +243,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/work_orders", ReportController, :get_work_order_report
     get "/reports/complaints", ReportController, :get_complaint_report
     get "/reports/inventory", ReportController, :get_inventory_report
+    get "/reports/work_order_status", ReportController, :get_workorder_status_report
     get "/reports/locations_qr_code", ReportController, :get_locations_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
 
