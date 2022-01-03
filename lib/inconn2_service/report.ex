@@ -139,6 +139,8 @@ defmodule Inconn2Service.Report do
   def csg_workorder_report(prefix) do
     date = Date.utc_today |> Date.add(-1)
 
+    header = ~s(<p style="float:left">Site:CACIPL-Continental South Gate</p><p style="float:right">Date: #{Date.utc_today}</p>)
+
     heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>8:00</th><th>9:00</th><th>10:00</th><th>11:00</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>17:00</th><th>18:00</th>)
 
     work_order_groups = WorkOrder |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
@@ -172,7 +174,7 @@ defmodule Inconn2Service.Report do
 
     IO.inspect(data)
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table>", page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"])
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 
