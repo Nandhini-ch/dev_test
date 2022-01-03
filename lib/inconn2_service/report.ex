@@ -148,8 +148,8 @@ defmodule Inconn2Service.Report do
 
     data =
 
-      Enum.map(work_order_groups, fn {_key, work_orders} ->
-        # asset = Repo.get(Location, key)
+      Enum.map(work_order_groups, fn {key, work_orders} ->
+        asset = Repo.get(Location, key, prefix: prefix)
         work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)
         complete_status_string =
           Enum.map(work_orders, fn w ->
@@ -158,7 +158,7 @@ defmodule Inconn2Service.Report do
               _ -> "N"
             end
           end) |> Enum.join("<td>")
-        "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
+        "<td>" <> work_order_template.name <> " - " <> asset.name <> "</td><td>" <> complete_status_string <> "</tr>"
       end) |> put_sr_no() |> Enum.join()
 
       remarks_data =
