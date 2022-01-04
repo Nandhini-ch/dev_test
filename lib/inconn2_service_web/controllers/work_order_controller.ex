@@ -39,6 +39,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
+  def update_multiple(conn, %{"work_order_changes" => work_order_changes}) do
+    work_orders = Workorder.update_work_orders(work_order_changes, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def delete(conn, %{"id" => id}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
 

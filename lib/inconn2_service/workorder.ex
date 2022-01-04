@@ -879,6 +879,14 @@ defmodule Inconn2Service.Workorder do
     |> Repo.update(prefix: prefix)
   end
 
+  def update_work_orders(work_order_changes, prefix, user) do
+    Enum.map(work_order_changes["ids"], fn id ->
+      work_order = get_work_order!(id, prefix)
+      {:ok, work_order} = update_work_order(work_order, Map.drop(work_order_changes, ["ids"]), prefix, user)
+      work_order
+    end)
+  end
+
   @doc """
   Deletes a work_order.
 
