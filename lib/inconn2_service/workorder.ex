@@ -1228,6 +1228,37 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def update_workorder_task_from_group(%WorkorderTask{} = workorder_task, attrs, prefix) do
+    workorder_task
+      |> WorkorderTask.changeset(attrs)
+      |> validate_task_id(prefix)
+      |> validate_response(prefix)
+      |> Repo.update(prefix: prefix)
+  end
+
+  def update_workorder_tasks(tasks, prefix, user \\ %{id: nil}) do
+    work_order = get_work_order!(List.first(tasks).work_order_id, prefix)
+
+    result_list =
+      Enum.map(tasks, fn attrs ->
+        task = get_workorder_task!(attrs["id"], prefix)
+        case update_workorder_task_from_group(task, attrs, prefix) do
+          {:ok, _workorder_task} -> "success"
+          {:error, changeset} -> {:error, changeset}
+        end
+      end)
+
+    success_count = Enum.filter(result_list, fn r -> r == "success" end) |> Enum.count()
+    failure_results = Enum.filter(result_list, fn r -> r != "success" end)
+    error_count = length(failure_results)
+    case error_count do
+      0 -> update_work_order(work_order, %{"status" => "cp"}, prefix, user)
+      _ -> update_work_order(work_order, %{"status" => "ip"}, prefix, user)
+    end
+
+    {:ok, %{success_count: success_count, error_count: error_count, failure_result: failure_results}}
+  end
+
   @doc """
   Deletes a workorder_task.
 

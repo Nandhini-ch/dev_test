@@ -113,6 +113,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     post "/work_orders/:work_order_id/update_asset_status", WorkOrderController, :update_asset_status
+    put "/update_workorder_tasks", WorkorderTaskController, :group_update
     get "/work_orders/:work_order_id/workorder_tasks", WorkorderTaskController, :index_by_workorder
     put "/update_work_orders", WorkOrderController, :update_multiple
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
