@@ -18,6 +18,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Inventory.Item
+  alias Inconn2Service.CheckListConfig
   @doc """
   Returns the list of workorder_templates.
 
@@ -1435,6 +1436,7 @@ defmodule Inconn2Service.Workorder do
                                             }, prefix)
 
     auto_create_workorder_task(work_order, prefix)
+    auto_create_workorder_checks(work_order, prefix)
     auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
@@ -1539,6 +1541,20 @@ defmodule Inconn2Service.Workorder do
                           }
                           create_workorder_task(attrs, prefix)
                     end)
+  end
+
+  defp auto_create_workorder_checks(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    check_list = CheckListConfig.get_check_list!(workorder_template, prefix)
+    Enum.map(check_list.check_ids, fn check_id ->
+      check = CheckListConfig.get_check!(check_id, prefix)
+      attrs = %{
+        "check_id" => check_id,
+        "type" => check.type,
+        "work_order_id" => work_order.id
+      }
+      create_workorder_check(attrs, prefix)
+    end)
   end
 
   defp auto_update_workorder_task(work_order, prefix) do
@@ -1648,6 +1664,8 @@ defmodule Inconn2Service.Workorder do
         _ ->
           cs
       end
+    else
+      cs
     end
   end
 
