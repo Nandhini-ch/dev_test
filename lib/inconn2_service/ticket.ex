@@ -145,6 +145,10 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site])
   end
 
+  def list_work_requests_for_user(user, prefix) do
+    WorkRequest |> where([assigned_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site])
+  end
+
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
     [asset_type, uuid] = String.split(qr_string, ":")
     case asset_type do
@@ -354,6 +358,14 @@ defmodule Inconn2Service.Ticket do
 
     end
 
+  end
+
+  def update_work_orders(work_request_changes, prefix, user) do
+    Enum.map(work_request_changes["ids"], fn id ->
+      work_request = get_work_request!(id, prefix)
+      {:ok, work_request} = update_work_request(work_request, Map.drop(work_request_changes, ["ids"]), prefix, user)
+      work_request
+    end)
   end
 
   # defp create_workorder_from_ticket(work_request, user, prefix, "AS") do
