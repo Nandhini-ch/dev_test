@@ -21,6 +21,14 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :workorder_template_id, :integer
     field :workorder_schedule_id, :integer
     field :work_request_id, :integer
+    field :workpermit_required, :boolean
+    field :workpermit_required_from, {:array, :integer}, default: []
+    field :workpermit_obtained, {:array, :integer}, default: []
+    field :loto_required, :boolean
+    field :loto_approval_from_user_id, :integer
+    field :is_loto_obtained, :boolean
+    field :pre_check_required, :boolean
+    field :precheck_completed, :boolean
 
     timestamps()
   end
@@ -37,7 +45,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     |> validate_start_time()
     |> validate_date_order()
     |> validate_time_order()
-    |> validate_inclusion(:status, ["cr", "as", "wp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
+    |> validate_inclusion(:status, ["cr", "as", "wp", "wpp", "wpa", "lta", "ltp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
     |> validate_based_on_type()
   end
 

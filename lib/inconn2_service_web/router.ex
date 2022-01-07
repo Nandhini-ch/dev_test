@@ -107,8 +107,13 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
-    resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
+    get "/work_orders/premit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
+    post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
+    post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
+    get "/work_orders/loto_pending", WorkOrderController, :work_order_loto_to_be_checked
+    post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
+    resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
@@ -248,7 +253,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/:site_id/locations_qr_code", ReportController, :get_locations_qr
     get "/reports/work_order_status", ReportController, :get_workorder_status_report
 
+    get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
-    get "/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
   end
 end

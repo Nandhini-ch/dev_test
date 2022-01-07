@@ -11,8 +11,8 @@ defmodule Inconn2ServiceWeb.WorkorderCheckController do
     render(conn, "index.json", workorder_checks: workorder_checks)
   end
 
-  def index_workorder_check_by_type(conn, %{"check_type" => check_type}) do
-    workorder_checks = Workorder.list_workorder_checks_by_type(check_type, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+  def index_workorder_check_by_type(conn, %{"work_order_id" => work_order_id, "check_type" => check_type}) do
+    workorder_checks = Workorder.list_workorder_checks_by_type(work_order_id, check_type, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", workorder_checks: workorder_checks)
   end
 
@@ -36,6 +36,11 @@ defmodule Inconn2ServiceWeb.WorkorderCheckController do
     with {:ok, %WorkorderCheck{} = workorder_check} <- Workorder.update_workorder_check(workorder_check, workorder_check_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", workorder_check: workorder_check)
     end
+  end
+
+  def self_update_pre(conn, %{"workorder_check_ids" => workorder_check_ids}) do
+    workorder_checks = Workorder.update_pre_checks(workorder_check_ids, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", workorder_checks: workorder_checks)
   end
 
   def delete(conn, %{"id" => id}) do

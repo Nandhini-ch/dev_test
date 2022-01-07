@@ -19,6 +19,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Inventory.Item
   alias Inconn2Service.CheckListConfig
+  alias Inconn2Service.Workorder.WorkorderCheck
   @doc """
   Returns the list of workorder_templates.
 
@@ -687,6 +688,23 @@ defmodule Inconn2Service.Workorder do
         work_order
     end
   end
+
+  def get_work_order_premits_to_be_approved(user, prefix) do
+    work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
+    Enum.map(work_orders, fn wo ->
+      if List.first(wo.workpermit_required_from -- wo.workpermit_obtained) == user.id do
+        wo
+      else
+        "not_required"
+      end
+    end) |> Enum.filter(fn x -> x != "not_required" end)
+  end
+
+  def get_work_order_loto_to_be_checked(user, prefix) do
+    WorkOrder
+    |> where([loto_approval_from_user_id: ^user.id, status: ^"ltp"])
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Creates a work_order.
 
@@ -888,6 +906,45 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
+  def approve_work_permit(work_order_id, prefix, user) do
+    work_order = get_work_order!(work_order_id, prefix)
+    if work_order.workpermit_obtained ++ [user.id] == work_order.workpermit_required do
+      attrs = %{"workpermit_obtained" => work_order.workpermit_obtained ++ [user.id], "status" => "wpa"}
+      {:ok, updated_work_order} = update_work_order(work_order, attrs, prefix, user)
+      query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order_id and wc.type == ^"WP", update: [set: [approved: true]]
+      Repo.update_all(query, prefix: prefix)
+      {:ok, updated_work_order}
+    else
+      attrs = %{"workpermit_obtained" => work_order.workpermit_obtained ++ [user.id]}
+      update_work_order(work_order, attrs, prefix, user)
+    end
+  end
+
+  def approve_loto(work_order_id, prefix, user) do
+    work_order = get_work_order!(work_order_id, prefix)
+    {:ok, updated_work_order} = update_work_order(work_order, %{"is_loto_obtained" => true, "status" => "lta"}, prefix, user)
+    query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order_id and wc.type == ^"LOTO", update: [set: [approved: true]]
+    Repo.update_all(query, prefix: prefix)
+    update_status_track(updated_work_order, user, prefix, "lta")
+  end
+
+  def update_pre_checks(workorder_check_ids, prefix, user) do
+
+    results =
+      Enum.map(workorder_check_ids, fn id ->
+        check = get_workorder_check!(id, prefix)
+        {:ok, workorder_check} = update_workorder_check(check, %{"approved" => true}, prefix)
+        workorder_check
+      end)
+
+    work_order = get_work_order!(List.first(results).work_order_id, prefix)
+    all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
+    if length(all_pre_checks) == length(results) do
+      update_work_order(work_order, %{"precheck_completed" => true}, prefix, user)
+    end
+    results
+  end
+
   @doc """
   Deletes a work_order.
 
@@ -1016,8 +1073,17 @@ defmodule Inconn2Service.Workorder do
               update_status_track(work_order, user, prefix, "cn")
               cs
       "hl" ->
+              update_status_track(work_order, user, prefix, "wpp")
+              cs
+
+      "ltp" ->
+              update_status_track(work_order, user, prefix, "ltp")
+              cs
+
+      "wpp" ->
               update_status_track(work_order, user, prefix, "hl")
               cs
+
        _ ->
               cs
     end
@@ -1404,7 +1470,7 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template!(workorder_schedule.workorder_template_id, prefix)
     case workorder_template.create_new do
       "at" ->
-          update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone)
+          update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, workorder_template, prefix, zone)
       "oc" ->
           w = from(w in WorkOrder, where: w.workorder_schedule_id == ^workorder_schedule.id and (w.scheduled_date < ^workorder_schedule.next_occurrence_date) or
                                                                                                 (w.scheduled_date == ^workorder_schedule.next_occurrence_date and w.scheduled_time < ^workorder_schedule.next_occurrence_time))
@@ -1418,13 +1484,46 @@ defmodule Inconn2Service.Workorder do
                                 end)
           status = List.delete(Enum.uniq(status), "done")
           if length(status) == 0 do
-            update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone)
+            update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, workorder_template, prefix, zone)
           else
             nil
           end
     end
   end
-  defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
+  # defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, prefix, zone) do
+  #   asset = get_asset(workorder_schedule, prefix)
+  #   {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
+  #                                           "asset_id" => workorder_schedule.asset_id,
+  #                                           "type" => "PRV",
+  #                                           "scheduled_date" => workorder_schedule.next_occurrence_date,
+  #                                           "scheduled_time" => workorder_schedule.next_occurrence_time,
+  #                                           "workorder_template_id" => workorder_schedule.workorder_template_id,
+  #                                           "workorder_schedule_id" => workorder_schedule.id
+  #                                           }, prefix)
+
+  #   auto_create_workorder_task(work_order, prefix)
+  #   auto_create_workorder_checks(work_order, prefix)
+  #   auto_assign_user(work_order, prefix)
+
+  #   workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
+  #   {:ok, workorder_schedule} = Multi.new()
+  #                             |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
+  #                             |> Repo.transaction(prefix: prefix)
+  #   multi = Multi.new()
+  #           |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id))
+
+  #   multi_insert_work_scheduler(workorder_schedule, prefix, zone, multi)
+  #   |> Repo.transaction()
+  # end
+  # defp multi_insert_work_scheduler(workorder_schedule, prefix, zone, multi) do
+  #   if workorder_schedule.next_occurrence.next_occurrence_date != nil do
+  #     Multi.insert(multi, :create, Common.insert_work_scheduler_cs(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.next_occurrence.id, "zone" => zone}))
+  #   else
+  #     multi
+  #   end
+  # end
+
+  defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, workorder_template, prefix, zone) do
     asset = get_asset(workorder_schedule, prefix)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
@@ -1432,11 +1531,18 @@ defmodule Inconn2Service.Workorder do
                                             "scheduled_date" => workorder_schedule.next_occurrence_date,
                                             "scheduled_time" => workorder_schedule.next_occurrence_time,
                                             "workorder_template_id" => workorder_schedule.workorder_template_id,
-                                            "workorder_schedule_id" => workorder_schedule.id
+                                            "workorder_schedule_id" => workorder_schedule.id,
+                                            "workpermit_required" => workorder_template.workpermit_required,
+                                            "workpermit_required_from" => workorder_template.workpermit_required_from,
+                                            "loto_required" => workorder_template.loto_required,
+                                            "loto_approval_from_user_id" => workorder_template.loto_approval_from_user_id,
+                                            "pre_check_required" => workorder_template.pre_check_required
                                             }, prefix)
 
     auto_create_workorder_task(work_order, prefix)
-    auto_create_workorder_checks(work_order, prefix)
+    if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
+    if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
+    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
     auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
@@ -1543,10 +1649,22 @@ defmodule Inconn2Service.Workorder do
                     end)
   end
 
-  defp auto_create_workorder_checks(work_order, prefix) do
+  defp auto_create_workorder_checks(work_order, check_list_type, prefix) do
     workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
-    check_list = CheckListConfig.get_check_list!(workorder_template, prefix)
-    Enum.map(check_list.check_ids, fn check_id ->
+
+    check_ids =
+      case check_list_type do
+        "WP" ->
+          CheckListConfig.get_check_list!(workorder_template.workpermit_check_list_id, prefix).check_ids
+
+        "LOTO" ->
+          CheckListConfig.get_check_list!(workorder_template.loto_lock_check_list_id, prefix).check_ids ++ CheckListConfig.get_check_list!(workorder_template.loto_release_check_list_id, prefix).check_ids
+
+        "PRE" ->
+          CheckListConfig.get_check_list!(workorder_template.pre_check_list_id, prefix).check_ids
+      end
+
+    Enum.map(check_ids, fn check_id ->
       check = CheckListConfig.get_check!(check_id, prefix)
       attrs = %{
         "check_id" => check_id,
@@ -1556,6 +1674,7 @@ defmodule Inconn2Service.Workorder do
       create_workorder_check(attrs, prefix)
     end)
   end
+
 
   defp auto_update_workorder_task(work_order, prefix) do
     workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
@@ -1612,9 +1731,9 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderCheck, prefix: prefix)
   end
 
-  def list_workorder_checks_by_type(check_type, user, prefix) do
+  def list_workorder_checks_by_type(work_order_id, check_type, prefix) do
     WorkorderCheck
-    |> where([type: ^check_type, approved_by_user_id: ^user.id])
+    |> where([type: ^check_type, work_order_id: ^work_order_id])
     |> Repo.all(prefix: prefix)
   end
 

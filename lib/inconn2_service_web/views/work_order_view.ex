@@ -32,6 +32,14 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template_id: work_order.workorder_template_id,
       workorder_schedule_id: work_order.workorder_schedule_id,
       work_request_id: work_order.work_request_id,
+      workpermit_required: work_order.workpermit_required,
+      workpermit_required_from: work_order.workpermit_required_from,
+      workpermit_obtained: work_order.workpermit_obtained,
+      loto_required: work_order.loto_required,
+      loto_approval_from_user_id: work_order.loto_approval_from_user_id,
+      is_loto_obtained: work_order.is_loto_obtained,
+      pre_check_required: work_order.pre_check_required,
+      precheck_completed: work_order.precheck_completed,
       overdue: work_order.overdue}
   end
 
