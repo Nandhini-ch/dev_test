@@ -257,5 +257,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
+
+    get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
   end
 end
