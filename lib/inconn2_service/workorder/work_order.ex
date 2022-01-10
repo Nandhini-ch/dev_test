@@ -5,6 +5,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   schema "work_orders" do
     field :site_id, :integer
     field :asset_id, :integer
+    field :asset_type, :string
     field :user_id, :integer
     field :type, :string
     field :created_date, :date

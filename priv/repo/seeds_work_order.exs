@@ -185,6 +185,7 @@ wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 1, "holidays" => [6,7]
 wk_ord1 = %{
   "site_id" => 1,
   "asset_id" => 1,
+  "asset_type" => "E",
   "user_id" => 1,
   "type" => "BRK",
   "scheduled_date" => "2021-09-14",

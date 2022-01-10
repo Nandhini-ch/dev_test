@@ -639,24 +639,25 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+
   def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
     [asset_type, uuid] = String.split(qr_string, ":")
     case asset_type do
       "L" ->
         location = Inconn2Service.AssetConfig.get_location_by_qr_code(uuid, prefix)
         WorkOrder
-        |> where([asset_id: ^location.id, user_id: ^user.id])
+        |> where([asset_id: ^location.id, asset_type: ^"L" ,user_id: ^user.id])
         |> where([w], w.status != "cp")
         |> Repo.all(prefix: prefix)
-        |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+        |> Enum.map(fn work_order -> add_stuff_to_workorder(work_order, prefix) end)
 
       "E" ->
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
         WorkOrder
-        |> where([asset_id: ^equipment.id, user_id: ^user.id])
+        |> where([asset_id: ^equipment.id, asset_type: "E", user_id: ^user.id])
         |> where([w], w.status != "cp")
         |> Repo.all(prefix: prefix)
-        |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+        |> Enum.map(fn work_order -> add_stuff_to_workorder(work_order, prefix) end)
     end
   end
 
@@ -1197,6 +1198,7 @@ defmodule Inconn2Service.Workorder do
             get_workorder_schedule!(id, prefix)
         end
 
+
       wo
       |> Map.put_new(:asset, asset)
       |> Map.put_new(:asset_type, workorder_template.asset_type)
@@ -1206,6 +1208,69 @@ defmodule Inconn2Service.Workorder do
       |> Map.put_new(:workorder_template, workorder_template)
       |> Map.put_new(:workorder_schedule, workorder_schedule)
     end)
+  end
+
+  def add_stuff_to_workorder(wo, prefix) do
+    workorder_template = get_workorder_template!(wo.workorder_template_id, prefix)
+    asset =
+      case workorder_template.asset_type do
+        "L" ->
+          AssetConfig.get_location!(wo.asset_id, prefix)
+        "E" ->
+          AssetConfig.get_equipment!(wo.asset_id, prefix)
+      end
+
+    site = AssetConfig.get_site!(wo.site_id, prefix)
+
+    user =
+      case wo.user_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_user!(id, prefix)
+      end
+
+    employee =
+      if user != nil do
+        case user.employee_id do
+          nil ->
+            nil
+
+          id ->
+            Staff.get_employee!(id, prefix)
+        end
+      else
+        nil
+      end
+
+    workorder_template =
+      case wo.workorder_template_id do
+        nil ->
+          nil
+
+        id ->
+          get_workorder_template!(id, prefix)
+      end
+
+    workorder_schedule =
+      case wo.workorder_schedule_id do
+        nil ->
+          nil
+
+        id ->
+          get_workorder_schedule!(id, prefix)
+      end
+
+
+    wo
+    |> Map.put_new(:asset, asset)
+    |> Map.put_new(:asset_type, workorder_template.asset_type)
+    |> Map.put_new(:site, site)
+    |> Map.put_new(:user, user)
+    |> Map.put_new(:employee, employee)
+    |> Map.put_new(:workorder_template, workorder_template)
+    |> Map.put_new(:workorder_schedule, workorder_schedule)
   end
 
   def list_workorder_tasks(prefix, work_order_id) do
@@ -1597,6 +1662,7 @@ defmodule Inconn2Service.Workorder do
     asset = get_asset(workorder_schedule, prefix)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
+                                            "asset_type" => workorder_template.asset_type,
                                             "type" => "PRV",
                                             "scheduled_date" => workorder_schedule.next_occurrence_date,
                                             "scheduled_time" => workorder_schedule.next_occurrence_time,

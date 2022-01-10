@@ -3,6 +3,7 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToWorkOrder do
 
   def change do
     alter table("work_orders") do
+      add :asset_type, :string
       add :workpermit_required, :boolean
       add :workpermit_required_from, {:array, :integer}
       add :workpermit_obtained, {:array, :integer}
