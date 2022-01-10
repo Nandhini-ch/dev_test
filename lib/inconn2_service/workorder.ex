@@ -21,7 +21,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
-  alias Inconn2Service.Ticket
+  # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
 
