@@ -1206,9 +1206,47 @@ defmodule Inconn2Service.Workorder do
       {:error, %Ecto.Changeset{}}
 
   """
+  defp parse_naivedatetime(nil), do: nil
+
+  defp parse_naivedatetime(date_time) do
+    [date, time] = String.split(date_time, " ")
+    [year, month, day] = String.split(date, "-")
+    modified_month =
+      case String.length(month) do
+        1->
+          "0" <> month
+
+        _ ->
+          month
+      end
+
+    modified_day =
+      case String.length(day) do
+        1->
+          "0" <> day
+
+        _ ->
+          day
+      end
+
+    Date.new!(String.to_integer(year), String.to_integer(modified_month), String.to_integer(modified_day))
+    |> NaiveDateTime.new!(Time.from_iso8601!(time))
+  end
+
+  defp update_datetime_in_attrs(attrs) do
+    modified_start_time = parse_naivedatetime(attrs["actual_start_time"])
+    modified_end_time = parse_naivedatetime(attrs["actual_end_time"])
+
+    attrs
+    |> Map.put("actual_start_time", modified_start_time)
+    |> Map.put("actual_end_time", modified_end_time)
+  end
+
+
   def update_workorder_task(%WorkorderTask{} = workorder_task, attrs, prefix, user \\ %{id: nil}) do
+    modified_attrs = update_datetime_in_attrs(attrs)
     result = workorder_task
-            |> WorkorderTask.changeset(attrs)
+            |> WorkorderTask.changeset(modified_attrs)
             |> validate_task_id(prefix)
             |> validate_response(prefix)
             |> Repo.update(prefix: prefix)
