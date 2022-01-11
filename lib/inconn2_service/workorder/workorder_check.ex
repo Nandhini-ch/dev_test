@@ -17,22 +17,22 @@ defmodule Inconn2Service.Workorder.WorkorderCheck do
     |> cast(attrs, [:check_id, :type, :approved])
     |> validate_required([:check_id, :type])
     |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
-    |> validate_remarks()
+    # |> validate_remarks()
     |> assoc_constraint(:work_order)
   end
 
-  defp validate_remarks(cs) do
-    approved = get_field(cs, :approved, nil)
-    if approved != nil do
-      case approved do
-        false ->
-          validate_required(cs, [:remarks])
+  # defp validate_remarks(cs) do
+  #   approved = get_field(cs, :approved, nil)
+  #   if approved != nil do
+  #     case approved do
+  #       false ->
+  #         validate_required(cs, [:remarks])
 
-        _ ->
-          cs
-      end
-    else
-      cs
-    end
-  end
+  #       _ ->
+  #         cs
+  #     end
+  #   else
+  #     cs
+  #   end
+  # end
 end
