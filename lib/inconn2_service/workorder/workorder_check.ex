@@ -4,11 +4,8 @@ defmodule Inconn2Service.Workorder.WorkorderCheck do
 
   schema "workorder_checks" do
     field :approved, :boolean, default: false
-    field :approved_by_user_id, :integer
     field :check_id, :integer
-    field :remarks, :string
     field :type, :string
-    # field :work_order_id, :id
     belongs_to :work_order, Inconn2Service.Workorder.WorkOrder
 
     timestamps()
@@ -17,9 +14,9 @@ defmodule Inconn2Service.Workorder.WorkorderCheck do
   @doc false
   def changeset(workorder_check, attrs) do
     workorder_check
-    |> cast(attrs, [:check_id, :type, :approved_by_user_id, :approved, :remarks])
+    |> cast(attrs, [:check_id, :type, :approved])
     |> validate_required([:check_id, :type])
-    |> validate_inclusion(:type, ["WP", "LOTO"])
+    |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
     |> validate_remarks()
     |> assoc_constraint(:work_order)
   end
