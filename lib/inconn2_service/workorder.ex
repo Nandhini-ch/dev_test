@@ -1209,7 +1209,13 @@ defmodule Inconn2Service.Workorder do
   defp parse_naivedatetime(nil), do: nil
 
   defp parse_naivedatetime(date_time) do
-    [date, time] = String.split(date_time, " ")
+
+    [date, time] =
+      case String.contains?(date_time, "T") do
+        true -> String.split(date_time, "T")
+        false -> String.split(date_time, " ")
+      end
+
     [year, month, day] = String.split(date, "-")
     modified_month =
       case String.length(month) do
