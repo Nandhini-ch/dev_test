@@ -21,8 +21,9 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
   end
 
   def render("mobile_work_order.json", %{work_order: work_order}) do
+    IO.inspect(work_order)
     asset =
-      case work_order.asset_type do
+      case work_order.workorder_template.asset_type do
         "E" -> render_one(work_order.asset, EquipmentView, "equipment.json")
         "L" -> render_one(work_order.asset, LocationView, "location.json")
       end
