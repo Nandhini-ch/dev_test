@@ -147,7 +147,6 @@ defmodule Inconn2Service.Report do
     IO.inspect(work_order_groups)
 
     data =
-
       Enum.map(work_order_groups, fn {key, work_orders} ->
         asset = Repo.get(Location, key, prefix: prefix)
         work_order_template = Repo.get(WorkorderTemplate, List.first(work_orders).workorder_template_id, prefix: prefix)

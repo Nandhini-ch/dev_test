@@ -15,6 +15,6 @@ defmodule Inconn2Service.CheckListConfig.Check do
     check
     |> cast(attrs, [:label, :type, :active])
     |> validate_required([:label, :type])
-    |> validate_inclusion(:type, ["WP", "LOTO"])
+    |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
   end
 end

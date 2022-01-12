@@ -10,6 +10,14 @@ defmodule Inconn2ServiceWeb.WorkorderTaskView do
     %{data: render_one(workorder_task, WorkorderTaskView, "workorder_task.json")}
   end
 
+  def render("group_update", %{workorder_task_details: workorder_task_details}) do
+    %{
+      success_count: workorder_task_details.success_count,
+      error_count: workorder_task_details.error_count,
+      failure_results: workorder_task_details.failure_results,
+    }
+  end
+
   def render("workorder_task.json", %{workorder_task: workorder_task}) do
     %{id: workorder_task.id,
       task_id: workorder_task.task_id,

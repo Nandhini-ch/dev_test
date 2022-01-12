@@ -23,11 +23,15 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :spares, {:array, :map}, default: []
     field :consumables, {:array, :map}, default: []
     field :workorder_prior_time, :integer
-    field :workpermit_required, :boolean
+    field :workpermit_required, :boolean, default: false
+    field :workpermit_required_from, {:array, :integer}, default: []
     field :workpermit_check_list_id, :integer
-    field :loto_required, :boolean
+    field :loto_required, :boolean, default: false
+    field :loto_approval_from_user_id, :integer
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
+    field :pre_check_required, :boolean, default: false
+    field :pre_check_list_id, :integer
     field :active, :boolean, default: true
 
     timestamps()

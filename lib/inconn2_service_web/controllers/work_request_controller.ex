@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
+  def index_for_user(conn, _) do
+    work_requests = Ticket.list_work_requests_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
   def index_approval_required(conn, _params) do
     work_requests = Ticket.list_work_requests_for_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_requests: work_requests)
@@ -46,6 +51,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     with {:ok, %WorkRequest{} = work_request} <- Ticket.update_work_request(work_request, work_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_request: work_request)
     end
+  end
+
+  def update_multiple(conn, %{"work_request)changes" => work_request_changes}) do
+    work_requests = Ticket.update_work_orders(work_request_changes, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", work_requests: work_requests)
   end
 
   def delete(conn, %{"id" => id}) do

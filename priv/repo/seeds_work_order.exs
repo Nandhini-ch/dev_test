@@ -76,6 +76,8 @@ wkord_tp3 = %{
   "max_times" => 5,
   "workorder_prior_time" => 180,
   "workpermit_required" => true,
+  "status" => "wpp",
+  "workpermit_required_from" => [2],
   "workpermit_check_list_id" => chk_lst1c.id,
   "loto_required" => false
 }
@@ -169,15 +171,29 @@ wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 1, "holidays" => [6,7]
 {:ok, wkord_sc5c} = Workorder.create_workorder_schedule(wkord_sc5, "inc_bata")
 {:ok, wkord_sc6c} = Workorder.create_workorder_schedule(wkord_sc6, "inc_bata")
 
+# wk_ord1 = %{
+#   "site_id" => 1,
+#   "asset_id" => 1,
+#   "user_id" => 1,
+#   "type" => "BRK",
+#   "scheduled_date" => "2021-09-14",
+#   "scheduled_time" => "09:00:00",
+#   "workorder_template_id" => 1,
+#   "work_request_id" => 1
+# }
+
 wk_ord1 = %{
   "site_id" => 1,
   "asset_id" => 1,
+  "asset_type" => "E",
   "user_id" => 1,
   "type" => "BRK",
   "scheduled_date" => "2021-09-14",
   "scheduled_time" => "09:00:00",
   "workorder_template_id" => 1,
-  "work_request_id" => 1
+  "work_request_id" => 1,
+  "status" => "wpp",
+  "workpermit_required_from" => [2]
 }
 
 wk_ord2 = %{

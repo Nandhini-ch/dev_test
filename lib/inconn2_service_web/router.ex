@@ -107,13 +107,20 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
-    resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
+    get "/work_orders/premit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
+    post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
+    post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
+    get "/work_orders/loto_pending", WorkOrderController, :work_order_loto_to_be_checked
+    post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
+    resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
     resources "/workorder_tasks", WorkorderTaskController, except: [:new, :edit]
     post "/work_orders/:work_order_id/update_asset_status", WorkOrderController, :update_asset_status
+    put "/update_workorder_tasks", WorkorderTaskController, :group_update
     get "/work_orders/:work_order_id/workorder_tasks", WorkorderTaskController, :index_by_workorder
+    put "/update_work_orders", WorkOrderController, :update_multiple
     get "/workorder_status_tracks/:work_order_id", WorkorderStatusTrackController, :index
     get "/download_workorder_templates", ReferenceDownloadController, :download_workorder_templates
     post "/upload_workorder_templates", ReferenceUploadController, :upload_workorder_templates
@@ -170,6 +177,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/category_helpdesks", CategoryHelpdeskController, except: [:new, :edit]
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
+    post "/update_work_requests", WorkRequestController, :update_multiple
+    get "/work_requests_for_user", WorkRequestController, :index_for_user
     get "/work_request_approvals", WorkRequestController, :index_approval_required
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
     get "/work_requests_for_category_helpdesk_user", WorkRequestController, :index_tickets_of_helpdesk_user
@@ -247,7 +256,9 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/locations_qr_code", ReportController, :get_locations_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
 
+    get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
-    get "/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
+
+    get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
   end
 end

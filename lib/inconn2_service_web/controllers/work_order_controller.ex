@@ -16,6 +16,20 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def work_order_premits_to_be_approved(conn, _) do
+    work_orders = Workorder.get_work_order_premits_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_order_loto_to_be_checked(conn, _) do
+    work_orders = Workorder.get_work_order_loto_to_be_checked(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def get_work_order_for_mobile(conn, _) do
+    work_orders = Workorder.list_work_orders_mobile(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "mobile_index.json", work_orders: work_orders)
+  end
 
   def create(conn, %{"work_order" => work_order_params}) do
     with {:ok, %WorkOrder{} = work_order} <- Workorder.create_work_order(work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
@@ -37,6 +51,24 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
+  end
+
+  def approve_work_permit(conn, %{"id" => id}) do
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+      render(conn, "show.json", work_order: work_order)
+    end
+  end
+
+  def approve_loto(conn, %{"id" => id}) do
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_loto(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+      render(conn, "show.json", work_order: work_order)
+    end
+  end
+
+
+  def update_multiple(conn, %{"work_order_changes" => work_order_changes}) do
+    work_orders = Workorder.update_work_orders(work_order_changes, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", work_orders: work_orders)
   end
 
   def delete(conn, %{"id" => id}) do
