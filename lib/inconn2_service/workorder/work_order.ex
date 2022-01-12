@@ -27,7 +27,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :workpermit_obtained, {:array, :integer}, default: []
     field :loto_required, :boolean
     field :loto_approval_from_user_id, :integer
-    field :is_loto_obtained, :boolean
+    field :is_loto_obtained, :boolean, default: false
     field :pre_check_required, :boolean
     field :precheck_completed, :boolean
 
