@@ -1730,7 +1730,7 @@ defmodule Inconn2Service.Workorder do
                               |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
                               |> Repo.transaction(prefix: prefix)
     multi = Multi.new()
-            |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id))
+            |> Multi.delete(:delete, Common.delete_work_scheduler_cs(workorder_schedule.next_occurrence.id, prefix))
 
     multi_insert_work_scheduler(workorder_schedule, prefix, zone, multi)
     |> Repo.transaction()
