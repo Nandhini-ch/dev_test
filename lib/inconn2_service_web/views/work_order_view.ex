@@ -2,7 +2,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView}
   alias Inconn2ServiceWeb.{UserView, WorkorderTemplateView, WorkorderScheduleView}
-  alias Inconn2ServiceWeb.{SiteView, EmployeeView}
+  alias Inconn2ServiceWeb.{SiteView, EmployeeView, WorkorderCheckView, WorkorderTaskView}
 
   def render("index.json", %{work_orders: work_orders}) do
     %{data: render_many(work_orders, WorkOrderView, "work_order.json")}
@@ -32,6 +32,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       site: render_one(work_order.site, SiteView, "site.json"),
       asset_id: work_order.asset_id,
       asset: asset,
+      workorder_tasks: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       user_id: work_order.user_id,
       user: render_one(work_order.user, UserView, "user.json"),
@@ -54,12 +55,15 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule.json"),
       work_request_id: work_order.work_request_id,
       workpermit_required: work_order.workpermit_required,
+      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
       workpermit_required_from: work_order.workpermit_required_from,
       workpermit_obtained: work_order.workpermit_obtained,
       loto_required: work_order.loto_required,
+      loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check.json"),
       loto_approval_from_user_id: work_order.loto_approval_from_user_id,
       is_loto_obtained: work_order.is_loto_obtained,
       pre_check_required: work_order.pre_check_required,
+      pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check.json"),
       precheck_completed: work_order.precheck_completed}
   end
 
