@@ -1142,8 +1142,8 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_orders_mobile(user, prefix) do
-    until = Time.utc_now |> Time.add(28800, :second)
-    query = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.scheduled_time <= ^until
+    until = Time.utc_now
+    query = from wo in WorkOrder, where: wo.user_id == ^user.id
     work_orders = Repo.all(query, prefix: prefix)
 
     Enum.map(work_orders, fn wo ->
