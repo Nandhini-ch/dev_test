@@ -32,6 +32,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       site: render_one(work_order.site, SiteView, "site.json"),
       asset_id: work_order.asset_id,
       asset: asset,
+      asset_qr_code: work_order.asset_qr_code,
       workorder_tasks: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json"),
       work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),

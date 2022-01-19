@@ -22,13 +22,13 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :workorder_template_id, :integer
     field :workorder_schedule_id, :integer
     field :work_request_id, :integer
-    field :workpermit_required, :boolean
+    field :workpermit_required, :boolean, default: false
     field :workpermit_required_from, {:array, :integer}, default: []
     field :workpermit_obtained, {:array, :integer}, default: []
-    field :loto_required, :boolean
+    field :loto_required, :boolean, default: false
     field :loto_approval_from_user_id, :integer
-    field :is_loto_obtained, :boolean, default: false
-    field :pre_check_required, :boolean
+    field :is_loto_obtained, :boolean
+    field :pre_check_required, :boolean, default: false
     field :precheck_completed, :boolean
 
     timestamps()
