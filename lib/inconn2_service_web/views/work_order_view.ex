@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.WorkOrderView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView}
+  alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView, WorkRequestView}
   alias Inconn2ServiceWeb.{UserView, WorkorderTemplateView, WorkorderScheduleView}
   alias Inconn2ServiceWeb.{SiteView, EmployeeView, WorkorderCheckView, WorkorderTaskView}
 
@@ -32,7 +32,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       site: render_one(work_order.site, SiteView, "site.json"),
       asset_id: work_order.asset_id,
       asset: asset,
-      workorder_tasks: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task.json"),
+      workorder_tasks: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json"),
+      work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       user_id: work_order.user_id,
       user: render_one(work_order.user, UserView, "user.json"),

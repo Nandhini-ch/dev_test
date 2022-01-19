@@ -1142,7 +1142,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_orders_mobile(user, prefix) do
-    until = Time.utc_now
+    # until = Time.utc_now
     query = from wo in WorkOrder, where: wo.user_id == ^user.id
     work_orders = Repo.all(query, prefix: prefix)
 
@@ -1198,7 +1198,23 @@ defmodule Inconn2Service.Workorder do
             get_workorder_schedule!(id, prefix)
         end
 
-      workorder_tasks = list_workorder_tasks(prefix, wo.id)
+      workorder_tasks =
+        list_workorder_tasks(prefix, wo.id)
+        |> Enum.map(fn wot ->
+          Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix))
+        end)
+
+
+      work_request =
+        case wo.workorder_schedule_id do
+          nil ->
+            nil
+
+          id ->
+            Inconn2Service.Ticket.get_work_request!(id, prefix)
+        end
+
+
 
       workpermit_checks =
         if workorder_template.workpermit_required do
@@ -1228,6 +1244,7 @@ defmodule Inconn2Service.Workorder do
       wo
       |> Map.put_new(:asset, asset)
       |> Map.put_new(:asset_type, workorder_template.asset_type)
+      |> Map.put_new(:asset_qr_code, asset.qr_code)
       |> Map.put_new(:site, site)
       |> Map.put_new(:user, user)
       |> Map.put_new(:employee, employee)
@@ -1238,6 +1255,7 @@ defmodule Inconn2Service.Workorder do
       |> Map.put_new(:workpermit_checks, workpermit_checks)
       |> Map.put_new(:loto_checks, loto_checks)
       |> Map.put_new(:pre_checks, pre_checks)
+      |> Map.put_new(:work_request, work_request)
 
     end)
   end
