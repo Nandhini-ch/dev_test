@@ -10,7 +10,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :task_list_id, :integer
     field :tasks, {:array, :map}, default: []
     field :estimated_time, :integer
-    field :scheduled, :boolean
+    field :scheduled, :boolean, default: false
     field :repeat_every, :integer
     field :repeat_unit, :string
     field :applicable_start, :date
