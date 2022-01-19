@@ -38,7 +38,7 @@ defmodule Inconn2ServiceWeb.WorkorderTaskController do
     end
   end
 
-  def group_update(conn, %{"tasks" => tasks}) do
+  def group_update(conn, %{"workorder_tasks" => tasks}) do
     with {:ok, workorder_task_details} <- Workorder.update_workorder_tasks(tasks, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "group_update.json", workorder_task_details: workorder_task_details)
     end
