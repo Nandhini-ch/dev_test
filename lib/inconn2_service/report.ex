@@ -122,6 +122,7 @@ defmodule Inconn2Service.Report do
   def generate_qr_code_for_assets(site_id, prefix) do
     locations_qr = Inconn2Service.AssetConfig.list_locations_qr(site_id, prefix)
 
+
     body =
       Enum.map(locations_qr, fn x ->
         "inc_" <> sub_domain = prefix
@@ -131,10 +132,21 @@ defmodule Inconn2Service.Report do
 
     IO.inspect(body)
 
-    {:ok, filename} = PdfGenerator.generate( ~s(<div class="row">) <> body <> "</div>", page_size: "A4", shell_params: ["--enable-local-file-access"])
+    {:ok, filename} = PdfGenerator.generate(html_bootstrap_header() <> ~s(<div class="row">) <> body <> "</div>" <> html_bootstrap_footer(), page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
+
+  def html_bootstrap_header do
+  starting_tags = "<html><head>"
+  bootstrap_link = ~s(<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">)
+  bootstrap_script= ~s(<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>)
+  starting_finish_tags = "</head>"
+
+  starting_tags <> bootstrap_link <> bootstrap_script <> starting_finish_tags <> "<body>"
+  end
+
+  def html_bootstrap_footer, do: "</body></html>"
 
   def csg_workorder_report(prefix) do
     date = Date.utc_today |> Date.add(-1)
