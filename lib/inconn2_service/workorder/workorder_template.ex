@@ -40,7 +40,8 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   @doc false
   def changeset(workorder_template, attrs) do
     workorder_template
-    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
+    |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :workpermit_required, :workpermit_check_list_id, :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id,
+    :workpermit_required_from, :pre_check_required, :pre_check_list_id, :loto_approval_from_user_id])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_scheduled()
     |> validate_time_required()
