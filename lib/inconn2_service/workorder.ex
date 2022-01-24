@@ -1206,7 +1206,7 @@ defmodule Inconn2Service.Workorder do
 
 
       work_request =
-        case wo.workorder_schedule_id do
+        case wo.workorder_request_id do
           nil ->
             nil
 
