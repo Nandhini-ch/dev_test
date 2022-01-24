@@ -40,7 +40,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     |> cast(attrs, [:site_id, :asset_id, :user_id, :type, :created_date, :created_time, :assigned_date, :assigned_time,
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workpermit_required, :loto_required, :pre_check_required,
-                    :workpermit_required_from, :workpermit_obtained, :loto_approval_from_user_id, :is_loto_obtained, :pre_check_completed])
+                    :workpermit_required_from, :workpermit_obtained, :loto_approval_from_user_id, :is_loto_obtained, :precheck_completed])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
     |> validate_start_date()
