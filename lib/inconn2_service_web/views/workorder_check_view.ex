@@ -10,6 +10,14 @@ defmodule Inconn2ServiceWeb.WorkorderCheckView do
     %{data: render_one(workorder_check, WorkorderCheckView, "workorder_check.json")}
   end
 
+  def render("workorder_check_with_check.json", %{workorder_check: workorder_check}) do
+    %{id: workorder_check.id,
+      check_id: workorder_check.check_id,
+      check: render_one(workorder_check.check, WorkorderCheckView, "check.json"),
+      type: workorder_check.type,
+      approved: workorder_check.approved}
+  end
+
   def render("workorder_check.json", %{workorder_check: workorder_check}) do
     %{id: workorder_check.id,
       check_id: workorder_check.check_id,
