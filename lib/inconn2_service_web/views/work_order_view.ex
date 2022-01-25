@@ -57,15 +57,15 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule.json"),
       work_request_id: work_order.work_request_id,
       workpermit_required: work_order.workpermit_required,
-      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
+      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       workpermit_required_from: work_order.workpermit_required_from,
       workpermit_obtained: work_order.workpermit_obtained,
       loto_required: work_order.loto_required,
-      loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check.json"),
+      loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       loto_approval_from_user_id: work_order.loto_approval_from_user_id,
       is_loto_obtained: work_order.is_loto_obtained,
       pre_check_required: work_order.pre_check_required,
-      pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check.json"),
+      pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       precheck_completed: work_order.precheck_completed}
   end
 
