@@ -16,9 +16,9 @@ use Mix.Config
   config :inconn2_service, Inconn2ServiceWeb.Endpoint,
   url: [host: "0.0.0.0"],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  http: [port: 4001],
+  http: [port: 4000],
   https: [
-    port: 4000,
+    port: 4001,
     cipher_suite: :strong,
     otp_app: :inconn2_service,
     keyfile: "priv/keys/inconn.io.key",
