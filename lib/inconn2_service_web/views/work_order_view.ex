@@ -63,7 +63,6 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       loto_required: work_order.loto_required,
       loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       loto_approval_from_user_id: work_order.loto_approval_from_user_id,
-      is_loto_obtained: work_order.is_loto_obtained,
       pre_check_required: work_order.pre_check_required,
       pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       precheck_completed: work_order.precheck_completed}

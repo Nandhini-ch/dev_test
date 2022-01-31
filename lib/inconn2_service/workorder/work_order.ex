@@ -29,7 +29,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :loto_approval_from_user_id, :integer
     field :is_loto_obtained, :boolean
     field :pre_check_required, :boolean, default: false
-    field :precheck_completed, :boolean
+    field :precheck_completed, :boolean, default: false
 
     timestamps()
   end
