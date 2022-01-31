@@ -22,7 +22,7 @@ use Mix.Config
     cipher_suite: :strong,
     otp_app: :inconn2_service,
     keyfile: "priv/keys/inconn.io.key",
-    certfile: "priv/keys/root-ca-certificate"
+    certfile: "priv/keys/inconn.cert"
     # OPTIONAL Key for intermediate certificates:
     # cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH")
   ]
