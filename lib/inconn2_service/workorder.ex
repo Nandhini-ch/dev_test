@@ -514,7 +514,7 @@ defmodule Inconn2Service.Workorder do
             |> check_for_holidays()
             |> check_before_applicable_date(applicable_end)
           else
-            date = Date.new!(next_occurrence_date.year, month, first_occurrence_date.day)
+            date = date_valid_in_every_month(next_occurrence_date.year, month, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
             |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
             |> check_for_holidays()
@@ -530,6 +530,14 @@ defmodule Inconn2Service.Workorder do
       end
     else
       cs
+    end
+  end
+
+  defp date_valid_in_every_month(year, month, day) do
+    date = Date.new(year, month, day)
+    case date do
+      {:ok, date} -> date
+      {:error, _} -> date_valid_in_every_month(year, month, day-1)
     end
   end
 
