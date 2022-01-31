@@ -108,7 +108,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
-    get "/work_orders/premit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
+    get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
     post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
     post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
     get "/work_orders/loto_pending", WorkOrderController, :work_order_loto_to_be_checked

@@ -1533,7 +1533,8 @@ defmodule Inconn2Service.Workorder do
   end
 
   def update_workorder_tasks(tasks, prefix, user \\ %{id: nil}) do
-    work_order = get_work_order!(List.first(tasks).work_order_id, prefix)
+    first = List.first(tasks)
+    work_order = get_work_order!(first["work_order_id"], prefix)
 
     result_list =
       Enum.map(tasks, fn attrs ->
