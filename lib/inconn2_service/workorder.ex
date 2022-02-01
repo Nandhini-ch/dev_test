@@ -1567,7 +1567,7 @@ end
       _ -> update_work_order(work_order, %{"status" => "ip"}, prefix, user)
     end
 
-    {:ok, %{success_count: success_count, error_count: error_count, failure_result: failure_results}}
+    {:ok, %{success_count: success_count, error_count: error_count, failure_results: failure_results}}
   end
 
   @doc """
