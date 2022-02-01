@@ -42,39 +42,56 @@ defmodule Inconn2Service.Workorder.WorkOrder do
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
-    |> validate_start_date()
-    |> validate_start_time()
+    |> validate_start_date_time()
+    # |> validate_start_date()
+    # |> validate_start_time()
     |> validate_date_order()
     |> validate_time_order()
     |> validate_inclusion(:status, ["cr", "as", "wp", "wpp", "wpa", "lta", "ltp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
     |> validate_based_on_type()
   end
 
-  defp validate_start_date(cs) do
+  defp validate_start_date_time(cs) do
     scheduled_date = get_field(cs, :scheduled_date)
-    start_date = get_field(cs, :start_date)
-    if start_date != nil do
-      case Date.compare(scheduled_date, start_date) do
-        :gt -> add_error(cs, :start_date, "should be greater than scheduled date")
-        _ -> cs
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_start_time(cs) do
     scheduled_time = get_field(cs, :scheduled_time)
+    start_date = get_field(cs, :start_date)
     start_time = get_field(cs, :start_time)
-    if start_time != nil do
-      case Time.compare(scheduled_time, start_time) do
-        :gt -> add_error(cs, :start_time, "should be greater than scheduled time")
-        _ -> cs
+    if start_date != nil and start_time != nil do
+      sch_dt = NaiveDateTime.new!(scheduled_date, scheduled_time)
+      srt_dt = NaiveDateTime.new!(start_date, start_time)
+      case NaiveDateTime.compare(sch_dt, srt_dt) do
+        :gt -> add_error(cs, :start_date, "should be greater than scheduled date and time")
+          _ -> cs
       end
     else
       cs
     end
   end
+  # defp validate_start_date(cs) do
+  #   scheduled_date = get_field(cs, :scheduled_date)
+  #   start_date = get_field(cs, :start_date)
+  #   if start_date != nil do
+  #     case Date.compare(scheduled_date, start_date) do
+  #       :gt -> add_error(cs, :start_date, "should be greater than scheduled date")
+  #       _ -> cs
+  #     end
+  #   else
+  #     cs
+  #   end
+  # end
+
+  # defp validate_start_time(cs) do
+  #   scheduled_time = get_field(cs, :scheduled_time)
+  #   start_time = get_field(cs, :start_time)
+  #   if start_time != nil do
+  #     case Time.compare(scheduled_time, start_time) do
+  #       :gt -> add_error(cs, :start_time, "should be greater than scheduled time")
+  #       _ -> cs
+  #     end
+  #   else
+  #     cs
+  #   end
+  # end
 
   defp validate_date_order(cs) do
     start_date = get_field(cs, :start_date)
