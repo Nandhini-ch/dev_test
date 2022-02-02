@@ -894,8 +894,8 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
 
     case result do
-      {:ok, work_order} ->
-          auto_update_workorder_task(work_order, prefix)
+      {:ok, _work_order} ->
+          # auto_update_workorder_task(work_order, prefix)
           result
       _ ->
         result
