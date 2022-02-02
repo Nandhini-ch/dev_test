@@ -53,8 +53,8 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     end
   end
 
-  def update_multiple(conn, %{"work_request)changes" => work_request_changes}) do
-    work_requests = Ticket.update_work_orders(work_request_changes, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+  def update_multiple(conn, %{"work_request_changes" => work_request_changes}) do
+    work_requests = Ticket.update_work_requests(work_request_changes, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     render(conn, "index.json", work_requests: work_requests)
   end
 

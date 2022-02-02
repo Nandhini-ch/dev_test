@@ -1922,17 +1922,18 @@ end
 
 
   defp auto_update_workorder_task(work_order, prefix) do
-    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
-    tasks = workorder_template.tasks
-    Enum.map(tasks, fn task ->
-                          workorder_task = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == ^task["order"])
-                                           |> Repo.one(prefix: prefix)
-                          start_dt = calculate_start_of_task(work_order, task["order"], prefix)
-                          end_dt = calculate_end_of_task(start_dt, task["id"], prefix)
+    # workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    # tasks = workorder_template.tasks
+    workorder_tasks = list_workorder_tasks(prefix, work_order.id)
+    Enum.map(workorder_tasks, fn workorder_task ->
+                          # workorder_task = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == ^task["order"])
+                          #                  |> Repo.one(prefix: prefix)
+                          start_dt = calculate_start_of_task(work_order, workorder_task["order"], prefix)
+                          end_dt = calculate_end_of_task(start_dt, workorder_task["id"], prefix)
                           attrs = %{
-                            "work_order_id" => work_order.id,
-                            "task_id" => task["id"],
-                            "sequence" => task["order"],
+                            # "work_order_id" => work_order.id,
+                            # "task_id" => workorder_tasks["id"],
+                            # "sequence" => task["order"],
                             # "response" => %{"answers" => nil},
                             "expected_start_time" => start_dt,
                             "expected_end_time" => end_dt
