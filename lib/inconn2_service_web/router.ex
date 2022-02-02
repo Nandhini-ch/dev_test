@@ -177,7 +177,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/category_helpdesks", CategoryHelpdeskController, except: [:new, :edit]
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
-    post "/update_work_requests", WorkRequestController, :update_multiple
+    put "/update_work_requests", WorkRequestController, :update_multiple
     get "/work_requests_for_user", WorkRequestController, :index_for_user
     get "/work_request_approvals", WorkRequestController, :index_approval_required
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment

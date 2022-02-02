@@ -361,7 +361,7 @@ defmodule Inconn2Service.Ticket do
 
   end
 
-  def update_work_orders(work_request_changes, prefix, user) do
+  def update_work_requests(work_request_changes, prefix, user) do
     Enum.map(work_request_changes["ids"], fn id ->
       work_request = get_work_request!(id, prefix)
       {:ok, work_request} = update_work_request(work_request, Map.drop(work_request_changes, ["ids"]), prefix, user)
