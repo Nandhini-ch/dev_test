@@ -1929,7 +1929,7 @@ end
                           # workorder_task = from(wt in WorkorderTask, where: wt.work_order_id == ^work_order.id and wt.sequence == ^task["order"])
                           #                  |> Repo.one(prefix: prefix)
                           start_dt = calculate_start_of_task(work_order, workorder_task.sequence, prefix)
-                          end_dt = calculate_end_of_task(start_dt, workorder_task.id, prefix)
+                          end_dt = calculate_end_of_task(start_dt, workorder_task.task_id, prefix)
                           attrs = %{
                             # "work_order_id" => work_order.id,
                             # "task_id" => workorder_tasks["id"],
