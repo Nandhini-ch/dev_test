@@ -1151,7 +1151,7 @@ defmodule Inconn2Service.Workorder do
 
   def list_work_orders_mobile(user, prefix) do
     # until = Time.utc_now
-    query = from wo in WorkOrder, where: wo.user_id == ^user.id
+    query = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     work_orders = Repo.all(query, prefix: prefix)
 
     Enum.map(work_orders, fn wo ->
