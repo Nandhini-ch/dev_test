@@ -51,7 +51,8 @@ defmodule Inconn2Service.MixProject do
       {:guardian, "~> 1.0"},
       {:csv, "~> 2.4"},
       {:pdf_generator, ">=0.6.0"},
-      {:eqrcode, "~> 0.1.10"}
+      {:eqrcode, "~> 0.1.10"},
+      {:sneeze, "~> 1.2"}
     ]
   end
 
