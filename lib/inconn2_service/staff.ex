@@ -407,8 +407,9 @@ defmodule Inconn2Service.Staff do
                    {:ok, _user} ->
                        {:ok, emp_set |> Repo.preload(:org_unit)}
 
-                   {:error, _changeset} ->
+                   {:error, changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
+                       {:error, changeset}
                  end
 
          {:error, _change_set} ->
