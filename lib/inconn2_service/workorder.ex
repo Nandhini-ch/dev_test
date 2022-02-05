@@ -669,12 +669,36 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def list_work_orders_of_user(prefix, user \\ %{id: nil}) do
-    WorkOrder
-    |> where(user_id: ^user.id)
-    |> Repo.all(prefix: prefix)
+  def list_work_orders_of_user(prefix, user \\ %{id: nil, employee_id: nil}) do
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id
+    assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
+
+    asset_category_workorders =
+
+      case employee do
+        nil ->
+          []
+
+        employee ->
+          query =
+            from wo in WorkOrder,
+              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+          Repo.all(query, prefix: prefix)
+      end
+
+    Enum.uniq(assigned_work_orders ++ asset_category_workorders)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
-  end
+
+    end
 
   @doc """
   Gets a single work_order.
@@ -1150,9 +1174,36 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_orders_mobile(user, prefix) do
+
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+
     # until = Time.utc_now
-    query = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
-    work_orders = Repo.all(query, prefix: prefix)
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
+    assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
+
+    asset_category_workorders =
+
+      case employee do
+        nil ->
+          []
+
+        employee ->
+          query =
+            from wo in WorkOrder,
+              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+          Repo.all(query, prefix: prefix)
+      end
+
+    work_orders = Enum.uniq(assigned_work_orders ++ asset_category_workorders)
+
 
     Enum.map(work_orders, fn wo ->
       workorder_template = get_workorder_template!(wo.workorder_template_id, prefix)
@@ -1782,7 +1833,7 @@ defmodule Inconn2Service.Workorder do
     if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
     if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
     if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
-    auto_assign_user(work_order, prefix)
+    # auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
     {:ok, workorder_schedule} = Multi.new()
