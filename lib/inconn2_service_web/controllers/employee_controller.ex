@@ -22,8 +22,8 @@ defmodule Inconn2ServiceWeb.EmployeeController do
   end
 
   def create(conn, %{"employee" => employee_params}) do
-    employee_params = temporary_patch_for_skills(employee_params)
-                      |> temporary_fix_for_role_id()
+    # employee_params = temporary_patch_for_skills(employee_params)
+    #                   |> temporary_fix_for_role_id(employee_params)
     with {:ok, %Employee{} = employee} <- Staff.create_employee(employee_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
@@ -39,8 +39,8 @@ defmodule Inconn2ServiceWeb.EmployeeController do
 
   def update(conn, %{"id" => id, "employee" => employee_params}) do
     employee = Staff.get_employee!(id, conn.assigns.sub_domain_prefix)
-    employee_params = temporary_patch_for_skills(employee_params)
-                        |> temporary_fix_for_role_id()
+    # employee_params = temporary_patch_for_skills(employee_params)
+    #                     |> temporary_fix_for_role_id()
     with {:ok, %Employee{} = employee} <-
            Staff.update_employee(employee, employee_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", employee: employee)
