@@ -225,8 +225,8 @@ defmodule Inconn2Service.Common do
     |> Repo.insert()
   end
 
-  def update_work_scheduler(workorder_schedule_id, attrs \\ %{}) do
-    work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
+  def update_work_scheduler(work_scheduler, attrs \\ %{}) do
+    # work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
     work_scheduler
     |> WorkScheduler.changeset(attrs)
     |> calculate_utc_datetime

@@ -473,9 +473,15 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, workorder_schedule} ->
           zone = get_time_zone(workorder_schedule, prefix)
-          work_scheduler = Repo.get_by!(WorkScheduler, workorder_schedule_id: workorder_schedule.id)
-          Common.update_work_scheduler(work_scheduler.id, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
-          {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+          work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
+          case work_scheduler do
+            nil ->
+              {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+
+            _ ->
+              Common.update_work_scheduler(work_scheduler, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+              {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+          end
       _ ->
         result
     end
