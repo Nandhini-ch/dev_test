@@ -691,7 +691,7 @@ defmodule Inconn2Service.Workorder do
         employee ->
           query =
             from wo in WorkOrder,
-              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
@@ -1198,7 +1198,7 @@ defmodule Inconn2Service.Workorder do
         employee ->
           query =
             from wo in WorkOrder,
-              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
