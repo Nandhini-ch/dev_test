@@ -360,6 +360,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
@@ -407,11 +408,32 @@ defmodule Inconn2Service.Workorder do
       end
   end
 
+  defp validate_first_occurence_time(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id, nil)
+    first_time = get_change(cs, :first_occurrence_time, nil)
+    if workorder_template_id != nil and first_time != nil do
+      workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
+      time_start = workorder_template.time_start
+      time_end = workorder_template.time_end
+      if time_start != nil and time_end != nil do
+        if first_time < time_start or first_time > time_end do
+          add_error(cs, :first_occurrence_time, "should be within the time limit of workorder template")
+        else
+          cs
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id, nil)
-    first_date = get_change(cs, :first_occurrence_date, nil)
-    first_time = get_change(cs, :first_occurrence_time, nil)
-    if first_date != nil and first_time != nil do
+    first_date = get_field(cs, :first_occurrence_date, nil)
+    first_time = get_field(cs, :first_occurrence_time, nil)
+    if get_change(cs, :first_occurrence_date, nil) != nil or get_change(cs, :first_occurrence_time, nil) != nil do
         workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
         if workorder_template != nil do
           applicable_start = workorder_template.applicable_start
@@ -445,6 +467,7 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
     case result do
