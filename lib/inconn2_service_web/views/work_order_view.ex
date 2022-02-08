@@ -54,7 +54,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template_id: work_order.workorder_template_id,
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
-      workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule.json"),
+      workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
       workpermit_required: work_order.workpermit_required,
       workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
