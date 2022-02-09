@@ -720,7 +720,7 @@ defmodule Inconn2Service.Workorder do
         employee ->
           query =
             from wo in WorkOrder,
-              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
@@ -1219,7 +1219,6 @@ defmodule Inconn2Service.Workorder do
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
     asset_category_workorders =
-
       case employee do
         nil ->
           []
@@ -1227,7 +1226,7 @@ defmodule Inconn2Service.Workorder do
         employee ->
           query =
             from wo in WorkOrder,
-              join: wt in WorkOrderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wo.status not in ["cp", "cn"] and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
@@ -1307,7 +1306,7 @@ defmodule Inconn2Service.Workorder do
       workpermit_checks =
         if workorder_template.workpermit_required do
           query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"WP"
-          Repo.all(query, prefix)
+          Repo.all(query, prefix: prefix)
         else
           []
         end
@@ -1315,7 +1314,7 @@ defmodule Inconn2Service.Workorder do
       loto_checks =
         if workorder_template.loto_required do
           query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"LOTO"
-          Repo.all(query, prefix)
+          Repo.all(query, prefix: prefix)
         else
           []
         end
@@ -1323,7 +1322,7 @@ defmodule Inconn2Service.Workorder do
       pre_checks =
         if workorder_template.pre_check_required do
           query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"PRE"
-          Repo.all(query, prefix)
+          Repo.all(query, prefix: prefix)
         else
           []
         end
