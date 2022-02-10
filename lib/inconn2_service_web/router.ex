@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
@@ -255,6 +255,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/work_order_status", ReportController, :get_workorder_status_report
     get "/reports/:site_id/locations_qr_code", ReportController, :get_locations_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
+    get "/reports/csg_report", ReportController, :get_workorder_status_report
+
 
     get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]

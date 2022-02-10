@@ -224,7 +224,7 @@ defmodule Inconn2Service.Report do
           complete_status_string =
             Enum.map(work_orders, fn w ->
               tasks = WorkorderTask |> where([work_order_id: ^w.id]) |> Repo.all(prefix: prefix)
-              Enum.map(tasks, fn t -> t.remarks end) |> Enum.join(",")
+              Enum.map(tasks, fn t -> t.remarks end) |>  Enum.join(",")
             end) |> Enum.join("<td>")
           "<td>" <> work_order_template.name <> "</td><td>" <> complete_status_string <> "</tr>"
         end) |> put_sr_no() |> Enum.join()
