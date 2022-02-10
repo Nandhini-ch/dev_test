@@ -198,7 +198,7 @@ defmodule Inconn2Service.Report do
 
     header = ~s(<p style="float:left">Site:CACIPL-Continental South Gate</p><p style="float:right">Date: #{Date.utc_today}</p>)
 
-    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>8:00</th><th>9:00</th><th>10:00</th><th>11:00</th><th>12:00</th><th>13:00</th><th>14:00</th><th>15:00</th><th>16:00</th><th>17:00</th><th>18:00</th>)
+    heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>9:00</th><th>11:00</th><th>13:00</th><th>15:00</th><th>17:00</th><th>19:00</th>)
 
     work_order_groups = WorkOrder |> where(scheduled_date: ^date) |> Repo.all(prefix: prefix) |> Enum.group_by(&(&1.asset_id))
     IO.inspect(work_order_groups)
