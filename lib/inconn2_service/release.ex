@@ -1,21 +1,26 @@
 defmodule Inconn2Service.Release do
   alias Inconn2Service.Account
+  alias Ecto.Migrator
   @app :inconn2_service
 
   def migrate do
-    load_app()
+    {:ok, _} = Application.ensure_all_started(@app)
 
-    for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-    end
+    migrate_public_schema()
+    migrate_tenant_schemas()
   end
 
-  def migrate_tenant_schemas do
-    load_app()
+  defp migrate_public_schema do
+    path = Application.app_dir(@app, "priv/repo/migrations")
+    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
+  end
 
-    path = Application.app_dir(:inconn2_service, "prive/repo/tenant_migrations")
+  defp migrate_tenant_schemas do
+    path = Application.app_dir(@app, "priv/repo/tenant_migrations")
+
     Account.list_licensees()
-    |> Enum.each(&Ecto.Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
+    |> Enum.map(fn licensee -> Map.put_new(licensee, :prefix, "inc_" <> licensee.subdomain) end)
+    |> Enum.each(&Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
   end
 
   def rollback(repo, version) do
