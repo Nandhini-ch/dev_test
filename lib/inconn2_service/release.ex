@@ -19,7 +19,7 @@ defmodule Inconn2Service.Release do
     path = Application.app_dir(@app, "priv/repo/tenant_migrations")
 
     Account.list_licensees()
-    |> Enum.map(fn licensee -> Map.put_new(licensee, :prefix, "inc_" <> licensee.subdomain) end)
+    |> Enum.map(fn licensee -> Map.put_new(licensee, :prefix, "inc_" <> licensee.sub_domain) end)
     |> Enum.each(&Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
   end
 
