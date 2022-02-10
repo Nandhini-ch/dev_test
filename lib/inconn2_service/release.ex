@@ -13,7 +13,7 @@ defmodule Inconn2Service.Release do
   def migrate_tenant_schemas do
     load_app()
 
-    path = Application.app_dir(:inconn2_service, "prive/repo/tenant_migrations")
+    path = Application.app_dir(:inconn2_service, "priv/repo/tenant_migrations")
     Account.list_licensees()
     |> Enum.each(&Ecto.Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
   end
