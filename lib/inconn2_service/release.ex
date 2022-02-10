@@ -1,4 +1,5 @@
 defmodule Inconn2Service.Release do
+  alias Inconn2Service.Account
   @app :inconn2_service
 
   def migrate do
@@ -7,6 +8,14 @@ defmodule Inconn2Service.Release do
     for repo <- repos() do
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
+  end
+
+  def migrate_tenant_schemas do
+    load_app()
+
+    path = Application.app_dir(:inconn2_service, "prive/repo/tenant_migrations")
+    Account.list_licensees()
+    |> Enum.each(&Ecto.Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
   end
 
   def rollback(repo, version) do

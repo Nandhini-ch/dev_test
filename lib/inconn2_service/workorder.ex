@@ -937,6 +937,7 @@ defmodule Inconn2Service.Workorder do
             |> WorkOrder.changeset(attrs)
             |> validate_site_id(prefix)
             |> validate_asset_id_workorder(prefix)
+            |> self_assign(work_order, user)
             |> validate_user_id(prefix)
             |> status_assigned(work_order, user, prefix)
             |> status_reassigned(work_order, user, prefix)
@@ -1052,6 +1053,14 @@ defmodule Inconn2Service.Workorder do
     date = Date.new!(date_time.year, date_time.month, date_time.day)
     time = Time.new!(date_time.hour, date_time.minute, date_time.second)
     change(cs, %{status: "cr", created_date: date, created_time: time})
+  end
+
+  defp self_assign(cs, work_order, user) do
+    if get_change(cs, :start_date) != nil and get_change(cs, :start_time) != nil and work_order.user_id == nil do
+      change(cs, %{user_id: user.id, is_self_assigned: true})
+    else
+      cs
+    end
   end
 
   defp status_assigned(cs, prefix) do
