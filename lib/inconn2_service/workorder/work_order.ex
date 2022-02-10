@@ -7,6 +7,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :asset_id, :integer
     field :asset_type, :string
     field :user_id, :integer
+    field :is_self_assigned, :boolean, default: false
     field :type, :string
     field :created_date, :date
     field :created_time, :time
@@ -37,7 +38,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   @doc false
   def changeset(work_order, attrs) do
     work_order
-    |> cast(attrs, [:site_id, :asset_id, :user_id, :type, :created_date, :created_time, :assigned_date, :assigned_time,
+    |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workpermit_required, :loto_required, :pre_check_required,
                     :workpermit_required_from, :workpermit_obtained, :loto_approval_from_user_id, :is_loto_obtained, :precheck_completed])

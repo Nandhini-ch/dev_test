@@ -76,6 +76,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset_name: work_order.asset_name,
       asset_type: work_order.asset_type,
       user_id: work_order.user_id,
+      is_self_assigned: work_order.is_self_assigned,
       type: work_order.type,
       created_date: work_order.created_date,
       created_time: work_order.created_time,
