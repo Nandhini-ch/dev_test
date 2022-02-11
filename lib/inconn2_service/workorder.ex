@@ -318,7 +318,10 @@ defmodule Inconn2Service.Workorder do
 
   """
   def list_workorder_schedules(prefix) do
-    Repo.all(WorkorderSchedule, prefix: prefix) |> Repo.preload(:workorder_template)
+    WorkorderSchedule
+    |> where([active: true])
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload(:workorder_template)
   end
 
   def list_workorder_schedules(query_params, prefix) do
@@ -645,6 +648,25 @@ defmodule Inconn2Service.Workorder do
   """
   def delete_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, prefix) do
     Repo.delete(workorder_schedule, prefix: prefix)
+  end
+
+  def deactivate_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, prefix) do
+    result =
+      workorder_schedule
+      |> WorkorderSchedule.changeset(%{"active" => false})
+      |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, updated_workorder_schedule} ->
+        query = from wosr in WorkScheduler, where: wosr.workorder_schedule_id == ^workorder_schedule.id and wosr.prefix == ^prefix
+        Repo.delete_all(query)
+        {:ok, updated_workorder_schedule}
+
+      _ ->
+        result
+    end
+
+
   end
 
   @doc """

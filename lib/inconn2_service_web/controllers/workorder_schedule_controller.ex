@@ -43,7 +43,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
   def delete(conn, %{"id" => id}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderSchedule{}} <- Workorder.delete_workorder_schedule(workorder_schedule, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkorderSchedule{}} <- Workorder.deactivate_workorder_schedule(workorder_schedule, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
