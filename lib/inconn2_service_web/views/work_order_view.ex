@@ -20,6 +20,10 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
     %{data: render_one(work_order, WorkOrderView, "mobile_work_order.json")}
   end
 
+  def render("premit_responsr.json", %{response: response}) do
+    %{data: %{result: response.result, message: response.message}}
+  end
+
   def render("mobile_work_order.json", %{work_order: work_order}) do
     IO.inspect(work_order)
     asset =

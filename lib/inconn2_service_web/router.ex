@@ -108,6 +108,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
+    put "/work_orders/:id/send_for_permit_approval", WorkOrderController, :send_for_permit_approval
     get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
     post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
     post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
@@ -260,6 +261,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
+    put "/update_work_permit_checks", WorkorderCheckController, :update_work_permit_checks
 
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
   end

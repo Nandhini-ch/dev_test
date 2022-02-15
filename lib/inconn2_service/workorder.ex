@@ -978,6 +978,36 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def update_work_order_without_validations(%WorkOrder{} = work_order, attrs, prefix, user) do
+    result = work_order
+            |> WorkOrder.changeset(attrs)
+            |> update_status(work_order, user, prefix)
+            |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, _work_order} ->
+          # auto_update_workorder_task(work_order, prefix)
+          result
+      _ ->
+        result
+    end
+  end
+
+  def send_for_workpermit_approval(work_order, prefix, user) do
+    query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order.id
+    workorder_checks = Repo.all(query, prefix: prefix)
+
+    completed_workorder_checks =
+      Enum.filter(workorder_checks, fn wc -> wc.approved == true end)
+
+    if length(completed_workorder_checks) != length(workorder_checks) do
+      %{"result" => false, "message" => "All Workpermit checks not completed"}
+    else
+      update_work_order_without_validations(work_order, %{"status" => "wpp"}, prefix, user)
+      %{"result" => true, "message" => "Submitted for approval"}
+    end
+  end
+
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
     work_order
     |> WorkOrder.changeset(attrs)
@@ -1891,7 +1921,7 @@ defmodule Inconn2Service.Workorder do
                                             }, prefix)
 
     auto_create_workorder_task(work_order, prefix)
-    # if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
+    if workorder_template.is_workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
     # if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
     # if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
     # auto_assign_user(work_order, prefix)
@@ -2172,6 +2202,13 @@ defmodule Inconn2Service.Workorder do
     |> validate_approved_by_user_id(prefix)
     |> validate_check_id(prefix)
     |> Repo.update(prefix: prefix)
+  end
+
+  def update_workorder_checks(workorder_check_ids, prefix) do
+    Enum.map(workorder_check_ids, fn workorder_check_id ->
+      workorder_check = get_workorder_check!(workorder_check_id, prefix)
+      update_workorder_check(workorder_check, %{"approved" => true}, prefix)
+    end)
   end
 
   @doc """

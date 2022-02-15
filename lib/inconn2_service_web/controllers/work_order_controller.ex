@@ -53,6 +53,12 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
+  def send_for_workpermit_approval(conn, %{"id" => id}) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    result = Workorder.send_for_workpermit_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "permit_response.json", response: result)
+  end
+
   def approve_work_permit(conn, %{"id" => id}) do
     with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
