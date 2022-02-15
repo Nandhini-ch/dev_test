@@ -21,7 +21,7 @@ defmodule Inconn2Service.Workorder.WorkorderSchedule do
   @doc false
   def changeset(workorder_schedule, attrs) do
     workorder_schedule
-    |> cast(attrs, [:workorder_template_id, :asset_id, :holidays, :first_occurrence_date, :first_occurrence_time])
+    |> cast(attrs, [:workorder_template_id, :asset_id, :holidays, :first_occurrence_date, :first_occurrence_time, :active])
     |> validate_required([:workorder_template_id, :asset_id, :first_occurrence_date, :first_occurrence_time])
     |> assoc_constraint(:workorder_template)
   end

@@ -23,9 +23,18 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_locations_qr(conn, %{"site_id" => site_id}) do
-    qrs = Report.generate_qr_code_for_assets(site_id, conn.assigns.sub_domain_prefix)
+    qrs = Report.generate_qr_code_for_locations(site_id, conn.assigns.sub_domain_prefix)
     conn
     |> put_resp_content_type("application/pdf")
+    |> put_resp_header("content-disposition", "attachment; filename=\"location_qrs.pdf\"")
+    |> send_resp(:ok, qrs)
+  end
+
+  def get_equipments_qr(conn, %{"site_id" => site_id}) do
+    qrs = Report.generate_qr_code_for_equipments(site_id, conn.assigns.sub_domain_prefix)
+    conn
+    |> put_resp_content_type("application/pdf")
+    |> put_resp_header("content-disposition", "attachment; filename=\"equipment_qrs.pdf\"")
     |> send_resp(:ok, qrs)
   end
 
