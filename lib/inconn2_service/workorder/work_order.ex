@@ -23,9 +23,9 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :workorder_template_id, :integer
     field :workorder_schedule_id, :integer
     field :work_request_id, :integer
-    field :workpermit_required, :boolean, default: false
-    field :workpermit_required_from, {:array, :integer}, default: []
-    field :workpermit_obtained, {:array, :integer}, default: []
+    field :workorder_approval_user_id, :integer
+    field :workpermit_approval_user_ids, {:array, :integer}, default: []
+    field :workpermit_obtained_from_user_ids, {:array, :integer}, default: []
     field :loto_required, :boolean, default: false
     field :loto_approval_from_user_id, :integer
     field :is_loto_obtained, :boolean
@@ -40,7 +40,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     work_order
     |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
-                    :status, :workorder_template_id, :workorder_schedule_id, :work_request_id])
+                    :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workorder_approval_user_id,
+                    :workpermit_approval_user_ids, :workpermit_obtained_from_user_ids])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
     |> validate_start_date_time()

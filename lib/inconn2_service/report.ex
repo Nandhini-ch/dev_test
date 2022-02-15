@@ -127,7 +127,7 @@ defmodule Inconn2Service.Report do
     |> Enum.join(";")
   end
 
-  def generate_qr_code_for_assets(site_id, prefix) do
+  def generate_qr_code_for_locations(site_id, prefix) do
     locations_qr = Inconn2Service.AssetConfig.list_locations_qr(site_id, prefix)
     "inc_" <> sub_domain = prefix
 
@@ -156,6 +156,7 @@ defmodule Inconn2Service.Report do
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
+
 
   def render_img_qr(qr_list, sub_domain) do
     Enum.map(qr_list, fn x ->

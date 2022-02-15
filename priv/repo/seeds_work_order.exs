@@ -35,7 +35,7 @@ wkord_tp1 = %{
   "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
   "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
+  "is_workpermit_required" false,
   "loto_required" => false
 }
 
@@ -55,7 +55,7 @@ wkord_tp2 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
+  "is_workpermit_required" false,
   "loto_required" => false
 }
 
@@ -75,7 +75,7 @@ wkord_tp3 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => true,
+  "is_workpermit_required" true,
   "status" => "wpp",
   "workpermit_required_from" => [2],
   "workpermit_check_list_id" => chk_lst1c.id,
@@ -98,7 +98,7 @@ wkord_tp4 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
+  "is_workpermit_required" false,
   "loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
   "loto_release_check_list_id" => chk_lst2c.id
@@ -120,7 +120,7 @@ wkord_tp5 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => true,
+  "is_workpermit_required" true,
   "workpermit_check_list_id" => chk_lst1c.id,
   "loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
@@ -146,7 +146,7 @@ wkord_tp6 = %{
   "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
   "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
+  "is_workpermit_required" false,
   "loto_required" => false
 }
 

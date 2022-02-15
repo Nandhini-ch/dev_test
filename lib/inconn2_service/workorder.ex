@@ -778,7 +778,7 @@ defmodule Inconn2Service.Workorder do
   def get_work_order_premits_to_be_approved(user, prefix) do
     work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
     Enum.map(work_orders, fn wo ->
-      if List.first(wo.workpermit_required_from -- wo.workpermit_obtained) == user.id do
+      if List.first(wo.workpermit_approvals_from_ids -- wo.workpermit_obtained_from_user_ids) == user.id do
         wo
       else
         "not_required"
@@ -995,14 +995,14 @@ defmodule Inconn2Service.Workorder do
 
   def approve_work_permit(work_order_id, prefix, user) do
     work_order = get_work_order!(work_order_id, prefix)
-    if work_order.workpermit_obtained ++ [user.id] == work_order.workpermit_required do
-      attrs = %{"workpermit_obtained" => work_order.workpermit_obtained ++ [user.id], "status" => "wpa"}
+    if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
+      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
       {:ok, updated_work_order} = update_work_order(work_order, attrs, prefix, user)
       query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order_id and wc.type == ^"WP", update: [set: [approved: true]]
       Repo.update_all(query, prefix: prefix)
       {:ok, updated_work_order}
     else
-      attrs = %{"workpermit_obtained" => work_order.workpermit_obtained ++ [user.id]}
+      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
       update_work_order(work_order, attrs, prefix, user)
     end
   end
@@ -1881,17 +1881,19 @@ defmodule Inconn2Service.Workorder do
                                             "scheduled_time" => workorder_schedule.next_occurrence_time,
                                             "workorder_template_id" => workorder_schedule.workorder_template_id,
                                             "workorder_schedule_id" => workorder_schedule.id,
-                                            "workpermit_required" => workorder_template.workpermit_required,
-                                            "workpermit_required_from" => workorder_template.workpermit_required_from,
+                                            "is_workorder_approval_required" => workorder_template.is_workorder_approval_required,
+                                            "workorder_approval_user_id" => workorder_schedule.workorder_approval_user_id,
+                                            "is_workpermit_required" => workorder_template.is_workpermit_required,
+                                            "workpermit_approval_user_ids" => workorder_schedule.workpermit_approval_user_ids,
                                             "loto_required" => workorder_template.loto_required,
                                             "loto_approval_from_user_id" => workorder_template.loto_approval_from_user_id,
                                             "pre_check_required" => workorder_template.pre_check_required
                                             }, prefix)
 
     auto_create_workorder_task(work_order, prefix)
-    if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
-    if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
-    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
+    # if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
+    # if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
+    # if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
     # auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
