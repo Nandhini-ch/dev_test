@@ -1358,6 +1358,7 @@ defmodule Inconn2Service.Workorder do
           []
         end
 
+      scheduled_date_time = NaiveDateTime.new!(wo.scheduled_date, wo.scheduled_time)
 
       wo
       |> Map.put_new(:asset, asset)
@@ -1374,8 +1375,11 @@ defmodule Inconn2Service.Workorder do
       |> Map.put_new(:loto_checks, loto_checks)
       |> Map.put_new(:pre_checks, pre_checks)
       |> Map.put_new(:work_request, work_request)
+      |> Map.put_new(:scheduled_date_time, scheduled_date_time)
 
     end)
+    |> Enum.sort_by(&(&1.scheduled_date_time), NaiveDateTime)
+
   end
 
   def add_stuff_to_workorder(wo, prefix) do
