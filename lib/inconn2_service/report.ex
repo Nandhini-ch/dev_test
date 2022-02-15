@@ -127,7 +127,7 @@ defmodule Inconn2Service.Report do
     |> Enum.join(";")
   end
 
-  def generate_qr_code_for_assets(site_id, prefix) do
+  def generate_qr_code_for_locations(site_id, prefix) do
     locations_qr = Inconn2Service.AssetConfig.list_locations_qr(site_id, prefix)
     "inc_" <> sub_domain = prefix
 
@@ -157,26 +157,56 @@ defmodule Inconn2Service.Report do
     pdf_content
   end
 
+  def generate_qr_code_for_equipments(site_id, prefix) do
+    equipments_qr = Inconn2Service.AssetConfig.list_equipments_qr(site_id, prefix)
+    "inc_" <> sub_domain = prefix
+
+    body =
+      Sneeze.render([
+        :div,
+        %{
+          style: style(%{
+            "display" => "flex",
+            "flex-direction" => "column",
+            "align-items" => "flex-start"
+          })
+        },
+        render_img_qr(equipments_qr, sub_domain),
+      ])
+
+    # img_render_string = render_img_qr(locations_qr, sub_domain)
+
+    IO.inspect(body)
+    # IO.inspect(img_render_string)
+    string = Sneeze.render([
+      [:__@raw_html, body]])
+
+    # {:ok, filename} = PdfGenerator.generate(html_bootstrap_header() <> ~s(<div class="row">) <> body <> "</div>" <> html_bootstrap_footer(), page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+  end
+
   def render_img_qr(qr_list, sub_domain) do
     Enum.map(qr_list, fn x ->
 
-      IO.inspect("http://#{sub_domain}.localhost:4000#{x.asset_qr_url}")
+      # IO.inspect("http://#{sub_domain}.inconn.io:4000#{x.asset_qr_url}")
       [
         :div,
         %{
-          style: style(%{"display" => "inline-block"})
+          style: style(%{"display" => "inline-block", "padding" => "10px", "text-align" => "center"})
         },
         [
           :img,
           %{
-            src: "http://#{sub_domain}.localhost:4000#{x.asset_qr_url}",
+            src: "http://#{sub_domain}.inconn.io:4000#{x.asset_qr_url}",
             style: style(%{
-              "height" => "200px",
-              "width" => "200px"
+              "height" => "250px",
+              "width" => "250px"
             })
           },
         ],
-        [:h3, %{style: style(%{"text-align" => "center"})}, "#{x.asset_name}"]
+        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"]
       ]
 
     end)
