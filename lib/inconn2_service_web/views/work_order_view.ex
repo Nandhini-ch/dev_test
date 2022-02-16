@@ -94,7 +94,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       completed_time: work_order.completed_time,
       status: work_order.status,
       workorder_approval_user_id: work_order.workorder_approval_user_id,
-      workpermit_approval_user_ids: work_order.workpremit_approval_user_ids,
+      workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
       workpermit_obtained_approval_user_ids: work_order.workpermit_obtained_from_user_ids,
       workorder_template_id: work_order.workorder_template_id,
       workorder_schedule_id: work_order.workorder_schedule_id,

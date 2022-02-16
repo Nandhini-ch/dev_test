@@ -817,9 +817,19 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, work_order} ->
           create_status_track(work_order, user, prefix)
+          auto_create_workorder_tasks_checks(work_order, prefix)
+          {:ok, work_order}
       _ ->
         result
     end
+  end
+
+  defp auto_create_workorder_tasks_checks(work_order, prefix) do
+    auto_create_workorder_task(work_order, prefix)
+    workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
+    if workorder_template.is_workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
+    if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
+    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
   end
 
   defp validate_site_id(cs, prefix) do
@@ -1920,10 +1930,6 @@ defmodule Inconn2Service.Workorder do
                                             "pre_check_required" => workorder_template.pre_check_required
                                             }, prefix)
 
-    auto_create_workorder_task(work_order, prefix)
-    if workorder_template.is_workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
-    # if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
-    # if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
     # auto_assign_user(work_order, prefix)
 
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
