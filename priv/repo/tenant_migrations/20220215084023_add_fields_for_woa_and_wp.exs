@@ -13,6 +13,8 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsForWoaAndWp do
       remove :workpermit_required
       remove :workpermit_required_from
       remove :workpermit_obtained
+      add :is_workorder_approval_required, :boolean
+      add :is_workpermit_required, :boolean
       add :workorder_approval_user_id, :integer
       add :workpermit_approval_user_ids, {:array, :integer}
       add :workpermit_obtained_from_user_ids, {:array, :integer}

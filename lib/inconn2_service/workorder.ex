@@ -1004,7 +1004,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def send_for_workpermit_approval(work_order, prefix, user) do
-    query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order.id
+    query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order.id and wc.type == ^"WP"
     workorder_checks = Repo.all(query, prefix: prefix)
 
     completed_workorder_checks =
