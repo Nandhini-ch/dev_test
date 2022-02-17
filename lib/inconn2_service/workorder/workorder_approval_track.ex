@@ -8,7 +8,7 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
     field :remarks, :string
     field :type, :string
     field :approval_user_id, :integer
-    belongs_to :work_orders, Inconn2Service.Workorder.WorkOrder
+    belongs_to :work_order, Inconn2Service.Workorder.WorkOrder
 
     timestamps()
   end
@@ -16,8 +16,8 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
   @doc false
   def changeset(workorder_approval_track, attrs) do
     workorder_approval_track
-    |> cast(attrs, [:type, :approved, :remarks, :discrepancy_workorder_check_ids])
-    |> validate_required([:type, :approved])
+    |> cast(attrs, [:work_order_id, :approval_user_id, :type, :approved, :remarks, :discrepancy_workorder_check_ids])
+    |> validate_required([:work_order_id, :type, :approved])
     |> validate_inclusion(:type, ["WP", "LOTO"])
     |> validate_remarks_required()
     |> assoc_constraint(:work_order)

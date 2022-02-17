@@ -14,6 +14,7 @@ defmodule Inconn2ServiceWeb.WorkorderCheckView do
     %{id: workorder_check.id,
       check_id: workorder_check.check_id,
       type: workorder_check.type,
+      work_order_id: workorder_check.work_order_id,
       approved: workorder_check.approved}
   end
 end

@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkorderApprovalTrackController do
     render(conn, "index.json", workorder_approval_tracks: workorder_approval_tracks)
   end
 
+  def index_workorder_approval_tracks_by_workorder_and_type(conn, %{"work_order_id" => work_order_id, "approval_type" => approval_type}) do
+    workorder_approval_tracks = Workorder.list_workorder_approval_tracks_by_workorder_and_type(work_order_id, approval_type, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", workorder_approval_tracks: workorder_approval_tracks)
+  end
+
   def create(conn, %{"workorder_approval_track" => workorder_approval_track_params}) do
     with {:ok, %WorkorderApprovalTrack{} = workorder_approval_track} <- Workorder.create_workorder_approval_track(workorder_approval_track_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn

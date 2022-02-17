@@ -13,6 +13,8 @@ defmodule Inconn2ServiceWeb.WorkorderApprovalTrackView do
   def render("workorder_approval_track.json", %{workorder_approval_track: workorder_approval_track}) do
     %{id: workorder_approval_track.id,
       type: workorder_approval_track.type,
+      approval_user_id: workorder_approval_track.approval_user_id,
+      work_order_id: workorder_approval_track.work_order_id,
       approved: workorder_approval_track.approved,
       remarks: workorder_approval_track.remarks,
       discrepancy_workorder_check_ids: workorder_approval_track.discrepancy_workorder_check_ids}

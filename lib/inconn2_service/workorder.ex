@@ -778,12 +778,14 @@ defmodule Inconn2Service.Workorder do
   def get_work_order_premits_to_be_approved(user, prefix) do
     work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
     Enum.map(work_orders, fn wo ->
-      if List.first(wo.workpermit_approvals_from_ids -- wo.workpermit_obtained_from_user_ids) == user.id do
+      if List.first(wo.workpermit_approval_user_ids -- wo.workpermit_obtained_from_user_ids) == user.id do
         wo
       else
         "not_required"
       end
-    end) |> Enum.filter(fn x -> x != "not_required" end)
+    end)
+    |> Enum.filter(fn x -> x != "not_required" end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def get_work_order_loto_to_be_checked(user, prefix) do
@@ -2242,7 +2244,7 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderApprovalTrack, prefix: prefix)
   end
 
-  def list_list_workorder_approval_tracks_by_workorder_and_type(work_order_id, type, prefix) do
+  def list_workorder_approval_tracks_by_workorder_and_type(work_order_id, type, prefix) do
     query = from wat in WorkorderApprovalTrack, where: wat.work_order_id == ^work_order_id and wat.type == ^type
     Repo.all(query, prefix: prefix)
   end
@@ -2298,8 +2300,8 @@ defmodule Inconn2Service.Workorder do
 
   defp change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user) do
     if created_workorder_approval_track.type == "WP" do
-      from(wo_check in WorkorderCheck, where: wo_check.id in ^created_workorder_approval_track.discrepancy_workorder_check_ids)
-      |> Repo.update_all(set: [approved: false], prefix: prefix)
+      query = from wo_c in WorkorderCheck, where: wo_c.id in ^created_workorder_approval_track.discrepancy_workorder_check_ids
+      Repo.update_all(query, [set: [approved: false]], prefix: prefix)
     end
     get_work_order!(created_workorder_approval_track.work_order_id, prefix)
     |> update_work_order_without_validations(%{"status" => "wpr"}, prefix, user)
@@ -2353,6 +2355,6 @@ defmodule Inconn2Service.Workorder do
   end
 
   defp set_user_id_for_approval(cs, user) do
-    get_change(cs, :approval_user_id, user.id)
+    change(cs, approval_user_id: user.id)
   end
 end
