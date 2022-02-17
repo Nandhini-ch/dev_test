@@ -55,8 +55,16 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
 
   def send_for_workpermit_approval(conn, %{"id" => id}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
-    result = Workorder.send_for_workpermit_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
-    render(conn, "permit_response.json", response: result)
+    response = Workorder.send_for_workpermit_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    case response.result do
+      true ->
+        render(conn, "permit_response.json", response: response)
+      false ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> put_view(Inconn2ServiceWeb.WorkOrderView)
+          |> render("permit_response.json", response: response)
+    end
   end
 
   def approve_work_permit(conn, %{"id" => id}) do

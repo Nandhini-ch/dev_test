@@ -1011,10 +1011,10 @@ defmodule Inconn2Service.Workorder do
       Enum.filter(workorder_checks, fn wc -> wc.approved == true end)
 
     if length(completed_workorder_checks) != length(workorder_checks) do
-      %{"result" => false, "message" => "All Workpermit checks not completed"}
+      %{result: false, message: "All Workpermit checks not completed"}
     else
       update_work_order_without_validations(work_order, %{"status" => "wpp"}, prefix, user)
-      %{"result" => true, "message" => "Submitted for approval"}
+      %{result: true, message: "Submitted for approval"}
     end
   end
 
@@ -1037,11 +1037,8 @@ defmodule Inconn2Service.Workorder do
     work_order = get_work_order!(work_order_id, prefix)
     if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
       attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
-      {:ok, updated_work_order} = update_work_order(work_order, attrs, prefix, user)
-      query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order_id and wc.type == ^"WP", update: [set: [approved: true]]
-      Repo.update_all(query, prefix: prefix)
-      {:ok, updated_work_order}
-    else
+      update_work_order(work_order, attrs, prefix, user)
+     else
       attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
       update_work_order(work_order, attrs, prefix, user)
     end
@@ -2156,26 +2153,9 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_check(attrs \\ %{}, prefix) do
     %WorkorderCheck{}
     |> WorkorderCheck.changeset(attrs)
-    |> validate_approved_by_user_id(prefix)
     |> validate_check_id(prefix)
     |> Repo.insert(prefix: prefix)
   end
-
-  defp validate_approved_by_user_id(cs, prefix) do
-    user_id = get_change(cs, :approved_by_user_id, nil)
-    if user_id != nil do
-      case Repo.get(User, user_id, prefix: prefix) do
-        nil ->
-          add_error(cs, :user_id, "User does not exist")
-
-        _ ->
-          cs
-      end
-    else
-      cs
-    end
-  end
-
 
   defp validate_check_id(cs, prefix) do
     check_id = get_change(cs, :check_id, nil)
@@ -2183,10 +2163,11 @@ defmodule Inconn2Service.Workorder do
       case Repo.get(Check, check_id, prefix: prefix) do
         nil ->
           add_error(cs, :check_id, "Enter valid check id")
-
         _ ->
           cs
       end
+    else
+      cs
     end
   end
 
@@ -2205,7 +2186,6 @@ defmodule Inconn2Service.Workorder do
   def update_workorder_check(%WorkorderCheck{} = workorder_check, attrs, prefix) do
     workorder_check
     |> WorkorderCheck.changeset(attrs)
-    |> validate_approved_by_user_id(prefix)
     |> validate_check_id(prefix)
     |> Repo.update(prefix: prefix)
   end
@@ -2213,7 +2193,8 @@ defmodule Inconn2Service.Workorder do
   def update_workorder_checks(workorder_check_ids, prefix) do
     Enum.map(workorder_check_ids, fn workorder_check_id ->
       workorder_check = get_workorder_check!(workorder_check_id, prefix)
-      update_workorder_check(workorder_check, %{"approved" => true}, prefix)
+      {:ok, updated_workorder_check} = update_workorder_check(workorder_check, %{"approved" => true}, prefix)
+      updated_workorder_check
     end)
   end
 
