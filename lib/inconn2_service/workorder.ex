@@ -1033,14 +1033,14 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
-  def approve_work_permit(work_order_id, prefix, user) do
+  def approve_work_permit_in_work_order(work_order_id, prefix, user) do
     work_order = get_work_order!(work_order_id, prefix)
     if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
       attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
-      update_work_order(work_order, attrs, prefix, user)
+      update_work_order_without_validations(work_order, attrs, prefix, user)
      else
       attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
-      update_work_order(work_order, attrs, prefix, user)
+      update_work_order_without_validations(work_order, attrs, prefix, user)
     end
   end
 
@@ -2225,5 +2225,134 @@ defmodule Inconn2Service.Workorder do
   """
   def change_workorder_check(%WorkorderCheck{} = workorder_check, attrs \\ %{}) do
     WorkorderCheck.changeset(workorder_check, attrs)
+  end
+
+  alias Inconn2Service.Workorder.WorkorderApprovalTrack
+
+  @doc """
+  Returns the list of workorder_approval_tracks.
+
+  ## Examples
+
+      iex> list_workorder_approval_tracks()
+      [%WorkorderApprovalTrack{}, ...]
+
+  """
+  def list_workorder_approval_tracks(prefix) do
+    Repo.all(WorkorderApprovalTrack, prefix: prefix)
+  end
+
+  def list_list_workorder_approval_tracks_by_workorder_and_type(work_order_id, type, prefix) do
+    query = from wat in WorkorderApprovalTrack, where: wat.work_order_id == ^work_order_id and wat.type == ^type
+    Repo.all(query, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workorder_approval_track.
+
+  Raises `Ecto.NoResultsError` if the Workorder approval track does not exist.
+
+  ## Examples
+
+      iex> get_workorder_approval_track!(123)
+      %WorkorderApprovalTrack{}
+
+      iex> get_workorder_approval_track!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_approval_track!(id, prefix), do: Repo.get!(WorkorderApprovalTrack, id, prefix: prefix)
+
+  @doc """
+  Creates a workorder_approval_track.
+
+  ## Examples
+
+      iex> create_workorder_approval_track(%{field: value})
+      {:ok, %WorkorderApprovalTrack{}}
+
+      iex> create_workorder_approval_track(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_approval_track(attrs \\ %{}, prefix, user) do
+    workorder_approval_track =
+      %WorkorderApprovalTrack{}
+      |> WorkorderApprovalTrack.changeset(attrs)
+      |> set_user_id_for_approval(user)
+      |> Repo.insert(prefix: prefix)
+
+    case workorder_approval_track do
+      {:ok, created_workorder_approval_track} ->
+        if created_workorder_approval_track.approved do
+          approve_work_permit_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+          workorder_approval_track
+        else
+          change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user)
+          workorder_approval_track
+        end
+      _ ->
+        workorder_approval_track
+    end
+  end
+
+  defp change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user) do
+    if created_workorder_approval_track.type == "WP" do
+      from(wo_check in WorkorderCheck, where: wo_check.id in ^created_workorder_approval_track.discrepancy_workorder_check_ids)
+      |> Repo.update_all(set: [approved: false], prefix: prefix)
+    end
+    get_work_order!(created_workorder_approval_track.work_order_id, prefix)
+    |> update_work_order_without_validations(%{"status" => "wpr"}, prefix, user)
+  end
+  @doc """
+  Updates a workorder_approval_track.
+
+  ## Examples
+
+      iex> update_workorder_approval_track(workorder_approval_track, %{field: new_value})
+      {:ok, %WorkorderApprovalTrack{}}
+
+      iex> update_workorder_approval_track(workorder_approval_track, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_approval_track(%WorkorderApprovalTrack{} = workorder_approval_track, attrs, prefix, user) do
+    workorder_approval_track
+    |> WorkorderApprovalTrack.changeset(attrs)
+    |> set_user_id_for_approval(user)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_approval_track.
+
+  ## Examples
+
+      iex> delete_workorder_approval_track(workorder_approval_track)
+      {:ok, %WorkorderApprovalTrack{}}
+
+      iex> delete_workorder_approval_track(workorder_approval_track)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_approval_track(%WorkorderApprovalTrack{} = workorder_approval_track, prefix) do
+    Repo.delete(workorder_approval_track, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_approval_track changes.
+
+  ## Examples
+
+      iex> change_workorder_approval_track(workorder_approval_track)
+      %Ecto.Changeset{data: %WorkorderApprovalTrack{}}
+
+  """
+  def change_workorder_approval_track(%WorkorderApprovalTrack{} = workorder_approval_track, attrs \\ %{}) do
+    WorkorderApprovalTrack.changeset(workorder_approval_track, attrs)
+  end
+
+  defp set_user_id_for_approval(cs, user) do
+    get_change(cs, :approval_user_id, user.id)
   end
 end
