@@ -788,6 +788,12 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def get_work_orders_to_be_approved(user, prefix) do
+    WorkOrder
+    |> where([status: "woap", workorder_approval_user_id: ^user.id])
+    |> Repo.all(prefix)
+  end
+
   def get_work_order_loto_to_be_checked(user, prefix) do
     WorkOrder
     |> where([loto_approval_from_user_id: ^user.id, status: ^"ltp"])
@@ -2287,8 +2293,14 @@ defmodule Inconn2Service.Workorder do
     case workorder_approval_track do
       {:ok, created_workorder_approval_track} ->
         if created_workorder_approval_track.approved do
-          approve_work_permit_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
-          workorder_approval_track
+          case created_workorder_approval_track.type do
+            "WP" ->
+              approve_work_permit_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "WOA" ->
+              approve_work_order_execution(created_workorder_approval_track.work_order_id, prefix, user)
+          end
         else
           change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user)
           workorder_approval_track
@@ -2298,13 +2310,22 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def approve_work_order_execution(work_order_id, prefix, user) do
+    get_work_order!(work_order_id, prefix)
+    |> update_work_order_without_validations(%{"status" => "woap"}, prefix, user)
+  end
+
   defp change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user) do
     if created_workorder_approval_track.type == "WP" do
       query = from wo_c in WorkorderCheck, where: wo_c.id in ^created_workorder_approval_track.discrepancy_workorder_check_ids
       Repo.update_all(query, [set: [approved: false]], prefix: prefix)
+      get_work_order!(created_workorder_approval_track.work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "wpr"}, prefix, user)
     end
-    get_work_order!(created_workorder_approval_track.work_order_id, prefix)
-    |> update_work_order_without_validations(%{"status" => "wpr"}, prefix, user)
+    if created_workorder_approval_track.type == "WOA" do
+      get_work_order!(created_workorder_approval_track.work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "woar"}, prefix, user)
+    end
   end
   @doc """
   Updates a workorder_approval_track.
