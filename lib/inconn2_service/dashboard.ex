@@ -30,41 +30,49 @@ defmodule Inconn2Service.Dashboard do
   end
 
   def work_order_bar_chart(prefix, query_params) do
-    date = Date.utc_today()
-    query =
+    {from_date, to_date} =
       case query_params do
         %{"from_date" => from_date,  "to_date" => to_date} ->
           {:ok, converted_from_date} = date_convert(from_date)
           {:ok, converted_to_date} = date_convert(to_date)
-          date_list = form_date_list(converted_from_date, converted_to_date)
-          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
+          {converted_from_date, converted_to_date}
 
         %{"from_date" => from_date} ->
           {:ok, converted_from_date} = date_convert(from_date)
-          date_list = form_date_list(converted_from_date, date)
-          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
+          {converted_from_date, Date.utc_today()}
 
         _ ->
-          date_list = form_date_list(date, date)
-          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
+          {Date.utc_today, Date.utc_today}
       end
-    work_orders = Repo.all(query, prefix: prefix) |> Enum.group_by(&(&1.scheduled_date))
+    # work_orders = Repo.all(query, prefix: prefix) |> Enum.group_by(&(&1.scheduled_date))
+
+    date_list = form_date_list(from_date, to_date)
 
     completed_work_order_counts =
-      Enum.map(work_orders, fn{_date, work_orders} ->
-        Enum.filter(work_orders, fn work_order -> work_order.status == "cp" end) |> Enum.count
+      Enum.map(date_list, fn date ->
+        WorkOrder |> where([scheduled_date: ^date, status: "cp"]) |> Repo.all(prefix: prefix) |> Enum.count
       end)
 
     incomplete_work_order_counts =
-      Enum.map(work_orders, fn{_date, work_orders} ->
-        Enum.filter(work_orders, fn work_order -> work_order.status != "cp" end) |> Enum.count
+      Enum.map(date_list, fn date ->
+        WorkOrder |> where([scheduled_date: ^date]) |> Repo.all(prefix: prefix) |> Enum.filter(fn wo -> wo.status != "cp" end) |> Enum.count
       end)
+
+    # completed_work_order_counts =
+    #   Enum.map(work_orders, fn{_date, work_orders} ->
+    #     Enum.filter(work_orders, fn work_order -> work_order.status == "cp" end) |> Enum.count
+    #   end)
+
+    # incomplete_work_order_counts =
+    #   Enum.map(work_orders, fn{_date, work_orders} ->
+    #     Enum.filter(work_orders, fn work_order -> work_order.status != "cp" end) |> Enum.count
+    #   end)
 
 
     %{
       completed_work_order_count: completed_work_order_counts,
       incomplete_work_order_count: incomplete_work_order_counts,
-      dates: Map.keys(work_orders)
+      dates: date_list
     }
   end
 
