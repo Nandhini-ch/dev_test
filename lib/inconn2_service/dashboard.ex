@@ -10,12 +10,12 @@ defmodule Inconn2Service.Dashboard do
     query =
       case query_params do
         %{"from_date" => from_date,  "to_date" => to_date} ->
-          converted_from_date = date_convert(from_date)
-          converted_to_date = date_convert(to_date)
+          {:ok, converted_from_date} = date_convert(from_date)
+          {:ok, converted_to_date} = date_convert(to_date)
           from wo in WorkOrder, where: wo.scheduled_date >= ^converted_from_date and wo.scheduled_date <= ^converted_to_date
 
         %{"from_date" => from_date} ->
-          converted_from_date = date_convert(from_date)
+          {:ok, converted_from_date} = date_convert(from_date)
           from wo in WorkOrder, where: wo.scheduled_date >= ^converted_from_date and wo.scheduled_date <= ^date
 
         _ ->
@@ -34,16 +34,19 @@ defmodule Inconn2Service.Dashboard do
     query =
       case query_params do
         %{"from_date" => from_date,  "to_date" => to_date} ->
-          converted_from_date = date_convert(from_date)
-          converted_to_date = date_convert(to_date)
-          from wo in WorkOrder, where: wo.scheduled_date >= ^converted_from_date and wo.scheduled_date <= ^converted_to_date
+          {:ok, converted_from_date} = date_convert(from_date)
+          {:ok, converted_to_date} = date_convert(to_date)
+          date_list = form_date_list(converted_from_date, converted_to_date)
+          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
 
         %{"from_date" => from_date} ->
-          converted_from_date = date_convert(from_date)
-          from wo in WorkOrder, where: wo.scheduled_date >= ^converted_from_date and wo.scheduled_date <= ^date
+          {:ok, converted_from_date} = date_convert(from_date)
+          date_list = form_date_list(converted_from_date, date)
+          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
 
         _ ->
-          from wo in WorkOrder, where: wo.scheduled_date == ^date
+          date_list = form_date_list(date, date)
+          from wo in WorkOrder, where: wo.scheduled_date in ^date_list
       end
     work_orders = Repo.all(query, prefix: prefix) |> Enum.group_by(&(&1.scheduled_date))
 
@@ -70,5 +73,17 @@ defmodule Inconn2Service.Dashboard do
     |> String.split("-")
     |> Enum.map(&String.to_integer/1)
     |> (fn [year, month, day] -> Date.new(year, month, day) end).()
+  end
+
+  defp form_date_list(from_date, to_date) do
+    list = [from_date] |> List.flatten()
+    now_date = Date.add(List.last(list), 1)
+    case Date.compare(now_date, to_date) do
+      :gt ->
+            list
+      _ ->
+            list ++ [now_date]
+            |> form_date_list(to_date)
+    end
   end
 end
