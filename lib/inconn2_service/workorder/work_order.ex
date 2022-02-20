@@ -31,6 +31,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :is_loto_obtained, :boolean
     field :pre_check_required, :boolean, default: false
     field :precheck_completed, :boolean, default: false
+    field :is_deactivated, :boolean, null: false, default: false
+    field :deactivated_date_time, :naive_datetime
 
     timestamps()
   end
@@ -40,8 +42,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     work_order
     |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
-                    :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workpermit_required, :loto_required, :pre_check_required,
-                    :workpermit_required_from, :workpermit_obtained, :loto_approval_from_user_id, :is_loto_obtained, :precheck_completed])
+                    :status, :workorder_template_id, :workorder_schedule_id, :work_request_id,
+                    :is_deactivated, :deactivated_date_time])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
     |> validate_start_date_time()
@@ -49,7 +51,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     # |> validate_start_time()
     |> validate_date_order()
     |> validate_time_order()
-    |> validate_inclusion(:status, ["cr", "as", "wp", "wpp", "wpa", "lta", "ltp", "ltl", "ip", "cp", "ltr", "cn", "hl"])
+    |> validate_inclusion(:status, ["cr", "as", "wp", "wpp", "wpa", "lta", "ltp", "ltl", "ip", "incp", "cp", "ltr", "cn", "hl"])
     |> validate_based_on_type()
   end
 

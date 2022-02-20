@@ -762,12 +762,17 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_approval(attrs \\ %{}, prefix) do
+  def create_approval(attrs \\ %{}, prefix, user) do
     result = %Approval{}
               |> Approval.changeset(attrs)
+              |> set_approver_user_id(user)
               |> Repo.insert(prefix: prefix)
 
     update_status_for_work_request(result, prefix)
+  end
+
+  defp set_approver_user_id(cs, user) do
+    change(cs, %{user_id: user.id})
   end
 
   def update_status_for_work_request({:error, reason}, _),  do: {:error, reason}
@@ -807,9 +812,10 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_approval(%Approval{} = approval, attrs, prefix) do
+  def update_approval(%Approval{} = approval, attrs, prefix, user) do
     result = approval
               |> Approval.changeset(attrs)
+              |> set_approver_user_id(user)
               |> Repo.update(prefix: prefix)
     update_status_for_work_request(result, prefix)
   end

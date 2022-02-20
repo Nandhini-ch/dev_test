@@ -17,7 +17,7 @@ defmodule Inconn2ServiceWeb.ApprovalController do
   end
 
   def create(conn, %{"approval" => approval_params}) do
-    with {:ok, %Approval{} = approval} <- Ticket.create_approval(approval_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %Approval{} = approval} <- Ticket.create_approval(approval_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.approval_path(conn, :show, approval))
@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.ApprovalController do
   def update(conn, %{"id" => id, "approval" => approval_params}) do
     approval = Ticket.get_approval!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Approval{} = approval} <- Ticket.update_approval(approval, approval_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %Approval{} = approval} <- Ticket.update_approval(approval, approval_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", approval: approval)
     end
   end

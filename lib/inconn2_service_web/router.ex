@@ -263,5 +263,9 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
 
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
+
+    get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
+    get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
+
   end
 end

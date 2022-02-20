@@ -747,6 +747,7 @@ defmodule Inconn2Service.Workorder do
       end
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
+    |> Enum.filter(fn wo -> wo.is_deactivated != true end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
 
     end
@@ -775,6 +776,11 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def get_work_orders_by_workorder_schedule_id(workorder_schedule_id, prefix) do
+    from(wo in WorkOrder, where: wo.workorder_schedule_id == ^workorder_schedule_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_work_order_premits_to_be_approved(user, prefix) do
     work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
     Enum.map(work_orders, fn wo ->
@@ -784,6 +790,7 @@ defmodule Inconn2Service.Workorder do
         "not_required"
       end
     end) |> Enum.filter(fn x -> x != "not_required" end)
+    |> Enum.filter(fn wo -> wo.is_deactivated != true end)
   end
 
   def get_work_order_loto_to_be_checked(user, prefix) do
@@ -965,6 +972,7 @@ defmodule Inconn2Service.Workorder do
             |> status_reassigned(work_order, user, prefix)
             |> status_rescheduled(work_order, user, prefix)
             |> update_status(work_order, user, prefix)
+            |> prevent_updating_deactivated_work_order(work_order)
             |> validate_workorder_template_id(prefix)
             |> validate_workorder_schedule_id(prefix)
             |> Repo.update(prefix: prefix)
@@ -976,6 +984,54 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp prevent_updating_deactivated_work_order(cs, work_order) do
+    if work_order.is_deactivated do
+      change_cs_to_prevent_updating_deactivated_work_order(cs, work_order)
+    else
+      cs
+    end
+  end
+
+  defp change_cs_to_prevent_updating_deactivated_work_order(cs, work_order) do
+    start_date = get_field(cs, :start_date)
+    start_time = get_field(cs, :start_time)
+    completed_date = get_field(cs, :completed_date)
+    completed_time = get_field(cs, :completed_time)
+    if start_date != nil and start_time != nil do
+      cs =
+            if NaiveDateTime.new!(start_date, start_time) <= work_order.deactivated_date_time do
+              change(cs, %{status: "incp"})
+            else
+              cs
+            end
+      if completed_date != nil and completed_time != nil do
+        if NaiveDateTime.new!(completed_date, completed_time) <= work_order.deactivated_date_time do
+          change(cs, %{status: "cp"})
+        else
+          cs
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
+  defp combine_date_time_in_attrs(date, time) when date != nil and time != nil do
+    date = date
+            |> String.split("-")
+            |> Enum.map(&String.to_integer/1)
+            |> (fn [year, month, day] -> Date.new!(year, month, day) end).()
+
+    time = time
+            |> String.split(":")
+            |> Enum.map(&String.to_integer/1)
+            |> (fn [hour, min, sec] -> Time.new!(hour, min, sec) end).()
+
+    NaiveDateTime.new!(date, time)
   end
 
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
@@ -1046,6 +1102,12 @@ defmodule Inconn2Service.Workorder do
   """
   def delete_work_order(%WorkOrder{} = work_order, prefix) do
     Repo.delete(work_order, prefix: prefix)
+  end
+
+  def get_site_date_time(work_order, prefix) do
+    site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
   def create_status_track(work_order, user, prefix) do
@@ -1378,6 +1440,7 @@ defmodule Inconn2Service.Workorder do
       |> Map.put_new(:scheduled_date_time, scheduled_date_time)
 
     end)
+    |> Enum.filter(fn wo -> wo.is_deactivated != true end)
     |> Enum.sort_by(&(&1.scheduled_date_time), NaiveDateTime)
 
   end
@@ -1898,6 +1961,8 @@ defmodule Inconn2Service.Workorder do
     if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
     # auto_assign_user(work_order, prefix)
 
+    deactivate_previous_work_orders(work_order, work_order.scheduled_date, work_order.scheduled_time, prefix)
+
     workorder_schedule_cs = change_workorder_schedule(workorder_schedule)
     {:ok, workorder_schedule} = Multi.new()
                               |> Multi.update(:next_occurrence, update_next_occurrence(workorder_schedule_cs, prefix))
@@ -1914,6 +1979,17 @@ defmodule Inconn2Service.Workorder do
     else
       multi
     end
+  end
+
+  defp deactivate_previous_work_orders(work_order, scheduled_date, scheduled_time, prefix) do
+    work_orders = get_work_orders_by_workorder_schedule_id(work_order.workorder_schedule_id, prefix)
+                  |> Enum.filter(fn wo -> wo.status not in ["cp", "cn"] and wo.is_deactivated == false and wo.id != work_order.id end)
+    date_time = NaiveDateTime.new!(scheduled_date, scheduled_time)
+    Enum.map(work_orders, fn wo ->
+                                change_work_order(wo, %{"is_deactivated" => true, "deactivated_date_time" => date_time})
+                                |> Repo.update(prefix: prefix)
+                          end)
+
   end
 
   defp auto_assign_user(work_order, prefix) do

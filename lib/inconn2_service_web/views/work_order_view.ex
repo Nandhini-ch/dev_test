@@ -51,6 +51,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       completed_date: work_order.completed_date,
       completed_time: work_order.completed_time,
       status: work_order.status,
+      is_deactivated: work_order.is_deactivated,
+      deactivated_date_time: work_order.deactivated_date_time,
       workorder_template_id: work_order.workorder_template_id,
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
@@ -100,6 +102,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_loto_obtained: work_order.is_loto_obtained,
       pre_check_required: work_order.pre_check_required,
       precheck_completed: work_order.precheck_completed,
+      is_deactivated: work_order.is_deactivated,
+      deactivated_date_time: work_order.deactivated_date_time,
       overdue: work_order.overdue}
   end
 
