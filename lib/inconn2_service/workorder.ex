@@ -962,9 +962,6 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
-    # attrs = prevent_updating_deactivated_work_order(work_order, attrs)
-    # |> IO.inspect()
-    # IO.puts("$$$$$$$$$$$$$$$4$$")
     result = work_order
             |> WorkOrder.changeset(attrs)
             |> validate_site_id(prefix)
@@ -975,6 +972,7 @@ defmodule Inconn2Service.Workorder do
             |> status_reassigned(work_order, user, prefix)
             |> status_rescheduled(work_order, user, prefix)
             |> update_status(work_order, user, prefix)
+            |> prevent_updating_deactivated_work_order(work_order)
             |> validate_workorder_template_id(prefix)
             |> validate_workorder_schedule_id(prefix)
             |> Repo.update(prefix: prefix)
@@ -988,35 +986,37 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp prevent_updating_deactivated_work_order(work_order, attrs) do
+  defp prevent_updating_deactivated_work_order(cs, work_order) do
     if work_order.is_deactivated do
-      attrs = Map.put_new(attrs, "start_date_time", combine_date_time_in_attrs(attrs["start_date"], attrs["start_time"]))
-              |> Map.put_new("completed_date_time", combine_date_time_in_attrs(attrs["completed_date"], attrs["completed_time"]))
-      change_attrs_to_prevent_updating_deactivated_work_order(work_order, attrs)
+      change_cs_to_prevent_updating_deactivated_work_order(cs, work_order)
     else
-      attrs
+      cs
     end
   end
 
-  defp change_attrs_to_prevent_updating_deactivated_work_order(work_order, attrs) do
-    if attrs["start_date_time"] != nil do
-      attrs =
-              if attrs["start_date_time"] <= work_order.deactivated_date_time do
-                Map.put_new(attrs, "status", "incp")
-              else
-                attrs
-              end
-      if attrs["completed_date_time"] != nil do
-        if attrs["completed_date_time"] <= work_order.deactivated_date_time do
-          Map.put(attrs, "status", "cp")
+  defp change_cs_to_prevent_updating_deactivated_work_order(cs, work_order) do
+    start_date = get_field(cs, :start_date)
+    start_time = get_field(cs, :start_time)
+    completed_date = get_field(cs, :completed_date)
+    completed_time = get_field(cs, :completed_time)
+    if start_date != nil and start_time != nil do
+      cs =
+            if NaiveDateTime.new!(start_date, start_time) <= work_order.deactivated_date_time do
+              change(cs, %{status: "incp"})
+            else
+              cs
+            end
+      if completed_date != nil and completed_time != nil do
+        if NaiveDateTime.new!(completed_date, completed_time) <= work_order.deactivated_date_time do
+          change(cs, %{status: "cp"})
         else
-          attrs
+          cs
         end
       else
-        attrs
+        cs
       end
     else
-      attrs
+      cs
     end
   end
 
