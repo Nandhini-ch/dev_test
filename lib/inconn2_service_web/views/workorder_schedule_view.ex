@@ -72,7 +72,7 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
       next_occurrence_time: workorder_schedule.next_occurrence_time,
       workorder_approval_user_id: workorder_schedule.workorder_approval_user_id,
       workpermit_approval_user_ids: workorder_schedule.workpermit_approval_user_ids,
-      workorder_acknowledgement_from_user_id: workorder_schedule.workorder_acknowledgement_from_user_id
+      workorder_acknowledgement_user_id: workorder_schedule.workorder_acknowledgement_user_id
     }
   end
 end

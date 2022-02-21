@@ -28,7 +28,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
 
   def work_orders_to_be_acknowledged(conn, _) do
     work_orders = Workorder.get_work_order_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", work_order: work_orders)
+    render(conn, "index.json", work_orders: work_orders)
   end
 
   def work_order_loto_to_be_checked(conn, _) do

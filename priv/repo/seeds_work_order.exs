@@ -55,6 +55,8 @@ wkord_tp2 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
+  "is_workorder_approval_required" => true,
+  "is_workorder_acknowledgement_required" => true,
   "is_workpermit_required" => false,
   "loto_required" => false
 }
@@ -156,7 +158,7 @@ wkord_tp6 = %{
 {:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_bata")
 
 wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2}
 wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [2, 4] }
 wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [1, 2, 4] }

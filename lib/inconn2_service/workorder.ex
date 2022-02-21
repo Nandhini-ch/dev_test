@@ -791,13 +791,15 @@ defmodule Inconn2Service.Workorder do
   def get_work_orders_to_be_approved(user, prefix) do
     WorkOrder
     |> where([status: "woap", workorder_approval_user_id: ^user.id])
-    |> Repo.all(prefix)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def get_work_order_to_be_acknowledged(user, prefix) do
     WorkOrder
     |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id])
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def get_work_order_loto_to_be_checked(user, prefix) do
@@ -1618,7 +1620,7 @@ defmodule Inconn2Service.Workorder do
       _ ->
             if (actual_start_length == workorder_tasks_length) and (actual_end_length == workorder_tasks_length) do
               attrs =
-                if work_order.is_acknowledgement_required do
+                if work_order.is_workorder_acknowledgement_required do
                   %{"status" => "ackp"}
                 else
                   %{"status" => "cp"}
@@ -1945,6 +1947,8 @@ defmodule Inconn2Service.Workorder do
                                             "workorder_approval_user_id" => workorder_schedule.workorder_approval_user_id,
                                             "is_workpermit_required" => workorder_template.is_workpermit_required,
                                             "workpermit_approval_user_ids" => workorder_schedule.workpermit_approval_user_ids,
+                                            "is_workorder_acknowledgement_required" => workorder_template.is_workorder_acknowledgement_required,
+                                            "workorder_acknowledgement_user_id" => workorder_schedule.workorder_acknowledgement_user_id,
                                             "loto_required" => workorder_template.loto_required,
                                             "loto_approval_from_user_id" => workorder_template.loto_approval_from_user_id,
                                             "pre_check_required" => workorder_template.pre_check_required
@@ -2315,6 +2319,11 @@ defmodule Inconn2Service.Workorder do
 
             "WOA" ->
               approve_work_order_execution(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "ACK" ->
+              acknowledge_work_order_after_execution(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
           end
         else
           change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user)
@@ -2328,6 +2337,11 @@ defmodule Inconn2Service.Workorder do
   def approve_work_order_execution(work_order_id, prefix, user) do
     get_work_order!(work_order_id, prefix)
     |> update_work_order_without_validations(%{"status" => "woap"}, prefix, user)
+  end
+
+  def acknowledge_work_order_after_execution(work_order_id, prefix, user) do
+    get_work_order!(work_order_id, prefix)
+    |> update_work_order_without_validations(%{"status" => "cp"}, prefix, user)
   end
 
   defp change_in_workorder_checks_when_rejected(created_workorder_approval_track, prefix, user) do

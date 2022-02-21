@@ -20,13 +20,13 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsForWoaAndWp do
       add :workpermit_approval_user_ids, {:array, :integer}
       add :workpermit_obtained_from_user_ids, {:array, :integer}
       add :is_workorder_acknowledgement_required, :boolean
-      add :workorder_acknowledgement_required_from_user_id, :integer
+      add :workorder_acknowledgement_user_id, :integer
     end
 
     alter table("workorder_schedules") do
       add :workorder_approval_user_id, :integer
       add :workpermit_approval_user_ids, {:array, :integer}
-      add :workorder_acknowledgement_required_from_user_id, :integer
+      add :workorder_acknowledgement_user_id, :integer
     end
   end
 end
