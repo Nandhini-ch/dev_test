@@ -84,11 +84,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
-  def approve_work_permit(conn, %{"id" => id}) do
-    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
-      render(conn, "show.json", work_order: work_order)
-    end
-  end
+  # def approve_work_permit(conn, %{"id" => id}) do
+  #   with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+  #     render(conn, "show.json", work_order: work_order)
+  #   end
+  # end
 
   def approve_loto(conn, %{"id" => id}) do
     with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_loto(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
