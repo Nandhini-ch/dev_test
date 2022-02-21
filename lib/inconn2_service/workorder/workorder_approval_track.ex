@@ -18,7 +18,7 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
     workorder_approval_track
     |> cast(attrs, [:work_order_id, :approval_user_id, :type, :approved, :remarks, :discrepancy_workorder_check_ids])
     |> validate_required([:work_order_id, :type, :approved])
-    |> validate_inclusion(:type, ["WP", "LOTO", "WOA"])
+    |> validate_inclusion(:type, ["WP", "LOTO", "WOA", "ACK"])
     |> validate_remarks_required()
     |> assoc_constraint(:work_order)
   end

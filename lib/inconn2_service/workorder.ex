@@ -794,6 +794,12 @@ defmodule Inconn2Service.Workorder do
     |> Repo.all(prefix)
   end
 
+  def get_work_order_to_be_acknowledged(user, prefix) do
+    WorkOrder
+    |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id])
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_work_order_loto_to_be_checked(user, prefix) do
     WorkOrder
     |> where([loto_approval_from_user_id: ^user.id, status: ^"ltp"])
@@ -1024,6 +1030,10 @@ defmodule Inconn2Service.Workorder do
       update_work_order_without_validations(work_order, %{"status" => "wpp"}, prefix, user)
       %{result: true, message: "Submitted for approval"}
     end
+  end
+
+  def send_for_work_order_approval(work_order, prefix, user) do
+    update_work_order_without_validations(work_order, %{"status" => "woap"}, prefix, user)
   end
 
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
@@ -1607,7 +1617,12 @@ defmodule Inconn2Service.Workorder do
             {:ok, workorder_task}
       _ ->
             if (actual_start_length == workorder_tasks_length) and (actual_end_length == workorder_tasks_length) do
-              attrs = %{"status" => "cp"}
+              attrs =
+                if work_order.is_acknowledgement_required do
+                  %{"status" => "ackp"}
+                else
+                  %{"status" => "cp"}
+                end
               update_work_order_status(work_order, attrs, prefix, user)
               {:ok, workorder_task}
             else
@@ -2325,6 +2340,10 @@ defmodule Inconn2Service.Workorder do
     if created_workorder_approval_track.type == "WOA" do
       get_work_order!(created_workorder_approval_track.work_order_id, prefix)
       |> update_work_order_without_validations(%{"status" => "woar"}, prefix, user)
+    end
+    if created_workorder_approval_track.type == "ACK" do
+      get_work_order!(created_workorder_approval_track.work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "ackr"}, prefix, user)
     end
   end
   @doc """

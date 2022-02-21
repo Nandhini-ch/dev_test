@@ -109,6 +109,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
+    put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
     get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
     get "/work_orders/approvals_pending", WorkOrderController, :work_orders_to_be_approved
     post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit

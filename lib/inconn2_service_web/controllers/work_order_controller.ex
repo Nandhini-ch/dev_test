@@ -26,6 +26,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def work_orders_to_be_acknowledged(conn, _) do
+    work_orders = Workorder.get_work_order_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_order: work_orders)
+  end
+
   def work_order_loto_to_be_checked(conn, _) do
     work_orders = Workorder.get_work_order_loto_to_be_checked(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
@@ -54,6 +59,13 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
   def update(conn, %{"id" => id, "work_order" => work_order_params}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+      render(conn, "show.json", work_order: work_order)
+    end
+  end
+
+  def send_for_work_order_approval(conn, %{"id" => id}) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.send_for_work_order_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
   end

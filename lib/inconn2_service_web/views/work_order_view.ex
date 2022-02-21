@@ -100,6 +100,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_workpermit_required: work_order.is_workpermit_required,
       workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
       workpermit_obtained_from_user_ids: work_order.workpermit_obtained_from_user_ids,
+      is_workorder_acknowledgement_required: work_order.is_workorder_acknowledgement_required,
+      workorder_acknowledgement_from_user_id: work_order.workorder_acknowledgement_from_user_id,
       workorder_template_id: work_order.workorder_template_id,
       workorder_schedule_id: work_order.workorder_schedule_id,
       work_request_id: work_order.work_request_id,
