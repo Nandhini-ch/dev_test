@@ -845,7 +845,7 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
     if workorder_template.is_workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
     if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
-    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
+    auto_create_workorder_checks(work_order, "PRE", prefix)
   end
 
   defp validate_site_id(cs, prefix) do
@@ -2072,7 +2072,14 @@ defmodule Inconn2Service.Workorder do
           CheckListConfig.get_check_list!(workorder_template.loto_lock_check_list_id, prefix).check_ids ++ CheckListConfig.get_check_list!(workorder_template.loto_release_check_list_id, prefix).check_ids
 
         "PRE" ->
-          CheckListConfig.get_check_list!(workorder_template.pre_check_list_id, prefix).check_ids
+          # check_list = CheckListConfig.get_pre_check_list(work_order.site_id, prefix)
+          case CheckListConfig.get_pre_check_list(work_order.site_id, prefix) do
+            nil ->
+              []
+
+            check_list ->
+              check_list.check_ids
+          end
       end
 
     Enum.map(check_ids, fn check_id ->

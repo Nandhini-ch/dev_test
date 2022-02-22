@@ -28,5 +28,9 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsForWoaAndWp do
       add :workpermit_approval_user_ids, {:array, :integer}
       add :workorder_acknowledgement_user_id, :integer
     end
+
+    alter table("check_lists") do
+      add :site_id, :integer
+    end
   end
 end

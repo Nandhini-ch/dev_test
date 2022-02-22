@@ -4,11 +4,15 @@ chk1 = %{"label" => "check 1", "type" => "WP"}
 chk2 = %{"label" => "check 2", "type" => "WP"}
 chk3 = %{"label" => "check 3", "type" => "LOTO"}
 chk4 = %{"label" => "check 4", "type" => "LOTO"}
+chk5 = %{"label" => "check 5", "type" => "PRE"}
+chk6 = %{"label" => "check 6", "type" => "PRE"}
 
 {:ok, chk1c} = CheckListConfig.create_check(chk1, "inc_bata")
 {:ok, chk2c} = CheckListConfig.create_check(chk2, "inc_bata")
 {:ok, chk3c} = CheckListConfig.create_check(chk3, "inc_bata")
 {:ok, chk4c} = CheckListConfig.create_check(chk4, "inc_bata")
+{:ok, chk5c} = CheckListConfig.create_check(chk5, "inc_bata")
+{:ok, chk6c} = CheckListConfig.create_check(chk6, "inc_bata")
 
 chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
 chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}

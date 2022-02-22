@@ -152,6 +152,8 @@ defmodule Inconn2Service.CheckListConfig do
   """
   def get_check_list!(id, prefix), do: Repo.get!(CheckList, id, prefix: prefix)
 
+  def get_check_list(id, prefix), do: Repo.get(CheckList, id, prefix: prefix)
+
   @doc """
   Creates a check_list.
 
@@ -168,7 +170,25 @@ defmodule Inconn2Service.CheckListConfig do
     %CheckList{}
     |> CheckList.changeset(attrs)
     |> validate_check_ids(prefix)
+    |> validate_existing_for_pre(prefix)
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_existing_for_pre(cs, prefix) do
+    site_id = get_field(cs, :site_id, nil)
+    if site_id != nil do
+      if get_pre_check_list(site_id, prefix) do
+        add_error(cs, :site_id, "A PRE Check list is already existing")
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
+  def get_pre_check_list(site_id, prefix) do
+    from(cl in CheckList, where: cl.type == "PRE" and cl.site_id == ^site_id) |> Repo.one(prefix: prefix)
   end
 
   defp validate_check_ids(cs, prefix) do
