@@ -39,7 +39,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
               add_error(changeset, :config, "Config is invalid")
             end
       "MT" ->
-            if (["UOM", "max_value", "min_value", "threshold_value", "type"] -- Map.keys(config) == []) and config["type"] in ["C","A"] do
+            if (["UOM", "type"] -- Map.keys(config) == []) and config["type"] in ["C","A"] do
               changeset
             else
               add_error(changeset, :config, "Config is invalid")

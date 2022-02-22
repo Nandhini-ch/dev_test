@@ -242,10 +242,11 @@ defmodule Inconn2Service.FileLoader do
         IO.inspect(map)
         if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
           array =
-            Enum.map(map["Config"], fn x ->
-              [label, value] = String.split(x, ":")
-              %{"label" => label, "value" => value}
-            end)
+            Enum.filter(map["Config"], fn x -> x != "" end)
+            |> Enum.map(fn x ->
+                [label, value] = String.split(x, ":")
+                %{"label" => label, "value" => value}
+              end)
           new_map = Map.put(map, "Config", %{"options" => array})
           IO.inspect(new_map)
           convert_special_keys_to_required_type(tail, new_map)
