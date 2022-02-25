@@ -19,4 +19,13 @@ defmodule Inconn2ServiceWeb.DashboardView do
       }
     }
   end
+
+  def render("workflow_pie_chart.json", %{workflow_data: workflow_data}) do
+    %{
+      data: %{
+        labels: workflow_data.labels,
+        data: workflow_data.data
+      }
+    }
+  end
 end
