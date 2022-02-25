@@ -45,7 +45,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id,
                     :is_deactivated, :deactivated_date_time])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
-    |> validate_inclusion(:type, ["PRV", "BRK"])
+    |> validate_inclusion(:type, ["PRV", "BRK", "TKT"])
     |> validate_start_date_time()
     # |> validate_start_date()
     # |> validate_start_time()
