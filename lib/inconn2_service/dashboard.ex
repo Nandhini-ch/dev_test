@@ -104,6 +104,14 @@ defmodule Inconn2Service.Dashboard do
     %{labels: ["completed_work_order_count", "incomplete_work_order_count"], data: [completed_work_order_count, incomplete_work_order_count]}
   end
 
+  def get_trendline_for_metering(_prefix, query_params) do
+    {:ok, from_date} = date_convert(query_params["from_date"])
+    {:ok, to_date} = date_convert(query_params["to_date"])
+    labels = form_date_list(from_date, to_date)
+    data = Enum.map(1..length(labels), fn _x -> Enum.random(200..300) end)
+  %{labels: labels, data: data}
+  end
+
   def filter_by_date(query, nil, nil), do: query
 
   def filter_by_date(query, from_date, nil) do
