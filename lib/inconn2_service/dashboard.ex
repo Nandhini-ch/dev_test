@@ -4,6 +4,7 @@ defmodule Inconn2Service.Dashboard do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig.{Location, Equipment}
+  alias Inconn2Service.Workorder
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Workorder.WorkorderTemplate
 
@@ -75,14 +76,12 @@ defmodule Inconn2Service.Dashboard do
         {"site_id", site_id}, query  ->
           from w in query, where: w.site_id == ^site_id
 
-        {"asset_category_id", asset_category_id}, query ->
-          from w in query, where: w.asset_category_id == ^asset_category_id
-
         {"type", work_order_type}, query ->
           from w in query, where: w.type == ^work_order_type
       end)
       |> filter_by_date(query_params["start_date"], query_params["end_date"])
       |> Repo.all(prefix: prefix)
+      |> filter_by_asset_category(query_params["asset_category_id"], prefix)
 
     completed_work_order_count =
       Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
@@ -92,6 +91,13 @@ defmodule Inconn2Service.Dashboard do
 
     # %{completed_work_order_count: completed_work_order_count, incomplete_work_order_count: incomplete_work_order_count}
     %{labels: ["completed_work_order_count", "incomplete_work_order_count"], data: [completed_work_order_count, incomplete_work_order_count]}
+  end
+
+  def filter_by_asset_category(work_orders, asset_category_id, prefix) do
+    Enum.filter(work_orders, fn wo ->
+      workorder_template = Workorder.get_workorder_template!(wo.workorder_template_id, prefix)
+      workorder_template.asset_category_id == asset_category_id
+    end)
   end
 
   def get_trendline_for_metering(_prefix, query_params) do
