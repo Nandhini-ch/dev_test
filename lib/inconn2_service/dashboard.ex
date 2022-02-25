@@ -99,10 +99,7 @@ defmodule Inconn2Service.Dashboard do
 
     %{
       labels: ["Total Assets", "Available", "Current running", "Breakdown", "Critical Assets"],
-      datasets: [%{
-        label: "Asset Status Dashboard",
-        data: [total_asset_count, available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count]
-      }]
+      data: [total_asset_count, available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count]
     }
 
   end
