@@ -30,9 +30,9 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :workpermit_approval_user_ids, {:array, :integer}, default: []
     field :workpermit_obtained_from_user_ids, {:array, :integer}, default: []
     field :workorder_acknowledgement_user_id, :integer
-    field :loto_required, :boolean, default: false
-    field :loto_approval_from_user_id, :integer
-    field :is_loto_obtained, :boolean
+    field :is_loto_required, :boolean
+    field :loto_lock_check_list_id, :integer
+    field :loto_release_check_list_id, :integer
     field :pre_check_required, :boolean, default: false
     field :precheck_completed, :boolean, default: false
 
@@ -46,7 +46,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workorder_approval_user_id,
                     :workpermit_approval_user_ids, :workpermit_obtained_from_user_ids, :is_workorder_approval_required,
-                    :is_workpermit_required, :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id])
+                    :is_workpermit_required, :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id,
+                    :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK"])
     |> validate_start_date_time()
@@ -54,7 +55,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     # |> validate_start_time()
     |> validate_date_order()
     |> validate_time_order()
-    |> validate_inclusion(:status, ["cr", "as", "woap", "woaa", "woar", "wp", "wpp", "wpa", "wpr", "lta", "ltp", "ltl", "ackp", "ackr", "ip", "cp", "ltr", "cn", "hl"])
+    |> validate_inclusion(:status, ["cr", "as", "woap", "woaa", "woar", "wp", "wpp", "wpa", "wpr", "ltla", "ltlp", "ltrp","ltra", "ltlr", "ltrr", "ackp", "ackr", "ip", "cp", "ltr", "cn", "hl"])
     |> validate_based_on_type()
   end
 

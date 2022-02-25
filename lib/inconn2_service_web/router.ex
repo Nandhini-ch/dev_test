@@ -110,12 +110,16 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
     put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
+    put "/work_orders/:id/send_for_loto_lock_approval", WorkOrderController, :send_for_loto_lock_approval
+    put "/work_orders/:id/send_for_loto_release_approval", WorkOrderController, :send_for_loto_release_approval
     get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
     get "/work_orders/workorder_approvals_pending", WorkOrderController, :work_orders_to_be_approved
     get "/work_orders/workorder_acknowledgement_pending", WorkOrderController, :work_orders_to_be_acknowledged
     post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
-    post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
-    get "/work_orders/loto_pending", WorkOrderController, :work_order_loto_to_be_checked
+    post "/work_orders/approve_loto_lock/:id", WorkOrderController, :approve_loto_lock
+    post "/work_orders/approve_loto_release/:id", WorkOrderController, :approve_loto_release
+    get "/work_orders/loto_lock_pending", WorkOrderController, :work_order_loto_lock_to_be_checked
+    get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
     post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr

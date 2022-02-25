@@ -27,12 +27,9 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :is_workorder_approval_required, :boolean, default: false
     field :is_workorder_acknowledgement_required, :boolean, default: false
     field :workpermit_check_list_id, :integer
-    field :loto_required, :boolean, default: false
-    field :loto_approval_from_user_id, :integer
+    field :is_loto_required, :boolean, default: false
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
-    field :pre_check_required, :boolean, default: false
-    field :pre_check_list_id, :integer
     field :active, :boolean, default: true
 
     timestamps()
@@ -42,7 +39,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   def changeset(workorder_template, attrs) do
     workorder_template
     |> cast(attrs, [:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :is_workpermit_required, :is_workorder_approval_required, :workpermit_check_list_id,
-                    :loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :is_workorder_acknowledgement_required])
+                    :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :is_workorder_acknowledgement_required])
     |> validate_required([:asset_category_id, :name, :task_list_id, :tasks, :estimated_time, :scheduled])
     |> validate_scheduled()
     |> validate_time_required()
@@ -56,7 +53,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
 
   defp validate_scheduled(cs) do
     case get_field(cs, :scheduled) do
-      true -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :create_new, :max_times, :workorder_prior_time, :is_workpermit_required, :loto_required])
+      true -> validate_required(cs, [ :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :create_new, :max_times, :workorder_prior_time, :is_workpermit_required, :is_loto_required])
       false -> cs
       _ -> cs
     end
@@ -104,7 +101,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   end
 
   defp validate_loto_required(cs) do
-    case get_field(cs, :loto_required) do
+    case get_field(cs, :is_loto_required) do
       true -> validate_required(cs, [:loto_lock_check_list_id, :loto_release_check_list_id])
       false -> cs
       _ -> cs

@@ -62,7 +62,7 @@ wkord_tp2 = %{
   "is_workorder_approval_required" => true,
   "is_workorder_acknowledgement_required" => true,
   "is_workpermit_required" => false,
-  "loto_required" => false
+  "is_loto_required" => false
 }
 
 wkord_tp3 = %{
@@ -83,7 +83,7 @@ wkord_tp3 = %{
   "workorder_prior_time" => 180,
   "is_workpermit_required" => true,
   "workpermit_check_list_id" => chk_lst1c.id,
-  "loto_required" => false
+  "is_loto_required" => false
 }
 
 wkord_tp4 = %{
@@ -103,7 +103,7 @@ wkord_tp4 = %{
   "max_times" => 5,
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
-  "loto_required" => true,
+  "is_loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
   "loto_release_check_list_id" => chk_lst2c.id
 }
@@ -126,9 +126,9 @@ wkord_tp5 = %{
   "workorder_prior_time" => 180,
   "is_workpermit_required" => true,
   "workpermit_check_list_id" => chk_lst1c.id,
-  "loto_required" => true,
+  "is_loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
-  "loto_release_check_list_id" => chk_lst2c.id
+  "loto_release_check_list_id" => chk_lst2c.id,
 }
 
 wkord_tp6 = %{
@@ -151,7 +151,7 @@ wkord_tp6 = %{
   "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
-  "loto_required" => false
+  "is_loto_required" => false
 }
 
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
