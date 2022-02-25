@@ -3,6 +3,7 @@ defmodule Inconn2Service.Dashboard do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
+  alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Workorder
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Workorder.WorkorderTemplate
@@ -60,17 +61,6 @@ defmodule Inconn2Service.Dashboard do
         WorkOrder |> where([scheduled_date: ^date]) |> Repo.all(prefix: prefix) |> Enum.filter(fn wo -> wo.status != "cp" end) |> Enum.count
       end)
 
-    # completed_work_order_counts =
-    #   Enum.map(work_orders, fn{_date, work_orders} ->
-    #     Enum.filter(work_orders, fn work_order -> work_order.status == "cp" end) |> Enum.count
-    #   end)
-
-    # incomplete_work_order_counts =
-    #   Enum.map(work_orders, fn{_date, work_orders} ->
-    #     Enum.filter(work_orders, fn work_order -> work_order.status != "cp" end) |> Enum.count
-    #   end)
-
-
     %{
       completed_work_order_count: completed_work_order_counts,
       incomplete_work_order_count: incomplete_work_order_counts,
@@ -88,6 +78,8 @@ defmodule Inconn2Service.Dashboard do
 
         {"type", work_order_type}, query ->
           from w in query, where: w.type == ^work_order_type
+
+        {"asset_category_id", _}, query -> query
       end)
       |> filter_by_date(query_params["start_date"], query_params["end_date"])
       |> Repo.all(prefix: prefix)
@@ -161,4 +153,40 @@ defmodule Inconn2Service.Dashboard do
             |> form_date_list(to_date)
     end
   end
+
+  def asset_status_pie_chart(prefix, query_params) do
+
+    locations = query_variable_asset_status(Location, query_params, prefix)
+    equipments = query_variable_asset_status(Equipment, query_params, prefix)
+
+    assets = locations ++ equipments
+    total_asset_count = Enum.count(assets)
+    available_asset_count = Enum.filter(assets, fn x -> x.status in ["ON", "OFF"] end) |> Enum.count()
+    current_running_asset_count = Enum.filter(assets, fn x -> x.status == "ON" end) |> Enum.count()
+    breakdown_asset_count = Enum.filter(assets, fn x -> x.status == "BRK" end) |> Enum.count()
+    critical_asset_count = Enum.filter(assets, fn x -> x.criticality == 1 end) |> Enum.count()
+
+    %{
+      labels: ["Total Assets", "Available", "Current running", "Breakdown", "Critical Assets"],
+      data: [total_asset_count, available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count]
+    }
+
+  end
+
+  def query_variable_asset_status(module, query_params, prefix) do
+    query = from a in module
+
+    Enum.reduce(query_params, query, fn
+
+      {"site_id", site_id}, query ->
+          from q in query, where: q.site_id == ^site_id
+
+      {"asset_category_id", asset_category_id}, query ->
+          from q in query, where: q.asset_category_id == ^asset_category_id
+
+    end)
+
+    |> Repo.all(prefix: prefix)
+  end
+
 end

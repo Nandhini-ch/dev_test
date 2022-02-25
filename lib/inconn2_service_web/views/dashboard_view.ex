@@ -20,6 +20,13 @@ defmodule Inconn2ServiceWeb.DashboardView do
     }
   end
 
+
+  def render("asset_staus_pie.json", %{asset_status_data: asset_status_data}) do
+    %{
+      data: asset_status_data
+    }
+  end
+
   def render("workflow_pie_chart.json", %{workflow_data: workflow_data}) do
     %{
       data: workflow_data
