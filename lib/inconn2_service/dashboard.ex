@@ -167,8 +167,9 @@ defmodule Inconn2Service.Dashboard do
     critical_asset_count = Enum.filter(assets, fn x -> x.criticality == 1 end) |> Enum.count()
 
     %{
-      labels: ["Total Assets", "Available", "Current running", "Breakdown", "Critical Assets"],
-      data: [total_asset_count, available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count]
+      labels: ["Available", "Current running", "Breakdown", "Critical Assets"],
+      data: [available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count],
+      total_assets: total_asset_count
     }
 
   end
