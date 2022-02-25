@@ -5,6 +5,7 @@ defmodule Inconn2Service.Dashboard do
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder.WorkorderTemplate
 
   def work_order_pie_chart(prefix, query_params) do
     date = Date.utc_today()
@@ -64,6 +65,52 @@ defmodule Inconn2Service.Dashboard do
       incomplete_work_order_count: incomplete_work_order_counts,
       dates: date_list
     }
+  end
+
+  def work_flow_pie_chart(prefix, query_params) do
+    query = from wo in WorkOrder, join: wt in WorkorderTemplate
+
+    work_orders =
+      Enum.reduce(query_params, query, fn
+        {"site_id", site_id}, query  ->
+          from w in query, where: w.site_id == ^site_id
+
+        {"asset_category_id", asset_category_id}, query ->
+          from w in query, where: w.asset_category_id == ^asset_category_id
+
+        {"type", work_order_type}, query ->
+          from w in query, where: w.type == ^work_order_type
+      end)
+      |> filter_by_date(query_params["start_date"], query_params["end_date"])
+      |> Repo.all(prefix: prefix)
+
+    completed_work_order_count =
+      Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+
+    incomplete_work_order_count =
+      Enum.filter(work_orders, fn wo -> wo.status != "cp" end) |> Enum.count()
+
+    # %{completed_work_order_count: completed_work_order_count, incomplete_work_order_count: incomplete_work_order_count}
+    %{labels: ["completed_work_order_count", "incomplete_work_order_count"], data: [completed_work_order_count, incomplete_work_order_count]}
+  end
+
+  def get_trendline_for_metering(_prefix, query_params) do
+    {:ok, from_date} = date_convert(query_params["from_date"])
+    {:ok, to_date} = date_convert(query_params["to_date"])
+    labels = form_date_list(from_date, to_date)
+    data = Enum.map(1..length(labels), fn _x -> Enum.random(200..300) end)
+  %{labels: labels, data: data}
+  end
+
+  def filter_by_date(query, nil, nil), do: query
+
+  def filter_by_date(query, from_date, nil) do
+    from w in query, where: w.scheduled_date >= ^from_date
+  end
+
+
+  def filter_by_date(query, from_date, to_date) do
+    from w in query, where: w.scheduled_date >= ^from_date and w.scheduled_date <= ^to_date
   end
 
   defp date_convert(date_to_convert) do
