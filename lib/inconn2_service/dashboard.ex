@@ -111,8 +111,22 @@ defmodule Inconn2Service.Dashboard do
   end
 
   def get_trendline_for_metering(_prefix, query_params) do
-    {:ok, from_date} = date_convert(query_params["from_date"])
-    {:ok, to_date} = date_convert(query_params["to_date"])
+    from_date =
+      case query_params["from_date"] do
+        nil ->
+          Date.utc_today()
+        date ->
+          {:ok, converted_date} = date_convert(date)
+          converted_date
+      end
+    to_date =
+      case query_params["to_date"] do
+        nil ->
+          Date.utc_today()
+        date ->
+          {:ok, converted_date} = date_convert(date)
+          converted_date
+      end
     labels = form_date_list(from_date, to_date)
     data = Enum.map(1..length(labels), fn _x -> Enum.random(200..300) end)
   %{labels: labels, data: data}
