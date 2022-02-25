@@ -78,6 +78,8 @@ defmodule Inconn2Service.Dashboard do
 
         {"type", work_order_type}, query ->
           from w in query, where: w.type == ^work_order_type
+
+        {"asset_category_id", _}, query -> query
       end)
       |> filter_by_date(query_params["start_date"], query_params["end_date"])
       |> Repo.all(prefix: prefix)
