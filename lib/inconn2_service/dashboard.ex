@@ -221,7 +221,7 @@ defmodule Inconn2Service.Dashboard do
     # if asset_id != nil do
       work_orders = from(wo in WorkOrder, where: wo.status == "cp")
                     |> Repo.all(prefix: prefix)
-                    |> Enum.map(fn wo -> preload_required(wo) end)
+                    |> Enum.map(fn wo -> preload_required(wo, prefix) end)
                     |> Enum.filter(fn wo -> wo.workorder_task != [] end)
                     |> Enum.map(fn wo -> Map.put(wo, :workorder_task, List.first(wo.workorder_task)) end)
                     |> process_recorded()
@@ -246,11 +246,11 @@ defmodule Inconn2Service.Dashboard do
     end
   end
 
-  defp preload_required(work_order) do
+  defp preload_required(work_order, prefix) do
     work_order
-    |> Map.put(:workorder_template, Repo.get(WorkorderTemplate, work_order.workorder_template_id))
-    |> Map.put(:workorder_task, Repo.all(from wot in WorkorderTask, where: wot.work_order_id == ^work_order.id)
-                                |> Enum.map(fn wot -> Map.put(wot, :task, Repo.get(Task, wot.task_id)) end)
+    |> Map.put(:workorder_template, Repo.get(WorkorderTemplate, work_order.workorder_template_id, prefix: prefix))
+    |> Map.put(:workorder_task, Repo.all(from(wot in WorkorderTask, where: wot.work_order_id == ^work_order.id), prefix: prefix)
+                                |> Enum.map(fn wot -> Map.put(wot, :task, Repo.get(Task, wot.task_id, prefix: prefix)) end)
                                 |> Enum.filter(fn wot -> wot.task.task_type == "MT" and wot.task.config["UOM"] in ["kwh", "KWH", "KwH", "Kwh", "kWh", "kWH"] end)
                 )
   end
