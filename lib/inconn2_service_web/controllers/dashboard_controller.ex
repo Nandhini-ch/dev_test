@@ -14,8 +14,8 @@ defmodule Inconn2ServiceWeb.DashboardController do
   end
 
   def get_metering_linear_chart(conn, _) do
-    metering_data = Dashboard.get_trendline_for_metering(conn.assigns.sub_domain_prefix, conn.query_params)
-    render(conn, "workflow_pie_chart.json", workflow_data: metering_data)
+    metering_linear_data = Dashboard.get_metering_linear_chart(conn.assigns.sub_domain_prefix, conn.query_params)
+    render(conn, "metering_linear_chart.json", metering_linear_data: metering_linear_data)
   end
 
   def get_work_order_bar_chart(conn, _) do
