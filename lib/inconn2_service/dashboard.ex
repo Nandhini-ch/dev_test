@@ -162,13 +162,13 @@ defmodule Inconn2Service.Dashboard do
     assets = locations ++ equipments
     total_asset_count = Enum.count(assets)
     available_asset_count = Enum.filter(assets, fn x -> x.status in ["ON", "OFF"] end) |> Enum.count()
-    current_running_asset_count = Enum.filter(assets, fn x -> x.status == "ON" end) |> Enum.count()
-    breakdown_asset_count = Enum.filter(assets, fn x -> x.status == "BRK" end) |> Enum.count()
-    critical_asset_count = Enum.filter(assets, fn x -> x.criticality == 1 end) |> Enum.count()
-
+    # current_running_asset_count = Enum.filter(assets, fn x -> x.status == "ON" end) |> Enum.count()
+    # breakdown_asset_count = Enum.filter(assets, fn x -> x.status == "BRK" end) |> Enum.count()
+    # critical_asset_count = Enum.filter(assets, fn x -> x.criticality == 1 end) |> Enum.count()
+    not_available_asset_count = Enum.filter(assets, fn x -> x.status not in ["ON", "OFF"] end) |> Enum.count()
     %{
-      labels: ["Available", "Current running", "Breakdown", "Critical Assets"],
-      data: [available_asset_count, current_running_asset_count, breakdown_asset_count, critical_asset_count],
+      labels: ["Available", "Not Available"],
+      data: [available_asset_count, not_available_asset_count],
       total_assets: total_asset_count
     }
 
