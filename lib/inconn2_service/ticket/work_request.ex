@@ -15,6 +15,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :priority, :string
     field :request_type, :string
     field :time_of_requirement, :naive_datetime
+    field :raised_date_time, :naive_datetime
     # field :requested_user_id, :integer
     # field :assigned_user_id, :integer
     belongs_to :requested_user, Inconn2Service.Staff.User, foreign_key: :requested_user_id
@@ -38,8 +39,8 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     work_request
     |> cast(attrs, [:site_id, :workrequest_category_id, :workrequest_subcategory_id, :location_id, :asset_id, :asset_type, :description, :priority, :request_type,
                     :time_of_requirement, :requested_user_id, :assigned_user_id, :approvals_required,
-                    :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id])
-    |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type])
+                    :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id, :raised_date_time])
+    |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type, :raised_date_time])
     |> validate_inclusion(:asset_type, ["L", "E"])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])
     |> validate_inclusion(:request_type, ["CO", "RE"])

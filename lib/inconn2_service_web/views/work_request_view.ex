@@ -22,6 +22,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       priority: work_request.priority,
       request_type: work_request.request_type,
       time_of_requirement: work_request.time_of_requirement,
+      raised_date_time: work_request.raised_date_time,
       requested_user: render_one(work_request.requested_user, UserView, "user_without_org_unit.json"),
       assigned_user: render_one(work_request.assigned_user, UserView, "user_without_org_unit.json"),
       attachment_type: work_request.attachment_type,

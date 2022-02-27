@@ -287,6 +287,7 @@ work_request1 = %{
   "priority" => "CR",
   "request_type" => "CO",
   "status" => "RS",
+  "raised_date_time" => "2022-02-01 09:00:00",
   "location_id" => 1,
   "assigned_user_id" => 2
 }
@@ -301,6 +302,7 @@ work_request2 = %{
   "request_type" => "RE",
   "is_approvals_required" => true,
   "approvals_required" => [1,2],
+  "raised_date_time" => "2022-02-01 09:00:00",
   "status" => "RS",
   "location_id" => 1,
   "asset_id" => 1,

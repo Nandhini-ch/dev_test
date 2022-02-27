@@ -265,7 +265,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
 
     get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
+    get "/dashboards/workflow_pie_chart", DashboardController, :get_workflow_pie_chart
     get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
+    get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
+    get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
 
   end
 end
