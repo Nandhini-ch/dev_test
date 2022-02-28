@@ -69,7 +69,7 @@ defmodule Inconn2Service.Dashboard do
   end
 
   def work_flow_pie_chart(prefix, query_params) do
-    query = from wo in WorkOrder, join: wt in WorkorderTemplate
+    query = from wo in WorkOrder
 
     work_orders =
       Enum.reduce(query_params, query, fn
@@ -89,7 +89,7 @@ defmodule Inconn2Service.Dashboard do
       Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
 
     incomplete_work_order_count =
-      Enum.filter(work_orders, fn wo -> wo.status != "cp" end) |> Enum.count()
+      Enum.filter(work_orders, fn wo -> wo.status not in ["cp"] end) |> Enum.count()
 
     # %{completed_work_order_count: completed_work_order_count, incomplete_work_order_count: incomplete_work_order_count}
     %{labels: ["completed_work_order_count", "incomplete_work_order_count"], data: [completed_work_order_count, incomplete_work_order_count]}
