@@ -95,6 +95,8 @@ defmodule Inconn2Service.Dashboard do
     %{labels: ["completed_work_order_count", "incomplete_work_order_count"], data: [completed_work_order_count, incomplete_work_order_count]}
   end
 
+  def filter_by_asset_category(work_orders, nil, _prefix), do: work_orders
+
   def filter_by_asset_category(work_orders, asset_category_id, prefix) do
     Enum.filter(work_orders, fn wo ->
       workorder_template = Workorder.get_workorder_template!(wo.workorder_template_id, prefix)
