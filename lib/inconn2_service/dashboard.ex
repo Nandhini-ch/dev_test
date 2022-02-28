@@ -81,7 +81,7 @@ defmodule Inconn2Service.Dashboard do
 
         {"asset_category_id", _}, query -> query
       end)
-      |> filter_by_date(query_params["start_date"], query_params["end_date"])
+      |> filter_by_date(query_params["from_date"], query_params["to_date"])
       |> Repo.all(prefix: prefix)
       |> filter_by_asset_category(query_params["asset_category_id"], prefix)
 
@@ -126,7 +126,10 @@ defmodule Inconn2Service.Dashboard do
   %{labels: labels, data: data}
   end
 
-  def filter_by_date(query, nil, nil), do: query
+  def filter_by_date(query, nil, nil) do
+    from_date = Date.utc_today()
+    from w in query, where: w.scheduled_date == ^ from_date
+  end
 
   def filter_by_date(query, from_date, nil) do
     from w in query, where: w.scheduled_date >= ^from_date
