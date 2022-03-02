@@ -270,5 +270,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
     get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
 
+    get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
+    # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
   end
 end
