@@ -9,6 +9,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetConfig.Site
+  alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
   Inconn2Service.Account.Licensee
 
@@ -159,6 +160,17 @@ defmodule Inconn2Service.AssetConfig do
   """
   def change_site(%Site{} = site, attrs \\ %{}) do
     Site.changeset(site, attrs)
+  end
+
+  def get_assets_by_asset_category_id(asset_category_id, prefix) do
+    asset_category = get_asset_category!(asset_category_id, prefix)
+    case asset_category.asset_type do
+      "L" ->
+         Location |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+
+      "E" ->
+        Equipment |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+    end
   end
 
   alias Inconn2Service.AssetConfig.AssetCategory
