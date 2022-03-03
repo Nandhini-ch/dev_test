@@ -7,6 +7,11 @@ defmodule Inconn2ServiceWeb.DashboardController do
     energy_meter_data = Dashboards.get_energy_meter_linear_chart_random(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "energy_meter.json", energy_meter_data: energy_meter_data)
   end
+
+  def get_energy_meter_speedometer(conn, _) do
+    energy_meter_data = Dashboards.get_energy_meter_speedometer_random(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "energy_meter.json", energy_meter_data: energy_meter_data)
+  end
   # def get_work_order_pie_chart(conn, _) do
   #   work_order_counts = Dashboard.work_order_pie_chart(conn.assigns.sub_domain_prefix, conn.query_params)
   #   render(conn, "work_order_pie.json", work_order_counts: work_order_counts)
