@@ -128,7 +128,7 @@ defmodule Inconn2Service.Dashboards do
 
   def get_energy_meter_speedometer_random(_query_parmas, _params) do
     %{
-      labels: ["Site Name"],
+      labels: [Date.utc_today()],
       data: [Enum.random(100..1000)]
     }
   end
@@ -194,6 +194,11 @@ defmodule Inconn2Service.Dashboards do
         }
     end
   end
+
+  # def get_energy_meter_speedometer(query_params, prefix) do
+  #   {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+  #   date_list
+  # end
 
   defp form_date_list(from_date, to_date) do
     list = [from_date] |> List.flatten()
