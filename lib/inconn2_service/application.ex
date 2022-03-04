@@ -14,7 +14,7 @@ defmodule Inconn2Service.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Inconn2Service.PubSub},
       #Start the GenServer
-      # Inconn2Service.Batch.WorkorderScheduler,
+      Inconn2Service.Batch.WorkorderScheduler,
       # Start the Endpoint (http/https)
       Inconn2ServiceWeb.Endpoint
       # Start a worker by calling: Inconn2Service.Worker.start_link(arg)
