@@ -126,6 +126,13 @@ defmodule Inconn2Service.Dashboards do
     |> Enum.map(fn a -> a.id end)
   end
 
+  def get_energy_meter_speedometer_random(_query_parmas, _params) do
+    %{
+      labels: ["Site Name"],
+      data: [Enum.random(100..1000)]
+    }
+  end
+
 
   def get_energy_meter_linear_chart_random(query_params, _prefix) do
     {from_date, to_date} =
