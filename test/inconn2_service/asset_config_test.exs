@@ -310,4 +310,63 @@ defmodule Inconn2Service.AssetConfigTest do
       assert %Ecto.Changeset{} = AssetConfig.change_asset_status_track(asset_status_track)
     end
   end
+
+  describe "site_config" do
+    alias Inconn2Service.AssetConfig.SiteConfig
+
+    @valid_attrs %{config: %{}}
+    @update_attrs %{config: %{}}
+    @invalid_attrs %{config: nil}
+
+    def site_config_fixture(attrs \\ %{}) do
+      {:ok, site_config} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_site_config()
+
+      site_config
+    end
+
+    test "list_site_config/0 returns all site_config" do
+      site_config = site_config_fixture()
+      assert AssetConfig.list_site_config() == [site_config]
+    end
+
+    test "get_site_config!/1 returns the site_config with given id" do
+      site_config = site_config_fixture()
+      assert AssetConfig.get_site_config!(site_config.id) == site_config
+    end
+
+    test "create_site_config/1 with valid data creates a site_config" do
+      assert {:ok, %SiteConfig{} = site_config} = AssetConfig.create_site_config(@valid_attrs)
+      assert site_config.config == %{}
+    end
+
+    test "create_site_config/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_site_config(@invalid_attrs)
+    end
+
+    test "update_site_config/2 with valid data updates the site_config" do
+      site_config = site_config_fixture()
+      assert {:ok, %SiteConfig{} = site_config} = AssetConfig.update_site_config(site_config, @update_attrs)
+      assert site_config.config == %{}
+    end
+
+    test "update_site_config/2 with invalid data returns error changeset" do
+      site_config = site_config_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_site_config(site_config, @invalid_attrs)
+      assert site_config == AssetConfig.get_site_config!(site_config.id)
+    end
+
+    test "delete_site_config/1 deletes the site_config" do
+      site_config = site_config_fixture()
+      assert {:ok, %SiteConfig{}} = AssetConfig.delete_site_config(site_config)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_site_config!(site_config.id) end
+    end
+
+    test "change_site_config/1 returns a site_config changeset" do
+      site_config = site_config_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_site_config(site_config)
+    end
+  end
 end

@@ -1502,4 +1502,100 @@ defmodule Inconn2Service.AssetConfig do
   def change_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs \\ %{}) do
     AssetStatusTrack.changeset(asset_status_track, attrs)
   end
+
+  alias Inconn2Service.AssetConfig.SiteConfig
+
+  @doc """
+  Returns the list of site_config.
+
+  ## Examples
+
+      iex> list_site_config()
+      [%SiteConfig{}, ...]
+
+  """
+  def list_site_config(prefix) do
+    Repo.all(SiteConfig, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single site_config.
+
+  Raises `Ecto.NoResultsError` if the Site config does not exist.
+
+  ## Examples
+
+      iex> get_site_config!(123)
+      %SiteConfig{}
+
+      iex> get_site_config!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_site_config!(id, prefix), do: Repo.get!(SiteConfig, id, prefix: prefix)
+
+  @doc """
+  Creates a site_config.
+
+  ## Examples
+
+      iex> create_site_config(%{field: value})
+      {:ok, %SiteConfig{}}
+
+      iex> create_site_config(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_site_config(attrs \\ %{}, prefix) do
+    %SiteConfig{}
+    |> SiteConfig.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a site_config.
+
+  ## Examples
+
+      iex> update_site_config(site_config, %{field: new_value})
+      {:ok, %SiteConfig{}}
+
+      iex> update_site_config(site_config, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_site_config(%SiteConfig{} = site_config, attrs, prefix) do
+    site_config
+    |> SiteConfig.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a site_config.
+
+  ## Examples
+
+      iex> delete_site_config(site_config)
+      {:ok, %SiteConfig{}}
+
+      iex> delete_site_config(site_config)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_site_config(%SiteConfig{} = site_config, prefix) do
+    Repo.delete(site_config, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking site_config changes.
+
+  ## Examples
+
+      iex> change_site_config(site_config)
+      %Ecto.Changeset{data: %SiteConfig{}}
+
+  """
+  def change_site_config(%SiteConfig{} = site_config, attrs \\ %{}) do
+    SiteConfig.changeset(site_config, attrs)
+  end
 end
