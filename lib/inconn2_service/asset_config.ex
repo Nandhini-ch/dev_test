@@ -1406,4 +1406,100 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_children({:error, cs}, _prefix), do: {:error, cs}
 
+
+  alias Inconn2Service.AssetConfig.AssetStatusTrack
+
+  @doc """
+  Returns the list of asset_status_tracks.
+
+  ## Examples
+
+      iex> list_asset_status_tracks()
+      [%AssetStatusTrack{}, ...]
+
+  """
+  def list_asset_status_tracks do
+    Repo.all(AssetStatusTrack)
+  end
+
+  @doc """
+  Gets a single asset_status_track.
+
+  Raises `Ecto.NoResultsError` if the Asset status track does not exist.
+
+  ## Examples
+
+      iex> get_asset_status_track!(123)
+      %AssetStatusTrack{}
+
+      iex> get_asset_status_track!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_asset_status_track!(id), do: Repo.get!(AssetStatusTrack, id)
+
+  @doc """
+  Creates a asset_status_track.
+
+  ## Examples
+
+      iex> create_asset_status_track(%{field: value})
+      {:ok, %AssetStatusTrack{}}
+
+      iex> create_asset_status_track(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_asset_status_track(attrs \\ %{}) do
+    %AssetStatusTrack{}
+    |> AssetStatusTrack.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a asset_status_track.
+
+  ## Examples
+
+      iex> update_asset_status_track(asset_status_track, %{field: new_value})
+      {:ok, %AssetStatusTrack{}}
+
+      iex> update_asset_status_track(asset_status_track, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs) do
+    asset_status_track
+    |> AssetStatusTrack.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a asset_status_track.
+
+  ## Examples
+
+      iex> delete_asset_status_track(asset_status_track)
+      {:ok, %AssetStatusTrack{}}
+
+      iex> delete_asset_status_track(asset_status_track)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_asset_status_track(%AssetStatusTrack{} = asset_status_track) do
+    Repo.delete(asset_status_track)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking asset_status_track changes.
+
+  ## Examples
+
+      iex> change_asset_status_track(asset_status_track)
+      %Ecto.Changeset{data: %AssetStatusTrack{}}
+
+  """
+  def change_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs \\ %{}) do
+    AssetStatusTrack.changeset(asset_status_track, attrs)
+  end
 end

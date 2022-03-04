@@ -7,9 +7,23 @@ defmodule Inconn2ServiceWeb.DashboardView do
     }
   end
 
-  def render("workflow_data.json", %{workflow_data: workflow_data}) do
+  def render("workflow_linear_data.json", %{workflow_data: workflow_data}) do
     %{
       data: workflow_data
+    }
+  end
+
+  def render("workflow_linear_ticket_data", %{workflow_data: workflow_data}) do
+    %{
+      data: %{
+        labels: workflow_data.labels,
+        datasets: workflow_data.darasets,
+        total_count: workflow_data.total_count,
+        additional_information: %{
+          reopened_tickets: render_many(workflow_data.additional_information.reopened_tickets, WorkRequestView, "work_request.json"),
+          open_complaints_against_categories: workflow_data.additional_information.open_complaints_agains_category
+        }
+      }
     }
   end
   # def render("work_order_pie.json", %{work_order_counts: work_order_counts}) do

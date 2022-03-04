@@ -3,44 +3,102 @@ defmodule Inconn2Service.Dashboards do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Ticket
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Ticket.WorkRequest
 
   def ticket_linear_chart(prefix, query_params) do
     main_query = from wo in WorkOrder, where: wo.type == "TKT",
-    join: wr in WorkRequest, on: wo.id == wr.work_order_id
+    join: wr in WorkRequest, on: wo.work_request_id == wr.id,
+    select: %{work_order: wo, work_request: wr}
 
-    dynamic_query =
-      Enum.reduce(query_params, main_query, fn
-        {"asset_category_id", asset_category_id}, main_query ->
-          asset_ids = asset_ids_for_asset_category(asset_category_id, prefix)
-          asset_category = AssetConfig.get_asset_category(asset_category_id, prefix)
-          case query_params["asset_id"] do
-            nil ->
-              from q in main_query, where: q.asset_id in ^asset_ids and q.asset_type == ^asset_category.asset_type
 
-            id ->
-              from q in main_query, where: q.asset_id == ^id and q.asset_type == ^asset_category.asset_type
-          end
+    dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
-        {"site_id", site_id}, main_query ->
-           from q in main_query, where: q.site_id == ^site_id
+    work_orders =
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+
+
+    open_tickets = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end)
+
+
+    open_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end) |> Enum.count()
+    closed_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status in ["CL", "CS"] end) |> Enum.count()
+    reopened_tickets =
+      Enum.filter(work_orders, fn wo -> wo.work_request.status == "RO" end)
+      |> Enum.map(fn wo -> %{id: wo.work_request.id, status: wo.work_request.status} end)
+
+    grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
+
+    open_complaints_against_categories =
+      Enum.map(grouped_by_tickets, fn {key, value} ->
+        workrequest_category = Ticket.get_workrequest_category!(key, prefix)
+        %{
+          workrequest_category_name: workrequest_category.name,
+          value: Enum.count(value)
+        }
       end)
 
-      {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-
-      work_orders =
-        from(q in dynamic_query, where: q.scheduled_date >= ^from_date and q.scheduled_date <= ^to_date)
-        |> Repo.all(prefix: prefix)
-
-      open_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end)
-      closed_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status in ["CL", "CS"] end)
-
-      %{
-        labels: ["Open Ticket Count", "Closed Ticket Count"],
-        datasets: [open_ticket_count, closed_ticket_count],
-        total_count: Enum.count(work_orders)
+    %{
+      labels: ["Open Ticket Count", "Closed Ticket Count"],
+      datasets: [open_ticket_count, closed_ticket_count],
+      total_count: Enum.count(work_orders),
+      additional_information: %{
+        reopened_tickets: reopened_tickets,
+        open_complaints_against_categories: open_complaints_against_categories
       }
+    }
+  end
+
+  def work_order_linear_chart(prefix, query_params) do
+    main_query = from wo in WorkOrder, where: wo.type not in ["TKT"]
+
+    dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
+
+    work_orders =
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+
+    completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+    incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
+    total_count = Enum.count(work_orders)
+
+    %{
+      labels: ["Completed Work Orders", "Incomplete Work Orders"],
+      datasets: [completed_work_orders, incomplete_work_orders],
+      total_count: total_count,
+      additional_information: %{
+        completed_work_orders: %{
+          number: completed_work_orders,
+          percentage: div(completed_work_orders,total_count) * 100
+        }
+      }
+    }
+  end
+
+  defp get_dynamic_query_for_workflow(main_query, query_params, prefix) do
+    Enum.reduce(query_params, main_query, fn
+      {"asset_category_id", asset_category_id}, main_query ->
+        asset_ids = asset_ids_for_asset_category(asset_category_id, prefix)
+        asset_category = AssetConfig.get_asset_category(asset_category_id, prefix)
+        case query_params["asset_id"] do
+          nil ->
+            from q in main_query, where: q.asset_id in ^asset_ids and q.asset_type == ^asset_category.asset_type
+
+          id ->
+            from q in main_query, where: q.asset_id == ^id and q.asset_type == ^asset_category.asset_type
+        end
+
+      {"site_id", site_id}, main_query ->
+         from q in main_query, where: q.site_id == ^site_id
+
+      _, main_query ->
+        main_query
+    end)
+  end
+
+  defp apply_dates_to_workflow_query(dynamic_query, query_params, prefix) do
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    from(q in dynamic_query, where: q.scheduled_date >= ^from_date and q.scheduled_date <= ^to_date)
   end
 
   defp get_dates_for_query(nil, nil, site_id, prefix) do

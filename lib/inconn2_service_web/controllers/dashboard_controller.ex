@@ -8,9 +8,14 @@ defmodule Inconn2ServiceWeb.DashboardController do
     render(conn, "energy_meter.json", energy_meter_data: energy_meter_data)
   end
 
-  def get_work_flow_pie_chart(conn, _) do
+  def get_workflow_ticket_pie_chart(conn, _) do
     workflow_data = Dashboards.ticket_linear_chart(conn.assigns.sub_domain_prefix, conn.query_params)
-    render(conn, "workflow_data.json", workflow_data: workflow_data)
+    render(conn, "workflow_linear_data.json", workflow_data: workflow_data)
+  end
+
+  def get_workflow_workorder_pie_chart(conn, _) do
+    workflow_data = Dashboards.work_order_linear_chart(conn.assigns.sub_domain_prefix, conn.query_params)
+    render(conn, "workflow_linear_data.json", workflow_data: workflow_data)
   end
   # def get_work_order_pie_chart(conn, _) do
   #   work_order_counts = Dashboard.work_order_pie_chart(conn.assigns.sub_domain_prefix, conn.query_params)
