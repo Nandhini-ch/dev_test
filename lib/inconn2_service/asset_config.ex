@@ -1672,11 +1672,18 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def update_site_config(%SiteConfig{} = site_config, attrs, prefix) do
+    attrs = append_in_config(attrs, site_config)
     site_config
     |> SiteConfig.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
+  defp append_in_config(attrs, site_config) do
+    config = attrs["config"]
+    old_config = site_config.config
+    new_config = Enum.reduce(config, old_config, fn x, acc -> Map.put(acc, elem(x, 0), elem(x, 1)) end)
+    Map.put(attrs, "config", new_config)
+  end
   @doc """
   Deletes a site_config.
 
