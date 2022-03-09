@@ -21,6 +21,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
+  alias Inconn2Service.Measurements
   # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
@@ -978,11 +979,20 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
 
     case result do
-      {:ok, _work_order} ->
+      {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          record_meter_readings(work_order, updated_work_order, prefix)
           result
       _ ->
         result
+    end
+  end
+
+  defp record_meter_readings(work_order, updated_work_order, prefix) do
+    if work_order.status != "cp" and updated_work_order.status == "cp" do
+      Measurements.record_meter_readings_from_work_order(work_order, prefix)
+    else
+      updated_work_order
     end
   end
 
