@@ -3,9 +3,11 @@ defmodule Inconn2Service.Dashboards do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.Measurements.MeterReading
 
   def ticket_linear_chart(prefix, query_params) do
     main_query = from wo in WorkOrder, where: wo.type == "TKT",
@@ -195,10 +197,170 @@ defmodule Inconn2Service.Dashboards do
     end
   end
 
-  # def get_energy_meter_speedometer(query_params, prefix) do
-  #   {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-  #   date_list
-  # end
+  def get_energy_meter_speedometer(query_params, prefix) do
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    date_list = form_date_list(from_date, to_date)
+    site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
+    data = get_main_meter_readings(site_config, date_list, prefix)
+    %{
+      labels: date_list,
+      data: [data]
+    }
+  end
+
+  def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
+    main_meters = site_config.config["main_meters"]
+    if main_meters != nil do
+      Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, List.first(date_list), prefix) end)
+      |> Enum.reduce(0, fn x, acc -> x + acc end)
+    else
+      0
+    end
+  end
+
+  def get_main_meter_readings(_site_config, _date_list, _prefix), do: 0
+
+  def get_energy_meter_reading(meter_id, date, prefix) do
+    start_dt = NaiveDateTime.new!(date.year, date.month, date.day, 0, 0, 0)
+    end_dt = NaiveDateTime.new!(date.year, date.month, date.day, 23, 59, 59, 999_999)
+    query = from mr in MeterReading, where: mr.asset_id == ^meter_id and
+                                            mr.asset_type == "E" and
+                                            mr.unit_of_measurement == "kwh" and
+                                            mr.recorded_date_time >= ^start_dt and mr.recorded_date_time <= ^end_dt
+    meter_readings = Repo.all(query, prefix: prefix)
+    Enum.map(meter_readings, fn x -> x.absolute_value end)
+    |> Enum.reduce(0, fn x, acc -> x + acc end)
+  end
+
+  def get_energy_meter_linear_chart(query_params, prefix) do
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    date_list = form_date_list(from_date, to_date)
+    case query_params["type"] do
+      "TOP3" ->
+          get_top_three_energy_meter_linear_chart(query_params["site_id"], date_list, prefix)
+
+      _ ->
+          query = from e in Equipment
+          energy_meters = Enum.reduce(query_params, query, fn
+                            {"site_id", site_id}, query  ->
+                              from e in query, where: e.site_id == ^site_id
+
+                            {"asset_category_id", asset_category_id}, query ->
+                              from e in query, where: e.asset_category_id == ^asset_category_id
+
+                            {"asset_id", asset_id}, query  ->
+                              from e in query, where: e.id == ^asset_id
+
+                            _, query ->
+                              query
+                          end)
+                          |> Repo.all(prefix: prefix)
+          data = Enum.map(date_list, fn date -> get_energy_meter_reading_for_multiple_assets(energy_meters, date, prefix) end)
+          %{
+            labels: date_list,
+            datasets: [calculate_datasets_for_energy_meter(query_params, data, prefix)]
+          }
+    end
+  end
+
+  def get_energy_meter_reading_for_multiple_assets(energy_meters, date, prefix) do
+    Enum.map(energy_meters, fn energy_meter -> get_energy_meter_reading(energy_meter.id, date, prefix) end)
+    |> Enum.reduce(0, fn x, acc -> x + acc end)
+  end
+
+
+  defp calculate_datasets_for_energy_meter(query_params, data, prefix) do
+    site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
+    case query_params["type"] do
+      "EC" ->
+        cost = if site_config == nil do
+                0
+               else
+                site_config.config["energy_cost_per_unit"]
+               end
+        data = Enum.map(data, fn x -> x * cost end)
+        %{
+          data: data, avg_value: average_value(data)
+        }
+
+      "EPI" ->
+        sq_feet = if site_config == nil do
+                    1
+                  else
+                    site_config.config["area"]
+                  end
+        data = Enum.map(data, fn x -> x / sq_feet end)
+        %{
+          data: data, avg_value: average_value(data)
+        }
+
+      "DEVI" ->
+        standard_value = if site_config == nil do
+                          0
+                         else
+                          site_config.config["standard_value_for_deviation"]
+                         end
+        data = Enum.map(data, fn x -> x - standard_value end)
+        %{
+          data: data, avg_value: average_value(data)
+        }
+
+      _ ->
+        %{
+          data: data, avg_value: average_value(data)
+        }
+
+    end
+  end
+
+  def get_top_three_energy_meter_linear_chart(site_id, date_list, prefix) do
+    site_config = AssetConfig.get_site_config_by_site_id(site_id, prefix)
+    cost = if site_config == nil do
+            0
+           else
+            site_config.config["energy_cost_per_unit"]
+          end
+    energy_meters = from(e in Equipment, where: e.site_id == ^site_id)
+                    |> Repo.all(prefix: prefix)
+    top_three = Enum.map(energy_meters, fn energy_meter ->
+                      get_energy_meter_reading_for_multiple_dates_single_asset(energy_meter, date_list, prefix)
+                  end)
+                |> Enum.sort_by(&(&1.aggregated_value), :desc)
+
+    top1 = Enum.at(top_three, 0)
+    top2 = Enum.at(top_three, 1)
+    top3 = Enum.at(top_three, 2)
+    %{
+      labels: date_list,
+      datasets:
+              [
+                %{
+                  data: top1.data, label: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost
+                },
+                %{
+                  data: top2.data, label: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost
+                },
+                %{
+                  data: top3.data, label: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost
+                }
+              ]
+      }
+  end
+
+  defp get_energy_meter_reading_for_multiple_dates_single_asset(energy_meter, date_list, prefix) do
+    data = Enum.map(date_list, fn date -> get_energy_meter_reading(energy_meter.id, date, prefix) end)
+    %{
+      asset_name: energy_meter.name,
+      data: data,
+      aggregated_value: Enum.sum(data),
+      avg_value: average_value(data)
+    }
+  end
+
+  defp average_value(data) do
+    Enum.sum(data) / length(data)
+  end
+
 
   defp form_date_list(from_date, to_date) do
     list = [from_date] |> List.flatten()
