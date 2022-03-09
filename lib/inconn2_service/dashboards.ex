@@ -483,7 +483,7 @@ defmodule Inconn2Service.Dashboards do
                end
         data = Enum.map(data, fn x -> x * cost end)
         %{
-          data: data, avg_value: average_value(data)
+          data: data, avg_value: average_value(data), label: "Energy Cost"
         }
 
       "EPI" ->
@@ -494,7 +494,7 @@ defmodule Inconn2Service.Dashboards do
                   end
         data = Enum.map(data, fn x -> x / sq_feet end)
         %{
-          data: data, avg_value: average_value(data)
+          data: data, avg_value: average_value(data), label: "EPI"
         }
 
       "DEVI" ->
@@ -505,12 +505,12 @@ defmodule Inconn2Service.Dashboards do
                          end
         data = Enum.map(data, fn x -> x - standard_value end)
         %{
-          data: data, avg_value: average_value(data)
+          data: data, avg_value: average_value(data), label: "Deviation"
         }
 
       _ ->
         %{
-          data: data, avg_value: average_value(data)
+          data: data, avg_value: average_value(data), label: "kWh"
         }
 
     end
