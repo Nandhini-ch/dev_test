@@ -13,6 +13,12 @@ defmodule Inconn2ServiceWeb.DashboardView do
     }
   end
 
+  def render("asset_status.json", %{asset_status: asset_status}) do
+    %{
+      data: asset_status
+    }
+  end
+
   def render("workflow_linear_ticket_data", %{workflow_data: workflow_data}) do
     %{
       data: %{

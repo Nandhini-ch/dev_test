@@ -3,6 +3,7 @@ defmodule Inconn2Service.Dashboards do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.AssetConfig.{AssetStatusTrack, Location, Equipment}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Ticket.WorkRequest
@@ -74,6 +75,208 @@ defmodule Inconn2Service.Dashboards do
       }
     }
   end
+
+  # def asset_status_chart(prefix, query_params) do
+  #   assets = get_locations_assets(prefix, query_params) ++ get_equipment_assets(prefix, query_params)
+
+  #   available_assets_count = Enum.filter(assets, fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
+  #   unavailable_asset_count = Enum.filter(assets, fn a -> a.status not in ["ON", "OFF"] end) |> Enum.count()
+
+  #   critical_assets =
+  #     Enum.filter(assets, fn a -> a.criticalty == 5 end)
+  #     |> Enum.map(fn ca -> get_critical_asset_track(ca, prefix) end)
+
+
+  #   %{
+  #     labels: ["Available Assets", "Unavailable Assets"],
+  #     datasets: [available_assets_count, unavailable_asset_count],
+  #     additional_information: %{
+  #       critical_asset_information: critical_assets
+  #     }
+  #   }
+  # end
+
+  def get_asset_working_hours_pie_chart(prefix, query_params) do
+    equipments = get_equipment_working_hours(prefix, query_params)
+    locations = get_location_working_hours(prefix, query_params)
+
+
+    available_hours =
+      Enum.map(equipments ++ locations,
+        fn e -> get_hours_for_asset(e, "AVAILABLE", query_params, prefix)
+        end) |> calculate_average()
+
+    not_available_hours =
+      Enum.map(equipments ++ locations,
+        fn e -> get_hours_for_asset(e,  "NOT AVAILABLE", query_params, prefix)
+        end) |> calculate_average()
+
+    critical_assets =
+      Enum.map(equipments ++ locations,
+      fn e -> check_cricality_assets(e, prefix)
+      end) |> Enum.filter(fn x -> x != "ND" end)
+
+    %{
+      labels: ["Available", "Not Available"],
+      datasets: [available_hours, not_available_hours],
+      additional_assets: %{
+        critical_assets_information: critical_assets,
+      }
+    }
+  end
+
+  def calculate_average(list) do
+    if length(list) == 0 do
+      0
+    else
+      Enum.sum(list)/length(list)
+    end
+  end
+
+  def check_cricality_assets(asset, prefix) do
+    query =
+      from(ast in AssetStatusTrack,
+          where: ast.asset_id == ^asset.id and
+                ast.asset_type == ^asset.asset_type,
+                order_by: [desc: ast.changed_date_time], limit: 1)
+
+    last_entry = Repo.one(query, prefix: prefix)
+
+    if last_entry.status_changed not in ["ON", "OFF"] do
+      time_zone = AssetConfig.get_site_time_zone_from_asset(asset.site_id, prefix)
+      {:ok, current_date} = DateTime.now(time_zone)
+      %{
+        asset_name: asset.name,
+        no_of_days_inactive: NaiveDateTime.diff(DateTime.to_naive(current_date), last_entry.changed_date_time)
+      }
+    else
+      "ND"
+    end
+  end
+
+
+  def get_equipment_working_hours(prefix, query_params) do
+    main_query = from e in Equipment
+
+    get_dynamic_query_for_assets(main_query, query_params)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn a -> Map.put_new(a, :asset_type, "E") end)
+  end
+
+  def get_location_working_hours(prefix, query_params) do
+    main_query = from l in Location
+
+    get_dynamic_query_for_assets(main_query, query_params)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn a -> Map.put_new(a, :asset_type, "L") end)
+  end
+
+  def get_hours_for_asset(asset, type, query_params, prefix) do
+
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
+    from_naive = NaiveDateTime.new!(from_date, Time.new!(0, 0, 0))
+    to_naive = NaiveDateTime.new!(to_date, Time.new!(23, 59, 59))
+
+
+    status_changes =
+      from(ast in AssetStatusTrack, where: ast.asset_id == ^asset.id and ast.asset_type == ^asset.asset_type and ast.changed_date_time >= ^from_naive and ast.changed_date_time <= ^to_naive)
+      |> Repo.all(prefix: prefix)
+
+    case type do
+      "AVAILABLE" ->
+        Enum.filter(status_changes, fn sc -> sc.status_changed in ["ON", "OFF"] end)
+        |> Enum.map(fn sc -> sc.hours end) |> Enum.sum() |> add_current_time_to_status_changes(asset, type, status_changes, from_naive, to_naive, prefix)
+
+      "NOT AVAILABLE" ->
+        Enum.filter(status_changes, fn sc -> sc.status_changed not in ["ON", "OFF"] end)
+        |> Enum.map(fn sc -> sc.hours end) |> Enum.sum() |> add_current_time_to_status_changes(asset, type, status_changes, from_naive, to_naive, prefix)
+    end
+  end
+
+  def add_current_time_to_status_changes(_sum, asset, "AVAILABLE", [], from_naive, to_naive, prefix) do
+    query =
+      from(ast in AssetStatusTrack,
+          where: ast.asset_id == ^asset.id and
+                ast.asset_type == ^asset.asset_type,
+                order_by: [desc: ast.changed_date_time], limit: 1)
+
+    last_entry = Repo.one(query, prefix: prefix)
+
+    cond do
+      last_entry.status_changed in ["ON", "OFF"] ->
+        IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
+        NaiveDateTime.diff(to_naive, from_naive) / 3600
+
+
+      true ->
+        0
+    end
+  end
+
+
+  def add_current_time_to_status_changes(_sum, asset, "NOT AVAILABLE", [], from_naive, to_naive, prefix) do
+    query =
+      from(ast in AssetStatusTrack,
+          where: ast.asset_id == ^asset.id and
+                ast.asset_type == ^asset.asset_type,
+                order_by: [desc: ast.changed_date_time], limit: 1)
+
+    last_entry = Repo.one(query, prefix: prefix)
+
+    cond do
+      last_entry.status_changed not in ["ON", "OFF"] ->
+        IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
+        NaiveDateTime.diff(to_naive, from_naive) / 3600
+
+
+      true ->
+        0
+    end
+  end
+
+  def add_current_time_to_status_changes(sum, asset, _type, status_changes, _from_naive, _to_naive, prefix) do
+    length_of_status_changes = length(status_changes)
+    last_status = Enum.at(status_changes, length_of_status_changes - 1)
+
+    time_zone = AssetConfig.get_site_time_zone_from_asset(asset.site_id, prefix)
+
+    {:ok, date_time} = DateTime.now(time_zone)
+
+    NaiveDateTime.diff(DateTime.to_naive(date_time), last_status.changed_date_time) / 3600 + sum
+  end
+
+
+  def get_locations_assets(prefix, query_params) do
+    main_query = from l in Location
+    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "L") end)
+  end
+
+
+  def get_equipment_assets(prefix, query_params) do
+    main_query = from e in Equipment
+    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "E") end)
+  end
+
+
+  defp get_dynamic_query_for_assets(main_query, query_params) do
+    Enum.reduce(query_params, main_query, fn
+      {"asset_category_id", asset_category_id}, main_query ->
+        from q in main_query, where: q.asset_category_id == ^asset_category_id
+
+      {"site_id", site_id}, main_query ->
+        from q in main_query, where: q.site_id == ^site_id
+
+      {"asset_id", asset_id}, main_query ->
+        from q in main_query, where: q.asset_id == ^asset_id
+
+      _ , main_query ->
+        main_query
+    end)
+  end
+
 
   defp get_dynamic_query_for_workflow(main_query, query_params, prefix) do
     Enum.reduce(query_params, main_query, fn

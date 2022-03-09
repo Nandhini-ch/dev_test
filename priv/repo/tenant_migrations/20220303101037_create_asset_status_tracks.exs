@@ -8,6 +8,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateAssetStatusTracks do
       add :status_changed, :string
       add :user_id, :integer
       add :changed_date_time, :naive_datetime
+      add :hours, :float
 
       timestamps()
     end

@@ -57,7 +57,7 @@ defmodule Inconn2ServiceWeb.LocationController do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Location{} = location} <-
-           AssetConfig.update_location(location, location_params, conn.assigns.sub_domain_prefix) do
+           AssetConfig.update_location(location, location_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", location: location)
     end
   end

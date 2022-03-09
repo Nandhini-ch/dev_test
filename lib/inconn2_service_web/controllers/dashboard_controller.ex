@@ -22,6 +22,11 @@ defmodule Inconn2ServiceWeb.DashboardController do
     energy_meter_data = Dashboards.get_energy_meter_speedometer_random(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "energy_meter.json", energy_meter_data: energy_meter_data)
   end
+
+  def get_asset_status_pie_chart(conn, _) do
+    asset_status = Dashboards.get_asset_working_hours_pie_chart(conn.assigns.sub_domain_prefix, conn.query_params)
+    render(conn, "asset_status.json", asset_status: asset_status)
+  end
   # def get_work_order_pie_chart(conn, _) do
   #   work_order_counts = Dashboard.work_order_pie_chart(conn.assigns.sub_domain_prefix, conn.query_params)
   #   render(conn, "work_order_pie.json", work_order_counts: work_order_counts)
