@@ -145,8 +145,16 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
-  def list_work_requests_for_user(user, prefix) do
+  def list_work_requests_for_raised_user(user, prefix) do
+    WorkRequest |> where([requested_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+  end
+
+  def list_work_requests_for_assigned_user(user, prefix) do
     WorkRequest |> where([assigned_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+  end
+
+  def list_work_requests_acknowledgement(user, prefix) do
+    WorkRequest |> where([requested_user_id: ^user.id, status: "CP"]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do

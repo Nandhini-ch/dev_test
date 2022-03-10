@@ -127,7 +127,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     type = get_field(cs, :type)
     case type do
       "PRV" -> validate_required(cs, :workorder_schedule_id)
-      "BRK" -> validate_required(cs, [:site_id, :user_id, :work_request_id])
+      "TKT" -> validate_required(cs, [:site_id, :user_id, :work_request_id])
       _ -> cs
     end
   end
