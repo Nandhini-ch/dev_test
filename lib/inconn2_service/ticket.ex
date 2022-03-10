@@ -762,13 +762,29 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_approval(attrs \\ %{}, prefix, user) do
+  def create_approval(attrs \\ %{}, prefix, _user) do
     result = %Approval{}
               |> Approval.changeset(attrs)
-              |> set_approver_user_id(user)
+              # |> set_approver_user_id(user)
               |> Repo.insert(prefix: prefix)
 
     update_status_for_work_request(result, prefix)
+  end
+
+
+  def create_multiple_approval(attrs, prefix, user) do
+    Enum.map(attrs["work_request_ids"], fn id ->
+      to_be_inserted = %{
+        "approved" => attrs["approved"],
+        "remarks" => attrs["remarks"],
+        "user_id" => user.id,
+        "work_request_id" => id,
+        "action_at" => attrs["action_at"]
+      }
+      create_approval(to_be_inserted, prefix)
+    end)
+
+    %{success: true}
   end
 
   defp set_approver_user_id(cs, user) do
