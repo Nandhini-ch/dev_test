@@ -7,11 +7,18 @@ defmodule Inconn2Service.Release do
     {:ok, _} = Application.ensure_all_started(@app)
 
     migrate_public_schema()
+    create_time_zones()
     migrate_tenant_schemas()
   end
 
+
   defp migrate_public_schema do
     path = Application.app_dir(@app, "priv/repo/migrations")
+    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
+  end
+
+  defp create_time_zones do
+    path = Application.app_dir(@app, "priv/repo/timezones")
     Migrator.run(Inconn2Service.Repo, path, :up, all: true)
   end
 
