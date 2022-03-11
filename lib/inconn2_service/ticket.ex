@@ -785,6 +785,7 @@ defmodule Inconn2Service.Ticket do
 
   """
   def create_approval(attrs \\ %{}, prefix, _user) do
+    # IO.inspect(attrs)
     result = %Approval{}
               |> Approval.changeset(attrs)
               # |> set_approver_user_id(user)
@@ -803,7 +804,9 @@ defmodule Inconn2Service.Ticket do
         "work_request_id" => id,
         "action_at" => attrs["action_at"]
       }
-      create_approval(to_be_inserted, prefix)
+      result = create_approval(to_be_inserted, prefix, user)
+      IO.inspect(to_be_inserted)
+      IO.inspect(result)
     end)
 
     %{success: true}
