@@ -159,6 +159,14 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
+  def list_work_requests_for_actions(user, prefix) do
+    %{
+      raised_by_me: list_work_requests_for_raised_user(user, prefix),
+      to_be_closed: list_work_requests_acknowledgement(user, prefix),
+      helpdesk: list_work_requests_for_helpdesk_user(user, prefix)
+    }
+  end
+
   def list_work_requests_for_raised_user(user, prefix) do
     WorkRequest |> where([requested_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
@@ -199,7 +207,7 @@ defmodule Inconn2Service.Ticket do
     helpdesk = get_category_helpdesk_by_user(current_user.id, prefix)
     if helpdesk != [] do
       workrequest_category_ids = Enum.map(helpdesk, fn x -> x.workrequest_category_id end)
-      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids)
+      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids and wr.status != "CS")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     else
