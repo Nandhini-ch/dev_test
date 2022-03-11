@@ -476,9 +476,11 @@ defmodule Inconn2Service.Dashboards do
                           end)
                           |> Repo.all(prefix: prefix)
           data = Enum.map(date_list, fn date -> get_energy_meter_reading_for_multiple_assets(energy_meters, date, prefix) end)
+          {datasets, additional_info} = calculate_datasets_for_energy_meter(query_params, data, prefix)
           %{
             labels: date_list,
-            datasets: [calculate_datasets_for_energy_meter(query_params, data, prefix)]
+            datasets: [datasets],
+            additional_information: [additional_info]
           }
     end
   end
@@ -499,10 +501,14 @@ defmodule Inconn2Service.Dashboards do
                 site_config.config["energy_cost_per_unit"]
                end
         data = Enum.map(data, fn x -> x * cost end)
-        %{
-          data: data, avg_value: average_value(data), label: "Energy Cost"
+        {
+            %{
+              data: data, name: "Energy Cost"
+            },
+            %{
+              avg_value: average_value(data)
+            }
         }
-
       "EPI" ->
         sq_feet = if site_config == nil do
                     1
@@ -510,8 +516,13 @@ defmodule Inconn2Service.Dashboards do
                     site_config.config["area"]
                   end
         data = Enum.map(data, fn x -> x / sq_feet end)
-        %{
-          data: data, avg_value: average_value(data), label: "EPI"
+        {
+          %{
+            data: data, name: "EPI"
+          },
+          %{
+            avg_value: average_value(data)
+          }
         }
 
       "DEVI" ->
@@ -521,13 +532,23 @@ defmodule Inconn2Service.Dashboards do
                           site_config.config["standard_value_for_deviation"]
                          end
         data = Enum.map(data, fn x -> x - standard_value end)
-        %{
-          data: data, avg_value: average_value(data), label: "Deviation"
+        {
+          %{
+            data: data, name: "Deviation"
+          },
+          %{
+            avg_value: average_value(data)
+          }
         }
 
       _ ->
-        %{
-          data: data, avg_value: average_value(data), label: "kWh"
+        {
+          %{
+            data: data, name: "kWh"
+          },
+          %{
+            avg_value: average_value(data)
+          }
         }
 
     end
@@ -555,14 +576,20 @@ defmodule Inconn2Service.Dashboards do
       datasets:
               [
                 %{
-                  data: top1.data, label: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost
+                  data: top1.data, name: top1.asset_name
                 },
                 %{
-                  data: top2.data, label: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost
+                  data: top2.data, name: top2.asset_name
                 },
                 %{
-                  data: top3.data, label: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost
+                  data: top3.data, name: top3.asset_name
                 }
+              ],
+      additional_information:
+              [
+                %{avg_value: top1.avg_value, cost: top1.avg_value * cost},
+                %{avg_value: top2.avg_value, cost: top2.avg_value * cost},
+                %{avg_value: top3.avg_value, cost: top3.avg_value * cost}
               ]
       }
   end
