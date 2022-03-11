@@ -98,7 +98,7 @@ defmodule Inconn2Service.Dashboards do
       additional_information: %{
         completed_work_orders: %{
           number: completed_work_orders,
-          percentage: div(completed_work_orders,total_count) * 100
+          percentage: completed_work_orders / total_count * 100 |> Float.ceil(2)
         }
       }
     }
