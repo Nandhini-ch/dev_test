@@ -31,6 +31,20 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_workrequest_categories_with_helpdesk_user(prefix) do
+    WorkrequestCategory
+    |> Repo.all(prefix: prefix)
+    |> get_helpdesk_user_for_categories(prefix)
+  end
+
+  def get_helpdesk_user_for_categories(categories, prefix) do
+    Enum.map(categories, fn c ->
+      helpdesk_users = Inconn2Service.Ticket.CategoryHelpdesk |> where([workrequest_category_id: ^c.id]) |> Repo.all(prefix: prefix)
+      users = Enum.map(helpdesk_users, fn h -> Inconn2Service.Staff.get_user!(h.user_id, prefix) end)
+      Map.put_new(c, :users, users)
+    end)
+  end
+
   @doc """
   Gets a single workrequest_category.
 

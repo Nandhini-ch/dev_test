@@ -168,6 +168,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
+    get "/workrequest_categories_with_helpdesk_user", WorkrequestCategoryController, :index_with_helpdesk_user
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
 

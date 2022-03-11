@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryController do
     render(conn, "index.json", workrequest_categories: workrequest_categories)
   end
 
+  def index_with_helpdesk_user(conn, _params) do
+    workrequest_categories = Ticket.list_workrequest_categories_with_helpdesk_user(conn.assigns.sub_domain_prefix)
+    render(conn, "index_with_helpdesk_user.json", workrequest_categories: workrequest_categories)
+  end
+
   def create(conn, %{"workrequest_category" => workrequest_category_params}) do
     with {:ok, %WorkrequestCategory{} = workrequest_category} <- Ticket.create_workrequest_category(workrequest_category_params, conn.assigns.sub_domain_prefix) do
       conn
