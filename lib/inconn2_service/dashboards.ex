@@ -460,6 +460,7 @@ defmodule Inconn2Service.Dashboards do
   end
 
   def get_energy_meter_linear_chart(query_params, prefix) do
+    query_params = rectify_query_params(query_params)
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_list = form_date_list(from_date, to_date)
     case query_params["type"] do
@@ -626,5 +627,10 @@ defmodule Inconn2Service.Dashboards do
             list ++ [now_date]
             |> form_date_list(to_date)
     end
+  end
+
+  defp rectify_query_params(query_params) do
+    Enum.filter(query_params, fn {_key, val} -> val not in ["null", "nil", nil] end)
+    |> Enum.into(%{})
   end
 end
