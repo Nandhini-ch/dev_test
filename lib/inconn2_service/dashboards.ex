@@ -514,7 +514,7 @@ defmodule Inconn2Service.Dashboards do
               data: data, name: "Energy Cost"
             },
             %{
-              avg_value: average_value(data)
+              avg_value: average_value(data), name: "Energy Cost"
             }
         }
       "EPI" ->
@@ -529,7 +529,7 @@ defmodule Inconn2Service.Dashboards do
             data: data, name: "EPI"
           },
           %{
-            avg_value: average_value(data)
+            avg_value: average_value(data), name: "EPI"
           }
         }
 
@@ -545,7 +545,7 @@ defmodule Inconn2Service.Dashboards do
             data: data, name: "Deviation"
           },
           %{
-            avg_value: average_value(data)
+            avg_value: average_value(data), name: "Deviation"
           }
         }
 
@@ -555,7 +555,7 @@ defmodule Inconn2Service.Dashboards do
             data: data, name: "kWh"
           },
           %{
-            avg_value: average_value(data)
+            avg_value: average_value(data), name: "kWh"
           }
         }
 
@@ -595,9 +595,9 @@ defmodule Inconn2Service.Dashboards do
               ],
       additional_information:
               [
-                %{avg_value: top1.avg_value, cost: top1.avg_value * cost},
-                %{avg_value: top2.avg_value, cost: top2.avg_value * cost},
-                %{avg_value: top3.avg_value, cost: top3.avg_value * cost}
+                %{name: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost},
+                %{name: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost},
+                %{name: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost}
               ]
       }
   end
