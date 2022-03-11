@@ -16,7 +16,7 @@ defmodule Inconn2Service.Dashboards do
     select: %{work_order: wo, work_request: wr}
 
 
-    dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
+    dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
     work_orders =
       apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
@@ -68,7 +68,7 @@ defmodule Inconn2Service.Dashboards do
   def work_order_linear_chart(prefix, query_params) do
     main_query = from wo in WorkOrder, where: wo.type not in ["TKT"]
 
-    dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
+    dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
     work_orders =
       apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
