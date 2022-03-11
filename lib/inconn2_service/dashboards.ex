@@ -42,9 +42,21 @@ defmodule Inconn2Service.Dashboards do
         }
       end)
 
+    # %{
+    #   labels: ["Open Ticket Count", "Closed Ticket Count"],
+    #   datasets: [open_ticket_count, closed_ticket_count],
+    #   total_count: Enum.count(work_orders),
+    #   additional_information: %{
+    #     reopened_tickets: reopened_tickets,
+    #     open_complaints_against_categories: open_complaints_against_categories
+    #   }
+    # }
+
     %{
-      labels: ["Open Ticket Count", "Closed Ticket Count"],
-      datasets: [open_ticket_count, closed_ticket_count],
+      dataset: [
+        %{name: "Open Ticket Count", y: open_ticket_count},
+        %{name: "Closed Ticket Count", y: closed_ticket_count}
+      ],
       total_count: Enum.count(work_orders),
       additional_information: %{
         reopened_tickets: reopened_tickets,
@@ -65,9 +77,23 @@ defmodule Inconn2Service.Dashboards do
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
     total_count = Enum.count(work_orders)
 
+    # %{
+    #   labels: ["Completed Work Orders", "Incomplete Work Orders"],
+    #   datasets: [completed_work_orders, incomplete_work_orders],
+    #   total_count: total_count,
+    #   additional_information: %{
+    #     completed_work_orders: %{
+    #       number: completed_work_orders,
+    #       percentage: div(completed_work_orders,total_count) * 100
+    #     }
+    #   }
+    # }
+
     %{
-      labels: ["Completed Work Orders", "Incomplete Work Orders"],
-      datasets: [completed_work_orders, incomplete_work_orders],
+      dataset: [
+        %{name: "Completed Work Orders", y: completed_work_orders},
+        %{name: "Incomplete Work Orders", y: incomplete_work_orders}
+      ],
       total_count: total_count,
       additional_information: %{
         completed_work_orders: %{
@@ -78,25 +104,6 @@ defmodule Inconn2Service.Dashboards do
     }
   end
 
-  # def asset_status_chart(prefix, query_params) do
-  #   assets = get_locations_assets(prefix, query_params) ++ get_equipment_assets(prefix, query_params)
-
-  #   available_assets_count = Enum.filter(assets, fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
-  #   unavailable_asset_count = Enum.filter(assets, fn a -> a.status not in ["ON", "OFF"] end) |> Enum.count()
-
-  #   critical_assets =
-  #     Enum.filter(assets, fn a -> a.criticalty == 5 end)
-  #     |> Enum.map(fn ca -> get_critical_asset_track(ca, prefix) end)
-
-
-  #   %{
-  #     labels: ["Available Assets", "Unavailable Assets"],
-  #     datasets: [available_assets_count, unavailable_asset_count],
-  #     additional_information: %{
-  #       critical_asset_information: critical_assets
-  #     }
-  #   }
-  # end
 
   def get_asset_working_hours_pie_chart(prefix, query_params) do
     equipments = get_equipment_working_hours(prefix, query_params)
@@ -115,12 +122,22 @@ defmodule Inconn2Service.Dashboards do
 
     critical_assets =
       Enum.map(equipments ++ locations,
-      fn e -> check_cricality_assets(e, prefix)
+      fn e -> check_criticality_assets(e, prefix)
       end) |> Enum.filter(fn x -> x != "ND" end)
 
+    # %{
+    #   labels: ["Available", "Not Available"],
+    #   datasets: [available_hours, not_available_hours],
+    #   additional_assets: %{
+    #     critical_assets_information: critical_assets,
+    #   }
+    # }
+
     %{
-      labels: ["Available", "Not Available"],
-      datasets: [available_hours, not_available_hours],
+      dataset: [
+        %{name: "Available", y: Float.ceil(available_hours, 2)},
+        %{name: "Not Available", y: Float.ceil(not_available_hours)}
+      ],
       additional_assets: %{
         critical_assets_information: critical_assets,
       }
@@ -135,7 +152,7 @@ defmodule Inconn2Service.Dashboards do
     end
   end
 
-  def check_cricality_assets(asset, prefix) do
+  def check_criticality_assets(asset, prefix) do
     query =
       from(ast in AssetStatusTrack,
           where: ast.asset_id == ^asset.id and
