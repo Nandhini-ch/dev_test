@@ -27,6 +27,8 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     field :approvals_required, {:array, :integer}
     field :reason, :string
     field :action_taken, :string
+    field :response_tat, :integer
+    field :resolution_tat, :integer
     # field :approved_user_ids, {:array, :integer}, default: []
     # field :rejected_user_ids, {:array, :integer}, default: []
     field :work_order_id, :integer
@@ -39,7 +41,8 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     work_request
     |> cast(attrs, [:site_id, :workrequest_category_id, :workrequest_subcategory_id, :location_id, :asset_id, :asset_type, :description, :priority, :request_type,
                     :time_of_requirement, :requested_user_id, :assigned_user_id, :approvals_required,
-                    :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id, :raised_date_time])
+                    :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id, :raised_date_time,
+                    :response_tat, :resolution_tat])
     |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type, :raised_date_time])
     |> validate_inclusion(:asset_type, ["L", "E"])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])

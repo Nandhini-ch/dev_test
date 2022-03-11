@@ -250,12 +250,12 @@ wkreq_cat2 = %{"name" => "Mechanical", "description" => "Deals with mechanical w
 {:ok, wkreq_cat1c} = Ticket.create_workrequest_category(wkreq_cat1, "inc_bata")
 {:ok, wkreq_cat2c} = Ticket.create_workrequest_category(wkreq_cat2, "inc_bata")
 
-wkreq_subcat1 = %{"name" => "Electrical Subcategory 1", "workrequest_category_id" => wkreq_cat1c.id}
-wkreq_subcat2 = %{"name" => "Electrical Subcategory 2", "workrequest_category_id" => wkreq_cat1c.id}
-wkreq_subcat3 = %{"name" => "Electrical Subcategory 3", "workrequest_category_id" => wkreq_cat1c.id}
-wkreq_subcat4 = %{"name" => "Mechnical Subcategory 1", "workrequest_category_id" => wkreq_cat2c.id}
-wkreq_subcat5 = %{"name" => "Mechnical Subcategory 2", "workrequest_category_id" => wkreq_cat2c.id}
-wkreq_subcat6 = %{"name" => "Mechnical Subcategory 3", "workrequest_category_id" => wkreq_cat2c.id}
+wkreq_subcat1 = %{"name" => "Electrical Subcategory 1", "workrequest_category_id" => wkreq_cat1c.id, "response_tat" => 30, "resolution_tat" => 60}
+wkreq_subcat2 = %{"name" => "Electrical Subcategory 2", "workrequest_category_id" => wkreq_cat1c.id, "response_tat" => 20, "resolution_tat" => 60}
+wkreq_subcat3 = %{"name" => "Electrical Subcategory 3", "workrequest_category_id" => wkreq_cat1c.id, "response_tat" => 10, "resolution_tat" => 120}
+wkreq_subcat4 = %{"name" => "Mechnical Subcategory 1", "workrequest_category_id" => wkreq_cat2c.id, "response_tat" => 15, "resolution_tat" => 50}
+wkreq_subcat5 = %{"name" => "Mechnical Subcategory 2", "workrequest_category_id" => wkreq_cat2c.id, "response_tat" => 30, "resolution_tat" => 40}
+wkreq_subcat6 = %{"name" => "Mechnical Subcategory 3", "workrequest_category_id" => wkreq_cat2c.id, "response_tat" => 10, "resolution_tat" => 60}
 
 {:ok, wkreq_subcat1c} = Ticket.create_workrequest_subcategory(wkreq_subcat1, "inc_bata")
 {:ok, wkreq_subcat2c} = Ticket.create_workrequest_subcategory(wkreq_subcat2, "inc_bata")
