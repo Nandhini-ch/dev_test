@@ -89,6 +89,13 @@ defmodule Inconn2Service.Dashboards do
     #   }
     # }
 
+    completed_precentage =
+      if total_count != 0 do
+        completed_work_orders / total_count * 100 |> Float.ceil(2)
+      else
+        0
+      end
+
     %{
       dataset: [
         %{name: "Completed Work Orders", y: completed_work_orders},
@@ -98,7 +105,7 @@ defmodule Inconn2Service.Dashboards do
       additional_information: %{
         completed_work_orders: %{
           number: completed_work_orders,
-          percentage: completed_work_orders / total_count * 100 |> Float.ceil(2)
+          percentage: completed_precentage
         }
       }
     }
