@@ -15,6 +15,8 @@ defmodule Inconn2Service.Dashboards do
     join: wr in WorkRequest, on: wo.work_request_id == wr.id,
     select: %{work_order: wo, work_request: wr}
 
+    query_params = rectify_query_params(query_params)
+
 
     dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
@@ -70,6 +72,9 @@ defmodule Inconn2Service.Dashboards do
 
   def work_order_linear_chart(prefix, query_params) do
     main_query = from wo in WorkOrder, where: wo.type not in ["TKT"]
+
+    query_params = rectify_query_params(query_params)
+
 
     dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
