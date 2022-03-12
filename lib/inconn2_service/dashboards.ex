@@ -19,7 +19,7 @@ defmodule Inconn2Service.Dashboards do
     dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, rectify_query_params(query_params), prefix) |> Repo.all(prefix: prefix)
 
 
     open_tickets = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end)
@@ -71,7 +71,7 @@ defmodule Inconn2Service.Dashboards do
     dynamic_query = get_dynamic_query_for_workflow(main_query, rectify_query_params(query_params), prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, rectify_query_params(query_params), prefix) |> Repo.all(prefix: prefix)
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
@@ -199,6 +199,7 @@ defmodule Inconn2Service.Dashboards do
 
 
   def get_hours_for_asset(asset, type, query_params, prefix) do
+    query_params = rectify_query_params(query_params)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
