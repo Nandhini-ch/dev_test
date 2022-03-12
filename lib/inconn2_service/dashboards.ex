@@ -197,6 +197,7 @@ defmodule Inconn2Service.Dashboards do
     |> Enum.map(fn a -> Map.put_new(a, :asset_type, "L") end)
   end
 
+
   def get_hours_for_asset(asset, type, query_params, prefix) do
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
@@ -275,14 +276,14 @@ defmodule Inconn2Service.Dashboards do
 
   def get_locations_assets(prefix, query_params) do
     main_query = from l in Location
-    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    dynamic_query = get_dynamic_query_for_assets(main_query, rectify_query_params(query_params))
     Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "L") end)
   end
 
 
   def get_equipment_assets(prefix, query_params) do
     main_query = from e in Equipment
-    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    dynamic_query = get_dynamic_query_for_assets(main_query, rectify_query_params(query_params))
     Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "E") end)
   end
 
@@ -292,11 +293,21 @@ defmodule Inconn2Service.Dashboards do
       {"asset_category_id", asset_category_id}, main_query ->
         from q in main_query, where: q.asset_category_id == ^asset_category_id
 
+
       {"site_id", site_id}, main_query ->
         from q in main_query, where: q.site_id == ^site_id
 
       {"asset_id", asset_id}, main_query ->
         from q in main_query, where: q.asset_id == ^asset_id
+
+      {"type", "current_running"}, main_query ->
+        from q in main_query, where: q.status in ["ON", "OFF"]
+
+      {"type", "critical_asset"}, main_query ->
+        from q in main_query, where: q.criticality == 1
+
+      {"type", "breakdown"}, main_query ->
+        from q in main_query, where: q.status not in ["ON","OFF"]
 
       _ , main_query ->
         main_query
