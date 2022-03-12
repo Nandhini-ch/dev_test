@@ -196,6 +196,8 @@ defmodule Inconn2Service.Dashboards do
   def get_equipment_working_hours(prefix, query_params) do
     main_query = from e in Equipment
 
+    query_params = rectify_query_params(query_params)
+
     get_dynamic_query_for_assets(main_query, query_params)
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn a -> Map.put_new(a, :asset_type, "E") end)
@@ -203,6 +205,8 @@ defmodule Inconn2Service.Dashboards do
 
   def get_location_working_hours(prefix, query_params) do
     main_query = from l in Location
+
+    query_params = rectify_query_params(query_params)
 
     get_dynamic_query_for_assets(main_query, query_params)
     |> Repo.all(prefix: prefix)
@@ -305,7 +309,6 @@ defmodule Inconn2Service.Dashboards do
     Enum.reduce(query_params, main_query, fn
       {"asset_category_id", asset_category_id}, main_query ->
         from q in main_query, where: q.asset_category_id == ^asset_category_id
-
 
       {"site_id", site_id}, main_query ->
         from q in main_query, where: q.site_id == ^site_id
