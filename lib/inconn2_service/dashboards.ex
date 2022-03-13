@@ -165,7 +165,7 @@ defmodule Inconn2Service.Dashboards do
 
   def calculate_average(list) do
     if length(list) == 0 do
-      0
+      0.0
     else
       Enum.sum(list)/length(list)
     end
