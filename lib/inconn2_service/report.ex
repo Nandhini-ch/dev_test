@@ -223,8 +223,16 @@ defmodule Inconn2Service.Report do
 
   def html_bootstrap_footer, do: "</body></html>"
 
-  def csg_workorder_report(prefix) do
-    date = Date.utc_today |> Date.add(-1)
+  def csg_workorder_report(prefix, query_params) do
+    from_date = query_params["date"]
+    date =
+      if from_date != nil do
+        Date.from_iso8601!(from_date)
+      else
+        Date.utc_today |> Date.add(-1)
+      end
+
+    IO.inspect(date)
 
     header = ~s(<p style="float:left">Site:CACIPL-Continental South Gate</p><p style="float:right">Date: #{Date.utc_today}</p>)
     heading = ~s(<table border=1px solid black style="border-collapse: collapse" width="100%"><th></th><th></th><th>7:00</th><th>9:00</th><th>11:00</th><th>13:00</th><th>15:00</th><th>17:00</th><th>19:00</th>)
@@ -262,10 +270,20 @@ defmodule Inconn2Service.Report do
 
     IO.inspect(data)
 
-    yes_percent = yes_count/(yes_count + no_count) * 100 |> Float.ceil(2)
-    no_percent = no_count/(yes_count + no_count) * 100 |> Float.ceil(2)
+    yes_percent =
+      if yes_count + no_count != 0 do
+        yes_count/(yes_count + no_count) * 100 |> Float.ceil(2)
+      else
+        0
+      end
+    no_percent =
+      if yes_count + no_count != 0 do
+        no_count/(yes_count + no_count) * 100 |> Float.ceil(2)
+      else
+        0
+      end
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Total: #{yes_count + no_count}, Completed: #{yes_count}(#{yes_percent}), Not Completed: #{no_count}(#{no_percent})") <> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Total: #{yes_count + no_count}, Completed: #{yes_count}(#{yes_percent}%), Not Completed: #{no_count}(#{no_percent}%)") <> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"])
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 
