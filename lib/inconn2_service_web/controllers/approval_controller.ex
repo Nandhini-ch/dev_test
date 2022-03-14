@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.ApprovalController do
     render(conn, "index.json", approvals: approvals)
   end
 
+  def create_multiple_approval(conn, %{"work_requests_params" => work_requests_params}) do
+    result = Ticket.create_multiple_approval(work_requests_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "multiple_create.json", result: result)
+  end
+
   def create(conn, %{"approval" => approval_params}) do
     with {:ok, %Approval{} = approval} <- Ticket.create_approval(approval_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn

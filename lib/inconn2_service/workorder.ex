@@ -22,7 +22,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
   alias Inconn2Service.Measurements
-  # alias Inconn2Service.Ticket
+  alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
 
@@ -982,15 +982,29 @@ defmodule Inconn2Service.Workorder do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
           record_meter_readings(work_order, updated_work_order, prefix)
+          change_ticket_status(work_order, updated_work_order, user, prefix)
           result
       _ ->
         result
     end
   end
 
+
   defp record_meter_readings(work_order, updated_work_order, prefix) do
     if work_order.status != "cp" and updated_work_order.status == "cp" do
       Measurements.record_meter_readings_from_work_order(work_order, prefix)
+      updated_work_order
+    else
+      updated_work_order
+    end
+  end
+
+
+  defp change_ticket_status(old_work_order, updated_work_order, user, prefix) do
+    if updated_work_order.type == "TKT" and old_work_order.status != "cp" and updated_work_order.status == "cp" do
+      work_request = Ticket.get_work_request!(updated_work_order.work_request_id, prefix)
+      Ticket.update_work_request(work_request, %{"status" => "CP"}, prefix, user)
+      updated_work_order
     else
       updated_work_order
     end

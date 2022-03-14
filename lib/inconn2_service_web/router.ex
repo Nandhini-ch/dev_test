@@ -170,6 +170,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
+    get "/workrequest_categories_with_helpdesk_user", WorkrequestCategoryController, :index_with_helpdesk_user
     put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
     put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
 
@@ -178,16 +179,22 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/category_helpdesks", CategoryHelpdeskController, except: [:new, :edit]
 
+    get "/work_requests_for_actions", WorkRequestController, :index_for_actions
+    get "/work_requests/raised", WorkRequestController, :index_for_raised_user
+    get "/work_requests/assigned", WorkRequestController, :index_for_assigned_user
+    get "/work_requests/approvals", WorkRequestController, :index_approval_required
+    get "/work_requests/category_helpdesk", WorkRequestController, :index_tickets_of_helpdesk_user
+    get "/work_requests/acknowledge", WorkRequestController, :index_for_acknowledgement
+
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
     put "/update_work_requests", WorkRequestController, :update_multiple
-    get "/work_requests_for_user", WorkRequestController, :index_for_user
-    get "/work_request_approvals", WorkRequestController, :index_approval_required
+
     get "/work_requests/:work_request_id/attachment", WorkRequestController, :get_attachment
-    get "/work_requests_for_category_helpdesk_user", WorkRequestController, :index_tickets_of_helpdesk_user
     # resources "/workrequest_status_tracks", WorkrequestStatusTrackController, [:new, :edit]
     get "/work_requests/:work_request_id/workrequest_status_tracks", WorkrequestStatusTrackController, :index_for_work_request
 
     resources "/approvals", ApprovalController, except: [:new, :edit]
+    post "/approve_multiple_work_request", ApprovalController, :create_multiple_approval
     get "/work_request/:work_request_id/approvals", ApprovalController, :approvals_for_work_request
 
     resources "/suppliers", SupplierController, except: [:new, :edit]

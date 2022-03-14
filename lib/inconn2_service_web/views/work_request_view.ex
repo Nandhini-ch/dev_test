@@ -6,6 +6,17 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
     %{data: render_many(work_requests, WorkRequestView, "work_request.json")}
   end
 
+  def render("index_for_actions.json", %{work_requests: work_requests}) do
+    %{
+      data:
+        %{
+          raised_by_me: render_many(work_requests.raised_by_me, WorkRequestView, "work_request.json"),
+          to_be_closed: render_many(work_requests.to_be_closed, WorkRequestView, "work_request.json"),
+          helpdesk: render_many(work_requests.helpdesk, WorkRequestView, "work_request.json")
+        }
+    }
+  end
+
   def render("show.json", %{work_request: work_request}) do
     %{data: render_one(work_request, WorkRequestView, "work_request.json")}
   end
@@ -29,6 +40,8 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       status: work_request.status,
       is_approvals_required: work_request.is_approvals_required,
       approvals_required: work_request.approvals_required,
+      response_tat: work_request.response_tat,
+      resolution_tat: work_request.resolution_tat,
       work_order_id: work_request.work_order_id}
   end
 end
