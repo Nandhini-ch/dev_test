@@ -414,10 +414,10 @@ defmodule Inconn2Service.Ticket do
       site_dt = get_site_date_time(work_request, prefix)
       case status do
         "AS" ->
-            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
             change(cs, %{response_tat: tat})
         "CP" ->
-            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
               change(cs, %{resolution_tat: tat})
           _ ->
             cs
