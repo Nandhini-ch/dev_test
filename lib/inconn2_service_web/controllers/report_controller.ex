@@ -48,7 +48,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_inventory_report(conn, _params) do
-    inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix)
+    inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "inventory_report.json", inventory_info: inventory_report_data)
   end
 end

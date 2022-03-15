@@ -2,12 +2,246 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
+  alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
+
+
+
+  def work_status_report(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+
+    main_query =
+      from wo in WorkOrder,
+      left_join: u in User, on: wo.user_id == u.id,
+      left_join: e in Employee, on: u.employee_id == e.id,
+      select: %{
+        site_id: wo.site_id,
+        asset_id: wo.asset_id,
+        asset_type: wo.asset_type,
+        type: wo.type,
+        status: wo.status,
+        assigned_to: e.first_name,
+        start_time: wo.start_time,
+        completed_time: wo.completed_time,
+        username: u.username,
+        first_name: e.first_name,
+        last_name: e.last_name,
+      }
+
+
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"asset_id", asset_id}, main_query ->
+          from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
+
+        {"status", status}, main_query ->
+          from q in main_query, where: q.status == ^status
+
+        {"user_id", user_id}, main_query ->
+          from q in main_query, where: q.user_id == ^user_id
+
+        _, main_query ->
+          main_query
+      end)
+
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
+    query_with_dates = from dq in dynamic_query, where: dq.scheduled_date >= ^from_date and dq.scheduled_date <= ^to_date
+
+
+    work_orders = Repo.all(query_with_dates, prefix: prefix)
+
+    work_orders_with_asset =
+      Enum.map(work_orders, fn work_order ->
+        asset =
+          case work_order.asset_type do
+            "E" -> AssetConfig.get_equipment!(work_order.asset_id, prefix)
+            "L" -> AssetConfig.get_location!(work_order.asset_id, prefix)
+          end
+          Map.put_new(work_order, :asset, asset)
+      end)
+
+
+    Enum.map(work_orders_with_asset, fn wo ->
+      {asset_name, asset_code} =
+        case wo.asset_type do
+          "E" ->
+            {wo.asset.name, wo.asset.equipment_code}
+
+          "L" ->
+            {wo.asset.name, wo.asset.location_code}
+        end
+
+      name =
+        if wo.first_name == nil, do: wo.username, else: wo.first_name
+
+      manhours_consumed =
+        cond do
+          wo.start_time == nil and wo.completed_time == nil ->
+            0
+
+          wo.completed_time == nil ->
+            Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
+
+          true ->
+            Time.diff(wo.completed_time, wo.start_time)
+        end
+
+      %{
+        asset_name: asset_name,
+        asset_code: asset_code,
+        type: wo.type,
+        status: wo.status,
+        assigned_to: name,
+        manhours_consumed: manhours_consumed * 3600
+      }
+    end)
+  end
+
+
+  def inventory_report(prefix, query_params) do
+
+    query_params = rectify_query_params(query_params)
+
+    main_query =
+      from it in InventoryTransaction,
+            join: i in Item, on: i.id == it.item_id,
+            join: st in InventoryStock, on: st.item_id == i.id,
+            join: u in UOM, on: u.id == it.uom_id,
+            join: il in InventoryLocation, on: st.inventory_location_id == il.id,
+            join: s in Supplier, on: s.id == it.supplier_id,
+            select:
+              %{
+                item_name: i.name,
+                item_type: i.type,
+                asset_category_ids: i.asset_categories_ids,
+                quantity_held: st.quantity,
+                transaction_quantity: it.quantity,
+                reorder_level: i.reorder_quantity,
+                uom: u.symbol,
+                store_name: il.name,
+                aisle: i.aisle,
+                bin: i.bin,
+                row: i.row,
+                cost: it.cost,
+                supplier: s.name,
+                transaction_type: it.transaction_type,
+                inserted_at: it.inserted_at }
+
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"transaction_type", transaction_type}, main_query ->
+          from q in main_query, where: q.transaction_type == ^transaction_type
+
+        {"asset_category_id", asset_category_id}, main_query ->
+          from q in main_query, where: ^asset_category_id in q.asset_categories_ids
+
+        _, main_query ->
+          main_query
+      end)
+
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    naive_from_date = convert_date_to_naive_date_time(from_date)
+    naive_to_date = convert_date_to_naive_date_time(to_date)
+
+    IO.inspect(naive_from_date > naive_to_date)
+
+    # query_with_dates = from dq in dynamic_query, where: dq.inserted_at >= ^naive_from_date and dq.inserted_at <= ^naive_to_date
+
+    inventory_transactions = Repo.all(dynamic_query, prefix: prefix)
+
+
+    Enum.map(inventory_transactions, fn it ->
+
+      asset_category =
+        Enum.map(it.asset_category_ids, fn id ->
+          Inconn2Service.AssetConfig.get_asset_category!(id, prefix).name
+        end) |> Enum.join(",")
+
+      IO.inspect(it.inserted_at >= naive_from_date)
+
+      %{
+        item_name: it.item_name,
+        item_type: it.item_type,
+        asset_category: asset_category,
+        quantity_held: it.quantity_held,
+        reorder_level: it.reorder_level,
+        uom: it.uom,
+        store_name: it.store_name,
+        aisle_bin_row: it.aisle <> "-" <> it.bin <> "-" <> it.row,
+        supplier: it.supplier
+      }
+    end)
+  end
+
+  defp get_site_time(site_id, prefix) do
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    result = NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
+    NaiveDateTime.to_time(result)
+  end
+
+  # def asset_status_reports(query_params, prefix) do
+  #   {asset_type, asset_ids} = get_assets_by_asset_category_id(query_params["asset_category_id"], prefix)
+  # end
+
+
+  def get_assets_by_asset_category_id(asset_category_id, prefix) do
+    asset_category = AssetConfig.get_asset_category!(asset_category_id, prefix)
+    assets =
+      case asset_category.asset_type do
+        "L" ->
+          Location |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+
+        "E" ->
+          Equipment |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+      end
+    {asset_category.asset_type, Enum.map(assets, fn a -> a.id end)}
+  end
+
+  defp rectify_query_params(query_params) do
+    Enum.filter(query_params, fn {key, value} ->
+      if value != "null", do: {key, value}
+    end) |> Enum.into(%{})
+  end
+
+  defp get_dates_for_query(nil, nil, site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    {
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1),
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+    }
+  end
+
+  defp get_dates_for_query(from_date, nil, site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    {
+      Date.from_iso8601!(from_date),
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+    }
+  end
+
+  defp get_dates_for_query(from_date, to_date, _site_id, _prefix) do
+    {Date.from_iso8601!(from_date), Date.from_iso8601!(to_date)}
+  end
+
+  defp convert_date_to_naive_date_time(date) do
+    NaiveDateTime.new!(date, Time.new!(0, 0, 0))
+  end
+
+
+  IO.inspect("---------------------------------------------------------------------------------")
 
   def put_sr_no(list) do
     IO.inspect(list)
@@ -348,36 +582,36 @@ defmodule Inconn2Service.Report do
   end
 
 
-  def inventory_report(prefix) do
-    query = from it in InventoryTransaction,
-            join: i in Item, on: i.id == it.item_id,
-            join: st in InventoryStock, on: st.item_id == i.id,
-            join: u in UOM, on: u.id == it.uom_id,
-            join: il in InventoryLocation, on: st.inventory_location_id == il.id,
-            join: s in Supplier, on: s.id == it.supplier_id,
-            select: { i.name, i.type, i.asset_categories_ids, st.quantity, it.quantity, i.reorder_quantity, u.symbol, il.name, i.aisle, i.bin, i.row, it.cost, s.name, it.transaction_type }
+  # def inventory_report(prefix) do
+  #   query = from it in InventoryTransaction,
+  #           join: i in Item, on: i.id == it.item_id,
+  #           join: st in InventoryStock, on: st.item_id == i.id,
+  #           join: u in UOM, on: u.id == it.uom_id,
+  #           join: il in InventoryLocation, on: st.inventory_location_id == il.id,
+  #           join: s in Supplier, on: s.id == it.supplier_id,
+  #           select: { i.name, i.type, i.asset_categories_ids, st.quantity, it.quantity, i.reorder_quantity, u.symbol, il.name, i.aisle, i.bin, i.row, it.cost, s.name, it.transaction_type }
 
-    inventory_items = Repo.all(query, prefix: prefix)
+  #   inventory_items = Repo.all(query, prefix: prefix)
 
-    Enum.map(inventory_items, fn inventory_item ->
-      %{
-        item_name: elem(inventory_item, 0),
-        item_type: elem(inventory_item, 1),
-        asset_categories: elem(inventory_item, 2),
-        quantity_held: elem(inventory_item, 3),
-        transaction_quantity: elem(inventory_item, 4),
-        reorder_level: elem(inventory_item, 5),
-        uom: elem(inventory_item, 6),
-        store_name: elem(inventory_item, 7),
-        aisle: elem(inventory_item, 8),
-        bin: elem(inventory_item, 9),
-        row: elem(inventory_item, 10),
-        cost: elem(inventory_item, 11),
-        supplier: elem(inventory_item, 12),
-        transaction_type: elem(inventory_item, 13)
-      }
-    end)
-  end
+  #   Enum.map(inventory_items, fn inventory_item ->
+  #     %{
+  #       item_name: elem(inventory_item, 0),
+  #       item_type: elem(inventory_item, 1),
+  #       asset_categories: elem(inventory_item, 2),
+  #       quantity_held: elem(inventory_item, 3),
+  #       transaction_quantity: elem(inventory_item, 4),
+  #       reorder_level: elem(inventory_item, 5),
+  #       uom: elem(inventory_item, 6),
+  #       store_name: elem(inventory_item, 7),
+  #       aisle: elem(inventory_item, 8),
+  #       bin: elem(inventory_item, 9),
+  #       row: elem(inventory_item, 10),
+  #       cost: elem(inventory_item, 11),
+  #       supplier: elem(inventory_item, 12),
+  #       transaction_type: elem(inventory_item, 13)
+  #     }
+  #   end)
+  # end
 
   def report_heading(heading) do
     "</b><center><h1>#{heading}</h1></center>"
