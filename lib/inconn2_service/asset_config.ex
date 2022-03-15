@@ -657,7 +657,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_location(%Location{} = location, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(location)
 
-    {:ok, updated_location} =
+    result =
       cond do
         Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
           new_parent_id = attrs["parent_id"]
@@ -677,7 +677,14 @@ defmodule Inconn2Service.AssetConfig do
       end
 
     # create_status_track_for_asset(result, location, attrs, "L", user, prefix)
-    update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
+
+    case result do
+      {:ok, updated_location} ->
+        update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
+
+      _ ->
+        result
+    end
 
   end
 
@@ -1058,7 +1065,7 @@ defmodule Inconn2Service.AssetConfig do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment(%Equipment{} = equipment, attrs, prefix, user) do
+  def update_equipment(%Equipment{} = equipment, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(equipment)
 
     result =
@@ -1081,6 +1088,14 @@ defmodule Inconn2Service.AssetConfig do
 
           Repo.update(eq_cs, prefix: prefix)
       end
+
+    case result do
+      {:ok, updated_equipment} ->
+        update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
+
+      _ ->
+        result
+    end
 
     create_status_track_for_asset(result, equipment, attrs, "E", user, prefix)
   end
