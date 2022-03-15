@@ -56,7 +56,17 @@ defmodule Inconn2Service.Dashboards do
     #   }
     # }
 
+    data_available =
+      case length(work_orders) do
+        0 ->
+          false
+
+        _ ->
+          true
+      end
+
     %{
+      data_available: data_available,
       dataset: [
         %{name: "Open Ticket Count", y: open_ticket_count},
         %{name: "Closed Ticket Count", y: closed_ticket_count}
@@ -107,7 +117,17 @@ defmodule Inconn2Service.Dashboards do
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
 
+    data_available =
+      case total_count do
+        0 ->
+          false
+
+        _ ->
+          true
+      end
+
     %{
+      data_available: data_available,
       dataset: [
         %{name: "Completed Work Orders", y: completed_work_orders},
         %{name: "Incomplete Work Orders", y: incomplete_work_orders}
@@ -153,6 +173,7 @@ defmodule Inconn2Service.Dashboards do
     # }
 
     %{
+      # data_available: data_available,
       dataset: [
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
