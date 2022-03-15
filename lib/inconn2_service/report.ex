@@ -106,7 +106,6 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-
   def inventory_report(prefix, query_params) do
 
     query_params = rectify_query_params(query_params)
@@ -184,8 +183,6 @@ defmodule Inconn2Service.Report do
       }
     end)
   end
-
-
 
   defp get_site_time(site_id, prefix) do
     site = Repo.get!(Site, site_id, prefix: prefix)
