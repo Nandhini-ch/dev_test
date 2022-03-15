@@ -377,7 +377,7 @@ defmodule Inconn2Service.Ticket do
     |> validate_assigned_user_id(prefix)
     |> validate_approvals_required_ids(prefix)
     |> is_approvals_required(user, prefix)
-    # |> approval()
+    |> calculate_tat(work_request, prefix)
     |> Repo.update(prefix: prefix)
 
     case updated_work_request do
@@ -406,6 +406,32 @@ defmodule Inconn2Service.Ticket do
   # defp create_workorder_from_ticket(work_request, _user, _prefix, _) do
   #   {:ok, work_request}
   # end
+
+  defp calculate_tat(cs, work_request, prefix) do
+    status = get_change(cs, :status)
+    if status != nil do
+      raised_dt = get_field(cs, :raised_date_time)
+      site_dt = get_site_date_time(work_request, prefix)
+      case status do
+        "AS" ->
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+            change(cs, %{response_tat: tat})
+        "CP" ->
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+              change(cs, %{resolution_tat: tat})
+          _ ->
+            cs
+      end
+    else
+      cs
+    end
+  end
+
+  defp get_site_date_time(work_request, prefix) do
+    site = Repo.get!(Site, work_request.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
+  end
 
   defp update_status_track(work_request, prefix) do
     case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
