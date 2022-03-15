@@ -821,12 +821,23 @@ defmodule Inconn2Service.Workorder do
               |> validate_user_id(prefix)
               |> validate_workorder_template_id(prefix)
               |> validate_workorder_schedule_id(prefix)
+              |> prefill_asset_type(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
           create_status_track(work_order, user, prefix)
       _ ->
         result
+    end
+  end
+
+  defp prefill_asset_type(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id, nil)
+    if workorder_template_id != nil do
+      workorder_template = get_workorder_template!(workorder_template_id, prefix)
+      change(cs, %{asset_type: workorder_template.asset_type})
+    else
+      cs
     end
   end
 
@@ -1880,6 +1891,7 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
     WorkorderStatusTrack.changeset(workorder_status_track, attrs)
   end
+
   defp get_asset(workorder_schedule, prefix) do
     case workorder_schedule.asset_type do
       "L" ->
@@ -1952,7 +1964,7 @@ defmodule Inconn2Service.Workorder do
     asset = get_asset(workorder_schedule, prefix)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
-                                            "asset_type" => workorder_template.asset_type,
+                                            # "asset_type" => workorder_template.asset_type,
                                             "type" => "PRV",
                                             "scheduled_date" => workorder_schedule.next_occurrence_date,
                                             "scheduled_time" => workorder_schedule.next_occurrence_time,

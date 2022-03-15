@@ -15,6 +15,11 @@ defmodule Inconn2ServiceWeb.ReportController do
     |> send_resp(:ok, work_order_report_data)
   end
 
+  def get_workflow_report(conn, _params) do
+    result = Report.work_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    render(conn, "work_order_report.json", work_order_info: result)
+  end
+
   def get_workorder_status_report(conn, _) do
     workorder_status_report_data = Report.csg_workorder_report(conn.assigns.sub_domain_prefix)
     conn

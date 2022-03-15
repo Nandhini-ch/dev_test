@@ -185,6 +185,8 @@ defmodule Inconn2Service.Report do
     end)
   end
 
+
+
   defp get_site_time(site_id, prefix) do
     site = Repo.get!(Site, site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
@@ -195,7 +197,6 @@ defmodule Inconn2Service.Report do
   # def asset_status_reports(query_params, prefix) do
   #   {asset_type, asset_ids} = get_assets_by_asset_category_id(query_params["asset_category_id"], prefix)
   # end
-
 
   def get_assets_by_asset_category_id(asset_category_id, prefix) do
     asset_category = AssetConfig.get_asset_category!(asset_category_id, prefix)
@@ -239,7 +240,6 @@ defmodule Inconn2Service.Report do
   defp convert_date_to_naive_date_time(date) do
     NaiveDateTime.new!(date, Time.new!(0, 0, 0))
   end
-
 
   IO.inspect("---------------------------------------------------------------------------------")
 
