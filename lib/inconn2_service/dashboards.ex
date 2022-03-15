@@ -248,10 +248,9 @@ defmodule Inconn2Service.Dashboards do
     last_entry = Repo.one(query, prefix: prefix)
 
     cond do
-      last_entry.status_changed in ["ON", "OFF"] ->
+      last_entry != nil and last_entry.status_changed in ["ON", "OFF"] ->
         IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
         NaiveDateTime.diff(to_naive, from_naive) / 3600
-
 
       true ->
         0
