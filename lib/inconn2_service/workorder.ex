@@ -698,6 +698,10 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_active_work_orders(prefix) do
+    query = from wo in WorkOrder, where: wo.status != "cp"
+    Repo.all(query, prefix: prefix) |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
 
   def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
     [asset_type, uuid] = String.split(qr_string, ":")
@@ -730,7 +734,7 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
-    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status != "cp"
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
     asset_category_workorders =
@@ -741,8 +745,8 @@ defmodule Inconn2Service.Workorder do
 
         employee ->
           query =
-            from wo in WorkOrder,
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+            from wo in WorkOrder, where: wo.status != "cp",
+              left_join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
