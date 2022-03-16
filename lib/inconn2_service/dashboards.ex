@@ -319,7 +319,7 @@ defmodule Inconn2Service.Dashboards do
 
     cond do
       last_entry != nil and last_entry.status_changed not in ["ON", "OFF"] ->
-        IO.insoect(last_entry)
+        IO.inspect(last_entry)
         IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
         NaiveDateTime.diff(to_naive, from_naive) / 3600
 
