@@ -505,6 +505,17 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def search_locations(name_text, site_id, prefix) do
+    if String.length(name_text) < 3 do
+      []
+    else
+      search_text = "%" <> name_text <> "%"
+
+      from(l in Location, where: l.site_id == ^site_id and ilike(l.name, ^search_text), order_by: l.name)
+      |> Repo.all(prefix: prefix)
+    end
+  end
+
   def list_locations(site_id, query_params, prefix) do
     Location
     |> Repo.add_active_filter(query_params)
@@ -853,6 +864,17 @@ defmodule Inconn2Service.AssetConfig do
     Equipment
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+  end
+
+  def search_equipments(name_text, site_id, prefix) do
+    if String.length(name_text) < 3 do
+      []
+    else
+      search_text = "%" <> name_text <> "%"
+
+      from(e in Equipment, where: e.site_id == ^site_id and ilike(e.name, ^search_text), order_by: e.name)
+      |> Repo.all(prefix: prefix)
+    end
   end
 
   def list_equipments(site_id, query_params, prefix) do

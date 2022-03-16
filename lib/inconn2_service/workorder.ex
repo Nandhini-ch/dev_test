@@ -22,6 +22,8 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
   alias Inconn2Service.Ticket
+  alias Inconn2Service.Measurements
+  alias Inconn2Service.Ticket
 
   @doc """
   Returns the list of workorder_templates.
@@ -1022,10 +1024,8 @@ defmodule Inconn2Service.Workorder do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
 
-          change_ticket_status(work_order, updated_work_order, user, prefix)
-
           record_meter_readings(work_order, updated_work_order, prefix)
-
+          change_ticket_status(work_order, updated_work_order, user, prefix)
           result
       _ ->
         result

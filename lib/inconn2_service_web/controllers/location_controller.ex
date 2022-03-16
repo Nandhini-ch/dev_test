@@ -7,8 +7,14 @@ defmodule Inconn2ServiceWeb.LocationController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, %{"site_id" => site_id}) do
-    locations = AssetConfig.list_locations(site_id, conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", locations: locations)
+    case Map.get(conn.query_params, "name", nil) do
+      nil ->
+        locations = AssetConfig.list_locations(site_id, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", locations: locations)
+      name ->
+        locations = AssetConfig.search_locations(name, site_id, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", locations: locations)
+    end
   end
 
   def display_qr_code(conn, %{"id" => id}) do
