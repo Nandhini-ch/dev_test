@@ -68,8 +68,8 @@ defmodule Inconn2Service.Dashboards do
     %{
       data_available: data_available,
       dataset: [
-        %{name: "Open Ticket Count", y: open_ticket_count},
-        %{name: "Closed Ticket Count", y: closed_ticket_count}
+        %{name: "Open", y: open_ticket_count},
+        %{name: "Closed", y: closed_ticket_count}
       ],
       total_count: Enum.count(work_orders),
       additional_information: %{
@@ -153,8 +153,8 @@ defmodule Inconn2Service.Dashboards do
     %{
       data_available: data_available,
       dataset: [
-        %{name: "Completed Work Orders", y: completed_work_orders},
-        %{name: "Incomplete Work Orders", y: incomplete_work_orders}
+        %{name: "Completed", y: completed_work_orders},
+        %{name: "Incomplete", y: incomplete_work_orders}
       ],
       total_count: total_count,
       additional_information: %{
