@@ -168,10 +168,12 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_for_raised_user(user, prefix) do
-    WorkRequest |> where([requested_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    from(w in WorkRequest, where: w.requested_user_id == ^user.id and w.status not in ["CP", "CL"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
   def list_work_requests_for_assigned_user(user, prefix) do
+    from(w in WorkRequest, where: w.assigned_user_id == ^user.id and w.status not in ["CP", "CL"])
     WorkRequest |> where([assigned_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
@@ -199,7 +201,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
   end
 
