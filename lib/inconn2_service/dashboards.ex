@@ -93,23 +93,47 @@ defmodule Inconn2Service.Dashboards do
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
+
+    completed_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true end) |> Enum.count()
+
     total_count = Enum.count(work_orders)
 
-    # %{
-    #   labels: ["Completed Work Orders", "Incomplete Work Orders"],
-    #   datasets: [completed_work_orders, incomplete_work_orders],
-    #   total_count: total_count,
-    #   additional_information: %{
-    #     completed_work_orders: %{
-    #       number: completed_work_orders,
-    #       percentage: div(completed_work_orders,total_count) * 100
-    #     }
-    #   }
-    # }
+    open_work_orders_with_asset =
+      Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end)
+      |> Enum.map(fn wo ->
+          asset =
+            case wo.asset_type do
+              "L" ->
+                AssetConfig.get_location(wo.asset_id, prefix)
 
-    completed_precentage =
+              "E" ->
+                AssetConfig.get_equipment(wo.asset_id, prefix)
+            end
+
+            asset_category = AssetConfig.get_asset_category!(asset.asset_category_id, prefix)
+            Map.put_new(wo, :asset_category, asset_category)
+        end)
+        |> Enum.group_by(&(&1.asset_category.name))
+
+    open_count_with_asset_category =
+      Enum.map(open_work_orders_with_asset, fn {key, value} ->
+        %{
+          asset_category: key,
+          count: length(value)
+        }
+      end)
+
+
+    completed_percentage =
       if total_count != 0 do
         completed_work_orders / total_count * 100 |> Float.ceil(2)
+      else
+        0
+      end
+
+    completed_overdue_percentage =
+      if total_count != 0 do
+        completed_overdue_work_orders / total_count * 100 |> Float.ceil(2)
       else
         0
       end
@@ -136,8 +160,13 @@ defmodule Inconn2Service.Dashboards do
       additional_information: %{
         completed_work_orders: %{
           number: completed_work_orders,
-          percentage: completed_precentage
-        }
+          percentage: completed_percentage
+        },
+        completed_overdue_work_orders: %{
+          number: completed_overdue_work_orders,
+          precentage: completed_overdue_percentage
+        },
+        open_count_with_asset_category: open_count_with_asset_category
       },
       labels: form_date_list(from_date, to_date)
     }
