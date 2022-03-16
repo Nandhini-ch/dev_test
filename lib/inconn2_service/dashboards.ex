@@ -89,7 +89,7 @@ defmodule Inconn2Service.Dashboards do
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)|> Enum.map(fn wo -> add_overdue_flag(wo, prefix) end)
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
@@ -318,7 +318,7 @@ defmodule Inconn2Service.Dashboards do
     last_entry = Repo.one(query, prefix: prefix)
 
     cond do
-      last_entry != nil and last_entry.status_changed not in ["ON", "OFF"] ->
+      last_entry != nil && last_entry.status_changed not in ["ON", "OFF"] ->
         IO.inspect(last_entry)
         IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
         NaiveDateTime.diff(to_naive, from_naive) / 3600
@@ -338,6 +338,17 @@ defmodule Inconn2Service.Dashboards do
     {:ok, date_time} = DateTime.now(time_zone)
 
     NaiveDateTime.diff(DateTime.to_naive(date_time), last_status.changed_date_time) / 3600 + sum
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
+    end
   end
 
 
