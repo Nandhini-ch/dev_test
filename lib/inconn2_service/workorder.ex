@@ -363,6 +363,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
@@ -432,6 +433,40 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp validate_for_future_date(cs, prefix) do
+    first_occurrance_date = get_field(cs, :first_occurrance_date)
+    asset_id = get_field(cs, :asset_id, nil)
+    asset_type = get_field(cs, :asset_type, nil)
+    if asset_id != nil and asset_type != nil do
+      asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
+      if asset != nil do
+        {date, _time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
+        if first_occurrance_date != nil do
+          case Date.compare(first_occurrance_date, date) do
+            :gt ->
+              cs
+
+            :lt ->
+              add_error(cs, :first_occurance_date, "Has to be a date in the future")
+          end
+        else
+          cs
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
+
+  defp get_date_time_in_required_time_zone(site_id, prefix) do
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
+  end
+
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id, nil)
     first_date = get_field(cs, :first_occurrence_date, nil)
@@ -470,6 +505,7 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
