@@ -7,8 +7,14 @@ defmodule Inconn2ServiceWeb.EquipmentController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, %{"site_id" => site_id}) do
-    equipments = AssetConfig.list_equipments(site_id, conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", equipments: equipments)
+    case Map.get(conn.query_params, "name", nil) do
+      nil ->
+        equipments = AssetConfig.list_equipments(site_id, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", equipments: equipments)
+      name ->
+        equipments = AssetConfig.search_equipments(name, site_id, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", equipments: equipments)
+    end
   end
 
   def display_qr_code(conn, %{"id" => id}) do
