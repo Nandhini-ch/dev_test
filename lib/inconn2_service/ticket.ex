@@ -41,7 +41,7 @@ defmodule Inconn2Service.Ticket do
     Enum.map(categories, fn c ->
       helpdesk_users = Inconn2Service.Ticket.CategoryHelpdesk |> where([workrequest_category_id: ^c.id]) |> Repo.all(prefix: prefix)
       users = Enum.map(helpdesk_users, fn h -> Inconn2Service.Staff.get_user!(h.user_id, prefix) end)
-      Map.put_new(c, :users, users)
+      Map.put_new(c, :helpdesk_users, users)
     end)
   end
 
