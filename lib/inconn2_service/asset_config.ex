@@ -9,8 +9,10 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetConfig.Site
+  alias Inconn2Service.AssetConfig.AssetStatusTrack
+  alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
-  Inconn2Service.Account.Licensee
+  # alias Inconn2Service.Account.Licensee
 
   @doc """
   Returns the list of sites.
@@ -159,6 +161,17 @@ defmodule Inconn2Service.AssetConfig do
   """
   def change_site(%Site{} = site, attrs \\ %{}) do
     Site.changeset(site, attrs)
+  end
+
+  def get_assets_by_asset_category_id(asset_category_id, prefix) do
+    asset_category = get_asset_category!(asset_category_id, prefix)
+    case asset_category.asset_type do
+      "L" ->
+         Location |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+
+      "E" ->
+        Equipment |> where([asset_category_id: ^asset_category_id]) |> Repo.all(prefix: prefix)
+    end
   end
 
   alias Inconn2Service.AssetConfig.AssetCategory
@@ -580,7 +593,15 @@ defmodule Inconn2Service.AssetConfig do
       |> Location.changeset(attrs)
       |> check_asset_category_type_loc(prefix)
 
-    create_location_in_tree(parent_id, loc_cs, prefix)
+    result = create_location_in_tree(parent_id, loc_cs, prefix)
+
+    case result do
+      {:ok, location} ->
+        create_track_for_asset_status(location, "L", prefix)
+
+      _ ->
+        result
+    end
   end
 
   defp create_location_in_tree(nil, loc_cs, prefix) do
@@ -633,27 +654,96 @@ defmodule Inconn2Service.AssetConfig do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_location(%Location{} = location, attrs, prefix) do
+  def update_location(%Location{} = location, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(location)
 
-    cond do
-      Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
-        new_parent_id = attrs["parent_id"]
+    result =
+      cond do
+        Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+          new_parent_id = attrs["parent_id"]
 
-        loc_cs =
-          update_location_default_changeset_pipe(location, attrs, prefix)
-          |> check_asset_category_type_loc(prefix)
+          loc_cs =
+            update_location_default_changeset_pipe(location, attrs, prefix)
+            |> check_asset_category_type_loc(prefix)
 
-        update_location_in_tree(new_parent_id, loc_cs, location, prefix)
+          update_location_in_tree(new_parent_id, loc_cs, location, prefix)
 
-      true ->
-        loc_cs =
-          update_location_default_changeset_pipe(location, attrs, prefix)
-          |> check_asset_category_type_loc(prefix)
+        true ->
+          loc_cs =
+            update_location_default_changeset_pipe(location, attrs, prefix)
+            |> check_asset_category_type_loc(prefix)
 
-        Repo.update(loc_cs, prefix: prefix)
+          Repo.update(loc_cs, prefix: prefix)
+      end
+
+    # create_status_track_for_asset(result, location, attrs, "L", user, prefix)
+
+    case result do
+      {:ok, updated_location} ->
+        update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
+
+      _ ->
+        result
+    end
+
+  end
+
+  defp update_status_track_for_asset(asset, previous_status, _asset_type, _user, _prefix) when asset.status == previous_status do
+    {:ok, asset}
+  end
+
+  defp update_status_track_for_asset(asset, _previous_status, asset_type, user, prefix) do
+    update_last_status_record(asset, asset_type, prefix)
+    create_track_for_asset_status(asset, asset_type, prefix, user.id)
+  end
+
+  defp update_last_status_record(asset, asset_type, prefix) do
+    query =
+      from(ast in AssetStatusTrack,
+          where: ast.asset_id == ^asset.id and
+                ast.asset_type == ^asset_type,
+                order_by: [desc: ast.changed_date_time], limit: 1)
+
+    last_entry = Repo.one(query, prefix: prefix)
+
+    time_zone = get_site_time_zone_from_asset(asset.site_id, prefix)
+
+    {:ok, current_date_time} = DateTime.now(time_zone)
+
+    attrs = %{
+      "hours" => NaiveDateTime.diff(DateTime.to_naive(current_date_time), last_entry.changed_date_time) / 3600
+    }
+
+    IO.inspect("&&&&&&&&&&&&&&&&&&&&")
+    IO.inspect(attrs)
+    IO.inspect(NaiveDateTime.diff(DateTime.to_naive(current_date_time), last_entry.changed_date_time) /3600 )
+
+    update_asset_status_track(last_entry, attrs, prefix)
+  end
+
+  def create_status_track_for_asset(result, asset_before_insertion, attrs, asset_type, user, prefix) do
+    case result do
+      {:ok, asset} ->
+        if attrs["status"] != asset_before_insertion.status do
+          IO.inspect("Inside If")
+          asset_status_update_attrs = %{
+            "asset_id" => asset.id,
+            "asset_type" => asset_type,
+            "status_changed" => asset.status,
+            "user_id" => user.id,
+            "changed_date_time" => NaiveDateTime.utc_now(),
+          }
+          IO.inspect(create_asset_status_track(asset_status_update_attrs, prefix))
+          {:ok, asset}
+
+        else
+          {:ok, asset}
+        end
+      _ ->
+        result
     end
   end
+
 
   defp update_location_in_tree(nil, loc_cs, location, prefix) do
     descendents = HierarchyManager.descendants(location) |> Repo.all(prefix: prefix)
@@ -903,7 +993,16 @@ defmodule Inconn2Service.AssetConfig do
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
 
-    create_equipment_in_tree(parent_id, eq_cs, prefix)
+    result = create_equipment_in_tree(parent_id, eq_cs, prefix)
+
+    case result do
+      {:ok, equipment} ->
+        create_track_for_asset_status(equipment, "E", prefix)
+
+      _ ->
+        result
+    end
+
   end
 
   defp create_equipment_in_tree(nil, eq_cs, prefix) do
@@ -966,28 +1065,39 @@ defmodule Inconn2Service.AssetConfig do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment(%Equipment{} = equipment, attrs, prefix) do
+  def update_equipment(%Equipment{} = equipment, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(equipment)
 
-    cond do
-      Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
-        new_parent_id = attrs["parent_id"]
+    result =
+      cond do
+        Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+          new_parent_id = attrs["parent_id"]
 
-        eq_cs =
-          update_equipment_default_changeset_pipe(equipment, attrs, prefix)
-          |> check_asset_category_type_eq(prefix)
-          |> check_site_id_of_location(prefix)
+          eq_cs =
+            update_equipment_default_changeset_pipe(equipment, attrs, prefix)
+            |> check_asset_category_type_eq(prefix)
+            |> check_site_id_of_location(prefix)
 
-        update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
+          update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
-      true ->
-        eq_cs =
-          update_equipment_default_changeset_pipe(equipment, attrs, prefix)
-          |> check_asset_category_type_eq(prefix)
-          |> check_site_id_of_location(prefix)
+        true ->
+          eq_cs =
+            update_equipment_default_changeset_pipe(equipment, attrs, prefix)
+            |> check_asset_category_type_eq(prefix)
+            |> check_site_id_of_location(prefix)
 
-        Repo.update(eq_cs, prefix: prefix)
+          Repo.update(eq_cs, prefix: prefix)
+      end
+
+    case result do
+      {:ok, updated_equipment} ->
+        update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
+
+      _ ->
+        result
     end
+
+    create_status_track_for_asset(result, equipment, attrs, "E", user, prefix)
   end
 
   def update_active_status_for_equipment(%Equipment{} = equipment, equipment_params, prefix) do
@@ -1364,6 +1474,27 @@ defmodule Inconn2Service.AssetConfig do
     Party.changeset(party, attrs)
   end
 
+  defp create_track_for_asset_status(asset, asset_type, prefix, user_id \\ nil) do
+    time_zone = get_site_time_zone_from_asset(asset.site_id, prefix)
+    {:ok, date_time} = DateTime.now(time_zone)
+
+    attrs = %{
+      "asset_id" => asset.id,
+      "asset_type" => asset_type,
+      "changed_date_time" => DateTime.to_naive(date_time),
+      "status_changed" => asset.status,
+      "user_id" => user_id
+    }
+    create_asset_status_track(attrs, prefix)
+
+    {:ok, asset}
+  end
+
+  def get_site_time_zone_from_asset(site_id, prefix) do
+    site = get_site!(site_id, prefix)
+    site.time_zone
+  end
+
   defp handle_hierarchical_activation(resource, resource_params, module, prefix, parent_id) do
     resource
     |> module.changeset(resource_params)
@@ -1404,4 +1535,206 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_children({:error, cs}, _prefix), do: {:error, cs}
 
+
+  alias Inconn2Service.AssetConfig.AssetStatusTrack
+
+  @doc """
+  Returns the list of asset_status_tracks.
+
+  ## Examples
+
+      iex> list_asset_status_tracks()
+      [%AssetStatusTrack{}, ...]
+
+  """
+  def list_asset_status_tracks(prefix) do
+    Repo.all(AssetStatusTrack, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single asset_status_track.
+
+  Raises `Ecto.NoResultsError` if the Asset status track does not exist.
+
+  ## Examples
+
+      iex> get_asset_status_track!(123)
+      %AssetStatusTrack{}
+
+      iex> get_asset_status_track!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_asset_status_track!(id, prefix), do: Repo.get!(AssetStatusTrack, id, prefix: prefix)
+
+  @doc """
+  Creates a asset_status_track.
+
+  ## Examples
+
+      iex> create_asset_status_track(%{field: value})
+      {:ok, %AssetStatusTrack{}}
+
+      iex> create_asset_status_track(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_asset_status_track(attrs \\ %{}, prefix) do
+    %AssetStatusTrack{}
+    |> AssetStatusTrack.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a asset_status_track.
+
+  ## Examples
+
+      iex> update_asset_status_track(asset_status_track, %{field: new_value})
+      {:ok, %AssetStatusTrack{}}
+
+      iex> update_asset_status_track(asset_status_track, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs, prefix) do
+    asset_status_track
+    |> AssetStatusTrack.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a asset_status_track.
+
+  ## Examples
+
+      iex> delete_asset_status_track(asset_status_track)
+      {:ok, %AssetStatusTrack{}}
+
+      iex> delete_asset_status_track(asset_status_track)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_asset_status_track(%AssetStatusTrack{} = asset_status_track, prefix) do
+    Repo.delete(asset_status_track, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking asset_status_track changes.
+
+  ## Examples
+
+      iex> change_asset_status_track(asset_status_track)
+      %Ecto.Changeset{data: %AssetStatusTrack{}}
+
+  """
+  def change_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs \\ %{}) do
+    AssetStatusTrack.changeset(asset_status_track, attrs)
+  end
+
+  alias Inconn2Service.AssetConfig.SiteConfig
+
+  @doc """
+  Returns the list of site_config.
+
+  ## Examples
+
+      iex> list_site_config()
+      [%SiteConfig{}, ...]
+
+  """
+  def list_site_config(prefix) do
+    Repo.all(SiteConfig, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single site_config.
+
+  Raises `Ecto.NoResultsError` if the Site config does not exist.
+
+  ## Examples
+
+      iex> get_site_config!(123)
+      %SiteConfig{}
+
+      iex> get_site_config!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_site_config!(id, prefix), do: Repo.get!(SiteConfig, id, prefix: prefix)
+  def get_site_config_by_site_id(site_id, prefix) do
+    Repo.get_by(SiteConfig, [site_id: site_id], prefix: prefix)
+  end
+
+  @doc """
+  Creates a site_config.
+
+  ## Examples
+
+      iex> create_site_config(%{field: value})
+      {:ok, %SiteConfig{}}
+
+      iex> create_site_config(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_site_config(attrs \\ %{}, prefix) do
+    %SiteConfig{}
+    |> SiteConfig.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a site_config.
+
+  ## Examples
+
+      iex> update_site_config(site_config, %{field: new_value})
+      {:ok, %SiteConfig{}}
+
+      iex> update_site_config(site_config, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_site_config(%SiteConfig{} = site_config, attrs, prefix) do
+    attrs = append_in_config(attrs, site_config)
+    site_config
+    |> SiteConfig.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  defp append_in_config(attrs, site_config) do
+    config = attrs["config"]
+    old_config = site_config.config
+    new_config = Enum.reduce(config, old_config, fn x, acc -> Map.put(acc, elem(x, 0), elem(x, 1)) end)
+    Map.put(attrs, "config", new_config)
+  end
+  @doc """
+  Deletes a site_config.
+
+  ## Examples
+
+      iex> delete_site_config(site_config)
+      {:ok, %SiteConfig{}}
+
+      iex> delete_site_config(site_config)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_site_config(%SiteConfig{} = site_config, prefix) do
+    Repo.delete(site_config, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking site_config changes.
+
+  ## Examples
+
+      iex> change_site_config(site_config)
+      %Ecto.Changeset{data: %SiteConfig{}}
+
+  """
+  def change_site_config(%SiteConfig{} = site_config, attrs \\ %{}) do
+    SiteConfig.changeset(site_config, attrs)
+  end
 end

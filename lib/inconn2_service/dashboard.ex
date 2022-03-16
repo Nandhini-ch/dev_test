@@ -128,7 +128,7 @@ defmodule Inconn2Service.Dashboard do
 
   def filter_by_date(query, nil, nil) do
     from_date = Date.utc_today()
-    from w in query, where: w.scheduled_date == ^ from_date
+    from w in query, where: w.scheduled_date == ^from_date
   end
 
   def filter_by_date(query, from_date, nil) do

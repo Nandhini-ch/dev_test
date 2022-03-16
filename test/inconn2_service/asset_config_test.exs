@@ -243,4 +243,130 @@ defmodule Inconn2Service.AssetConfigTest do
       assert %Ecto.Changeset{} = AssetConfig.change_party(party)
     end
   end
+
+  describe "asset_status_tracks" do
+    alias Inconn2Service.AssetConfig.AssetStatusTrack
+
+    @valid_attrs %{asset_id: 42, asset_type: "some asset_type", changed_date_time: ~N[2010-04-17 14:00:00], status_changed: "some status_changed", user_id: 42}
+    @update_attrs %{asset_id: 43, asset_type: "some updated asset_type", changed_date_time: ~N[2011-05-18 15:01:01], status_changed: "some updated status_changed", user_id: 43}
+    @invalid_attrs %{asset_id: nil, asset_type: nil, changed_date_time: nil, status_changed: nil, user_id: nil}
+
+    def asset_status_track_fixture(attrs \\ %{}) do
+      {:ok, asset_status_track} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_asset_status_track()
+
+      asset_status_track
+    end
+
+    test "list_asset_status_tracks/0 returns all asset_status_tracks" do
+      asset_status_track = asset_status_track_fixture()
+      assert AssetConfig.list_asset_status_tracks() == [asset_status_track]
+    end
+
+    test "get_asset_status_track!/1 returns the asset_status_track with given id" do
+      asset_status_track = asset_status_track_fixture()
+      assert AssetConfig.get_asset_status_track!(asset_status_track.id) == asset_status_track
+    end
+
+    test "create_asset_status_track/1 with valid data creates a asset_status_track" do
+      assert {:ok, %AssetStatusTrack{} = asset_status_track} = AssetConfig.create_asset_status_track(@valid_attrs)
+      assert asset_status_track.asset_id == 42
+      assert asset_status_track.asset_type == "some asset_type"
+      assert asset_status_track.changed_date_time == ~N[2010-04-17 14:00:00]
+      assert asset_status_track.status_changed == "some status_changed"
+      assert asset_status_track.user_id == 42
+    end
+
+    test "create_asset_status_track/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_asset_status_track(@invalid_attrs)
+    end
+
+    test "update_asset_status_track/2 with valid data updates the asset_status_track" do
+      asset_status_track = asset_status_track_fixture()
+      assert {:ok, %AssetStatusTrack{} = asset_status_track} = AssetConfig.update_asset_status_track(asset_status_track, @update_attrs)
+      assert asset_status_track.asset_id == 43
+      assert asset_status_track.asset_type == "some updated asset_type"
+      assert asset_status_track.changed_date_time == ~N[2011-05-18 15:01:01]
+      assert asset_status_track.status_changed == "some updated status_changed"
+      assert asset_status_track.user_id == 43
+    end
+
+    test "update_asset_status_track/2 with invalid data returns error changeset" do
+      asset_status_track = asset_status_track_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_asset_status_track(asset_status_track, @invalid_attrs)
+      assert asset_status_track == AssetConfig.get_asset_status_track!(asset_status_track.id)
+    end
+
+    test "delete_asset_status_track/1 deletes the asset_status_track" do
+      asset_status_track = asset_status_track_fixture()
+      assert {:ok, %AssetStatusTrack{}} = AssetConfig.delete_asset_status_track(asset_status_track)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_asset_status_track!(asset_status_track.id) end
+    end
+
+    test "change_asset_status_track/1 returns a asset_status_track changeset" do
+      asset_status_track = asset_status_track_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_asset_status_track(asset_status_track)
+    end
+  end
+
+  describe "site_config" do
+    alias Inconn2Service.AssetConfig.SiteConfig
+
+    @valid_attrs %{config: %{}}
+    @update_attrs %{config: %{}}
+    @invalid_attrs %{config: nil}
+
+    def site_config_fixture(attrs \\ %{}) do
+      {:ok, site_config} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_site_config()
+
+      site_config
+    end
+
+    test "list_site_config/0 returns all site_config" do
+      site_config = site_config_fixture()
+      assert AssetConfig.list_site_config() == [site_config]
+    end
+
+    test "get_site_config!/1 returns the site_config with given id" do
+      site_config = site_config_fixture()
+      assert AssetConfig.get_site_config!(site_config.id) == site_config
+    end
+
+    test "create_site_config/1 with valid data creates a site_config" do
+      assert {:ok, %SiteConfig{} = site_config} = AssetConfig.create_site_config(@valid_attrs)
+      assert site_config.config == %{}
+    end
+
+    test "create_site_config/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_site_config(@invalid_attrs)
+    end
+
+    test "update_site_config/2 with valid data updates the site_config" do
+      site_config = site_config_fixture()
+      assert {:ok, %SiteConfig{} = site_config} = AssetConfig.update_site_config(site_config, @update_attrs)
+      assert site_config.config == %{}
+    end
+
+    test "update_site_config/2 with invalid data returns error changeset" do
+      site_config = site_config_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_site_config(site_config, @invalid_attrs)
+      assert site_config == AssetConfig.get_site_config!(site_config.id)
+    end
+
+    test "delete_site_config/1 deletes the site_config" do
+      site_config = site_config_fixture()
+      assert {:ok, %SiteConfig{}} = AssetConfig.delete_site_config(site_config)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_site_config!(site_config.id) end
+    end
+
+    test "change_site_config/1 returns a site_config changeset" do
+      site_config = site_config_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_site_config(site_config)
+    end
+  end
 end

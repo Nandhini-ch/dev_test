@@ -68,7 +68,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %Equipment{} = equipment} <-
-           AssetConfig.update_equipment(equipment, equipment_params, conn.assigns.sub_domain_prefix) do
+           AssetConfig.update_equipment(equipment, equipment_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", equipment: equipment)
     end
   end

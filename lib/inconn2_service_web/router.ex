@@ -28,6 +28,7 @@ defmodule Inconn2ServiceWeb.Router do
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
     resources "/sites", SiteController, except: [:new, :edit]
+    resources "/site_config", SiteConfigController, except: [:new, :edit]
     get "/sites?active=true", SiteController, :index
     get "/sites?active=false", SiteController, :index
     put "/sites/:id/activate", SiteController, :activate_site
@@ -70,6 +71,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_equipments", ReferenceDownloadController, :download_equipments
     post "/upload_equipments", ReferenceUploadController, :upload_equipments
 
+    resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]
 
     resources "/shifts", ShiftController, except: [:new, :edit]
     put "/shifts/:id/activate", ShiftController, :activate_shift
@@ -272,10 +274,14 @@ defmodule Inconn2ServiceWeb.Router do
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
 
     get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
-    get "/dashboards/workflow_pie_chart", DashboardController, :get_workflow_pie_chart
+    get "/dashboards/workflow_ticket_pie_chart", DashboardController, :get_workflow_ticket_pie_chart
+    get "/dashboards/workflow_workorder_pie_chart", DashboardController, :get_workflow_workorder_pie_chart
     get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
     get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
     get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
 
+    get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
+    get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
+    # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
   end
 end
