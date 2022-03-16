@@ -7,6 +7,7 @@ defmodule Inconn2Service.Dashboards do
   alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Measurements.MeterReading
 
@@ -108,6 +109,9 @@ defmodule Inconn2Service.Dashboards do
 
               "E" ->
                 AssetConfig.get_equipment(wo.asset_id, prefix)
+
+              nil ->
+                get_asset_from_workorder_template(wo, prefix)
             end
 
             asset_category = AssetConfig.get_asset_category!(asset.asset_category_id, prefix)
@@ -230,7 +234,7 @@ defmodule Inconn2Service.Dashboards do
 
     last_entry = Repo.one(query, prefix: prefix)
 
-    if last_entry.status_changed not in ["ON", "OFF"] do
+    if last_entry != nil and last_entry.status_changed not in ["ON", "OFF"] do
       time_zone = AssetConfig.get_site_time_zone_from_asset(asset.site_id, prefix)
       {:ok, current_date} = DateTime.now(time_zone)
       %{
@@ -411,6 +415,17 @@ defmodule Inconn2Service.Dashboards do
       _, main_query ->
         main_query
     end)
+  end
+
+  defp get_asset_from_workorder_template(work_order, prefix) do
+    workorder_template = Workorder.get_workorder_template!(work_order.workorder_template_id, prefix)
+    case workorder_template.asset_type do
+      "L" ->
+        AssetConfig.get_location(work_order.asset_id, prefix)
+
+      "E" ->
+        AssetConfig.get_equipment(work_order.asset_id, prefix)
+    end
   end
 
   defp apply_dates_to_workflow_query(dynamic_query, query_params, prefix) do
