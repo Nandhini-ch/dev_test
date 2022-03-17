@@ -197,6 +197,13 @@ defmodule Inconn2Service.Dashboards do
       fn e -> check_criticality_assets(e, prefix)
       end) |> Enum.filter(fn x -> x != "ND" end)
 
+    data_available =
+      if available_hours == 0 and not_available_hours == 0 do
+        false
+      else
+        true
+      end
+
     # %{
     #   labels: ["Available", "Not Available"],
     #   datasets: [available_hours, not_available_hours],
@@ -211,6 +218,7 @@ defmodule Inconn2Service.Dashboards do
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
       ],
+      data_available: data_available,
       additional_assets: %{
         critical_assets_information: critical_assets,
       }
