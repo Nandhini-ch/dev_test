@@ -238,6 +238,61 @@ defmodule Inconn2Service.Report do
     NaiveDateTime.new!(date, Time.new!(0, 0, 0))
   end
 
+
+  defp convert_to_pdf(report_title, data, report_headers) do
+    create_report_structure(report_title, data, report_headers)
+  end
+
+  def create_report_structure(report_title, data, report_headers) do
+    [
+      :div,
+      [
+        :h1,
+        %{
+          style: style(%{"text-align" => "center"})
+        },
+        "#{report_title}"
+      ],
+      [
+        :div,
+        [
+          :table,
+          create_report_headers(report_headers),
+          create_table_body(data)
+        ]
+      ]
+    ]
+  end
+
+
+  defp create_report_headers(report_headers) do
+    [
+      :tr,
+      %{
+        style: style(%{"text-align" => "center"})
+      },
+      Enum.map(report_headers, fn h ->
+        [:th, %{style: style(%{"font-weight" => "bold"})}, "#{h}"]
+      end)
+    ]
+  end
+
+  defp create_table_body(report_body_json) do
+    Enum.map(report_body_json, fn rpj ->
+      [
+        :tr,
+        Enum.map(rpj, fn {_key, value} ->
+          [
+            :td,
+            "#{value}"
+          ]
+        end)
+      ]
+    end)
+  end
+
+
+
   IO.inspect("---------------------------------------------------------------------------------")
 
   def put_sr_no(list) do
