@@ -107,7 +107,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Coonsumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Consumed"]
 
     case query_params["type"] do
       "pdf" ->
@@ -269,8 +269,9 @@ defmodule Inconn2Service.Report do
           ],
           [
             :table,
-            %{style: style(%{"width" => "100%", "border" => "1px solid black"})},
-            create_report_headers(report_headers)
+            %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+            create_report_headers(report_headers),
+            create_table_body(data)
           ]
         ]
       )
@@ -286,13 +287,28 @@ defmodule Inconn2Service.Report do
       %{
         style: style(%{"text-align" => "center"})
       },
-      [:th, %{style: style(%{"font-weight" => "bold", "border" => "1px solid black"})}, "hello"],
-      [:th, %{style: style(%{"font-weight" => "bold", "border" => "1px solid black"})}, "hello"]
+      Enum.map(report_headers, fn h ->
+        [
+          :th,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          "#{h}"
+        ]
+      end)
     ]
   end
 
   defp create_table_body(report_body_json) do
-
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :tr,
+        Enum.map(rbj, fn {_key, value} ->
+          [
+            :td,
+            value
+          ]
+        end)
+      ]
+    end)
   end
 
 
