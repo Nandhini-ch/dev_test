@@ -437,20 +437,24 @@ defmodule Inconn2Service.Workorder do
   end
 
   defp validate_for_future_date(cs, prefix) do
-    first_occurrance_date = get_field(cs, :first_occurrance_date)
-    asset_id = get_field(cs, :asset_id, nil)
-    asset_type = get_field(cs, :asset_type, nil)
-    if asset_id != nil and asset_type != nil do
-      asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
-      if asset != nil do
-        {date, _time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
-        if first_occurrance_date != nil do
-          case Date.compare(first_occurrance_date, date) do
+    if Map.has_key?(cs.changes, :first_occurrance_date) or Map.has_key?(cs.changes, :first_occurrance_time) do
+      first_occurrance_date = get_field(cs, :first_occurrance_date)
+      first_occurrance_time = get_field(cs, :first_occurrance_time)
+      asset_id = get_field(cs, :asset_id, nil)
+      asset_type = get_field(cs, :asset_type, nil)
+      if asset_id != nil and asset_type != nil and first_occurrance_date != nil and first_occurrance_time != nil do
+        asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
+        if asset != nil do
+          {date, time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
+          dt = NaiveDateTime.new!(date, time)
+          f_dt = NaiveDateTime.new!(first_occurrance_date, first_occurrance_time)
+          case Date.compare(f_dt, dt) do
             :gt ->
               cs
 
-            :lt ->
-              add_error(cs, :first_occurance_date, "Has to be a date in the future")
+            _ ->
+              add_error(cs, :first_occurance_date, "Date and time should be in the future")
+              |> add_error(:first_occurance_time, "Date and time should be in the future")
           end
         else
           cs
