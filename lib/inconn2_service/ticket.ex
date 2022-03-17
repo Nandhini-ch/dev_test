@@ -405,8 +405,8 @@ defmodule Inconn2Service.Ticket do
     |> validate_asset_id(prefix)
     |> attachment_format(attrs)
     |> validate_assigned_user_id(prefix)
-    |> validate_approvals_required_ids(prefix)
     |> is_approvals_required(user, prefix)
+    |> validate_approvals_required_ids(prefix)
     |> calculate_tat(work_request, prefix)
     |> Repo.update(prefix: prefix)
 
@@ -483,17 +483,23 @@ defmodule Inconn2Service.Ticket do
   end
 
   defp validate_approvals_required_ids(cs, prefix) do
-    user_ids = get_change(cs, :approvals_required, nil)
-    if user_ids != nil do
-      users = from(u in User, where: u.id in ^user_ids )
-              |> Repo.all(prefix: prefix)
-      case length(user_ids) == length(users) do
-        true -> cs
-        false -> add_error(cs, :approvals_required, "User IDs are invalid")
+    is_approvals_required = get_change(cs, :is_approvals_required, nil)
+    if is_approvals_required do
+      user_ids = get_change(cs, :approvals_required, nil)
+      if user_ids != nil do
+        users = from(u in User, where: u.id in ^user_ids )
+                |> Repo.all(prefix: prefix)
+        case length(user_ids) == length(users) do
+          true -> cs
+          false -> add_error(cs, :approvals_required, "User IDs are invalid")
+        end
+      else
+        cs
       end
     else
       cs
     end
+
   end
 
   defp is_approvals_required(cs, user, prefix) do
