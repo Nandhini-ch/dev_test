@@ -379,7 +379,7 @@ defmodule Inconn2Service.Dashboards do
         from q in main_query, where: q.site_id == ^site_id
 
       {"asset_id", asset_id}, main_query ->
-        from q in main_query, where: q.asset_id == ^asset_id
+        from q in main_query, where: q.id == ^asset_id
 
       {"type", "current_running"}, main_query ->
         from q in main_query, where: q.status in ["ON", "OFF"]
