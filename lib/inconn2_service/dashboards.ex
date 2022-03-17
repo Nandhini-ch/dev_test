@@ -77,7 +77,7 @@ defmodule Inconn2Service.Dashboards do
         reopened_tickets: reopened_tickets,
         open_complaints_against_categories: open_complaints_against_categories
       },
-      labels: form_date_list(from_date, to_date)
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
@@ -90,7 +90,7 @@ defmodule Inconn2Service.Dashboards do
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix) |> Enum.map(fn wo -> add_overdue_flag(wo, prefix) end)
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
@@ -172,7 +172,7 @@ defmodule Inconn2Service.Dashboards do
         },
         open_count_with_asset_category: open_count_with_asset_category
       },
-      labels: form_date_list(from_date, to_date)
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
@@ -316,6 +316,17 @@ defmodule Inconn2Service.Dashboards do
 
       true ->
         0
+    end
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
     end
   end
 
