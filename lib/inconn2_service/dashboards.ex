@@ -36,7 +36,7 @@ defmodule Inconn2Service.Dashboards do
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
 
-    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
     open_complaints_against_categories =
       Enum.map(grouped_by_tickets, fn {key, value} ->
@@ -142,7 +142,7 @@ defmodule Inconn2Service.Dashboards do
         0
       end
 
-    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
 
     data_available =
