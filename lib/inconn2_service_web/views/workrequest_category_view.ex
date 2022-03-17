@@ -27,7 +27,7 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryView do
     %{id: workrequest_category.id,
       name: workrequest_category.name,
       description: workrequest_category.description,
-      users: render_many(workrequest_category.users, UserView, "user.json")
+      helpdesk_users: render_many(workrequest_category.helpdesk_users, UserView, "user.json")
     }
   end
 
