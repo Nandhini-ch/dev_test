@@ -287,7 +287,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
 
       _ ->
         created_work_request
@@ -413,7 +413,7 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
       _ ->
         updated_work_request
 
@@ -425,7 +425,7 @@ defmodule Inconn2Service.Ticket do
     Enum.map(work_request_changes["ids"], fn id ->
       work_request = get_work_request!(id, prefix)
       {:ok, work_request} = update_work_request(work_request, Map.drop(work_request_changes, ["ids"]), prefix, user)
-      work_request
+      work_request |> preload_to_approve_users(prefix)
     end)
   end
 
@@ -474,10 +474,10 @@ defmodule Inconn2Service.Ticket do
           "status" => work_request.status
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
 
       _ ->
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
 
     end
   end
