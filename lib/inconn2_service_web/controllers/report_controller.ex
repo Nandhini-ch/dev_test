@@ -17,7 +17,16 @@ defmodule Inconn2ServiceWeb.ReportController do
 
   def get_workflow_report(conn, _params) do
     result = Report.work_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
-    render(conn, "work_order_report.json", work_order_info: result)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.pdf\"")
+        |> send_resp(200, result)
+
+      _ ->
+        render(conn, "work_order_report.json", work_order_info: result)
+    end
   end
 
   def get_workorder_status_report(conn, _) do

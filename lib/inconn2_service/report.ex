@@ -69,41 +69,53 @@ defmodule Inconn2Service.Report do
           Map.put_new(work_order, :asset, asset)
       end)
 
+    result =
 
-    Enum.map(work_orders_with_asset, fn wo ->
-      {asset_name, asset_code} =
-        case wo.asset_type do
-          "E" ->
-            {wo.asset.name, wo.asset.equipment_code}
 
-          "L" ->
-            {wo.asset.name, wo.asset.location_code}
-        end
+      Enum.map(work_orders_with_asset, fn wo ->
+        {asset_name, asset_code} =
+          case wo.asset_type do
+            "E" ->
+              {wo.asset.name, wo.asset.equipment_code}
 
-      name =
-        if wo.first_name == nil, do: wo.username, else: wo.first_name
+            "L" ->
+              {wo.asset.name, wo.asset.location_code}
+          end
 
-      manhours_consumed =
-        cond do
-          wo.start_time == nil and wo.completed_time == nil ->
-            0
+        name =
+          if wo.first_name == nil, do: wo.username, else: wo.first_name
 
-          wo.completed_time == nil ->
-            Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
+        manhours_consumed =
+          cond do
+            wo.start_time == nil and wo.completed_time == nil ->
+              0
 
-          true ->
-            Time.diff(wo.completed_time, wo.start_time)
-        end
+            wo.completed_time == nil ->
+              Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
 
-      %{
-        asset_name: asset_name,
-        asset_code: asset_code,
-        type: wo.type,
-        status: wo.status,
-        assigned_to: name,
-        manhours_consumed: manhours_consumed * 3600
-      }
-    end)
+            true ->
+              Time.diff(wo.completed_time, wo.start_time)
+          end
+
+        %{
+          asset_name: asset_name,
+          asset_code: asset_code,
+          type: wo.type,
+          status: wo.status,
+          assigned_to: name,
+          manhours_consumed: manhours_consumed * 3600
+        }
+      end)
+
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Coonsumed"]
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Work Order Report", result, report_headers)
+
+      _ ->
+        result
+    end
   end
 
   def inventory_report(prefix, query_params) do
