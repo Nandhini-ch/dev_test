@@ -10,6 +10,10 @@ defmodule Inconn2ServiceWeb.ApprovalView do
     %{data: render_one(approval, ApprovalView, "approval.json")}
   end
 
+  def render("multiple_create.json", %{result: result}) do
+    %{data: result}
+  end
+
   def render("approval.json", %{approval: approval}) do
     %{id: approval.id,
       user_id: approval.user_id,

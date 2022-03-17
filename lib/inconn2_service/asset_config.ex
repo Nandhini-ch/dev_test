@@ -1194,6 +1194,16 @@ defmodule Inconn2Service.AssetConfig do
     Repo.delete_all(subtree, prefix: prefix)
   end
 
+  def get_asset_by_type(asset_id, asset_type, prefix) do
+    case asset_type do
+      "L" ->
+        get_location(asset_id, prefix)
+
+      "E" ->
+        get_equipment(asset_id, prefix)
+    end
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking equipment changes.
 

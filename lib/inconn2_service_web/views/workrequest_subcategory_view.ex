@@ -14,6 +14,8 @@ defmodule Inconn2ServiceWeb.WorkrequestSubcategoryView do
     %{id: workrequest_subcategory.id,
       name: workrequest_subcategory.name,
       description: workrequest_subcategory.description,
+      response_tat: workrequest_subcategory.response_tat,
+      resolution_tat: workrequest_subcategory.resolution_tat,
       workrequest_category_id: workrequest_subcategory.workrequest_category_id
     }
   end

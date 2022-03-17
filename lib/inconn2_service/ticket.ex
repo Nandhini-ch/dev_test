@@ -31,6 +31,20 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_workrequest_categories_with_helpdesk_user(prefix) do
+    WorkrequestCategory
+    |> Repo.all(prefix: prefix)
+    |> get_helpdesk_user_for_categories(prefix)
+  end
+
+  def get_helpdesk_user_for_categories(categories, prefix) do
+    Enum.map(categories, fn c ->
+      helpdesk_users = Inconn2Service.Ticket.CategoryHelpdesk |> where([workrequest_category_id: ^c.id]) |> Repo.all(prefix: prefix)
+      users = Enum.map(helpdesk_users, fn h -> Inconn2Service.Staff.get_user!(h.user_id, prefix) end)
+      Map.put_new(c, :helpdesk_users, users)
+    end)
+  end
+
   @doc """
   Gets a single workrequest_category.
 
@@ -142,11 +156,56 @@ defmodule Inconn2Service.Ticket do
 
   """
   def list_work_requests(prefix) do
-    Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    Repo.all(WorkRequest, prefix: prefix)
+    |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
-  def list_work_requests_for_user(user, prefix) do
-    WorkRequest |> where([assigned_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+  def preload_to_approve_users(work_request, prefix) do
+    case work_request.approvals_required do
+      nil ->
+        Map.put_new(work_request, :approvals_required_user, [])
+
+      ids ->
+        if length(ids) != 0 do
+          users =
+            Enum.map(ids, fn id ->
+              Inconn2Service.Staff.get_user!(id, prefix)
+            end)
+            Map.put_new(work_request, :approvals_required_user, users)
+          else
+            Map.put_new(work_request, :approvals_required_user, [])
+        end
+      end
+  end
+
+  def list_work_requests_for_actions(user, prefix) do
+    %{
+      raised_by_me: list_work_requests_for_raised_user(user, prefix),
+      to_be_closed: list_work_requests_acknowledgement(user, prefix),
+      helpdesk: list_work_requests_for_helpdesk_user(user, prefix)
+    }
+  end
+
+  def list_work_requests_for_raised_user(user, prefix) do
+    from(w in WorkRequest, where: w.requested_user_id == ^user.id and w.status not in ["CP", "CL"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+  end
+
+  def list_work_requests_for_assigned_user(user, prefix) do
+    from(w in WorkRequest, where: w.assigned_user_id == ^user.id and w.status not in ["CP", "CL"])
+    WorkRequest |> where([assigned_user_id: ^user.id])
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+  end
+
+  def list_work_requests_acknowledgement(user, prefix) do
+    WorkRequest
+    |> where([requested_user_id: ^user.id, status: "CP"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
@@ -158,6 +217,7 @@ defmodule Inconn2Service.Ticket do
         |> where([asset_id: ^location.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+        |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
 
       "E" ->
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
@@ -165,21 +225,24 @@ defmodule Inconn2Service.Ticket do
         |> where([asset_id: ^equipment.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+        |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     end
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_for_helpdesk_user(current_user, prefix) do
     helpdesk = get_category_helpdesk_by_user(current_user.id, prefix)
     if helpdesk != [] do
       workrequest_category_ids = Enum.map(helpdesk, fn x -> x.workrequest_category_id end)
-      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids)
+      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids and wr.status != "CS")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+      |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     else
       []
     end
@@ -200,6 +263,7 @@ defmodule Inconn2Service.Ticket do
   """
   def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
                                           |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+                                          |> preload_to_approve_users(prefix)
 
   @doc """
   Creates a work_request.
@@ -227,7 +291,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
 
       _ ->
         created_work_request
@@ -345,15 +409,15 @@ defmodule Inconn2Service.Ticket do
     |> validate_asset_id(prefix)
     |> attachment_format(attrs)
     |> validate_assigned_user_id(prefix)
-    |> validate_approvals_required_ids(prefix)
     |> is_approvals_required(user, prefix)
-    # |> approval()
+    |> validate_approvals_required_ids(prefix)
+    |> calculate_tat(work_request, prefix)
     |> Repo.update(prefix: prefix)
 
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
       _ ->
         updated_work_request
 
@@ -365,7 +429,7 @@ defmodule Inconn2Service.Ticket do
     Enum.map(work_request_changes["ids"], fn id ->
       work_request = get_work_request!(id, prefix)
       {:ok, work_request} = update_work_request(work_request, Map.drop(work_request_changes, ["ids"]), prefix, user)
-      work_request
+      work_request |> preload_to_approve_users(prefix)
     end)
   end
 
@@ -376,6 +440,32 @@ defmodule Inconn2Service.Ticket do
   # defp create_workorder_from_ticket(work_request, _user, _prefix, _) do
   #   {:ok, work_request}
   # end
+
+  defp calculate_tat(cs, work_request, prefix) do
+    status = get_change(cs, :status)
+    if status != nil do
+      raised_dt = get_field(cs, :raised_date_time)
+      site_dt = get_site_date_time(work_request, prefix)
+      case status do
+        "AS" ->
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+            change(cs, %{response_tat: tat})
+        "CP" ->
+            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+              change(cs, %{resolution_tat: tat})
+          _ ->
+            cs
+      end
+    else
+      cs
+    end
+  end
+
+  defp get_site_date_time(work_request, prefix) do
+    site = Repo.get!(Site, work_request.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
+  end
 
   defp update_status_track(work_request, prefix) do
     case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
@@ -388,26 +478,32 @@ defmodule Inconn2Service.Ticket do
           "status" => work_request.status
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
 
       _ ->
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
 
     end
   end
 
   defp validate_approvals_required_ids(cs, prefix) do
-    user_ids = get_change(cs, :approvals_required, nil)
-    if user_ids != nil do
-      users = from(u in User, where: u.id in ^user_ids )
-              |> Repo.all(prefix: prefix)
-      case length(user_ids) == length(users) do
-        true -> cs
-        false -> add_error(cs, :approvals_required, "User IDs are invalid")
+    is_approvals_required = get_change(cs, :is_approvals_required, nil)
+    if is_approvals_required do
+      user_ids = get_change(cs, :approvals_required, nil)
+      if user_ids != nil do
+        users = from(u in User, where: u.id in ^user_ids )
+                |> Repo.all(prefix: prefix)
+        case length(user_ids) == length(users) do
+          true -> cs
+          false -> add_error(cs, :approvals_required, "User IDs are invalid")
+        end
+      else
+        cs
       end
     else
       cs
     end
+
   end
 
   defp is_approvals_required(cs, user, prefix) do
@@ -762,13 +858,32 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_approval(attrs \\ %{}, prefix, user) do
+  def create_approval(attrs \\ %{}, prefix, _user) do
+    # IO.inspect(attrs)
     result = %Approval{}
               |> Approval.changeset(attrs)
-              |> set_approver_user_id(user)
+              # |> set_approver_user_id(user)
               |> Repo.insert(prefix: prefix)
 
     update_status_for_work_request(result, prefix)
+  end
+
+
+  def create_multiple_approval(attrs, prefix, user) do
+    Enum.map(attrs["work_request_ids"], fn id ->
+      to_be_inserted = %{
+        "approved" => attrs["approved"],
+        "remarks" => attrs["remarks"],
+        "user_id" => user.id,
+        "work_request_id" => id,
+        "action_at" => attrs["action_at"]
+      }
+      result = create_approval(to_be_inserted, prefix, user)
+      IO.inspect(to_be_inserted)
+      IO.inspect(result)
+    end)
+
+    %{success: true}
   end
 
   defp set_approver_user_id(cs, user) do

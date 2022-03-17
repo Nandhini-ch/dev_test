@@ -5,6 +5,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
+  alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
@@ -111,7 +112,10 @@ defmodule Inconn2Service.Report do
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Order Report", result, report_headers)
+        convert_to_pdf("Work Order Report", result, report_headers, "WO")
+
+      "csv" ->
+        csv_for_workorder_report(report_headers, result)
 
       _ ->
         result
@@ -196,6 +200,104 @@ defmodule Inconn2Service.Report do
     end)
   end
 
+  def work_request_report(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+
+    main_query = from wo in WorkRequest
+
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"status", status}, main_query ->
+          from q in main_query, where: q.status == ^status
+
+        {"workrequest_category_id", workrequest_category_id}, main_query ->
+          from q in main_query, where: q.workrequest_category_id == ^workrequest_category_id
+
+        {"assigned_user_id", assigned_user_id}, main_query ->
+          from q in main_query, where: q.assigned_user_id == ^assigned_user_id
+
+        _, main_query ->
+          main_query
+
+      end)
+
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    naive_from_date = convert_date_to_naive_date_time(from_date)
+    naive_to_date = convert_date_to_naive_date_time(to_date)
+
+    query_with_dates = from dq in dynamic_query, where: dq.raised_date_time >= ^naive_from_date and dq.raised_date_time <= ^naive_to_date
+
+    work_requests =
+      Repo.all(query_with_dates, prefix: prefix)
+      |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+
+    work_requests_with_asset =
+      Enum.map(work_requests, fn work_request ->
+        asset =
+          case work_request.asset_type do
+            "E" -> AssetConfig.get_equipment(work_request.asset_id, prefix)
+            "L" -> AssetConfig.get_location(work_request.asset_id, prefix)
+          end
+          Map.put_new(work_request, :asset, asset)
+      end)
+
+    result =
+      Enum.map(work_requests_with_asset, fn wr ->
+
+        asset_name =
+          if wr.asset != nil do
+            wr.asset.name
+          else
+            nil
+          end
+
+        asset_category =
+          if wr.asset != nil do
+            AssetConfig.get_asset_category!(wr.asset.asset_category_id, prefix)
+          else
+            nil
+          end
+
+        raised_by =
+          cond do
+            wr.requested_user != nil && wr.requested_user.employee != nil ->
+              wr.requested_user.employee.first_name <> wr.requested_user.employee.second_name
+
+            wr.requested_user != nil ->
+              wr.requested_user.username
+
+            true ->
+              nil
+          end
+
+
+          assigned_to =
+            cond do
+              wr.assigned_user != nil && wr.assigned_user.employee != nil ->
+                wr.assigned_user.employee.first_name <> wr.assigned_user.employee.second_name
+
+              wr.assigned_user != nil ->
+                wr.assigned_user.username
+
+              true ->
+                nil
+            end
+
+
+
+        %{
+          asset_name: asset_name,
+          asset_category: asset_category,
+          raised_by: raised_by,
+          assigned_to: assigned_to
+        }
+      end)
+
+  end
+
   defp get_site_time(site_id, prefix) do
     site = Repo.get!(Site, site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
@@ -251,11 +353,11 @@ defmodule Inconn2Service.Report do
   end
 
 
-  defp convert_to_pdf(report_title, data, report_headers) do
-    create_report_structure(report_title, data, report_headers)
+  defp convert_to_pdf(report_title, data, report_headers, report_for) do
+    create_report_structure(report_title, data, report_headers, report_for)
   end
 
-  def create_report_structure(report_title, data, report_headers) do
+  def create_report_structure(report_title, data, report_headers, report_for) do
     string =
       Sneeze.render(
         [
@@ -271,7 +373,7 @@ defmodule Inconn2Service.Report do
             :table,
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
-            create_table_body(data)
+            create_table_body(data, report_for)
           ]
         ]
       )
@@ -297,18 +399,85 @@ defmodule Inconn2Service.Report do
     ]
   end
 
-  defp create_table_body(report_body_json) do
+  defp create_table_body(report_body_json, "WO") do
     Enum.map(report_body_json, fn rbj ->
       [
         :tr,
-        Enum.map(rbj, fn {_key, value} ->
-          [
-            :td,
-            value
-          ]
-        end)
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_code
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          match_work_order_type(rbj.type)
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          match_work_order_status(rbj.status)
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.assigned_to
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.manhours_consumed
+        ],
       ]
     end)
+  end
+
+  defp csv_for_workorder_report(report_headers, data) do
+    body =
+      Enum.map(data, fn d ->
+        [d.asset_name, d.asset_code, match_work_order_type(d.type), match_work_order_status(d.status), d.assigned_to, d.manhours_consumed]
+      end)
+
+    [report_headers] ++ body
+  end
+
+  defp match_work_order_type(type) do
+    case type do
+      "BRK" -> "Breakdown"
+      "PPM" -> "Preventive Maintainance"
+      "TKT" -> "Through a Ticket"
+      "PRV" -> "Preventive Maintainance"
+    end
+  end
+
+  defp match_work_order_status(status) do
+    case status do
+      "cr" -> "Created"
+      "as" -> "Assigned"
+      "ip" -> "Inprogress"
+      "incp" -> "Incomplete"
+      "cp" -> "Complete"
+      "cn" -> "Canceled"
+      "ht" -> "Hold"
+      _ -> status
+    end
+  end
+
+  defp match_work_request_status(status) do
+    case status do
+      "RS" -> "Raised"
+      "AP" -> "Approved"
+      "AS" -> "Assigned"
+      "RJ" -> "Rejected"
+      "CL" -> "Closed"
+      "CS" -> "Cancelled"
+      "RO" -> "Reopened"
+    end
   end
 
 

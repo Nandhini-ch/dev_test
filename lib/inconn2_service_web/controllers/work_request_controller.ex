@@ -16,8 +16,18 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
-  def index_for_user(conn, _) do
-    work_requests = Ticket.list_work_requests_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+  def index_for_actions(conn, _) do
+    work_requests = Ticket.list_work_requests_for_actions(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index_for_actions.json", work_requests: work_requests)
+  end
+
+  def index_for_raised_user(conn, _) do
+    work_requests = Ticket.list_work_requests_for_raised_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
+  def index_for_assigned_user(conn, _) do
+    work_requests = Ticket.list_work_requests_for_assigned_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_requests: work_requests)
   end
 
@@ -28,6 +38,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
 
   def index_tickets_of_helpdesk_user(conn, _params) do
     work_requests = Ticket.list_work_requests_for_helpdesk_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
+  def index_for_acknowledgement(conn, _) do
+    work_requests = Ticket.list_work_requests_acknowledgement(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_requests: work_requests)
   end
 

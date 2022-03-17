@@ -23,6 +23,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Staff
   alias Inconn2Service.Measurements
   # alias Inconn2Service.Ticket
+  alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
 
@@ -364,6 +365,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
@@ -433,6 +435,40 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp validate_for_future_date(cs, prefix) do
+    first_occurrance_date = get_field(cs, :first_occurrance_date)
+    asset_id = get_field(cs, :asset_id, nil)
+    asset_type = get_field(cs, :asset_type, nil)
+    if asset_id != nil and asset_type != nil do
+      asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
+      if asset != nil do
+        {date, _time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
+        if first_occurrance_date != nil do
+          case Date.compare(first_occurrance_date, date) do
+            :gt ->
+              cs
+
+            :lt ->
+              add_error(cs, :first_occurance_date, "Has to be a date in the future")
+          end
+        else
+          cs
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
+
+  defp get_date_time_in_required_time_zone(site_id, prefix) do
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
+  end
+
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id, nil)
     first_date = get_field(cs, :first_occurrence_date, nil)
@@ -471,6 +507,7 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
@@ -699,6 +736,10 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_active_work_orders(prefix) do
+    query = from wo in WorkOrder, where: wo.status != "cp"
+    Repo.all(query, prefix: prefix) |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
 
   def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
     [asset_type, uuid] = String.split(qr_string, ":")
@@ -731,7 +772,7 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
-    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status != "cp"
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
     asset_category_workorders =
@@ -742,8 +783,8 @@ defmodule Inconn2Service.Workorder do
 
         employee ->
           query =
-            from wo in WorkOrder,
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+            from wo in WorkOrder, where: wo.status != "cp",
+              left_join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
@@ -993,15 +1034,23 @@ defmodule Inconn2Service.Workorder do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
           record_meter_readings(work_order, updated_work_order, prefix)
+          change_ticket_status(work_order, updated_work_order, user, prefix)
+
           result
       _ ->
         result
     end
   end
 
-  defp record_meter_readings(work_order, updated_work_order, prefix) do
-    if work_order.status != "cp" and updated_work_order.status == "cp" do
-      Measurements.record_meter_readings_from_work_order(work_order, prefix)
+  # defp record_meter_readings(work_order, updated_work_order, prefix) do
+  #   if work_order.status != "cp" and updated_work_order.status == "cp" do
+  #     Measurements.record_meter_readings_from_work_order(work_order, prefix)
+
+  defp change_ticket_status(old_work_order, updated_work_order, user, prefix) do
+    if updated_work_order.type == "TKT" and old_work_order.status != "cp" and updated_work_order.status == "cp" do
+      work_request = Ticket.get_work_request!(updated_work_order.work_request_id, prefix)
+      Ticket.update_work_request(work_request, %{"status" => "CP"}, prefix, user)
+      updated_work_order
     else
       updated_work_order
     end
