@@ -191,7 +191,10 @@ defmodule Inconn2Service.Ticket do
 
   def list_work_requests_for_assigned_user(user, prefix) do
     from(w in WorkRequest, where: w.assigned_user_id == ^user.id and w.status not in ["CP", "CL"])
-    WorkRequest |> where([assigned_user_id: ^user.id]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    WorkRequest |> where([assigned_user_id: ^user.id])
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_acknowledgement(user, prefix) do
@@ -256,6 +259,7 @@ defmodule Inconn2Service.Ticket do
   """
   def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
                                           |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+                                          |> preload_to_approve_users(prefix)
 
   @doc """
   Creates a work_request.
