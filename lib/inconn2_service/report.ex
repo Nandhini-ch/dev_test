@@ -256,24 +256,27 @@ defmodule Inconn2Service.Report do
   end
 
   def create_report_structure(report_title, data, report_headers) do
-    [
-      :div,
-      [
-        :h1,
-        %{
-          style: style(%{"text-align" => "center"})
-        },
-        "#{report_title}"
-      ],
-      [
-        :div,
+    string =
+      Sneeze.render(
         [
-          :table,
-          create_report_headers(report_headers),
-          create_table_body(data)
+          :div,
+          [
+            :h1,
+            %{
+              style: style(%{"text-align" => "center"})
+            },
+            "#{report_title}"
+          ],
+          [
+            :table,
+            %{style: style(%{"width" => "100%", "border" => "1px solid black"})},
+            create_report_headers(report_headers)
+          ]
         ]
-      ]
-    ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
   end
 
 
@@ -283,24 +286,13 @@ defmodule Inconn2Service.Report do
       %{
         style: style(%{"text-align" => "center"})
       },
-      Enum.map(report_headers, fn h ->
-        [:th, %{style: style(%{"font-weight" => "bold"})}, "#{h}"]
-      end)
+      [:th, %{style: style(%{"font-weight" => "bold", "border" => "1px solid black"})}, "hello"],
+      [:th, %{style: style(%{"font-weight" => "bold", "border" => "1px solid black"})}, "hello"]
     ]
   end
 
   defp create_table_body(report_body_json) do
-    Enum.map(report_body_json, fn rpj ->
-      [
-        :tr,
-        Enum.map(rpj, fn {_key, value} ->
-          [
-            :td,
-            "#{value}"
-          ]
-        end)
-      ]
-    end)
+
   end
 
 
