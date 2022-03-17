@@ -156,7 +156,23 @@ defmodule Inconn2Service.Ticket do
 
   """
   def list_work_requests(prefix) do
-    Repo.all(WorkRequest, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    Repo.all(WorkRequest, prefix: prefix)
+    |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+  end
+
+  def preload_to_approve_users(work_request, prefix) do
+    case work_request.approvals_required do
+      nil ->
+        Map.put_new(work_request, :approvals_required_user, [])
+
+      ids ->
+        users =
+          Enum.map(ids, fn id ->
+            Inconn2Service.Staff.get_user!(id, prefix)
+          end)
+        Map.put_new(work_request, :approvals_required_user, users)
+      end
   end
 
   def list_work_requests_for_actions(user, prefix) do
@@ -170,6 +186,7 @@ defmodule Inconn2Service.Ticket do
   def list_work_requests_for_raised_user(user, prefix) do
     from(w in WorkRequest, where: w.requested_user_id == ^user.id and w.status not in ["CP", "CL"])
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_for_assigned_user(user, prefix) do
@@ -178,7 +195,10 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_acknowledgement(user, prefix) do
-    WorkRequest |> where([requested_user_id: ^user.id, status: "CP"]) |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    WorkRequest
+    |> where([requested_user_id: ^user.id, status: "CP"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
@@ -190,6 +210,7 @@ defmodule Inconn2Service.Ticket do
         |> where([asset_id: ^location.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+        |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
 
       "E" ->
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
@@ -197,12 +218,14 @@ defmodule Inconn2Service.Ticket do
         |> where([asset_id: ^equipment.id, assigned_user_id: ^user.id])
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+        |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     end
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
     query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
   end
 
   def list_work_requests_for_helpdesk_user(current_user, prefix) do
@@ -212,6 +235,7 @@ defmodule Inconn2Service.Ticket do
       from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids and wr.status != "CS")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+      |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     else
       []
     end
