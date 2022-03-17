@@ -551,6 +551,7 @@ defmodule Inconn2Service.Dashboards do
       labels: date_list,
       data: [data]
     }
+    |> add_boolean_flag()
   end
 
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
@@ -584,7 +585,7 @@ defmodule Inconn2Service.Dashboards do
     case query_params["type"] do
       "TOP3" ->
           get_top_three_energy_meter_linear_chart(query_params["site_id"], date_list, prefix)
-
+          |> add_boolean_flag_energy_speedometer()
       _ ->
           query = from e in Equipment
           energy_meters = Enum.reduce(query_params, query, fn
@@ -608,6 +609,7 @@ defmodule Inconn2Service.Dashboards do
             datasets: [datasets],
             additional_information: [additional_info]
           }
+          |> add_boolean_flag_energy_linear()
     end
   end
 
@@ -734,6 +736,35 @@ defmodule Inconn2Service.Dashboards do
     Enum.sum(data) / length(data)
   end
 
+  defp add_boolean_flag(data) do
+    inner_data = data.data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
+
+  defp add_boolean_flag_energy_linear(data) do
+    inner_data = List.first(data.datasets).data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
+
+  defp add_boolean_flag_energy_speedometer(data) do
+    inner_data = Enum.at(data.datasets, 0).data ++ Enum.at(data.datasets, 1).data ++ Enum.at(data.datasets, 2).data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
 
   defp form_date_list(from_date, to_date) do
     list = [from_date] |> List.flatten()
