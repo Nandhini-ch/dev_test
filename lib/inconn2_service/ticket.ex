@@ -167,11 +167,15 @@ defmodule Inconn2Service.Ticket do
         Map.put_new(work_request, :approvals_required_user, [])
 
       ids ->
-        users =
-          Enum.map(ids, fn id ->
-            Inconn2Service.Staff.get_user!(id, prefix)
-          end)
-        Map.put_new(work_request, :approvals_required_user, users)
+        if length(ids) != 0 do
+          users =
+            Enum.map(ids, fn id ->
+              Inconn2Service.Staff.get_user!(id, prefix)
+            end)
+            Map.put_new(work_request, :approvals_required_user, users)
+          else
+            Map.put_new(work_request, :approvals_required_user, [])
+        end
       end
   end
 
