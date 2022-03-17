@@ -589,7 +589,7 @@ defmodule Inconn2Service.Ticket do
 
   """
   def list_category_helpdesks(prefix) do
-    Repo.all(CategoryHelpdesk, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories])
+    Repo.all(CategoryHelpdesk, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
   end
 
   @doc """
@@ -606,7 +606,7 @@ defmodule Inconn2Service.Ticket do
       ** (Ecto.NoResultsError)
 
   """
-  def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories])
+  def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
   def get_category_helpdesk_by_user(user_id, prefix) do
     CategoryHelpdesk
     |> where(user_id: ^user_id)
@@ -630,7 +630,7 @@ defmodule Inconn2Service.Ticket do
               |> validate_user_id(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
-      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories])}
+      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])}
        _ -> result
     end
   end
@@ -668,7 +668,7 @@ defmodule Inconn2Service.Ticket do
               |> validate_user_id(prefix)
               |> Repo.update(prefix: prefix)
     case result do
-      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories], force: true)}
+      {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee], force: true)}
       _ -> result
     end
   end
