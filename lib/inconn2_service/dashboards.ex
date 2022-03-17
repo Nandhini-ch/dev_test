@@ -7,6 +7,7 @@ defmodule Inconn2Service.Dashboards do
   alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Measurements.MeterReading
 
@@ -14,6 +15,8 @@ defmodule Inconn2Service.Dashboards do
     main_query = from wo in WorkOrder, where: wo.type == "TKT",
     join: wr in WorkRequest, on: wo.work_request_id == wr.id,
     select: %{work_order: wo, work_request: wr}
+
+    query_params = rectify_query_params(query_params)
 
 
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
@@ -33,6 +36,8 @@ defmodule Inconn2Service.Dashboards do
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
 
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
     open_complaints_against_categories =
       Enum.map(grouped_by_tickets, fn {key, value} ->
         workrequest_category = Ticket.get_workrequest_category!(key, prefix)
@@ -42,61 +47,135 @@ defmodule Inconn2Service.Dashboards do
         }
       end)
 
+    # %{
+    #   labels: ["Open Ticket Count", "Closed Ticket Count"],
+    #   datasets: [open_ticket_count, closed_ticket_count],
+    #   total_count: Enum.count(work_orders),
+    #   additional_information: %{
+    #     reopened_tickets: reopened_tickets,
+    #     open_complaints_against_categories: open_complaints_against_categories
+    #   }
+    # }
+
+    data_available =
+      case length(work_orders) do
+        0 ->
+          false
+
+        _ ->
+          true
+      end
+
     %{
-      labels: ["Open Ticket Count", "Closed Ticket Count"],
-      datasets: [open_ticket_count, closed_ticket_count],
+      data_available: data_available,
+      dataset: [
+        %{name: "Open", y: open_ticket_count},
+        %{name: "Closed", y: closed_ticket_count}
+      ],
       total_count: Enum.count(work_orders),
       additional_information: %{
         reopened_tickets: reopened_tickets,
         open_complaints_against_categories: open_complaints_against_categories
-      }
+      },
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
   def work_order_linear_chart(prefix, query_params) do
     main_query = from wo in WorkOrder, where: wo.type not in ["TKT"]
 
+    query_params = rectify_query_params(query_params)
+
+
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix) |> Enum.map(fn wo -> add_overdue_flag(wo, prefix) end)
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
+
+    completed_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true end) |> Enum.count()
+
     total_count = Enum.count(work_orders)
 
+    open_work_orders_with_asset =
+      Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end)
+      |> Enum.map(fn wo ->
+          asset =
+            case wo.asset_type do
+              "L" ->
+                AssetConfig.get_location(wo.asset_id, prefix)
+
+              "E" ->
+                AssetConfig.get_equipment(wo.asset_id, prefix)
+
+              nil ->
+                get_asset_from_workorder_template(wo, prefix)
+            end
+
+            asset_category = AssetConfig.get_asset_category!(asset.asset_category_id, prefix)
+            Map.put_new(wo, :asset_category, asset_category)
+        end)
+        |> Enum.group_by(&(&1.asset_category.name))
+
+    open_count_with_asset_category =
+      Enum.map(open_work_orders_with_asset, fn {key, value} ->
+        %{
+          asset_category: key,
+          count: length(value)
+        }
+      end)
+
+
+    completed_percentage =
+      if total_count != 0 do
+        completed_work_orders / total_count * 100 |> Float.ceil(2)
+      else
+        0
+      end
+
+    completed_overdue_percentage =
+      if total_count != 0 do
+        completed_overdue_work_orders / total_count * 100 |> Float.ceil(2)
+      else
+        0
+      end
+
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
+
+    data_available =
+      case total_count do
+        0 ->
+          false
+
+        _ ->
+          true
+      end
+
     %{
-      labels: ["Completed Work Orders", "Incomplete Work Orders"],
-      datasets: [completed_work_orders, incomplete_work_orders],
+      data_available: data_available,
+      dataset: [
+        %{name: "Completed", y: completed_work_orders},
+        %{name: "Incomplete", y: incomplete_work_orders}
+      ],
       total_count: total_count,
       additional_information: %{
         completed_work_orders: %{
           number: completed_work_orders,
-          percentage: div(completed_work_orders,total_count) * 100
-        }
-      }
+          percentage: completed_percentage
+        },
+        completed_overdue_work_orders: %{
+          number: completed_overdue_work_orders,
+          precentage: completed_overdue_percentage
+        },
+        open_count_with_asset_category: open_count_with_asset_category
+      },
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
-  # def asset_status_chart(prefix, query_params) do
-  #   assets = get_locations_assets(prefix, query_params) ++ get_equipment_assets(prefix, query_params)
-
-  #   available_assets_count = Enum.filter(assets, fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
-  #   unavailable_asset_count = Enum.filter(assets, fn a -> a.status not in ["ON", "OFF"] end) |> Enum.count()
-
-  #   critical_assets =
-  #     Enum.filter(assets, fn a -> a.criticalty == 5 end)
-  #     |> Enum.map(fn ca -> get_critical_asset_track(ca, prefix) end)
-
-
-  #   %{
-  #     labels: ["Available Assets", "Unavailable Assets"],
-  #     datasets: [available_assets_count, unavailable_asset_count],
-  #     additional_information: %{
-  #       critical_asset_information: critical_assets
-  #     }
-  #   }
-  # end
 
   def get_asset_working_hours_pie_chart(prefix, query_params) do
     equipments = get_equipment_working_hours(prefix, query_params)
@@ -115,12 +194,31 @@ defmodule Inconn2Service.Dashboards do
 
     critical_assets =
       Enum.map(equipments ++ locations,
-      fn e -> check_cricality_assets(e, prefix)
+      fn e -> check_criticality_assets(e, prefix)
       end) |> Enum.filter(fn x -> x != "ND" end)
 
+    data_available =
+      if available_hours == 0 and not_available_hours == 0 do
+        false
+      else
+        true
+      end
+
+    # %{
+    #   labels: ["Available", "Not Available"],
+    #   datasets: [available_hours, not_available_hours],
+    #   additional_assets: %{
+    #     critical_assets_information: critical_assets,
+    #   }
+    # }
+
     %{
-      labels: ["Available", "Not Available"],
-      datasets: [available_hours, not_available_hours],
+      # data_available: data_available,
+      dataset: [
+        %{name: "Available", y: Float.ceil(available_hours, 2)},
+        %{name: "Not Available", y: Float.ceil(not_available_hours)}
+      ],
+      data_available: data_available,
       additional_assets: %{
         critical_assets_information: critical_assets,
       }
@@ -129,13 +227,13 @@ defmodule Inconn2Service.Dashboards do
 
   def calculate_average(list) do
     if length(list) == 0 do
-      0
+      0.0
     else
       Enum.sum(list)/length(list)
     end
   end
 
-  def check_cricality_assets(asset, prefix) do
+  def check_criticality_assets(asset, prefix) do
     query =
       from(ast in AssetStatusTrack,
           where: ast.asset_id == ^asset.id and
@@ -144,7 +242,7 @@ defmodule Inconn2Service.Dashboards do
 
     last_entry = Repo.one(query, prefix: prefix)
 
-    if last_entry.status_changed not in ["ON", "OFF"] do
+    if last_entry != nil and last_entry.status_changed not in ["ON", "OFF"] do
       time_zone = AssetConfig.get_site_time_zone_from_asset(asset.site_id, prefix)
       {:ok, current_date} = DateTime.now(time_zone)
       %{
@@ -160,6 +258,8 @@ defmodule Inconn2Service.Dashboards do
   def get_equipment_working_hours(prefix, query_params) do
     main_query = from e in Equipment
 
+    query_params = rectify_query_params(query_params)
+
     get_dynamic_query_for_assets(main_query, query_params)
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn a -> Map.put_new(a, :asset_type, "E") end)
@@ -168,12 +268,16 @@ defmodule Inconn2Service.Dashboards do
   def get_location_working_hours(prefix, query_params) do
     main_query = from l in Location
 
+    query_params = rectify_query_params(query_params)
+
     get_dynamic_query_for_assets(main_query, query_params)
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn a -> Map.put_new(a, :asset_type, "L") end)
   end
 
+
   def get_hours_for_asset(asset, type, query_params, prefix) do
+    query_params = rectify_query_params(query_params)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
@@ -206,13 +310,23 @@ defmodule Inconn2Service.Dashboards do
     last_entry = Repo.one(query, prefix: prefix)
 
     cond do
-      last_entry.status_changed in ["ON", "OFF"] ->
+      last_entry != nil and last_entry.status_changed in ["ON", "OFF"] ->
         IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
         NaiveDateTime.diff(to_naive, from_naive) / 3600
 
-
       true ->
         0
+    end
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
     end
   end
 
@@ -227,7 +341,7 @@ defmodule Inconn2Service.Dashboards do
     last_entry = Repo.one(query, prefix: prefix)
 
     cond do
-      last_entry.status_changed not in ["ON", "OFF"] ->
+      last_entry != nil and last_entry.status_changed not in ["ON", "OFF"] ->
         IO.inspect(NaiveDateTime.diff(to_naive, from_naive) / 3600)
         NaiveDateTime.diff(to_naive, from_naive) / 3600
 
@@ -251,14 +365,14 @@ defmodule Inconn2Service.Dashboards do
 
   def get_locations_assets(prefix, query_params) do
     main_query = from l in Location
-    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    dynamic_query = get_dynamic_query_for_assets(main_query, rectify_query_params(query_params))
     Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "L") end)
   end
 
 
   def get_equipment_assets(prefix, query_params) do
     main_query = from e in Equipment
-    dynamic_query = get_dynamic_query_for_assets(main_query, query_params)
+    dynamic_query = get_dynamic_query_for_assets(main_query, rectify_query_params(query_params))
     Repo.all(dynamic_query, prefix: prefix) |> Enum.map( fn a -> Map.put_new(a, :asset_type, "E") end)
   end
 
@@ -272,7 +386,16 @@ defmodule Inconn2Service.Dashboards do
         from q in main_query, where: q.site_id == ^site_id
 
       {"asset_id", asset_id}, main_query ->
-        from q in main_query, where: q.asset_id == ^asset_id
+        from q in main_query, where: q.id == ^asset_id
+
+      {"type", "current_running"}, main_query ->
+        from q in main_query, where: q.status in ["ON", "OFF"]
+
+      {"type", "critical_asset"}, main_query ->
+        from q in main_query, where: q.criticality == 1
+
+      {"type", "breakdown"}, main_query ->
+        from q in main_query, where: q.status not in ["ON","OFF"]
 
       _ , main_query ->
         main_query
@@ -301,12 +424,31 @@ defmodule Inconn2Service.Dashboards do
     end)
   end
 
+  defp get_asset_from_workorder_template(work_order, prefix) do
+    workorder_template = Workorder.get_workorder_template!(work_order.workorder_template_id, prefix)
+    case workorder_template.asset_type do
+      "L" ->
+        AssetConfig.get_location(work_order.asset_id, prefix)
+
+      "E" ->
+        AssetConfig.get_equipment(work_order.asset_id, prefix)
+    end
+  end
+
   defp apply_dates_to_workflow_query(dynamic_query, query_params, prefix) do
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     from(q in dynamic_query, where: q.scheduled_date >= ^from_date and q.scheduled_date <= ^to_date)
   end
 
   defp get_dates_for_query(nil, nil, site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    {
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1),
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+    }
+  end
+
+  defp get_dates_for_query("null", "null", site_id, prefix) do
     site = AssetConfig.get_site!(site_id, prefix)
     {
       DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1),
@@ -436,6 +578,7 @@ defmodule Inconn2Service.Dashboards do
   end
 
   def get_energy_meter_linear_chart(query_params, prefix) do
+    query_params = rectify_query_params(query_params)
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_list = form_date_list(from_date, to_date)
     case query_params["type"] do
@@ -459,9 +602,11 @@ defmodule Inconn2Service.Dashboards do
                           end)
                           |> Repo.all(prefix: prefix)
           data = Enum.map(date_list, fn date -> get_energy_meter_reading_for_multiple_assets(energy_meters, date, prefix) end)
+          {datasets, additional_info} = calculate_datasets_for_energy_meter(query_params, data, prefix)
           %{
             labels: date_list,
-            datasets: [calculate_datasets_for_energy_meter(query_params, data, prefix)]
+            datasets: [datasets],
+            additional_information: [additional_info]
           }
     end
   end
@@ -482,10 +627,14 @@ defmodule Inconn2Service.Dashboards do
                 site_config.config["energy_cost_per_unit"]
                end
         data = Enum.map(data, fn x -> x * cost end)
-        %{
-          data: data, avg_value: average_value(data), label: "Energy Cost"
+        {
+            %{
+              data: data, name: "Energy Cost"
+            },
+            %{
+              avg_value: average_value(data), name: "Energy Cost"
+            }
         }
-
       "EPI" ->
         sq_feet = if site_config == nil do
                     1
@@ -493,8 +642,13 @@ defmodule Inconn2Service.Dashboards do
                     site_config.config["area"]
                   end
         data = Enum.map(data, fn x -> x / sq_feet end)
-        %{
-          data: data, avg_value: average_value(data), label: "EPI"
+        {
+          %{
+            data: data, name: "EPI"
+          },
+          %{
+            avg_value: average_value(data), name: "EPI"
+          }
         }
 
       "DEVI" ->
@@ -504,13 +658,23 @@ defmodule Inconn2Service.Dashboards do
                           site_config.config["standard_value_for_deviation"]
                          end
         data = Enum.map(data, fn x -> x - standard_value end)
-        %{
-          data: data, avg_value: average_value(data), label: "Deviation"
+        {
+          %{
+            data: data, name: "Deviation"
+          },
+          %{
+            avg_value: average_value(data), name: "Deviation"
+          }
         }
 
       _ ->
-        %{
-          data: data, avg_value: average_value(data), label: "kWh"
+        {
+          %{
+            data: data, name: "kWh"
+          },
+          %{
+            avg_value: average_value(data), name: "kWh"
+          }
         }
 
     end
@@ -538,14 +702,20 @@ defmodule Inconn2Service.Dashboards do
       datasets:
               [
                 %{
-                  data: top1.data, label: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost
+                  data: top1.data, name: top1.asset_name
                 },
                 %{
-                  data: top2.data, label: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost
+                  data: top2.data, name: top2.asset_name
                 },
                 %{
-                  data: top3.data, label: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost
+                  data: top3.data, name: top3.asset_name
                 }
+              ],
+      additional_information:
+              [
+                %{name: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost},
+                %{name: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost},
+                %{name: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost}
               ]
       }
   end
@@ -575,5 +745,10 @@ defmodule Inconn2Service.Dashboards do
             list ++ [now_date]
             |> form_date_list(to_date)
     end
+  end
+
+  defp rectify_query_params(query_params) do
+    Enum.filter(query_params, fn {_key, val} -> val not in ["null", "nil", nil] end)
+    |> Enum.into(%{})
   end
 end
