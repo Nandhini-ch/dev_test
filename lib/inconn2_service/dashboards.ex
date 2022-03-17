@@ -36,7 +36,7 @@ defmodule Inconn2Service.Dashboards do
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
 
-    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
     open_complaints_against_categories =
       Enum.map(grouped_by_tickets, fn {key, value} ->
@@ -77,7 +77,7 @@ defmodule Inconn2Service.Dashboards do
         reopened_tickets: reopened_tickets,
         open_complaints_against_categories: open_complaints_against_categories
       },
-      labels: form_date_list(from_date, to_date)
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
@@ -90,7 +90,7 @@ defmodule Inconn2Service.Dashboards do
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
     work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix) |> Enum.map(fn wo -> add_overdue_flag(wo, prefix) end)
 
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
@@ -142,7 +142,7 @@ defmodule Inconn2Service.Dashboards do
         0
       end
 
-    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
 
     data_available =
@@ -172,7 +172,7 @@ defmodule Inconn2Service.Dashboards do
         },
         open_count_with_asset_category: open_count_with_asset_category
       },
-      labels: form_date_list(from_date, to_date)
+      # labels: form_date_list(from_date, to_date)
     }
   end
 
@@ -197,6 +197,13 @@ defmodule Inconn2Service.Dashboards do
       fn e -> check_criticality_assets(e, prefix)
       end) |> Enum.filter(fn x -> x != "ND" end)
 
+    data_available =
+      if available_hours == 0 and not_available_hours == 0 do
+        false
+      else
+        true
+      end
+
     # %{
     #   labels: ["Available", "Not Available"],
     #   datasets: [available_hours, not_available_hours],
@@ -211,6 +218,7 @@ defmodule Inconn2Service.Dashboards do
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
       ],
+      data_available: data_available,
       additional_assets: %{
         critical_assets_information: critical_assets,
       }
@@ -308,6 +316,17 @@ defmodule Inconn2Service.Dashboards do
 
       true ->
         0
+    end
+  end
+
+  defp add_overdue_flag(work_order, prefix) do
+    site = AssetConfig.get_site!(work_order.site_id, prefix)
+    site_dt = DateTime.now!(site.time_zone)
+    site_dt = DateTime.to_naive(site_dt)
+    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+    case NaiveDateTime.compare(scheduled_dt, site_dt) do
+      :lt -> Map.put_new(work_order, :overdue, true)
+      _ -> Map.put_new(work_order, :overdue, false)
     end
   end
 
@@ -532,6 +551,7 @@ defmodule Inconn2Service.Dashboards do
       labels: date_list,
       data: [data]
     }
+    |> add_boolean_flag()
   end
 
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
@@ -565,7 +585,7 @@ defmodule Inconn2Service.Dashboards do
     case query_params["type"] do
       "TOP3" ->
           get_top_three_energy_meter_linear_chart(query_params["site_id"], date_list, prefix)
-
+          |> add_boolean_flag_energy_speedometer()
       _ ->
           query = from e in Equipment
           energy_meters = Enum.reduce(query_params, query, fn
@@ -589,6 +609,7 @@ defmodule Inconn2Service.Dashboards do
             datasets: [datasets],
             additional_information: [additional_info]
           }
+          |> add_boolean_flag_energy_linear()
     end
   end
 
@@ -715,6 +736,35 @@ defmodule Inconn2Service.Dashboards do
     Enum.sum(data) / length(data)
   end
 
+  defp add_boolean_flag(data) do
+    inner_data = data.data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
+
+  defp add_boolean_flag_energy_linear(data) do
+    inner_data = List.first(data.datasets).data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
+
+  defp add_boolean_flag_energy_speedometer(data) do
+    inner_data = Enum.at(data.datasets, 0).data ++ Enum.at(data.datasets, 1).data ++ Enum.at(data.datasets, 2).data
+    filtered_data = Enum.filter(inner_data, fn x -> x != 0 end)
+    if filtered_data == [] do
+      Map.put(data, :data_available, false)
+    else
+      Map.put(data, :data_available, true)
+    end
+  end
 
   defp form_date_list(from_date, to_date) do
     list = [from_date] |> List.flatten()
