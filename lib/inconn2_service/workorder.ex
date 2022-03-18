@@ -1046,6 +1046,14 @@ defmodule Inconn2Service.Workorder do
   #   if work_order.status != "cp" and updated_work_order.status == "cp" do
   #     Measurements.record_meter_readings_from_work_order(work_order, prefix)
 
+  defp record_meter_readings(work_order, updated_work_order, prefix) do
+    if work_order.status != "cp" and updated_work_order.status == "cp" do
+      Measurements.record_meter_readings_from_work_order(work_order, prefix)
+    else
+      updated_work_order
+    end
+  end
+
   defp change_ticket_status(old_work_order, updated_work_order, user, prefix) do
     if updated_work_order.type == "TKT" and old_work_order.status != "cp" and updated_work_order.status == "cp" do
       work_request = Ticket.get_work_request!(updated_work_order.work_request_id, prefix)
