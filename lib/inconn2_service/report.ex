@@ -8,6 +8,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
   alias Inconn2Service.Workorder
+  alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
@@ -237,6 +238,7 @@ defmodule Inconn2Service.Report do
 
     query_with_dates = from dq in dynamic_query, where: dq.raised_date_time >= ^naive_from_date and dq.raised_date_time <= ^naive_to_date
 
+
     work_requests =
       Repo.all(query_with_dates, prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
@@ -295,17 +297,55 @@ defmodule Inconn2Service.Report do
                 nil
             end
 
+        workrequest_sub_category =
+          if wr.workrequest_subcategory_id != nil do
+            Ticket.get_workrequest_subcategory!(wr.workrequest_subcategory_id, prefix)
+          else
+            nil
+          end
 
+        {ticket_response_tat, ticket_resolution_tat} =
+          if workrequest_sub_category != nil do
+            {workrequest_sub_category.response_tat, workrequest_sub_category.resolution_tat}
+          else
+            {nil, nil}
+          end
+
+        IO.inspect({ticket_response_tat, ticket_resolution_tat})
+        IO.inspect({wr.response_tat, wr.resolution_tat})
+
+        {response_tat_met, resolution_tat_met} =
+          if ticket_response_tat != nil && ticket_resolution_tat != nil && wr.response_tat != nil && wr.resolution_tat != nil do
+            cond do
+              wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
+                {"yes", "yes"}
+
+                wr.response_tat <= ticket_response_tat ->
+                {"yes", nil}
+
+              true ->
+                {"no", "no"}
+            end
+          else
+            {nil, nil}
+          end
+
+        time_taken_to_close =
+          if wr.resolution_tat != nil do
+            wr.resolution_tat
+          else
+            nil
+          end
 
         %{
           asset_name: asset_name,
           asset_category: asset_category,
           raised_by: raised_by,
           assigned_to: assigned_to,
-          response_tat: "Yes",
-          resolution_tat: "Yes",
+          response_tat: response_tat_met,
+          resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
-          time_taken_to_close: 200
+          time_taken_to_close: time_taken_to_close
         }
       end)
 
