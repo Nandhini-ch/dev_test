@@ -27,6 +27,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     field :user_id, :integer
     field :reference_no, :string
     field :authorized_by_user_id, :integer
+    field :site_id, :integer
 
     # field :inventory_location_id, :integer
     belongs_to :inventory_location, Inconn2Service.Inventory.InventoryLocation
@@ -41,7 +42,7 @@ defmodule Inconn2Service.Inventory.InventoryTransaction do
     inventory_transaction
     |> cast(attrs, [:transaction_type, :price, :supplier_id, :quantity, :reference, :inventory_location_id, :item_id, :uom_id, :workorder_id, :remarks,
             :dc_attachment, :dc_attachment_type, :dc_reference, :dc_date, :gate_pass_attachment, :gate_pass_attachment_type, :gate_pass_reference, :gate_pass_date,
-            :remaining, :issue_reference, :user_id, :reference_no, :authorized_by_user_id, :approved])
+            :remaining, :issue_reference, :user_id, :reference_no, :authorized_by_user_id, :approved, :site_id])
     |> validate_inclusion(:transaction_type, ["IN", "IS", "RT", "PRT", "INTR", "OUT", "INIS"])
     |> validate_required([:transaction_type, :quantity, :inventory_location_id, :item_id, :uom_id])
     |> validate_for_transaction_type()
