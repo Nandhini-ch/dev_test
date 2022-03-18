@@ -429,7 +429,7 @@ defmodule Inconn2Service.Report do
             if last_entry != nil and last_entry.status in ["ON", "OFF"] do
               NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
             else
-              0
+              0.0
             end
 
           _ ->
@@ -438,7 +438,7 @@ defmodule Inconn2Service.Report do
               if last_entry.status_changed in ["ON", "OFF"] do
                 NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
               else
-                0
+                0.0
               end
             sum =
               Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
@@ -457,7 +457,7 @@ defmodule Inconn2Service.Report do
               if last_entry != nil and last_entry.status_changed == "ON" do
                 NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
               else
-                0
+                0.0
               end
 
             _ ->
@@ -468,7 +468,7 @@ defmodule Inconn2Service.Report do
                   NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
                 else
                   IO.inspect("213123")
-                  0
+                  0.0
                 end
               sum =
                 Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
@@ -498,7 +498,7 @@ defmodule Inconn2Service.Report do
         if length(ppm_work_orders) != 0 do
           div(completed_ppm,length(ppm_work_orders))
         else
-          0
+          0.0
         end
 
       %{
