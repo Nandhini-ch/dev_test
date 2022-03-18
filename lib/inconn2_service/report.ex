@@ -2,7 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
-  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.Equipment
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
@@ -119,9 +119,11 @@ defmodule Inconn2Service.Report do
 
     report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Consumed"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Order Report", result, report_headers, "WO")
+        convert_to_pdf("Work Order Report", filters, result, report_headers, "WO")
 
       "csv" ->
         csv_for_workorder_report(report_headers, result)
@@ -352,9 +354,11 @@ defmodule Inconn2Service.Report do
 
     report_headers = ["Asset Name", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Request Report", result, report_headers, "WR")
+        convert_to_pdf("Ticket Report", filters, result, report_headers, "WR")
 
       "csv" ->
         csv_for_workrequest_report(report_headers, result)
@@ -373,9 +377,11 @@ defmodule Inconn2Service.Report do
 
     report_headers = ["Asset Name", "Asset Code", "Asset Category", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion Percentage"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Asset Status Report", equipments_data ++ locations_data, report_headers, "AST")
+        convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST")
 
       "csv" ->
         csv_for_asset_status_report(report_headers, equipments_data ++ locations_data)
@@ -725,11 +731,11 @@ defmodule Inconn2Service.Report do
   end
 
 
-  defp convert_to_pdf(report_title, data, report_headers, report_for) do
-    create_report_structure(report_title, data, report_headers, report_for)
+  defp convert_to_pdf(report_title, filters, data, report_headers, report_for) do
+    create_report_structure(report_title, filters, data, report_headers, report_for)
   end
 
-  def create_report_structure(report_title, data, report_headers, report_for) do
+  def create_report_structure(report_title, filters, data, report_headers, report_for) do
     string =
       Sneeze.render(
         [
@@ -741,11 +747,42 @@ defmodule Inconn2Service.Report do
             },
             "#{report_title}"
           ],
+            [
+              :h2,
+              if filters.licensee != nil do
+                "Licensee: #{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :h2,
+              if filters.site != nil do
+                "Site: #{filters.site.name}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"font-size" => "20px"})},
+              if filters.from_date != nil do
+                "From Date: #{filters.from_date}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.to_date != nil do
+                "To Date: #{filters.to_date}"
+              end
+            ],
           [
             :table,
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
             create_table_body(data, report_for)
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "right", "font-style" => "italic"})},
+            "Powered By Inconn"
           ]
         ]
       )
@@ -964,6 +1001,56 @@ defmodule Inconn2Service.Report do
       "CS" -> "Cancelled"
       "RO" -> "Reopened"
     end
+  end
+
+  defp filter_data(query_params, prefix) do
+    "inc_" <> sub_domain = prefix
+    licensee = Account.get_licensee_by_sub_domain(sub_domain)
+    site =
+            if query_params["site_id"] != nil do
+              AssetConfig.get_site!(query_params["site_id"], prefix)
+            else
+              nil
+            end
+
+    asset =
+            if query_params["asset_id"] != nil and query_params["asset_type"] != nil do
+              case query_params["asset_type"] do
+                "L" ->
+                      AssetConfig.get_location!(query_params["asset_id"], prefix)
+                "E" ->
+                      AssetConfig.get_equipment!(query_params["asset_id"], prefix)
+              end
+            else
+              nil
+            end
+
+    work_order_status =
+            if query_params["status"] != nil do
+              match_work_order_status(query_params["status"])
+            else
+              nil
+            end
+
+    user =
+            if query_params["user_id"] != nil do
+              Staff.get_user!(query_params["user_id"], prefix)
+            else
+              nil
+            end
+
+    from_date = query_params["from_date"]
+    to_date = query_params["to_date"]
+
+    %{
+      licensee: licensee,
+      site: site,
+      asset: asset,
+      work_order_status: work_order_status,
+      user: user,
+      from_date: from_date,
+      to_date: to_date
+    }
   end
 
 
