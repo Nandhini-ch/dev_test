@@ -525,8 +525,13 @@ defmodule Inconn2Service.Workorder do
               {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
 
             _ ->
-              Common.update_work_scheduler(work_scheduler, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
-              {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              if attrs["first_occurrence_date"] != nil or attrs["first_occurrence_time"] != nil do
+                Common.delete_work_scheduler(workorder_schedule.id, prefix)
+                Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              else
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              end
           end
       _ ->
         result
