@@ -2,7 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
 
   alias Inconn2Service.Repo
-  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.Equipment
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
@@ -18,6 +18,7 @@ defmodule Inconn2Service.Report do
 
   def work_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
+    IO.inspect(query_params)
 
     main_query =
       from wo in WorkOrder,
@@ -92,14 +93,14 @@ defmodule Inconn2Service.Report do
           end
 
         name =
-          if wo.first_name == nil, do: wo.username, else: wo.first_name
+          if is_nil(wo.first_name), do: wo.username, else: wo.first_name
 
         manhours_consumed =
           cond do
-            wo.start_time == nil and wo.completed_time == nil ->
+            is_nil(wo.start_time) and is_nil(wo.completed_time) ->
               0
 
-            wo.completed_time == nil ->
+            is_nil(wo.completed_time) ->
               Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
 
             true ->
@@ -118,9 +119,11 @@ defmodule Inconn2Service.Report do
 
     report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Consumed"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Order Report", result, report_headers, "WO")
+        convert_to_pdf("Work Order Report", filters, result, report_headers, "WO")
 
       "csv" ->
         csv_for_workorder_report(report_headers, result)
@@ -184,28 +187,43 @@ defmodule Inconn2Service.Report do
 
     inventory_transactions = Repo.all(dynamic_query, prefix: prefix)
 
+    result =
+      Enum.map(inventory_transactions, fn it ->
 
-    Enum.map(inventory_transactions, fn it ->
+        asset_category =
+          Enum.map(it.asset_category_ids, fn id ->
+            Inconn2Service.AssetConfig.get_asset_category!(id, prefix).name
+          end) |> Enum.join(",")
 
-      asset_category =
-        Enum.map(it.asset_category_ids, fn id ->
-          Inconn2Service.AssetConfig.get_asset_category!(id, prefix).name
-        end) |> Enum.join(",")
+        IO.inspect(it.inserted_at >= naive_from_date)
 
-      IO.inspect(it.inserted_at >= naive_from_date)
+        %{
+          item_name: it.item_name,
+          item_type: it.item_type,
+          asset_category: asset_category,
+          quantity_held: it.quantity_held,
+          reorder_level: it.reorder_level,
+          uom: it.uom,
+          store_name: it.store_name,
+          aisle_bin_row: it.aisle <> "-" <> it.bin <> "-" <> it.row,
+          supplier: it.supplier
+        }
+      end)
+    report_headers = ["Item Name", "Item Type", "Asset Category", "Quantity Held", "Reorder Level", "UOM", "Store Name", "Aisle/Bin/Row", "Supplier"]
 
-      %{
-        item_name: it.item_name,
-        item_type: it.item_type,
-        asset_category: asset_category,
-        quantity_held: it.quantity_held,
-        reorder_level: it.reorder_level,
-        uom: it.uom,
-        store_name: it.store_name,
-        aisle_bin_row: it.aisle <> "-" <> it.bin <> "-" <> it.row,
-        supplier: it.supplier
-      }
-    end)
+    filters = filter_data(query_params, prefix)
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Inventory Report", filters, result, report_headers, "IN")
+
+      "csv" ->
+        csv_for_workrequest_report(report_headers, result)
+
+      _ ->
+        result
+    end
+
   end
 
   def work_request_report(prefix, query_params) do
@@ -351,9 +369,11 @@ defmodule Inconn2Service.Report do
 
     report_headers = ["Asset Name", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Request Report", result, report_headers, "WR")
+        convert_to_pdf("Ticket Report", filters, result, report_headers, "WR")
 
       "csv" ->
         csv_for_workrequest_report(report_headers, result)
@@ -367,18 +387,22 @@ defmodule Inconn2Service.Report do
   def asset_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
     equipments_data = get_equipment_details(prefix, query_params)
+    locations_data = get_location_details(prefix, query_params)
+
 
     report_headers = ["Asset Name", "Asset Code", "Asset Category", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion Percentage"]
 
+    filters = filter_data(query_params, prefix)
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Asset Status Report", equipments_data, report_headers, "AST")
+        convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST")
 
       "csv" ->
-        csv_for_asset_status_report(report_headers, equipments_data)
+        csv_for_asset_status_report(report_headers, equipments_data ++ locations_data)
 
       _ ->
-        equipments_data
+        equipments_data ++ locations_data
     end
 
   end
@@ -411,6 +435,8 @@ defmodule Inconn2Service.Report do
     naive_from_date = convert_date_to_naive_date_time(from_date)
     naive_to_date = convert_date_to_naive_date_time(to_date)
 
+    IO.inspect(naive_from_date)
+    IO.inspect(naive_to_date)
 
     Enum.map(equipments, fn e ->
       asset_status_tracks =
@@ -418,17 +444,201 @@ defmodule Inconn2Service.Report do
         |> Repo.all(prefix: prefix)
 
       up_time =
-        Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON", "OFF"] end)
-        |> Enum.map(fn ast -> ast.hours end)
-        |> Enum.sum()
+        case length(asset_status_tracks) do
+          0 ->
+            last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
+            if last_entry != nil and last_entry.status in ["ON", "OFF"] do
+              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+            else
+              0.0
+            end
 
-      utilized_time =
-        Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON"] end)
-        |> Enum.map(fn ast -> ast.hours end)
-        |> Enum.sum()
+          _ ->
+            last_entry = List.last(asset_status_tracks)
+            compensation_hours =
+              if last_entry.status_changed in ["ON", "OFF"] do
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+              else
+                0.0
+              end
+            sum =
+              Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
+              |> Enum.map(fn ast -> ast.hours end)
+              |> Enum.sum()
+
+          sum + compensation_hours
+        end
+
+
+        utilized_time =
+          case length(asset_status_tracks) do
+            0 ->
+              IO.inspect("-----------wqe4342")
+              last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
+              if last_entry != nil and last_entry.status_changed == "ON" do
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+              else
+                0.0
+              end
+
+            _ ->
+              last_entry = List.last(asset_status_tracks)
+              compensation_hours =
+                if last_entry.status_changed in ["ON", "OFF"] do
+                  IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
+                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                else
+                  IO.inspect("213123")
+                  0.0
+                end
+              sum =
+                Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
+                |> Enum.map(fn ast -> ast.hours end)
+                |> Enum.sum()
+
+              sum + compensation_hours
+          end
+
+      # up_time =
+      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON", "OFF"] end)
+      #   |> Enum.map(fn ast -> ast.hours end)
+      #   |> Enum.sum()
+
+      # utilized_time =
+      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON"] end)
+      #   |> Enum.map(fn ast -> ast.hours end)
+      #   |> Enum.sum()
 
       ppm_work_orders =
         (from wo in WorkOrder, where: wo.asset_id == ^e.id and wo.asset_type == ^"E" and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date)
+        |> Repo.all(prefix: prefix)
+
+      completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+
+      completion_percentage =
+        if length(ppm_work_orders) != 0 do
+          div(completed_ppm,length(ppm_work_orders))
+        else
+          0.0
+        end
+
+      %{
+        asset_name: e.name,
+        asset_code: e.equipment_code,
+        asset_category: AssetConfig.get_asset_category!(e.asset_category_id, prefix).name,
+        status: e.status,
+        criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
+        up_time: Float.ceil(up_time, 2),
+        utilized_time: Float.ceil(utilized_time, 2),
+        ppm_completion_percentage: completion_percentage
+      }
+    end)
+  end
+
+  defp get_location_details(prefix, query_params) do
+    main_query = from l in Location
+
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"location_id", location_id}, main_query ->
+          from q in main_query, where: ^location_id in q.path
+
+        {"status", status}, main_query ->
+          from q in main_query, where: q.status == ^status
+
+        {"asset_category_id", asset_category_id}, main_query ->
+          from q in main_query, where: q.asset_category_id == ^asset_category_id
+
+        _ , main_query ->
+          main_query
+      end)
+
+
+    locations = Repo.all(dynamic_query, prefix: prefix)
+
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    naive_from_date = convert_date_to_naive_date_time(from_date)
+    naive_to_date = convert_date_to_naive_date_time(to_date)
+
+    IO.inspect(naive_from_date)
+    IO.inspect(naive_to_date)
+
+    Enum.map(locations, fn l ->
+      asset_status_tracks =
+        from(ast in AssetStatusTrack, where: ast.asset_id == ^l.id and ast.asset_type == ^"L" and ast.changed_date_time >= ^naive_from_date and ast.changed_date_time <= ^naive_to_date)
+        |> Repo.all(prefix: prefix)
+
+      up_time =
+        case length(asset_status_tracks) do
+          0 ->
+            last_entry = get_last_entry_previous(l.id, "L", naive_from_date, prefix)
+            if last_entry != nil and last_entry.status in ["ON", "OFF"] do
+              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+            else
+              0.0
+            end
+
+          _ ->
+            last_entry = List.last(asset_status_tracks)
+            compensation_hours =
+              if last_entry.status_changed in ["ON", "OFF"] do
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+              else
+                0.0
+              end
+            sum =
+              Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
+              |> Enum.map(fn ast -> ast.hours end)
+              |> Enum.sum()
+
+          sum + compensation_hours
+        end
+
+
+        utilized_time =
+          case length(asset_status_tracks) do
+            0 ->
+              IO.inspect("-----------wqe4342")
+              last_entry = get_last_entry_previous(l.id, "L", naive_from_date, prefix)
+              if last_entry != nil and last_entry.status_changed == "ON" do
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+              else
+                0.0
+              end
+
+            _ ->
+              last_entry = List.last(asset_status_tracks)
+              compensation_hours =
+                if last_entry.status_changed in ["ON", "OFF"] do
+                  IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
+                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                else
+                  IO.inspect("213123")
+                  0.0
+                end
+              sum =
+                Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
+                |> Enum.map(fn ast -> ast.hours end)
+                |> Enum.sum()
+
+              sum + compensation_hours
+          end
+
+      # up_time =
+      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON", "OFF"] end)
+      #   |> Enum.map(fn ast -> ast.hours end)
+      #   |> Enum.sum()
+
+      # utilized_time =
+      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON"] end)
+      #   |> Enum.map(fn ast -> ast.hours end)
+      #   |> Enum.sum()
+
+      ppm_work_orders =
+        (from wo in WorkOrder, where: wo.asset_id == ^l.id and wo.asset_type == ^"E" and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date)
         |> Repo.all(prefix: prefix)
 
       completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
@@ -441,17 +651,29 @@ defmodule Inconn2Service.Report do
         end
 
       %{
-        asset_name: e.name,
-        asset_code: e.equipment_code,
-        asset_category: AssetConfig.get_asset_category!(e.asset_category_id, prefix).name,
-        status: e.status,
-        criticality: e.criticality,
-        up_time: up_time,
-        utilized_time: utilized_time,
+        asset_name: l.name,
+        asset_code: l.location_code,
+        asset_category: AssetConfig.get_asset_category!(l.asset_category_id, prefix).name,
+        status: l.status,
+        criticality: (if l.criticality <= 2, do: "Critical", else: "Not Critical"),
+        up_time: Float.ceil(up_time, 2),
+        utilized_time: Float.ceil(utilized_time, 2),
         ppm_completion_percentage: completion_percentage
       }
     end)
   end
+
+  defp get_last_entry_previous(asset_id, asset_type, date_time, prefix) do
+    query =
+      from(ast in AssetStatusTrack,
+          where: ast.asset_id == ^asset_id and
+                ast.asset_type == ^asset_type and
+                ast.changed_date_time <= ^date_time,
+                order_by: [desc: ast.changed_date_time], limit: 1)
+
+    Repo.one(query, prefix: prefix)
+  end
+
 
   defp get_asset_from_workorder_template(work_order, prefix) do
     workorder_template = Workorder.get_workorder_template!(work_order.workorder_template_id, prefix)
@@ -502,8 +724,8 @@ defmodule Inconn2Service.Report do
   defp get_dates_for_query(nil, nil, site_id, prefix) do
     site = AssetConfig.get_site!(site_id, prefix)
     {
-      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1),
-      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+      DateTime.now!(site.time_zone) |> DateTime.to_date(),
+      DateTime.now!(site.time_zone) |> DateTime.to_date()
     }
   end
 
@@ -511,7 +733,7 @@ defmodule Inconn2Service.Report do
     site = AssetConfig.get_site!(site_id, prefix)
     {
       Date.from_iso8601!(from_date),
-      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+      DateTime.now!(site.time_zone) |> DateTime.to_date()
     }
   end
 
@@ -524,11 +746,11 @@ defmodule Inconn2Service.Report do
   end
 
 
-  defp convert_to_pdf(report_title, data, report_headers, report_for) do
-    create_report_structure(report_title, data, report_headers, report_for)
+  defp convert_to_pdf(report_title, filters, data, report_headers, report_for) do
+    create_report_structure(report_title, filters, data, report_headers, report_for)
   end
 
-  def create_report_structure(report_title, data, report_headers, report_for) do
+  def create_report_structure(report_title, filters, data, report_headers, report_for) do
     string =
       Sneeze.render(
         [
@@ -540,11 +762,42 @@ defmodule Inconn2Service.Report do
             },
             "#{report_title}"
           ],
+            [
+              :h2,
+              if filters.licensee != nil do
+                "Licensee: #{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :h2,
+              if filters.site != nil do
+                "Site: #{filters.site.name}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"font-size" => "20px"})},
+              if filters.from_date != nil do
+                "From Date: #{filters.from_date}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.to_date != nil do
+                "To Date: #{filters.to_date}"
+              end
+            ],
           [
             :table,
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
             create_table_body(data, report_for)
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "right", "font-style" => "italic"})},
+            "Powered By Inconn"
           ]
         ]
       )
@@ -666,6 +919,59 @@ defmodule Inconn2Service.Report do
     end)
   end
 
+  defp create_table_body(report_body_json, "IN") do
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.item_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.item_type
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_category
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.quantity_held
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.reorder_level
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.uom
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.store_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.aisle_bin_row
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.supplier
+        ],
+      ]
+    end)
+  end
+
   defp create_table_body(report_body_json, "WO") do
     Enum.map(report_body_json, fn rbj ->
       [
@@ -763,6 +1069,56 @@ defmodule Inconn2Service.Report do
       "CS" -> "Cancelled"
       "RO" -> "Reopened"
     end
+  end
+
+  defp filter_data(query_params, prefix) do
+    "inc_" <> sub_domain = prefix
+    licensee = Account.get_licensee_by_sub_domain(sub_domain)
+    site =
+            if query_params["site_id"] != nil do
+              AssetConfig.get_site!(query_params["site_id"], prefix)
+            else
+              nil
+            end
+
+    asset =
+            if query_params["asset_id"] != nil and query_params["asset_type"] != nil do
+              case query_params["asset_type"] do
+                "L" ->
+                      AssetConfig.get_location!(query_params["asset_id"], prefix)
+                "E" ->
+                      AssetConfig.get_equipment!(query_params["asset_id"], prefix)
+              end
+            else
+              nil
+            end
+
+    work_order_status =
+            if query_params["status"] != nil do
+              match_work_order_status(query_params["status"])
+            else
+              nil
+            end
+
+    user =
+            if query_params["user_id"] != nil do
+              Staff.get_user!(query_params["user_id"], prefix)
+            else
+              nil
+            end
+
+    from_date = query_params["from_date"]
+    to_date = query_params["to_date"]
+
+    %{
+      licensee: licensee,
+      site: site,
+      asset: asset,
+      work_order_status: work_order_status,
+      user: user,
+      from_date: from_date,
+      to_date: to_date
+    }
   end
 
 
