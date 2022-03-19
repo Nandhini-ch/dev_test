@@ -15,6 +15,69 @@ defmodule Inconn2ServiceWeb.ReportController do
     |> send_resp(:ok, work_order_report_data)
   end
 
+  def get_workflow_report(conn, _params) do
+    result = Report.work_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.pdf\"")
+        |> send_resp(200, result)
+
+      "csv" ->
+        csv = result |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.csv\"")
+        |> send_resp(200, csv)
+
+      _ ->
+        render(conn, "work_order_report.json", work_order_info: result)
+    end
+  end
+
+  def get_work_request_report(conn, _params) do
+    result = Report.work_request_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_request_report.pdf\"")
+        |> send_resp(200, result)
+
+      "csv" ->
+        csv = result |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_request_report.csv\"")
+        |> send_resp(200, csv)
+
+      _ ->
+        render(conn, "work_order_report.json", work_order_info: result)
+    end
+  end
+
+  def get_asset_status_report(conn, _params) do
+    result = Report.asset_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"asset_status_report.pdf\"")
+        |> send_resp(200, result)
+
+      "csv" ->
+        csv = result |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"asset_status_report.csv\"")
+        |> send_resp(200, csv)
+
+      _ ->
+        render(conn, "work_order_report.json", work_order_info: result)
+    end
+  end
+
   def get_workorder_status_report(conn, _) do
     workorder_status_report_data = Report.csg_workorder_report(conn.assigns.sub_domain_prefix)
     conn
@@ -48,7 +111,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_inventory_report(conn, _params) do
-    inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix)
+    inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "inventory_report.json", inventory_info: inventory_report_data)
   end
 end

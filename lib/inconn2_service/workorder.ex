@@ -437,20 +437,24 @@ defmodule Inconn2Service.Workorder do
   end
 
   defp validate_for_future_date(cs, prefix) do
-    first_occurrance_date = get_field(cs, :first_occurrance_date)
-    asset_id = get_field(cs, :asset_id, nil)
-    asset_type = get_field(cs, :asset_type, nil)
-    if asset_id != nil and asset_type != nil do
-      asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
-      if asset != nil do
-        {date, _time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
-        if first_occurrance_date != nil do
-          case Date.compare(first_occurrance_date, date) do
+    if Map.has_key?(cs.changes, :first_occurrance_date) or Map.has_key?(cs.changes, :first_occurrance_time) do
+      first_occurrance_date = get_field(cs, :first_occurrance_date)
+      first_occurrance_time = get_field(cs, :first_occurrance_time)
+      asset_id = get_field(cs, :asset_id, nil)
+      asset_type = get_field(cs, :asset_type, nil)
+      if asset_id != nil and asset_type != nil and first_occurrance_date != nil and first_occurrance_time != nil do
+        asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
+        if asset != nil do
+          {date, time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
+          dt = NaiveDateTime.new!(date, time)
+          f_dt = NaiveDateTime.new!(first_occurrance_date, first_occurrance_time)
+          case Date.compare(f_dt, dt) do
             :gt ->
               cs
 
-            :lt ->
-              add_error(cs, :first_occurance_date, "Has to be a date in the future")
+            _ ->
+              add_error(cs, :first_occurance_date, "Date and time should be in the future")
+              |> add_error(:first_occurance_time, "Date and time should be in the future")
           end
         else
           cs
@@ -521,8 +525,13 @@ defmodule Inconn2Service.Workorder do
               {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
 
             _ ->
-              Common.update_work_scheduler(work_scheduler, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
-              {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              if attrs["first_occurrence_date"] != nil or attrs["first_occurrence_time"] != nil do
+                Common.delete_work_scheduler(workorder_schedule.id, prefix)
+                Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              else
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              end
           end
       _ ->
         result
@@ -863,12 +872,23 @@ defmodule Inconn2Service.Workorder do
               |> validate_user_id(prefix)
               |> validate_workorder_template_id(prefix)
               |> validate_workorder_schedule_id(prefix)
+              |> prefill_asset_type(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
           create_status_track(work_order, user, prefix)
       _ ->
         result
+    end
+  end
+
+  defp prefill_asset_type(cs, prefix) do
+    workorder_template_id = get_field(cs, :workorder_template_id, nil)
+    if workorder_template_id != nil do
+      workorder_template = get_workorder_template!(workorder_template_id, prefix)
+      change(cs, %{asset_type: workorder_template.asset_type})
+    else
+      cs
     end
   end
 
@@ -1023,7 +1043,6 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
-
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           result
@@ -1032,6 +1051,17 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  # defp record_meter_readings(work_order, updated_work_order, prefix) do
+  #   if work_order.status != "cp" and updated_work_order.status == "cp" do
+  #     Measurements.record_meter_readings_from_work_order(work_order, prefix)
+
+  defp record_meter_readings(work_order, updated_work_order, prefix) do
+    if work_order.status != "cp" and updated_work_order.status == "cp" do
+      Measurements.record_meter_readings_from_work_order(work_order, prefix)
+    else
+      updated_work_order
+    end
+  end
 
   defp change_ticket_status(old_work_order, updated_work_order, user, prefix) do
     if updated_work_order.type == "TKT" and old_work_order.status != "cp" and updated_work_order.status == "cp" do
@@ -1935,6 +1965,7 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
     WorkorderStatusTrack.changeset(workorder_status_track, attrs)
   end
+
   defp get_asset(workorder_schedule, prefix) do
     case workorder_schedule.asset_type do
       "L" ->
@@ -2007,7 +2038,7 @@ defmodule Inconn2Service.Workorder do
     asset = get_asset(workorder_schedule, prefix)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
-                                            "asset_type" => workorder_template.asset_type,
+                                            # "asset_type" => workorder_template.asset_type,
                                             "type" => "PRV",
                                             "scheduled_date" => workorder_schedule.next_occurrence_date,
                                             "scheduled_time" => workorder_schedule.next_occurrence_time,

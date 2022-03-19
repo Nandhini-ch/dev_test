@@ -40,6 +40,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       status: work_request.status,
       is_approvals_required: work_request.is_approvals_required,
       approvals_required: work_request.approvals_required,
+      approvals_required_user: render_many(work_request.approvals_required_user, UserView, "user_without_org_unit.json"),
       response_tat: work_request.response_tat,
       resolution_tat: work_request.resolution_tat,
       work_order_id: work_request.work_order_id}

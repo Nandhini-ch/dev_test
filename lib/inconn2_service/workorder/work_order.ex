@@ -43,7 +43,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
                     :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id,
-                    :is_deactivated, :deactivated_date_time])
+                    :is_deactivated, :deactivated_date_time, :asset_type])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK", "TKT"])
     |> validate_start_date_time()

@@ -846,6 +846,7 @@ defmodule Inconn2Service.Inventory do
     multi = Multi.new()
     |> Multi.insert(:inventory_transaction, InventoryTransaction.changeset(%InventoryTransaction{}, attrs)
     |> calculate_cost(prefix)
+    |> auto_fill_site_id(prefix)
     |> validate_presence_in_database(prefix), prefix: prefix)
     |> Multi.run(:inventory_stock, fn repo, %{inventory_transaction: inventory_transaction} ->
       inventory_stock = repo.get_by(InventoryStock, [inventory_location_id: inventory_transaction.inventory_location_id, item_id: inventory_transaction.item_id], prefix: prefix)
@@ -1153,7 +1154,17 @@ defmodule Inconn2Service.Inventory do
       end
   end
 
-  def calculate_cost(cs, prefix)  do
+  defp auto_fill_site_id(cs, prefix) do
+    inventory_location_id = get_change(cs, :inventory_location_id, nil)
+    if inventory_location_id != nil do
+      inventory_location = Inconn2Service.Inventory.get_inventory_location!(inventory_location_id, prefix)
+      change(cs, %{site_id: inventory_location.site_id})
+    else
+      cs
+    end
+  end
+
+  defp calculate_cost(cs, prefix)  do
     case get_field(cs, :transaction_type, nil) do
       "IN" ->
         supplier_id = get_field(cs, :supplier_id, nil)
