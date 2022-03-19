@@ -187,28 +187,43 @@ defmodule Inconn2Service.Report do
 
     inventory_transactions = Repo.all(dynamic_query, prefix: prefix)
 
+    result =
+      Enum.map(inventory_transactions, fn it ->
 
-    Enum.map(inventory_transactions, fn it ->
+        asset_category =
+          Enum.map(it.asset_category_ids, fn id ->
+            Inconn2Service.AssetConfig.get_asset_category!(id, prefix).name
+          end) |> Enum.join(",")
 
-      asset_category =
-        Enum.map(it.asset_category_ids, fn id ->
-          Inconn2Service.AssetConfig.get_asset_category!(id, prefix).name
-        end) |> Enum.join(",")
+        IO.inspect(it.inserted_at >= naive_from_date)
 
-      IO.inspect(it.inserted_at >= naive_from_date)
+        %{
+          item_name: it.item_name,
+          item_type: it.item_type,
+          asset_category: asset_category,
+          quantity_held: it.quantity_held,
+          reorder_level: it.reorder_level,
+          uom: it.uom,
+          store_name: it.store_name,
+          aisle_bin_row: it.aisle <> "-" <> it.bin <> "-" <> it.row,
+          supplier: it.supplier
+        }
+      end)
+    report_headers = ["Item Name", "Item Type", "Asset Category", "Quantity Held", "Reorder Level", "UOM", "Store Name", "Aisle/Bin/Row", "Supplier"]
 
-      %{
-        item_name: it.item_name,
-        item_type: it.item_type,
-        asset_category: asset_category,
-        quantity_held: it.quantity_held,
-        reorder_level: it.reorder_level,
-        uom: it.uom,
-        store_name: it.store_name,
-        aisle_bin_row: it.aisle <> "-" <> it.bin <> "-" <> it.row,
-        supplier: it.supplier
-      }
-    end)
+    filters = filter_data(query_params, prefix)
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Inventory Report", filters, result, report_headers, "IN")
+
+      "csv" ->
+        csv_for_workrequest_report(report_headers, result)
+
+      _ ->
+        result
+    end
+
   end
 
   def work_request_report(prefix, query_params) do
@@ -899,6 +914,59 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.time_taken_to_close
+        ],
+      ]
+    end)
+  end
+
+  defp create_table_body(report_body_json, "IN") do
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.item_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.item_type
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_category
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.quantity_held
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.reorder_level
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.uom
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.store_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.aisle_bin_row
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.supplier
         ],
       ]
     end)
