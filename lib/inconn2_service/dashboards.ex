@@ -12,17 +12,30 @@ defmodule Inconn2Service.Dashboards do
   alias Inconn2Service.Measurements.MeterReading
 
   def ticket_linear_chart(prefix, query_params) do
-    main_query = from wo in WorkOrder, where: wo.type == "TKT",
-    join: wr in WorkRequest, on: wo.work_request_id == wr.id,
+    # main_query = from wo in WorkOrder, where: wo.type == "TKT",
+    # join: wr in WorkRequest, on: wo.work_request_id == wr.id,
+    # select: %{work_order: wo, work_request: wr}
+
+    main_query = from wr in WorkRequest,
+    left_join: wo in WorkOrder, on: wo.work_request_id == wr.id,
     select: %{work_order: wo, work_request: wr}
+
 
     query_params = rectify_query_params(query_params)
 
 
     dynamic_query = get_dynamic_query_for_workflow(main_query, query_params, prefix)
 
-    work_orders =
-      apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+    # work_orders =
+    #   apply_dates_to_workflow_query(dynamic_query, query_params, prefix) |> Repo.all(prefix: prefix)
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
+    from_naive = NaiveDateTime.new!(from_date, Time.new!(0, 0, 0))
+    to_naive = NaiveDateTime.new!(to_date, Time.new!(23, 59, 59))
+
+    query_with_date = from dq in dynamic_query, where: dq.raised_date_time >= ^from_naive and dq.raised_date_time <= ^to_naive
+
+    work_orders = Repo.all(query_with_date, prefix: prefix)
 
 
     open_tickets = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end)
