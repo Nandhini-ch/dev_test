@@ -1243,8 +1243,8 @@ defmodule Inconn2Service.AssetConfig do
   def get_asset_from_qr_code(qr_code, prefix) do
     [asset_type, uuid] = String.split(qr_code, ":")
     case asset_type do
-      "L" -> {"L", get_location_by_qr_code(uuid, prefix)}
-      "E" -> {"E", get_equipment_by_qr_code(uuid, prefix)}
+      "L" -> {"L", get_location_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L")}
+      "E" -> {"E", get_equipment_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L")}
     end
   end
 
