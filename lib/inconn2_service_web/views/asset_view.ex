@@ -11,4 +11,10 @@ defmodule Inconn2ServiceWeb.AssetView do
     %{data: render_one(asset, EquipmentView, "equipment.json")}
   end
 
+  def render("success.json", %{success: success}) do
+    %{
+      data: success
+    }
+  end
+
 end
