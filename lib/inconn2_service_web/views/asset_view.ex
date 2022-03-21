@@ -17,4 +17,12 @@ defmodule Inconn2ServiceWeb.AssetView do
     }
   end
 
+  def render("asset_details.json", %{asset: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      asset_type: asset.asset_type
+     }
+  end
+
 end
