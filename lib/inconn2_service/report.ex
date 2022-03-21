@@ -9,7 +9,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
-  alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack, WorkrequestSubcategory}
+  alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
@@ -44,6 +44,9 @@ defmodule Inconn2Service.Report do
       Enum.reduce(query_params, main_query, fn
         {"site_id", site_id}, main_query ->
           from q in main_query, where: q.site_id == ^site_id
+
+        {"asset_type", asset_type}, main_query ->
+          from q in main_query, where: q.asset_type == ^asset_type
 
         {"asset_id", asset_id}, main_query ->
           from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
@@ -238,6 +241,12 @@ defmodule Inconn2Service.Report do
 
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
+
+        {"asset_type", asset_type}, main_query ->
+          from q in main_query, where: q.asset_type == ^asset_type
+
+        {"asset_id", asset_id}, main_query ->
+          from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
 
         {"workrequest_category_id", workrequest_category_id}, main_query ->
           from q in main_query, where: q.workrequest_category_id == ^workrequest_category_id
