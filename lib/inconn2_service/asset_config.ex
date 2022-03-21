@@ -1239,6 +1239,15 @@ defmodule Inconn2Service.AssetConfig do
     Equipment.changeset(equipment, attrs)
   end
 
+
+  def get_asset_from_qr_code(qr_code, prefix) do
+    [asset_type, uuid] = String.split(qr_code, ":")
+    case asset_type do
+      "L" -> get_location_by_qr_code(uuid, prefix)
+      "E" -> get_equipment_by_qr_code(uuid, prefix)
+    end
+  end
+
   alias Inconn2Service.AssetConfig.Party
 
   @doc """
