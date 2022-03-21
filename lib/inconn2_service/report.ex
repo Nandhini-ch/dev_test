@@ -456,7 +456,7 @@ defmodule Inconn2Service.Report do
         case length(asset_status_tracks) do
           0 ->
             last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
-            if last_entry != nil and last_entry.status in ["ON", "OFF"] do
+            if last_entry != nil and last_entry.status_changed in ["ON", "OFF"] do
               NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
             else
               0.0
