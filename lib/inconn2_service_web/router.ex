@@ -71,6 +71,9 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_equipments", ReferenceDownloadController, :download_equipments
     post "/upload_equipments", ReferenceUploadController, :upload_equipments
 
+
+    get "/assets/:qr_code/", AssetController, :get_asset_from_qr_code
+
     resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]
 
     resources "/shifts", ShiftController, except: [:new, :edit]
