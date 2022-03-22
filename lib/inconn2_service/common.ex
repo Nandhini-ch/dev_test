@@ -233,9 +233,10 @@ defmodule Inconn2Service.Common do
     |> Repo.update()
   end
 
-  def delete_work_scheduler(workorder_schedule_id) do
-    work_scheduler = Repo.get_by(WorkScheduler, workorder_schedule_id: workorder_schedule_id)
-    Repo.delete(work_scheduler)
+  def delete_work_scheduler(workorder_schedule_id, prefix) do
+    from(w in WorkScheduler, where: w.workorder_schedule_id == ^workorder_schedule_id and w.prefix == ^prefix)
+    |> Repo.one()
+    |> Repo.delete()
   end
 
   def delete_work_scheduler_cs(workorder_schedule_id, prefix, attrs \\ %{}) do

@@ -363,6 +363,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.insert(prefix: prefix)
@@ -432,6 +433,43 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp validate_for_future_date(cs, prefix) do
+    if Map.has_key?(cs.changes, :first_occurrance_date) or Map.has_key?(cs.changes, :first_occurrance_time) do
+      first_occurrance_date = get_field(cs, :first_occurrance_date)
+      first_occurrance_time = get_field(cs, :first_occurrance_time)
+      asset_id = get_field(cs, :asset_id, nil)
+      asset_type = get_field(cs, :asset_type, nil)
+      if asset_id != nil and asset_type != nil and first_occurrance_date != nil and first_occurrance_time != nil do
+        asset = AssetConfig.get_asset_by_type(asset_id, asset_type, prefix)
+        if asset != nil do
+          {date, time} = get_date_time_in_required_time_zone(asset.site_id, prefix)
+          dt = NaiveDateTime.new!(date, time)
+          f_dt = NaiveDateTime.new!(first_occurrance_date, first_occurrance_time)
+          case Date.compare(f_dt, dt) do
+            :gt ->
+              cs
+
+            _ ->
+              add_error(cs, :first_occurance_date, "Date and time should be in the future")
+              |> add_error(:first_occurance_time, "Date and time should be in the future")
+          end
+        else
+          cs
+        end
+      else
+        cs
+      end
+    else
+      cs
+    end
+  end
+
+  defp get_date_time_in_required_time_zone(site_id, prefix) do
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
+  end
+
   defp calculate_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id, nil)
     first_date = get_field(cs, :first_occurrence_date, nil)
@@ -470,6 +508,7 @@ defmodule Inconn2Service.Workorder do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
               |> Repo.update(prefix: prefix)
@@ -482,8 +521,13 @@ defmodule Inconn2Service.Workorder do
               {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
 
             _ ->
-              Common.update_work_scheduler(work_scheduler, %{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
-              {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              if attrs["first_occurrence_date"] != nil or attrs["first_occurrence_time"] != nil do
+                Common.delete_work_scheduler(workorder_schedule.id, prefix)
+                Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              else
+                {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
+              end
           end
       _ ->
         result
