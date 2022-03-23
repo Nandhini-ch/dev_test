@@ -108,7 +108,8 @@ defmodule Inconn2Service.Dashboards do
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
 
-    completed_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true end) |> Enum.count()
+    completed_overdue_work_orders = Enum.filter(completed_work_orders, fn wo -> wo.overdue == true end) |> Enum.count()
+    completed_in_time_work_orders = Enum.filter(completed_work_orders, fn wo -> wo.overdue != true end) |> Enum.count()
 
     total_count = Enum.count(work_orders)
 
@@ -155,6 +156,13 @@ defmodule Inconn2Service.Dashboards do
         0
       end
 
+    completed_in_time_percentage =
+      if total_count != 0 do
+        completed_in_time_work_orders / total_count * 100 |> Float.ceil(2)
+      else
+        0
+      end
+
     # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
 
@@ -182,6 +190,10 @@ defmodule Inconn2Service.Dashboards do
         completed_overdue_work_orders: %{
           number: completed_overdue_work_orders,
           precentage: completed_overdue_percentage
+        },
+        completed_in_time_work_orders: %{
+          number: completed_in_time_work_orders,
+          percentage: completed_in_time_percentage
         },
         open_count_with_asset_category: open_count_with_asset_category
       },
