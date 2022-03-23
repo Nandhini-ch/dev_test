@@ -108,8 +108,8 @@ defmodule Inconn2Service.Dashboards do
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
 
-    completed_overdue_work_orders = Enum.filter(completed_work_orders, fn wo -> wo.overdue == true end) |> Enum.count()
-    completed_in_time_work_orders = Enum.filter(completed_work_orders, fn wo -> wo.overdue != true end) |> Enum.count()
+    completed_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true and wo.status == "cp" end) |> Enum.count()
+    completed_in_time_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue != true and wo.status == "cp" end) |> Enum.count()
 
     total_count = Enum.count(work_orders)
 
