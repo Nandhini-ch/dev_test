@@ -556,13 +556,26 @@ defmodule Inconn2Service.Workorder do
     if next_occurrence_date != nil and next_occurrence_time != nil do
       case repeat_unit do
         "H" ->
-          time = Time.add(next_occurrence_time, repeat_every*3600) |> Time.truncate(:second)
+          dt = NaiveDateTime.new!(next_occurrence_date, next_occurrence_time)
+          dt_new = NaiveDateTime.add(dt, repeat_every*3600) |> NaiveDateTime.truncate(:second)
+          # time = Time.add(next_occurrence_time, repeat_every*3600) |> Time.truncate(:second)
+          date_new = NaiveDateTime.to_date(dt_new)
+          time_new = NaiveDateTime.to_time(dt_new)
           date = next_occurrence_date
-          if time >= time_start and time <= time_end do
-            change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
-            |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-            |> check_for_holidays()
-            |> check_before_applicable_date(applicable_end)
+          if time_new >= time_start and time_new <= time_end do
+            if date_new == date do
+              change(cs, %{next_occurrence_date: date, next_occurrence_time: time_new})
+              |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+              |> check_for_holidays()
+              |> check_before_applicable_date(applicable_end)
+            else
+              time = first_occurrence_time
+              date = Date.add(next_occurrence_date, 1)
+              change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
+              |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
+              |> check_for_holidays()
+              |> check_before_applicable_date(applicable_end)
+            end
           else
             time = first_occurrence_time
             date = Date.add(next_occurrence_date, 1)
