@@ -13,6 +13,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.Common
+  alias Inconn2Service.Prompt
   # alias Inconn2Service.Account.Licensee
 
   @doc """
@@ -1244,13 +1245,21 @@ defmodule Inconn2Service.AssetConfig do
 
   end
 
-  # def get_status_change_alert(existing_asset, update_asset) do
-  #   cond do
-  #     updated_asset.status == "BRK" ->
-  #       alert = Common.get_alert_by_code("ASSB")
-  #       alert_config = Prom
-  #   end
-  # end
+  def get_status_change_alert(existing_asset, updated_asset, asset_type, prefix) do
+    cond do
+      updated_asset.status == "BRK" ->
+        alert = Common.get_alert_by_code("ASSB")
+        alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+        attrs = %{
+          "alert_id" => alert.id,
+          "asset_id" => updated_asset.id,
+          "alert_type" => alert.type,
+        }
+        Enum.map(alert_config.user_ids, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+    end
+  end
 
 
   def get_asset_from_qr_code(qr_code, prefix) do

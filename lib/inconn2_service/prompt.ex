@@ -35,7 +35,11 @@ defmodule Inconn2Service.Prompt do
       ** (Ecto.NoResultsError)
 
   """
-  def get_alert_notification_config!(id, prefix), do: Repo.get!(AlertNotificationConfig, id, prefix: prefix)
+  def get_alert_notification_config!(id, prefix), do: Repo.get!(AlertNotificationConfig, id, prefix: prefix)\
+
+  def get_alert_notification_config_by_alert_id(alert_id, prefix) do
+    Repo.get_by(AlertNotificationConfig, [alert_id: alert_id], prefix: prefix)
+  end
 
   @doc """
   Creates a alert_notification_config.
@@ -113,8 +117,8 @@ defmodule Inconn2Service.Prompt do
       [%UserAlert{}, ...]
 
   """
-  def list_user_alerts do
-    Repo.all(UserAlert)
+  def list_user_alerts(prefix) do
+    Repo.all(UserAlert, prefix: prefix)
   end
 
   @doc """
@@ -131,7 +135,7 @@ defmodule Inconn2Service.Prompt do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user_alert!(id), do: Repo.get!(UserAlert, id)
+  def get_user_alert!(id, prefix), do: Repo.get!(UserAlert, id, prefix: prefix)
 
   @doc """
   Creates a user_alert.
@@ -145,10 +149,10 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_user_alert(attrs \\ %{}) do
+  def create_user_alert(attrs \\ %{}, prefix) do
     %UserAlert{}
     |> UserAlert.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -163,10 +167,10 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user_alert(%UserAlert{} = user_alert, attrs) do
+  def update_user_alert(%UserAlert{} = user_alert, attrs, prefix) do
     user_alert
     |> UserAlert.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -181,8 +185,8 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_user_alert(%UserAlert{} = user_alert) do
-    Repo.delete(user_alert)
+  def delete_user_alert(%UserAlert{} = user_alert, prefix) do
+    Repo.delete(user_alert, prefix: prefix)
   end
 
   @doc """
