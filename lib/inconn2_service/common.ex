@@ -452,4 +452,102 @@ defmodule Inconn2Service.Common do
   def change_list_of_value(%ListOfValue{} = list_of_value, attrs \\ %{}) do
     ListOfValue.changeset(list_of_value, attrs)
   end
+
+  alias Inconn2Service.Common.AlertNotificationReserve
+
+  @doc """
+  Returns the list of alert_notification_reserves.
+
+  ## Examples
+
+      iex> list_alert_notification_reserves()
+      [%AlertNotificationReserve{}, ...]
+
+  """
+  def list_alert_notification_reserves do
+    Repo.all(AlertNotificationReserve)
+  end
+
+  @doc """
+  Gets a single alert_notification_reserve.
+
+  Raises `Ecto.NoResultsError` if the Alert notification reserve does not exist.
+
+  ## Examples
+
+      iex> get_alert_notification_reserve!(123)
+      %AlertNotificationReserve{}
+
+      iex> get_alert_notification_reserve!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_alert_notification_reserve!(id), do: Repo.get!(AlertNotificationReserve, id)
+
+  def get_alert_by_code(code), do: Repo.get_by(AlertNotificationReserve, [code: code])
+
+  @doc """
+  Creates a alert_notification_reserve.
+
+  ## Examples
+
+      iex> create_alert_notification_reserve(%{field: value})
+      {:ok, %AlertNotificationReserve{}}
+
+      iex> create_alert_notification_reserve(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_alert_notification_reserve(attrs \\ %{}) do
+    %AlertNotificationReserve{}
+    |> AlertNotificationReserve.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a alert_notification_reserve.
+
+  ## Examples
+
+      iex> update_alert_notification_reserve(alert_notification_reserve, %{field: new_value})
+      {:ok, %AlertNotificationReserve{}}
+
+      iex> update_alert_notification_reserve(alert_notification_reserve, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve, attrs) do
+    alert_notification_reserve
+    |> AlertNotificationReserve.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a alert_notification_reserve.
+
+  ## Examples
+
+      iex> delete_alert_notification_reserve(alert_notification_reserve)
+      {:ok, %AlertNotificationReserve{}}
+
+      iex> delete_alert_notification_reserve(alert_notification_reserve)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve) do
+    Repo.delete(alert_notification_reserve)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking alert_notification_reserve changes.
+
+  ## Examples
+
+      iex> change_alert_notification_reserve(alert_notification_reserve)
+      %Ecto.Changeset{data: %AlertNotificationReserve{}}
+
+  """
+  def change_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve, attrs \\ %{}) do
+    AlertNotificationReserve.changeset(alert_notification_reserve, attrs)
+  end
 end
