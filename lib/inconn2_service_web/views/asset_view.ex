@@ -21,7 +21,11 @@ defmodule Inconn2ServiceWeb.AssetView do
     %{
       id: asset.id,
       name: asset.name,
-      asset_type: asset.asset_type
+      asset_type: asset.asset_type,
+      site_id: asset.site_id,
+      site_name: asset.site_name,
+      location_id: asset.location_id,
+      location_name: asset.location_name
      }
   end
 
