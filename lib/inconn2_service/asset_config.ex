@@ -1243,8 +1243,20 @@ defmodule Inconn2Service.AssetConfig do
   def get_asset_from_qr_code(qr_code, prefix) do
     [asset_type, uuid] = String.split(qr_code, ":")
     case asset_type do
-      "L" -> {"L", get_location_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L")}
-      "E" -> {"E", get_equipment_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L")}
+      "L" -> {"L", get_location_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L") |> preload_site_and_location(prefix)}
+      "E" -> {"E", get_equipment_by_qr_code(uuid, prefix) |> Map.put(:asset_type, "L") |> preload_site_and_location(prefix)}
+    end
+  end
+
+  def preload_site_and_location(asset, prefix) do
+    site = get_site!(asset.site_id, prefix)
+    case asset.asset_type do
+      "L" ->
+         asset |> Map.put(:location_id, asset.id) |> Map.put(:location_name, asset.name) |> Map.put(:site_name, site.name)
+
+      "E" ->
+        location = get_location!(asset.location_id, prefix)
+         asset |> Map.put(:location_id, asset.location_id) |> Map.put(:location_name, location.name) |> Map.put(:site_name, site.name)
     end
   end
 

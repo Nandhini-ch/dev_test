@@ -1076,7 +1076,7 @@ defmodule Inconn2Service.Report do
       "RJ" -> "Rejected"
       "CL" -> "Closed"
       "CS" -> "Cancelled"
-      "RO" -> "Reopened"
+      "ROP" -> "Reopened"
     end
   end
 
