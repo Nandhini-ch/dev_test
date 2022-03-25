@@ -717,10 +717,10 @@ defmodule Inconn2Service.Dashboards do
     site_meters = site_config.config["main_meters"]
     energy_meters = from(e in Equipment, where: e.site_id == ^site_id)
                     |> Repo.all(prefix: prefix)
+                    |> Enum.filter(fn x -> x.id not in site_meters end)
     top_three = Enum.map(energy_meters, fn energy_meter ->
                       get_energy_meter_reading_for_multiple_dates_single_asset(energy_meter, date_list, prefix)
                   end)
-                |> Enum.filter(fn x -> x.id not in energy_meters end)
                 |> Enum.sort_by(&(&1.aggregated_value), :desc)
 
     top1 = Enum.at(top_three, 0)
