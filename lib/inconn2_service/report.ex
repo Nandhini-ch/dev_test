@@ -239,8 +239,14 @@ defmodule Inconn2Service.Report do
         {"site_id", site_id}, main_query ->
           from q in main_query, where: q.site_id == ^site_id
 
-        {"status", status}, main_query ->
-          from q in main_query, where: q.status == ^status
+        {"status", "closed"}, main_query ->
+          from q in main_query, where: q.status in ["CL", "CP"]
+
+        {"status", "open"}, main_query ->
+          from q in main_query, where: q.status not in ["CL", "ROP"]
+
+        {"status", "reopened"}, main_query ->
+          from q in main_query, where: q.status == ^"ROP"
 
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
