@@ -36,6 +36,7 @@ defmodule Inconn2Service.AssetConfig do
    Site
    |> Repo.add_active_filter(query_params)
    |> Repo.all(prefix: prefix)
+   |> sort_sites()
   end
 
   @doc """
