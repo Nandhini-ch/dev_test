@@ -1327,17 +1327,24 @@ defmodule Inconn2Service.AssetConfig do
   defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-    attrs = %{
-      "alert_notification_id" => alert.id,
-      "asset_id" => updated_asset.id,
-      "asset_type" => asset_type,
-      "type" => alert.type,
-      "description" => description
-    }
 
-    Enum.map(alert_config.user_ids, fn id ->
-      Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
-    end)
+    case alert_config do
+      nil ->
+        {:ok, updated_asset}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "asset_id" => updated_asset.id,
+          "asset_type" => asset_type,
+          "type" => alert.type,
+          "description" => description
+        }
+
+        Enum.map(alert_config.user_ids, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+    end
   end
 
 

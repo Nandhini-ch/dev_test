@@ -38,7 +38,7 @@ defmodule Inconn2Service.Prompt do
   def get_alert_notification_config!(id, prefix), do: Repo.get!(AlertNotificationConfig, id, prefix: prefix)\
 
   def get_alert_notification_config_by_alert_id(alert_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_id: alert_id], prefix: prefix)
+    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id], prefix: prefix)
   end
 
   @doc """
