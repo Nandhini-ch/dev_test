@@ -4,24 +4,26 @@
 # remember to add this file to your .gitignore.
 use Mix.Config
 
-database_url =
-  System.get_env("DATABASE_URL") ||
-    raise """
-    environment variable DATABASE_URL is missing.
-    For example: ecto://USER:PASS@HOST/DATABASE
-    """
+# database_url =
+#   System.get_env("DATABASE_URL") ||
+#     raise """
+#     environment variable DATABASE_URL is missing.
+#     For example: ecto://USER:PASS@HOST/DATABASE
+#     """
+database_url="ecto://postgres:postgres@localhost:5432/inconn2_service_dev"
 
 config :inconn2_service, Inconn2Service.Repo,
   # ssl: true,
   url: database_url,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
-secret_key_base =
-  System.get_env("SECRET_KEY_BASE") ||
-    raise """
-    environment variable SECRET_KEY_BASE is missing.
-    You can generate one by calling: mix phx.gen.secret
-    """
+# secret_key_base =
+#   System.get_env("SECRET_KEY_BASE") ||
+#     raise """
+#     environment variable SECRET_KEY_BASE is missing.
+#     You can generate one by calling: mix phx.gen.secret
+#     """
+secret_key_base = "J/msB7xdbQu6gPiO31v6P1QAp8gughdvYFjAUwZXOAViV9nDkpweM4U5wpG0/cGm"
 
 config :inconn2_service, Inconn2ServiceWeb.Endpoint,
   http: [
