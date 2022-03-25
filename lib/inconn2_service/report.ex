@@ -242,8 +242,11 @@ defmodule Inconn2Service.Report do
         {"status", "closed"}, main_query ->
           from q in main_query, where: q.status in ["CL", "CP"]
 
-        {"status", "open"}, main_query ->
-          from q in main_query, where: q.status not in ["CL", "ROP"]
+        {"status", "not-closed"}, main_query ->
+          from q in main_query, where: q.status not in ["CL", "ROP", "RJ", "CP"]
+
+        {"status", "rejected"}, main_query ->
+          from q in main_query, where: q.status == ^"RJ"
 
         {"status", "reopened"}, main_query ->
           from q in main_query, where: q.status == ^"ROP"
