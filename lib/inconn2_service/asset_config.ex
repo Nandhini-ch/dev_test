@@ -25,6 +25,7 @@ defmodule Inconn2Service.AssetConfig do
   """
   def list_sites(prefix) do
     Repo.all(Site, prefix: prefix)
+    |> sort_sites()
   end
 
   defp sort_sites(sites) do
