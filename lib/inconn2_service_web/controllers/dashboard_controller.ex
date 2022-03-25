@@ -9,7 +9,7 @@ defmodule Inconn2ServiceWeb.DashboardController do
   end
 
   def get_energy_meter_speedometer(conn, _) do
-    energy_meter_data = Dashboards.get_energy_meter_speedometer_random(conn.query_params, conn.assigns.sub_domain_prefix)
+    energy_meter_data = Dashboards.get_energy_meter_speedometer(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "energy_meter.json", energy_meter_data: energy_meter_data)
   end
 
