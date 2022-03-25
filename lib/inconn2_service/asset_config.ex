@@ -611,7 +611,8 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-
+        push_alert_notification_for_asset(nil, location, "L", prefix)
+        result
       _ ->
         result
     end
@@ -694,7 +695,8 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_location} ->
         update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
-
+        push_alert_notification_for_asset(location, updated_location, "L", prefix)
+        result
       _ ->
         result
     end
@@ -835,7 +837,15 @@ defmodule Inconn2Service.AssetConfig do
     # TBD: do not allow delete if this location is linked to some other record(s)
     # Add that validation here....
     subtree = HierarchyManager.subtree(location)
-    IO.inspect(Repo.delete_all(subtree, prefix: prefix))
+    result = Repo.delete_all(subtree, prefix: prefix)
+    case result do
+      {_, nil} ->
+        push_alert_notification_for_asset(location, nil, "L", prefix)
+        result
+
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -1022,7 +1032,8 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-
+        push_alert_notification_for_asset(nil, equipment, "E", prefix)
+        result
       _ ->
         result
     end
@@ -1116,7 +1127,8 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_equipment} ->
         update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
-
+        push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix)
+        result
       _ ->
         result
     end
@@ -1215,7 +1227,15 @@ defmodule Inconn2Service.AssetConfig do
     # TBD: do not allow delete if this equipment is linked to some other record(s)
     # Add that validation here....
     subtree = HierarchyManager.subtree(equipment)
-    Repo.delete_all(subtree, prefix: prefix)
+    result = Repo.delete_all(subtree, prefix: prefix)
+    case result do
+      {_, nil} ->
+        push_alert_notification_for_asset(equipment, nil, "E", prefix)
+        result
+
+      _ ->
+        result
+    end
   end
 
   def get_asset_by_type(asset_id, asset_type, prefix) do
@@ -1241,24 +1261,83 @@ defmodule Inconn2Service.AssetConfig do
     Equipment.changeset(equipment, attrs)
   end
 
-  def push_alert_notification(existing_asset, updated_asset) do
 
+  #in case of a new assed, existing is nil and new asset is
+  #matched with updated asset
+  def push_alert_notification_for_asset(nil, updated_asset, asset_type, prefix) do
+    description = ~s(New Asset, #{updated_asset.name} has been added)
+    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, prefix)
+    {:ok, updated_asset}
   end
 
-  def get_status_change_alert(existing_asset, updated_asset, asset_type, prefix) do
+  def push_alert_notification_for_asset(existing_asset, nil, asset_type, prefix) do
+    description = ~s(#{existing_asset.name} has been deleted)
+    create_asset_alert_notification("ASRA", description, nil, asset_type, prefix)
+    {:ok, nil}
+  end
+
+  def push_alert_notification_for_asset(existing_asset, updated_asset, asset_type, prefix) do
     cond do
-      updated_asset.status == "BRK" ->
-        alert = Common.get_alert_by_code("ASSB")
-        alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+      existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
+        description = ~s(#{updated_asset.name}'s status has been changed to Breakdown)
+        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, prefix)
+
+      existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
+        description = ~s(#{updated_asset.name}'s status has been changed to #{updated_asset.status})
+        create_asset_alert_notification("ASST", description, updated_asset, asset_type, prefix)
+
+
+      existing_asset.parent_id != updated_asset.parent_id ->
+        description = ~s(#{updated_asset.name}'s hierarchy has been changed)
+        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, prefix)
+
+      existing_asset != updated_asset ->
+        description = ~s(#{updated_asset.name} has been modified)
+        create_asset_alert_notification("ASED", description, updated_asset, asset_type, prefix)
+
+      true ->
+        {:ok, updated_asset}
+    end
+
+    {:ok, updated_asset}
+  end
+
+  defp create_asset_alert_notification(alert_code, description, nil, asset_type, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    case alert_config do
+      nil ->
+        {:not_found, "Alert Not Configured"}
+
+      alert ->
         attrs = %{
-          "alert_id" => alert.id,
-          "asset_id" => updated_asset.id,
-          "alert_type" => alert.type,
+          "alert_notification_id" => alert.id,
+          "asset_id" => nil,
+          "asset_type" => asset_type,
+          "type" => alert.type,
+          "description" => description
         }
+
         Enum.map(alert_config.user_ids, fn id ->
           Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
+  end
+
+  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    attrs = %{
+      "alert_notification_id" => alert.id,
+      "asset_id" => updated_asset.id,
+      "asset_type" => asset_type,
+      "type" => alert.type,
+      "description" => description
+    }
+
+    Enum.map(alert_config.user_ids, fn id ->
+      Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+    end)
   end
 
 
