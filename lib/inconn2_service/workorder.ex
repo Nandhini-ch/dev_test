@@ -24,6 +24,8 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Ticket
   alias Inconn2Service.Measurements
   alias Inconn2Service.Ticket
+  alias Inconn2Service.Common
+  alias Inconn2Service.Prompt
 
   @doc """
   Returns the list of workorder_templates.
@@ -1051,8 +1053,170 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+
+  def push_alert_notification_for_work_order(existing_work_order, updated_work_order, prefix) do
+    workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
+    {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
+    cond do
+      is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
+        description = ~s(New Work Order Assigned, #{asset.name} with template #{workorder_template.name})
+        create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
+        description = ~s(Work Permit Required for template #{workorder_template.name} on #{asset.name})
+        create_work_order_alert_notification("WPAR", existing_work_order, updated_work_order, description, "workpermit_approval_required",prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
+        description = ~s(Work Permit Approved for template #{workorder_template.name} on #{asset.name})
+        create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
+        description = ~s(Loto Required for template #{workorder_template.name} on #{asset.name})
+        create_work_order_alert_notification("LTAR", existing_work_order, updated_work_order, description, "loto_required", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "lta" ->
+        description = ~s(Loto Approved for template #{workorder_template.name} on #{asset.name})
+        create_work_order_alert_notification("LTAP", existing_work_order, updated_work_order, description, "loto_approved", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woap" ->
+        description = ~s(Workorder Approval Required for #{asset.name} with template #{workorder_template.name})
+        create_work_order_alert_notification("WOAR", existing_work_order, updated_work_order, description, "work_order_approval_required", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woaa" ->
+        description = ~s(Workorder for #{asset.name} with template #{workorder_template.name} approved)
+        create_work_order_alert_notification("WOAP", existing_work_order, updated_work_order, description, "work_order_approved", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
+        description = ~s(Workorder for #{asset.name} to be acknowledged)
+        create_work_order_alert_notification("WACR", existing_work_order, updated_work_order, description, "work_order_acknowledge_pending", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
+        description = ~s(Workorder for #{asset.name} has been acknowledged)
+        create_work_order_alert_notification("WACK", existing_work_order, updated_work_order, description, "work_order_acknowledged", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
+        description = ~s(Workorder for #{asset.name} has been put on hold)
+        create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
+        description = ~s(Workorder for #{asset.name} has been cancelled)
+        create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
+
+      existing_work_order.scheduled_date != updated_work_order.scheduled_date ->
+        description = ~s(Workorder for #{asset.name} has been rescheduled)
+        create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
+
+      existing_work_order.user_id != updated_work_order.user_id ->
+        description = ~s(Workorder for #{asset.name} has been re-assigned)
+        create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
+
+      true ->
+        {:ok, updated_work_order}
+    end
+  end
+
+
+  def create_work_order_alert_notification(alert_code, _existing_work_order, updated_work_order, description, action_for, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    {asset, workorder_schedule}  = get_asset_from_work_order(updated_work_order, prefix)
+    attrs = %{
+      "alert_notification_id" => alert.id,
+      "asset_id" => asset.id,
+      "asset_type" => workorder_schedule.asset_type,
+      "type" => alert.type,
+      "description" => description
+    }
+
+    config_user_ids =
+      case alert_config do
+        nil -> []
+        _ -> alert_config.addressed_to_user_ids
+      end
+
+    case action_for do
+
+      "assigned_work_order" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "workpermit_approval_required" ->
+        Enum.map(alert_config.addressed_to_user_ids ++ updated_work_order.workpermit_required_from, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "workpermit_approved" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "loto_required" ->
+        Enum.map(config_user_ids ++ [updated_work_order.loto_approval_from_user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "loto_approved" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_approval_required" ->
+        Enum.map(config_user_ids ++ [updated_work_order.work_order_approval_user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_approved" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_acknowledge_pending" ->
+        Enum.map(config_user_ids ++ [updated_work_order.workorder_acknowledgement_user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_acknowledged" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_hold" ->
+        Enum.map(config_user_ids ++ config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_cancelled" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_rescheduled" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_reassigned" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+    end
+  end
+
+  def get_asset_from_work_order(work_order, prefix) do
+    workorder_schedule = get_workorder_schedule!(work_order.workorder_schedule_id, prefix)
+    case workorder_schedule.asset_type do
+      "L" ->
+        {AssetConfig.get_location(workorder_schedule.asset_id, prefix), workorder_schedule}
+
+      "E" ->
+        {AssetConfig.get_equipment(workorder_schedule.asset_id, prefix), workorder_schedule}
+    end
+  end
+
+
   # defp record_meter_readings(work_order, updated_work_order, prefix) do
-  #   if work_order.status != "cp" and updated_work_order.status == "cp" do
+  #   if work_order.status != "cp" and existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cp" do
   #     Measurements.record_meter_readings_from_work_order(work_order, prefix)
 
   defp change_ticket_status(old_work_order, updated_work_order, user, prefix) do
