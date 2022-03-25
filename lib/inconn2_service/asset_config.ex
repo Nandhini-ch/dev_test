@@ -27,6 +27,10 @@ defmodule Inconn2Service.AssetConfig do
     Repo.all(Site, prefix: prefix)
   end
 
+  defp sort_sites(sites) do
+    Enum.sort_by(sites, &(&1.name))
+  end
+
   def list_sites(query_params, prefix) do
    Site
    |> Repo.add_active_filter(query_params)
