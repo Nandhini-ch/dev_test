@@ -714,11 +714,13 @@ defmodule Inconn2Service.Dashboards do
            else
             site_config.config["energy_cost_per_unit"]
           end
+    site_meters = site_config.config["main_meters"]
     energy_meters = from(e in Equipment, where: e.site_id == ^site_id)
                     |> Repo.all(prefix: prefix)
     top_three = Enum.map(energy_meters, fn energy_meter ->
                       get_energy_meter_reading_for_multiple_dates_single_asset(energy_meter, date_list, prefix)
                   end)
+                |> Enum.filter(fn x -> x.id not in energy_meters end)
                 |> Enum.sort_by(&(&1.aggregated_value), :desc)
 
     top1 = Enum.at(top_three, 0)
@@ -750,6 +752,7 @@ defmodule Inconn2Service.Dashboards do
   defp get_energy_meter_reading_for_multiple_dates_single_asset(energy_meter, date_list, prefix) do
     data = Enum.map(date_list, fn date -> get_energy_meter_reading(energy_meter.id, date, prefix) end)
     %{
+      id: energy_meter.id,
       asset_name: energy_meter.name,
       data: data,
       aggregated_value: Enum.sum(data),
