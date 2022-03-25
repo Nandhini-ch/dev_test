@@ -1309,7 +1309,7 @@ defmodule Inconn2Service.AssetConfig do
       nil ->
         {:not_found, "Alert Not Configured"}
 
-      alert ->
+      _ ->
         attrs = %{
           "alert_notification_id" => alert.id,
           "asset_id" => nil,
@@ -1341,7 +1341,7 @@ defmodule Inconn2Service.AssetConfig do
           "description" => description
         }
 
-        Enum.map(alert_config.user_ids, fn id ->
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
           Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
