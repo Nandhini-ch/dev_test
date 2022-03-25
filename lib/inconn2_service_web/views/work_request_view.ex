@@ -29,6 +29,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       location: render_one(work_request.location, LocationView, "location.json"),
       asset_id: work_request.asset_id,
       asset_type: work_request.asset_type,
+      asset: render_one(work_request.asset, WorkRequestView, "asset.json"),
       description: work_request.description,
       priority: work_request.priority,
       request_type: work_request.request_type,
@@ -44,5 +45,12 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       response_tat: work_request.response_tat,
       resolution_tat: work_request.resolution_tat,
       work_order_id: work_request.work_order_id}
+  end
+
+  def render("asset.json", %{work_request: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name
+    }
   end
 end

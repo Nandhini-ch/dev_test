@@ -158,7 +158,8 @@ defmodule Inconn2Service.Ticket do
   def list_work_requests(prefix) do
     Repo.all(WorkRequest, prefix: prefix)
     |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
-    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
   def preload_to_approve_users(work_request, prefix) do
@@ -191,6 +192,7 @@ defmodule Inconn2Service.Ticket do
     from(w in WorkRequest, where: w.requested_user_id == ^user.id and w.status not in ["CP", "CL"])
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
   def list_work_requests_for_assigned_user(user, prefix) do
@@ -199,6 +201,7 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
   def list_work_requests_acknowledgement(user, prefix) do
@@ -206,6 +209,7 @@ defmodule Inconn2Service.Ticket do
     |> where([requested_user_id: ^user.id, status: "CP"])
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
@@ -218,6 +222,7 @@ defmodule Inconn2Service.Ticket do
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
         |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+        |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
 
       "E" ->
         equipment = Inconn2Service.AssetConfig.get_equipment_by_qr_code(uuid, prefix)
@@ -226,13 +231,15 @@ defmodule Inconn2Service.Ticket do
         |> Repo.all(prefix: prefix)
         |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
         |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+        |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
     end
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP"]
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
   def list_work_requests_for_helpdesk_user(current_user, prefix) do
@@ -243,8 +250,22 @@ defmodule Inconn2Service.Ticket do
       |> Repo.all(prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
       |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+      |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
     else
       []
+    end
+  end
+
+  defp preload_asset(work_request, prefix) do
+    case work_request.asset_type do
+      "L" ->
+        asset = AssetConfig.get_location(work_request.asset_id, prefix)
+        Map.put(work_request, :asset, asset)
+      "E" ->
+        asset = AssetConfig.get_equipment(work_request.asset_id, prefix)
+        Map.put(work_request, :asset, asset)
+      _ ->
+        Map.put(work_request, :asset, nil)
     end
   end
   @doc """
@@ -264,6 +285,7 @@ defmodule Inconn2Service.Ticket do
   def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
                                           |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
                                           |> preload_to_approve_users(prefix)
+                                          |> preload_asset(prefix)
 
   @doc """
   Creates a work_request.
@@ -291,7 +313,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)} |> preload_asset(prefix)
 
       _ ->
         created_work_request
@@ -417,7 +439,7 @@ defmodule Inconn2Service.Ticket do
     case updated_work_request do
       {:ok, work_request} ->
         update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)} |> preload_asset(prefix)
       _ ->
         updated_work_request
 
@@ -429,7 +451,7 @@ defmodule Inconn2Service.Ticket do
     Enum.map(work_request_changes["ids"], fn id ->
       work_request = get_work_request!(id, prefix)
       {:ok, work_request} = update_work_request(work_request, Map.drop(work_request_changes, ["ids"]), prefix, user)
-      work_request |> preload_to_approve_users(prefix)
+      work_request |> preload_to_approve_users(prefix) |> preload_asset(prefix)
     end)
   end
 
@@ -478,10 +500,10 @@ defmodule Inconn2Service.Ticket do
           "status" => work_request.status
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)} |> preload_asset(prefix)
 
       _ ->
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix)} |> preload_asset(prefix)
 
     end
   end
