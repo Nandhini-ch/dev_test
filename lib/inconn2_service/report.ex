@@ -280,10 +280,21 @@ defmodule Inconn2Service.Report do
     work_requests_with_asset =
       Enum.map(work_requests, fn work_request ->
         asset =
-          case work_request.asset_type do
-            "E" -> AssetConfig.get_equipment(work_request.asset_id, prefix)
-            "L" -> AssetConfig.get_location(work_request.asset_id, prefix)
-            _ -> nil
+          # case work_request.asset_type do
+          #   "E" -> AssetConfig.get_equipment(work_request.asset_id, prefix)
+          #   "L" -> AssetConfig.get_location(work_request.asset_id, prefix)
+          #   _ -> nil
+          # end
+
+          cond do
+            work_request.asset_type == "E" && !is_nil(work_request.asset_id) ->
+              AssetConfig.get_equipment(work_request.asset_id, prefix)
+
+            work_request.asset_type == "L" && !is_nil(work_request.asset_id) ->
+              AssetConfig.get_equipment(work_request.asset_id, prefix)
+
+            true ->
+              nil
           end
           Map.put_new(work_request, :asset, asset)
       end)
