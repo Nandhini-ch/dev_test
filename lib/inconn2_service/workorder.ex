@@ -891,6 +891,7 @@ defmodule Inconn2Service.Workorder do
       {:ok, work_order} ->
           create_status_track(work_order, user, prefix)
           auto_create_workorder_task(work_order, prefix)
+          result
       _ ->
         result
     end
