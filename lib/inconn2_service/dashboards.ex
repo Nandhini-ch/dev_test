@@ -501,6 +501,14 @@ defmodule Inconn2Service.Dashboards do
     }
   end
 
+  defp get_dates_for_query(from_date, "null", site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    {
+      Date.from_iso8601!(from_date),
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+    }
+  end
+
   defp get_dates_for_query(from_date, to_date, _site_id, _prefix) do
     {Date.from_iso8601!(from_date), Date.from_iso8601!(to_date)}
   end
@@ -594,7 +602,10 @@ defmodule Inconn2Service.Dashboards do
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
     main_meters = site_config.config["main_meters"]
     if main_meters != nil do
-      Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, List.first(date_list), prefix) end)
+      Enum.map(date_list, fn date ->
+        Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
+        |> Enum.reduce(0, fn x, acc -> x + acc end)
+      end)
       |> Enum.reduce(0, fn x, acc -> x + acc end)
     else
       0
