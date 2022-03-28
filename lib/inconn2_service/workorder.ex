@@ -890,6 +890,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, work_order} ->
           create_status_track(work_order, user, prefix)
+          auto_create_workorder_task(work_order, prefix)
       _ ->
         result
     end
@@ -2064,7 +2065,7 @@ defmodule Inconn2Service.Workorder do
                                             "pre_check_required" => workorder_template.pre_check_required
                                             }, prefix)
 
-    auto_create_workorder_task(work_order, prefix)
+    # auto_create_workorder_task(work_order, prefix)
     if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
     if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
     if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
