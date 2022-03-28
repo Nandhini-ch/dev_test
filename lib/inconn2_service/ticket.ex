@@ -256,7 +256,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  defp preload_asset(work_request, prefix) do
+  defp preload_asset(work_request, prefix) when work_request.asset_id != nil do
     case work_request.asset_type do
       "L" ->
         asset = AssetConfig.get_location(work_request.asset_id, prefix)
@@ -267,6 +267,10 @@ defmodule Inconn2Service.Ticket do
       _ ->
         Map.put(work_request, :asset, nil)
     end
+  end
+
+  defp preload_asset(work_request, prefix) do
+    Map.put(work_request, :asset, nil)
   end
   @doc """
   Gets a single work_request.
