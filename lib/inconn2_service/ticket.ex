@@ -438,14 +438,41 @@ defmodule Inconn2Service.Ticket do
     |> Repo.update(prefix: prefix)
 
     case updated_work_request do
-      {:ok, work_request} ->
-        update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
+      {:ok, updated_work_request} ->
+        update_status_track(updated_work_request, prefix)
+        update_user_for_workorder(work_request, updated_work_request, prefix, user)
+        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
       _ ->
         updated_work_request
 
     end
 
+  end
+
+  def update_user_for_workorder(existing_workrequest, updated_workrequest, prefix, user) do
+    cond do
+      !is_nil(updated_workrequest.assigned_user_id) && updated_workrequest.assigned_user_id != existing_workrequest.assigned_user_id ->
+          work_order =
+            Inconn2Service.Workorder.WorkOrder
+            |> where([work_request_id: ^updated_workrequest.id])
+            |> Repo.all(prefix: prefix)
+            |> Enum.filter(fn wo -> wo.status in ["cr, as"]  end)
+            |> Enum.sort_by(&(&1.inserted_at))
+            |> List.last()
+
+          case work_order do
+            nil ->
+              {:ok, updated_workrequest}
+
+            _ ->
+              Inconn2Service.Workorder.update_work_order(work_order, %{"user_id" => updated_workrequest.assigned_user_id}, prefix, user)
+              {:ok, updated_workrequest}
+          end
+
+
+      true ->
+        {:ok, updated_workrequest}
+    end
   end
 
   def update_work_requests(work_request_changes, prefix, user) do
