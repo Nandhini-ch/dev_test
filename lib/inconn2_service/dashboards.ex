@@ -206,6 +206,8 @@ defmodule Inconn2Service.Dashboards do
     equipments = get_equipment_working_hours(prefix, query_params)
     locations = get_location_working_hours(prefix, query_params)
 
+    available_count = AssetConfig.list_equipments(prefix) ++ AssetConfig.list_locations(prefix) |> Enum.filter(fn x ->  x.status in ["ON", "OFF"]  end) |> Enum.count()
+    not_available_count = AssetConfig.list_equipments(prefix) ++ AssetConfig.list_locations(prefix) |> Enum.filter(fn x ->  x.status not in ["ON", "OFF"]  end) |> Enum.count()
 
     available_hours =
       Enum.map(equipments ++ locations,
@@ -238,7 +240,13 @@ defmodule Inconn2Service.Dashboards do
     # }
 
     %{
-      # data_available: data_available,
+      # data_available: data_available,{
+      counts: %{
+        dataset: [
+          %{name: "Available", y: available_count},
+          %{name: "Not Available", y: not_available_count}
+        ]
+      },
       dataset: [
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
