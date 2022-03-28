@@ -17,6 +17,6 @@ defmodule Inconn2Service.Prompt.UserAlert do
   def changeset(user_alert, attrs) do
     user_alert
     |> cast(attrs, [:alert_notification_id, :type, :user_id, :asset_id, :description, :remarks])
-    |> validate_required([:alert_notification_id, :type, :user_id, :asset_id])
+    |> validate_required([:alert_notification_id, :type, :user_id, :description])
   end
 end

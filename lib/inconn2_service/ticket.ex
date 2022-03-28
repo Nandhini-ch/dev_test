@@ -11,6 +11,8 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Staff.User
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Site
+  alias Inconn2Service.Common
+  alias Inconn2Service.Prompt
 
   @doc """
   Returns the list of workrequest_categories.
@@ -79,7 +81,9 @@ defmodule Inconn2Service.Ticket do
               |> Repo.insert(prefix: prefix)
 
     case result do
-      {:ok, workrequest_category} -> {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
+      {:ok, workrequest_category} ->
+        push_alert_notification_for_ticket_category(workrequest_category, prefix)
+        {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
       _ -> result
     end
 
@@ -291,6 +295,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
+        push_alert_notification_for_ticket(nil, work_request, prefix)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
 
       _ ->
@@ -403,23 +408,24 @@ defmodule Inconn2Service.Ticket do
   def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
     # wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
-    updated_work_request = work_request
-    |> WorkRequest.changeset(payload)
-    |> auto_fill_wr_category(prefix)
-    |> validate_asset_id(prefix)
-    |> attachment_format(attrs)
-    |> validate_assigned_user_id(prefix)
-    |> is_approvals_required(user, prefix)
-    |> validate_approvals_required_ids(prefix)
-    |> calculate_tat(work_request, prefix)
-    |> Repo.update(prefix: prefix)
+    result = work_request
+              |> WorkRequest.changeset(payload)
+              |> auto_fill_wr_category(prefix)
+              |> validate_asset_id(prefix)
+              |> attachment_format(attrs)
+              |> validate_assigned_user_id(prefix)
+              |> is_approvals_required(user, prefix)
+              |> validate_approvals_required_ids(prefix)
+              |> calculate_tat(work_request, prefix)
+              |> Repo.update(prefix: prefix)
 
-    case updated_work_request do
-      {:ok, work_request} ->
-        update_status_track(work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
+    case result do
+      {:ok, updated_work_request} ->
+        update_status_track(updated_work_request, prefix)
+        push_alert_notification_for_ticket(work_request, updated_work_request, prefix)
+        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
       _ ->
-        updated_work_request
+        result
 
     end
 
@@ -614,6 +620,11 @@ defmodule Inconn2Service.Ticket do
   def get_category_helpdesk_by_user(user_id, prefix) do
     CategoryHelpdesk
     |> where(user_id: ^user_id)
+    |> Repo.all(prefix: prefix)
+  end
+  def get_category_helpdesk_by_workrequest_category(workrequest_catgoery_id, site_id, prefix) do
+    CategoryHelpdesk
+    |> where([workrequest_catgoery_id: ^workrequest_catgoery_id, site_id: ^site_id])
     |> Repo.all(prefix: prefix)
   end
   @doc """
@@ -1019,7 +1030,9 @@ defmodule Inconn2Service.Ticket do
               |> WorkrequestSubcategory.changeset(attrs)
               |> Repo.insert(prefix: prefix)
     case result do
-      {:ok, workrequest_subcategory} -> {:ok, workrequest_subcategory }
+      {:ok, workrequest_subcategory} ->
+        push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
+        {:ok, workrequest_subcategory }
       _ -> result
     end
   end
@@ -1073,5 +1086,122 @@ defmodule Inconn2Service.Ticket do
   """
   def change_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs \\ %{}) do
     WorkrequestSubcategory.changeset(workrequest_subcategory, attrs)
+  end
+
+  def push_alert_notification_for_ticket_category(_category, prefix) do
+    description = ~s(A ticket category/sub category has been created)
+    create_ticket_alert_notification("WRCN", description, nil, "category/sub_category created", prefix)
+  end
+
+  def push_alert_notification_for_ticket(nil, updated_work_request, prefix) do
+    description = ~s(A ticket has been raised)
+    create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
+  end
+
+  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix) do
+    cond do
+      existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
+        description = ~s(A ticket has been assigned)
+        create_ticket_alert_notification("WRAR", description, updated_work_request, "new ticket assigned", prefix)
+
+      updated_work_request.status in ["AP", "RJ"] ->
+        description = ~s(A ticket has been approved/rejected)
+        create_ticket_alert_notification("WRAR", description, updated_work_request, "ticket approved/rejected", prefix)
+
+      updated_work_request.status == "CP" ->
+        description = ~s(A ticket has been completed)
+        create_ticket_alert_notification("WRCP", description, updated_work_request, "ticket completed", prefix)
+
+      updated_work_request.status == "CL" ->
+        description = ~s(A ticket has been cancelled)
+        create_ticket_alert_notification("WRCL", description, updated_work_request, "ticket cancelled", prefix)
+
+      updated_work_request.status == "ROP" ->
+        description = ~s(A ticket has been reopened)
+        create_ticket_alert_notification("WRRO", description, updated_work_request, "ticket reopened", prefix)
+
+
+      existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
+        description = ~s(A ticket has been re-assigned)
+        create_ticket_alert_notification("WRRE", description, updated_work_request, "ticket reassigned", prefix)
+
+      true ->
+        {:ok, updated_work_request}
+    end
+  end
+
+  defp create_ticket_alert_notification(alert_code, description, updated_work_request, action_for, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    attrs = %{
+      "alert_notification_id" => alert.id,
+      "type" => alert.type,
+      "description" => description
+    }
+
+    config_user_ids =
+      case alert_config do
+        nil -> []
+        _ -> alert_config.addressed_to_user_ids
+      end
+
+    case action_for do
+      "category/sub_category created" ->
+        Enum.map(config_user_ids, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "new ticket raised" ->
+        helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
+                         |> Enum.map(fn x -> x.user_id end)
+        Enum.map(config_user_ids ++ helpdesk_users, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "new ticket assigned" ->
+        Enum.map(config_user_ids ++ [updated_work_request.assigned_user_id], fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "ticket approved/rejected" ->
+        helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
+                         |> Enum.map(fn x -> x.user_id end)
+        Enum.map(config_user_ids ++ helpdesk_users, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "ticket completed" ->
+        assigned_user_id =
+           case updated_work_request.assigned_user_id do
+            nil  -> []
+            _ -> [updated_work_request.assigned_user_id]
+           end
+        Enum.map(config_user_ids ++ assigned_user_id, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "ticket reassigned" ->
+        assigned_user_id =
+          case updated_work_request.assigned_user_id do
+           nil  -> []
+           _ -> [updated_work_request.assigned_user_id]
+          end
+        Enum.map(config_user_ids ++ assigned_user_id, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "ticket reopened" ->
+        assigned_user_id =
+          case updated_work_request.assigned_user_id do
+           nil  -> []
+           _ -> [updated_work_request.assigned_user_id]
+          end
+        helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
+                         |> Enum.map(fn x -> x.user_id end)
+        Enum.map(config_user_ids ++ assigned_user_id ++ helpdesk_users, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+    end
+
   end
 end
