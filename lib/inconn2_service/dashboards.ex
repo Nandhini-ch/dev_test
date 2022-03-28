@@ -489,6 +489,14 @@ defmodule Inconn2Service.Dashboards do
     }
   end
 
+  defp get_dates_for_query(from_date, "null", site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    {
+      Date.from_iso8601!(from_date),
+      DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
+    }
+  end
+
   defp get_dates_for_query(from_date, to_date, _site_id, _prefix) do
     {Date.from_iso8601!(from_date), Date.from_iso8601!(to_date)}
   end
