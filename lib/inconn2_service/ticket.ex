@@ -246,7 +246,8 @@ defmodule Inconn2Service.Ticket do
     helpdesk = get_category_helpdesk_by_user(current_user.id, prefix)
     if helpdesk != [] do
       workrequest_category_ids = Enum.map(helpdesk, fn x -> x.workrequest_category_id end)
-      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids and wr.status != "CS")
+      site_ids = Enum.map(helpdesk, fn x -> x.site_id end)
+      from(wr in WorkRequest, where: wr.workrequest_category_id in ^workrequest_category_ids and wr.site_id in ^site_ids and wr.status != "CS")
       |> Repo.all(prefix: prefix)
       |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
       |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
