@@ -179,8 +179,8 @@ defmodule Inconn2Service.Report do
       end)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-    naive_from_date = convert_date_to_naive_date_time(from_date)
-    naive_to_date = convert_date_to_naive_date_time(to_date)
+    naive_from_date = convert_date_to_naive_date_time(from_date, "from")
+    naive_to_date = convert_date_to_naive_date_time(to_date, "to")
 
     IO.inspect(naive_from_date > naive_to_date)
 
@@ -267,10 +267,13 @@ defmodule Inconn2Service.Report do
       end)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-    naive_from_date = convert_date_to_naive_date_time(from_date)
-    naive_to_date = convert_date_to_naive_date_time(to_date)
+    naive_from_date = convert_date_to_naive_date_time(from_date,  "from")
+    naive_to_date = convert_date_to_naive_date_time(to_date, "to")
 
-    query_with_dates = from dq in dynamic_query, where: dq.raised_date_time >= ^naive_from_date and dq.raised_date_time <= ^naive_to_date
+    IO.inspect(naive_from_date)
+    IO.inspect(naive_to_date)
+
+    query_with_dates = from dq in dynamic_query, where: dq.raised_date_time > ^naive_from_date and dq.raised_date_time < ^naive_to_date
 
 
     work_requests =
@@ -459,8 +462,8 @@ defmodule Inconn2Service.Report do
     equipments = Repo.all(dynamic_query, prefix: prefix)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-    naive_from_date = convert_date_to_naive_date_time(from_date)
-    naive_to_date = convert_date_to_naive_date_time(to_date)
+    naive_from_date = convert_date_to_naive_date_time(from_date, "from")
+    naive_to_date = convert_date_to_naive_date_time(to_date, "to")
 
     IO.inspect(naive_from_date)
     IO.inspect(naive_to_date)
@@ -587,8 +590,8 @@ defmodule Inconn2Service.Report do
     locations = Repo.all(dynamic_query, prefix: prefix)
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-    naive_from_date = convert_date_to_naive_date_time(from_date)
-    naive_to_date = convert_date_to_naive_date_time(to_date)
+    naive_from_date = convert_date_to_naive_date_time(from_date, "from")
+    naive_to_date = convert_date_to_naive_date_time(to_date, "to")
 
     IO.inspect(naive_from_date)
     IO.inspect(naive_to_date)
@@ -768,8 +771,12 @@ defmodule Inconn2Service.Report do
     {Date.from_iso8601!(from_date), Date.from_iso8601!(to_date)}
   end
 
-  defp convert_date_to_naive_date_time(date) do
+  defp convert_date_to_naive_date_time(date,  "from") do
     NaiveDateTime.new!(date, Time.new!(0, 0, 0))
+  end
+
+  defp convert_date_to_naive_date_time(date,  "to") do
+    NaiveDateTime.new!(date, Time.new!(23, 59, 59))
   end
 
 
