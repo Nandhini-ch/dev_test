@@ -8,6 +8,8 @@ defmodule Inconn2Service.Inventory do
   import Ecto.Changeset
 
   alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.Prompt
+  alias Inconn2Service.Common
 
   alias Inconn2Service.Inventory.{Supplier, SupplierItem}
 
@@ -876,10 +878,49 @@ defmodule Inconn2Service.Inventory do
 
     case Repo.transaction(multi) do
       {:ok, %{inventory_transaction: inventory_transaction, inventory_stock: _inventory_stock}} ->
+        {:ok, inventory_transaction} = push_alert_for_notification(inventory_transaction, prefix)
         {:ok, inventory_transaction |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])}
 
       {:error, :inventory_transaction, inventory_transaction_changeset, _} ->
         {:error, inventory_transaction_changeset}
+    end
+  end
+
+  def push_alert_for_notification(transaction, prefix) do
+      item = get_item!(transaction.item_id, prefix)
+      stock = get_stock_for_item(transaction.item_id, prefix)
+    cond do
+      stock.quantity <= item.reorder_quantity && item.critical ->
+        description = ~s(Critical Item #{item.name} below reorder quantity)
+        create_alert_for_inventory("INCB", description, prefix)
+
+      stock.quantity <= item.reorder_quantity ->
+        description = ~s(Item #{item.name} below reorder quantity)
+         create_alert_for_inventory("INSB", description, prefix)
+
+      true ->
+        {:ok, transaction}
+    end
+    {:ok, transaction}
+  end
+
+  def create_alert_for_inventory(alert_code, description, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    case alert_config do
+      nil ->
+        {:not_found, "Alert Not Configured"}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "type" => alert.type,
+          "description" => description
+        }
+
+        Enum.map(alert_config.user_ids, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
     end
   end
 
