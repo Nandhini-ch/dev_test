@@ -269,7 +269,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  defp preload_asset(work_request, prefix) do
+  defp preload_asset(work_request, _prefix) do
     Map.put(work_request, :asset, nil)
   end
   @doc """

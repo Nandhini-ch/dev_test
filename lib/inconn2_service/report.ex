@@ -14,8 +14,6 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
 
-
-
   def work_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
     IO.inspect(query_params)
@@ -100,7 +98,7 @@ defmodule Inconn2Service.Report do
 
         manhours_consumed =
           cond do
-            is_nil(wo.start_time) and is_nil(wo.completed_time) ->
+            is_nil(wo.start_time) && is_nil(wo.completed_time) ->
               0
 
             is_nil(wo.completed_time) ->
@@ -113,7 +111,7 @@ defmodule Inconn2Service.Report do
         %{
           asset_name: asset_name,
           asset_code: asset_code,
-          type: wo.type,
+          type: match_workorder_type(wo.type),
           status: wo.status,
           assigned_to: name,
           manhours_consumed: manhours_consumed * 3600
@@ -783,20 +781,20 @@ defmodule Inconn2Service.Report do
             [
               :h2,
               if filters.licensee != nil do
-                "Licensee: #{filters.licensee.company_name}"
+                "#{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.from_date != nil do
+                "From Date: #{filters.from_date}"
               end
             ],
             [
               :h2,
               if filters.site != nil do
                 "Site: #{filters.site.name}"
-              end
-            ],
-            [
-              :span,
-              %{style: style(%{"font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
               end
             ],
             [
@@ -1007,7 +1005,7 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          match_work_order_type(rbj.type)
+          rbj.type
         ],
         [
           :td,
@@ -1031,7 +1029,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, match_work_order_type(d.type), match_work_order_status(d.status), d.assigned_to, d.manhours_consumed]
+        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.manhours_consumed]
       end)
 
     [report_headers] ++ body
@@ -1055,14 +1053,14 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body
   end
 
-  defp match_work_order_type(type) do
-    case type do
-      "BRK" -> "Breakdown"
-      "PPM" -> "Preventive Maintainance"
-      "TKT" -> "Through a Ticket"
-      "PRV" -> "Preventive Maintainance"
-    end
-  end
+  # defp match_work_order_type(type) do
+  #   case type do
+  #     "BRK" -> "Breakdown"
+  #     "PPM" -> "Preventive Maintainance"
+  #     "TKT" -> "Through a Ticket"
+  #     "PRV" -> "Preventive Maintainance"
+  #   end
+  # end
 
   defp match_work_order_status(status) do
     case status do
@@ -1086,6 +1084,14 @@ defmodule Inconn2Service.Report do
       "CL" -> "Closed"
       "CS" -> "Cancelled"
       "ROP" -> "Reopened"
+    end
+  end
+
+  defp match_workorder_type(type) do
+    case type do
+      "PRV" -> "Scheduled"
+      "BRK" ->  "Breakdown"
+      "TKT" -> "Ticket"
     end
   end
 
