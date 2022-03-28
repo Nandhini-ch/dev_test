@@ -582,7 +582,10 @@ defmodule Inconn2Service.Dashboards do
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
     main_meters = site_config.config["main_meters"]
     if main_meters != nil do
-      Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, List.first(date_list), prefix) end)
+      Enum.map(date_list, fn date ->
+        Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
+        |> Enum.reduce(0, fn x, acc -> x + acc end)
+      end)
       |> Enum.reduce(0, fn x, acc -> x + acc end)
     else
       0
