@@ -86,7 +86,7 @@ Common.create_alert_notification_reserve(alert)
 alert = %{"module" => "Ticketing","description" => "New ticket assigned","type" => "Notification","code" => "WRAS"}
 Common.create_alert_notification_reserve(alert)
 
-alert = %{"module" => "Ticketing","description" => "Ticket approval status change","type" => "Notification","code" => "WRAS"}
+alert = %{"module" => "Ticketing","description" => "Ticket approval status change", "type" => "Notification","code" => "WRAR"}
 Common.create_alert_notification_reserve(alert)
 
 alert = %{"module" => "Ticketing","description" => "Ticket completed","type" => "Notification","code" => "WRCP"}
@@ -98,13 +98,13 @@ Common.create_alert_notification_reserve(alert)
 alert = %{"module" => "Ticketing","description" => "Ticket cancelled","type" => "Alert","code" => "WRCL"}
 Common.create_alert_notification_reserve(alert)
 
-alert = %{"module" => "Ticketing","description" => "Ticket re-asigned/re-scheduled","type" => "Alert","code" => "Alert"}
+alert = %{"module" => "Ticketing","description" => "Ticket re-assigned/re-scheduled","type" => "Alert","code" => "WRRE"}
 Common.create_alert_notification_reserve(alert)
 
 alert = %{"module" => "Ticketing","description" => "Ticket new category/ sub category added","type" => "Notification","code" => "WRCN"}
 Common.create_alert_notification_reserve(alert)
 
-alert = %{"module" => "Ticketing","description" => "Ticket re-opened","type" => "Alert","code" => "WRRE"}
+alert = %{"module" => "Ticketing","description" => "Ticket re-opened","type" => "Alert","code" => "WRRO"}
 Common.create_alert_notification_reserve(alert)
 
 alert = %{"module" => "Inventory","description" => "stock below re-order value","type" => "Alert","code" => "INSB"}

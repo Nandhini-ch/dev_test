@@ -70,19 +70,28 @@ defmodule Inconn2Service.Workorder do
 
   """
   def create_workorder_template(attrs \\ %{}, prefix) do
-    %WorkorderTemplate{}
-    |> WorkorderTemplate.changeset(attrs)
-    |> update_asset_type(prefix)
-    |> validate_asset_category_id(prefix)
-    |> validate_task_list_id(prefix)
-    |> validate_task_ids(prefix)
-    # |> validate_estimated_time(prefix)
-    |> validate_workpermit_check_list_id(prefix)
-    |> validate_loto_check_list_id(prefix)
-    |> validate_tools(prefix)
-    |> validate_spares(prefix)
-    |> validate_consumables(prefix)
-    |> Repo.insert(prefix: prefix)
+    result =
+      %WorkorderTemplate{}
+      |> WorkorderTemplate.changeset(attrs)
+      |> update_asset_type(prefix)
+      |> validate_asset_category_id(prefix)
+      |> validate_task_list_id(prefix)
+      |> validate_task_ids(prefix)
+      # |> validate_estimated_time(prefix)
+      |> validate_workpermit_check_list_id(prefix)
+      |> validate_loto_check_list_id(prefix)
+      |> validate_tools(prefix)
+      |> validate_spares(prefix)
+      |> validate_consumables(prefix)
+      |> Repo.insert(prefix: prefix)
+
+    case result do
+      {:ok, updated_template} ->
+        push_notification_for_workorder_template(updated_template, prefix, "new")
+
+      _ ->
+        result
+    end
   end
 
   defp update_asset_type(cs, prefix) do
@@ -266,19 +275,65 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix) do
-    workorder_template
-    |> WorkorderTemplate.changeset(attrs)
-    |> update_asset_type(prefix)
-    |> validate_asset_category_id(prefix)
-    |> validate_task_list_id(prefix)
-    |> validate_task_ids(prefix)
-    # |> validate_estimated_time(prefix)
-    |> validate_workpermit_check_list_id(prefix)
-    |> validate_loto_check_list_id(prefix)
-    |> validate_tools(prefix)
-    |> validate_spares(prefix)
-    |> validate_consumables(prefix)
-    |> Repo.update(prefix: prefix)
+   result =
+      workorder_template
+      |> WorkorderTemplate.changeset(attrs)
+      |> update_asset_type(prefix)
+      |> validate_asset_category_id(prefix)
+      |> validate_task_list_id(prefix)
+      |> validate_task_ids(prefix)
+      # |> validate_estimated_time(prefix)
+      |> validate_workpermit_check_list_id(prefix)
+      |> validate_loto_check_list_id(prefix)
+      |> validate_tools(prefix)
+      |> validate_spares(prefix)
+      |> validate_consumables(prefix)
+      |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, updated_template} ->
+        push_notification_for_workorder_template(updated_template, prefix, "modified")
+
+      _ ->
+        result
+    end
+  end
+
+
+  def push_notification_for_workorder_template(updated_template, prefix, "modified") do
+    description = ~s(Workorder Template #{updated_template.name} Modified)
+    create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
+  end
+
+  def push_notification_for_workorder_template(updated_template, prefix, "new") do
+    description = ~s(New Workorder Template #{updated_template.name}  created)
+    create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
+  end
+
+  def push_notification_for_workorder_template(updated_template, prefix, "deleted") do
+    description = ~s(Workorder Template #{updated_template.name}  deleted)
+    create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
+  end
+
+  def create_notification_for_workorder_template(alert_code, description, updated_template, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+
+    case alert_config do
+      nil ->
+        {:ok, updated_template}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "type" => alert.type,
+          "description" => description
+        }
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+        {:ok, updated_template}
+    end
   end
 
   @doc """
@@ -295,6 +350,8 @@ defmodule Inconn2Service.Workorder do
   """
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix) do
     Repo.delete(workorder_template, prefix: prefix)
+    push_notification_for_workorder_template(workorder_template, prefix, "deleted")
+    {:ok, nil}
   end
 
   @doc """
@@ -1097,6 +1154,10 @@ defmodule Inconn2Service.Workorder do
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
         description = ~s(Workorder for #{asset.name} has been put on hold)
         create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
+
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
+        description = ~s(Workorder for #{asset.name} has been cancelled)
+        create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
         description = ~s(Workorder for #{asset.name} has been cancelled)
