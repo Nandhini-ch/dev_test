@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Prompt.UserAlert do
+defmodule Inconn2Service.Prompt.UserAlertNotification do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -14,8 +14,8 @@ defmodule Inconn2Service.Prompt.UserAlert do
   end
 
   @doc false
-  def changeset(user_alert, attrs) do
-    user_alert
+  def changeset(user_alert_notification, attrs) do
+    user_alert_notification
     |> cast(attrs, [:alert_notification_id, :type, :user_id, :asset_id, :description, :remarks])
     |> validate_required([:alert_notification_id, :type, :user_id, :description])
   end

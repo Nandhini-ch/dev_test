@@ -106,7 +106,7 @@ defmodule Inconn2Service.Prompt do
     AlertNotificationConfig.changeset(alert_notification_config, attrs)
   end
 
-  alias Inconn2Service.Prompt.UserAlert
+  alias Inconn2Service.Prompt.UserAlertNotification
 
   @doc """
   Returns the list of user_alerts.
@@ -117,8 +117,8 @@ defmodule Inconn2Service.Prompt do
       [%UserAlert{}, ...]
 
   """
-  def list_user_alerts(prefix) do
-    Repo.all(UserAlert, prefix: prefix)
+  def list_user_alert_notifications(prefix) do
+    Repo.all(UserAlertNotification, prefix: prefix)
   end
 
   @doc """
@@ -135,7 +135,7 @@ defmodule Inconn2Service.Prompt do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user_alert!(id, prefix), do: Repo.get!(UserAlert, id, prefix: prefix)
+  def get_user_alert_notification!(id, prefix), do: Repo.get!(UserAlertNotification, id, prefix: prefix)
 
   @doc """
   Creates a user_alert.
@@ -149,9 +149,9 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_user_alert(attrs \\ %{}, prefix) do
-    %UserAlert{}
-    |> UserAlert.changeset(attrs)
+  def create_user_alert_notification(attrs \\ %{}, prefix) do
+    %UserAlertNotification{}
+    |> UserAlertNotification.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -167,9 +167,9 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user_alert(%UserAlert{} = user_alert, attrs, prefix) do
-    user_alert
-    |> UserAlert.changeset(attrs)
+  def update_user_alert_notification(%UserAlertNotification{} = user_alert_notification, attrs, prefix) do
+    user_alert_notification
+    |> UserAlertNotification.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
@@ -185,8 +185,8 @@ defmodule Inconn2Service.Prompt do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_user_alert(%UserAlert{} = user_alert, prefix) do
-    Repo.delete(user_alert, prefix: prefix)
+  def delete_user_alert_notification(%UserAlertNotification{} = user_alert_notification, prefix) do
+    Repo.delete(user_alert_notification, prefix: prefix)
   end
 
   @doc """
@@ -198,7 +198,7 @@ defmodule Inconn2Service.Prompt do
       %Ecto.Changeset{data: %UserAlert{}}
 
   """
-  def change_user_alert(%UserAlert{} = user_alert, attrs \\ %{}) do
-    UserAlert.changeset(user_alert, attrs)
+  def change_user_alert_notification(%UserAlertNotification{} = user_alert_notification, attrs \\ %{}) do
+    UserAlertNotification.changeset(user_alert_notification, attrs)
   end
 end

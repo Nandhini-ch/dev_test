@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Repo.Migrations.CreateUserAlerts do
+defmodule Inconn2Service.Repo.Migrations.CreateUserAlertNotifications do
   use Ecto.Migration
 
   def change do
