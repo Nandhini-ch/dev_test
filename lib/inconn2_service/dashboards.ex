@@ -108,6 +108,9 @@ defmodule Inconn2Service.Dashboards do
     completed_work_orders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
     incomplete_work_orders = Enum.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
 
+    incomplete_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true and wo.status not in ["cp", "cl"] end) |> Enum.count()
+
+
     completed_overdue_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue == true and wo.status == "cp" end) |> Enum.count()
     completed_in_time_work_orders = Enum.filter(work_orders, fn wo -> wo.overdue != true and wo.status == "cp" end) |> Enum.count()
 
@@ -163,6 +166,22 @@ defmodule Inconn2Service.Dashboards do
         0
       end
 
+      incomplete_work_order_percentage =
+        if total_count != 0 do
+          incomplete_work_orders / total_count * 100 |> Float.ceil(2)
+        else
+          0
+        end
+
+      incomplete_overdue_work_order_percentage =
+        if total_count != 0 do
+          incomplete_overdue_work_orders / total_count * 100 |> Float.ceil(2)
+        else
+          0
+        end
+
+
+
     # {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
 
@@ -195,6 +214,14 @@ defmodule Inconn2Service.Dashboards do
           number: completed_in_time_work_orders,
           percentage: completed_in_time_percentage
         },
+        incomplete_work_orders: %{
+          number: incomplete_work_orders,
+          percentage: incomplete_work_order_percentage
+        },
+        incomplete_overdue_work_orders: %{
+          number: incomplete_overdue_work_orders,
+          percentage: incomplete_overdue_work_order_percentage
+        },
         open_count_with_asset_category: open_count_with_asset_category
       },
       # labels: form_date_list(from_date, to_date)
@@ -206,6 +233,8 @@ defmodule Inconn2Service.Dashboards do
     equipments = get_equipment_working_hours(prefix, query_params)
     locations = get_location_working_hours(prefix, query_params)
 
+    current_available_assets = AssetConfig.list_locations(query_params["site_id"], prefix) ++ AssetConfig.list_equipments(query_params["site_id"], prefix) |> Enum.filter(fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
+    current_not_available_for_assets = AssetConfig.list_locations(query_params["site_id"], prefix) ++ AssetConfig.list_equipments(query_params["site_id"], prefix) |> Enum.filter(fn a -> a.status not in ["ON", "OFF"] end) |> Enum.count()
 
     available_hours =
       Enum.map(equipments ++ locations,
@@ -238,11 +267,17 @@ defmodule Inconn2Service.Dashboards do
     # }
 
     %{
-      # data_available: data_available,
+      current_running: %{
+        dataset: [
+          %{name: "Available", y: current_available_assets},
+          %{name: "Not Available", y: current_not_available_for_assets}
+        ]
+      },
       dataset: [
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
       ],
+      labels: [convert_to_minutes_and_hours(Float.ceil(available_hours, 2)), convert_to_minutes_and_hours(Float.ceil(not_available_hours)) ],
       data_available: data_available,
       additional_assets: %{
         critical_assets_information: critical_assets,
@@ -272,7 +307,7 @@ defmodule Inconn2Service.Dashboards do
       {:ok, current_date} = DateTime.now(time_zone)
       %{
         asset_name: asset.name,
-        no_of_days_inactive: NaiveDateTime.diff(DateTime.to_naive(current_date), last_entry.changed_date_time)
+        no_of_days_inactive: div(NaiveDateTime.diff(DateTime.to_naive(current_date), last_entry.changed_date_time), 1000 * 3600 * 24)
       }
     else
       "ND"
@@ -344,18 +379,6 @@ defmodule Inconn2Service.Dashboards do
     end
   end
 
-  defp add_overdue_flag(work_order, prefix) do
-    site = AssetConfig.get_site!(work_order.site_id, prefix)
-    site_dt = DateTime.now!(site.time_zone)
-    site_dt = DateTime.to_naive(site_dt)
-    scheduled_dt = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
-    case NaiveDateTime.compare(scheduled_dt, site_dt) do
-      :lt -> Map.put_new(work_order, :overdue, true)
-      _ -> Map.put_new(work_order, :overdue, false)
-    end
-  end
-
-
   def add_current_time_to_status_changes(_sum, asset, "NOT AVAILABLE", [], from_naive, to_naive, prefix) do
     query =
       from(ast in AssetStatusTrack,
@@ -388,6 +411,13 @@ defmodule Inconn2Service.Dashboards do
     NaiveDateTime.diff(DateTime.to_naive(date_time), last_status.changed_date_time) / 3600 + sum
   end
 
+
+  defp convert_to_minutes_and_hours(float_value) do
+    [hours, decimal] = :erlang.float_to_binary(float_value) |> String.split(".")
+   minutes = "0." <> decimal  |> :erlang.binary_to_float()
+  "#{hours}:#{minutes *  60 |> trunc() |> :erlang.integer_to_binary()}"
+  end
+
   defp add_overdue_flag(work_order, prefix) do
     site = AssetConfig.get_site!(work_order.site_id, prefix)
     site_dt = DateTime.now!(site.time_zone)
@@ -398,7 +428,6 @@ defmodule Inconn2Service.Dashboards do
       _ -> Map.put_new(work_order, :overdue, false)
     end
   end
-
 
   def get_locations_assets(prefix, query_params) do
     main_query = from l in Location
@@ -516,6 +545,11 @@ defmodule Inconn2Service.Dashboards do
   defp asset_ids_for_asset_category(asset_category_id, prefix) do
     AssetConfig.get_assets_by_asset_category_id(asset_category_id, prefix)
     |> Enum.map(fn a -> a.id end)
+  end
+
+  defp get_yesterday_date(site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    DateTime.now!(site.time_zone) |> DateTime.to_date() |> Date.add(-1)
   end
 
   def get_energy_meter_speedometer_random(_query_parmas, _params) do
