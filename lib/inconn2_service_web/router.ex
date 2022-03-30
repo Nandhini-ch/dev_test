@@ -49,7 +49,10 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/alert_notification_reserves", AlertNotificationReserveController, except: [:new, :edit]
     resources "/alert_notification_configs", AlertNotificationConfigController, except: [:new, :edit]
-    resources "/user_alerts", UserAlertController, except: [:new, :edit]
+    resources "/user_alert_notifications", UserAlertNotificationController, except: [:new, :edit]
+    get "/user_alert_notifications_for_logged_in_user", UserAlertNotificationController, :get_user_alert_notifications_for_logged_in_user
+    post "/acknowledge_alert/:id", UserAlertNotificationController, :acknowledge_alert
+    post "/discard_alerts_notifications", UserAlertNotificationController, :discard_alerts_notifications
 
     get "/sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
     resources "/locations", LocationController, except: [:new, :edit, :index]

@@ -6,6 +6,7 @@ defmodule Inconn2Service.Prompt do
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.Common
   alias Inconn2Service.Prompt.AlertNotificationConfig
 
   @doc """
@@ -119,8 +120,14 @@ defmodule Inconn2Service.Prompt do
   """
   def list_user_alert_notifications(prefix) do
     Repo.all(UserAlertNotification, prefix: prefix)
+    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve(user_alert_notification) end)
   end
 
+  def get_user_alert_notifications_for_logged_in_user(type, user, prefix) do
+    from(uan in UserAlertNotification, where: uan.type == ^type and uan.user_id == ^user.id and uan.action_taken == false)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve(user_alert_notification) end)
+  end
   @doc """
   Gets a single user_alert.
 
@@ -135,8 +142,12 @@ defmodule Inconn2Service.Prompt do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user_alert_notification!(id, prefix), do: Repo.get!(UserAlertNotification, id, prefix: prefix)
+  def get_user_alert_notification!(id, prefix), do: Repo.get!(UserAlertNotification, id, prefix: prefix) |> preload_alert_notification_reserve()
 
+  defp preload_alert_notification_reserve(user_alert_notification) do
+    alert_notification_reserve = Common.get_alert_notification_reserve!(user_alert_notification.alert_notification_id)
+    Map.put(user_alert_notification, :alert_notification, alert_notification_reserve)
+  end
   @doc """
   Creates a user_alert.
 
@@ -150,9 +161,27 @@ defmodule Inconn2Service.Prompt do
 
   """
   def create_user_alert_notification(attrs \\ %{}, prefix) do
-    %UserAlertNotification{}
-    |> UserAlertNotification.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+    result = %UserAlertNotification{}
+              |> UserAlertNotification.changeset(attrs)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, user_alert_notification} ->
+          {:ok, user_alert_notification |> preload_alert_notification_reserve()}
+      _ ->
+        result
+    end
+  end
+
+  def discard_alerts_notifications(attrs, prefix) do
+    case attrs["ids"] do
+      nil ->
+        []
+      ids ->
+        Enum.map(ids, fn id ->
+          get_user_alert_notification!(id, prefix)
+          |> update_user_alert_notification(%{"action_taken" => true}, prefix)
+        end)
+    end
   end
 
   @doc """
@@ -168,9 +197,15 @@ defmodule Inconn2Service.Prompt do
 
   """
   def update_user_alert_notification(%UserAlertNotification{} = user_alert_notification, attrs, prefix) do
-    user_alert_notification
-    |> UserAlertNotification.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result = user_alert_notification
+              |> UserAlertNotification.changeset(attrs)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, user_alert_notification} ->
+          {:ok, user_alert_notification |> preload_alert_notification_reserve()}
+      _ ->
+        result
+    end
   end
 
   @doc """

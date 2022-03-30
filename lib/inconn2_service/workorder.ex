@@ -87,7 +87,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_notification_for_workorder_template(updated_template, prefix, "new")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "new")
 
       _ ->
         result
@@ -292,7 +292,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_notification_for_workorder_template(updated_template, prefix, "modified")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "modified")
 
       _ ->
         result
@@ -300,18 +300,18 @@ defmodule Inconn2Service.Workorder do
   end
 
 
-  def push_notification_for_workorder_template(updated_template, prefix, "modified") do
-    description = ~s(Workorder Template #{updated_template.name} Modified)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "modified") do
+    description = ~s(Workorder Template #{updated_template.name} modified)
     create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
   end
 
-  def push_notification_for_workorder_template(updated_template, prefix, "new") do
-    description = ~s(New Workorder Template #{updated_template.name}  created)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "new") do
+    description = ~s(New Workorder Template #{updated_template.name} created)
     create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
   end
 
-  def push_notification_for_workorder_template(updated_template, prefix, "deleted") do
-    description = ~s(Workorder Template #{updated_template.name}  deleted)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted") do
+    description = ~s(Workorder Template #{updated_template.name} deleted)
     create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
   end
 
@@ -330,7 +330,7 @@ defmodule Inconn2Service.Workorder do
           "description" => description
         }
         Enum.map(alert_config.addressed_to_user_ids, fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
         {:ok, updated_template}
     end
@@ -350,7 +350,7 @@ defmodule Inconn2Service.Workorder do
   """
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix) do
     Repo.delete(workorder_template, prefix: prefix)
-    push_notification_for_workorder_template(workorder_template, prefix, "deleted")
+    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted")
     {:ok, nil}
   end
 
@@ -1104,6 +1104,7 @@ defmodule Inconn2Service.Workorder do
           # auto_update_workorder_task(work_order, prefix)
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
+          push_alert_notification_for_work_order(work_order, updated_work_order, prefix)
           result
       _ ->
         result
@@ -1174,6 +1175,7 @@ defmodule Inconn2Service.Workorder do
       true ->
         {:ok, updated_work_order}
     end
+    {:ok, updated_work_order}
   end
 
 
@@ -1199,67 +1201,67 @@ defmodule Inconn2Service.Workorder do
 
       "assigned_work_order" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "workpermit_approval_required" ->
         Enum.map(alert_config.addressed_to_user_ids ++ updated_work_order.workpermit_required_from, fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "workpermit_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "loto_required" ->
         Enum.map(config_user_ids ++ [updated_work_order.loto_approval_from_user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "loto_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_approval_required" ->
         Enum.map(config_user_ids ++ [updated_work_order.work_order_approval_user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_acknowledge_pending" ->
         Enum.map(config_user_ids ++ [updated_work_order.workorder_acknowledgement_user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_acknowledged" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_hold" ->
         Enum.map(config_user_ids ++ config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_cancelled" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_rescheduled" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
       "work_order_reassigned" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
   end

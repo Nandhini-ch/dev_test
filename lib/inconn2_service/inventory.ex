@@ -919,7 +919,7 @@ defmodule Inconn2Service.Inventory do
         }
 
         Enum.map(alert_config.user_ids, fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
   end

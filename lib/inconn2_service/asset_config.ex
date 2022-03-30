@@ -1319,7 +1319,7 @@ defmodule Inconn2Service.AssetConfig do
         }
 
         Enum.map(alert_config.user_ids, fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
   end
@@ -1342,7 +1342,7 @@ defmodule Inconn2Service.AssetConfig do
         }
 
         Enum.map(alert_config.addressed_to_user_ids, fn id ->
-          Prompt.create_user_alert(Map.put_new(attrs, "user_id", id), prefix)
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
   end
