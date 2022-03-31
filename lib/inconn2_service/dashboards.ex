@@ -277,7 +277,7 @@ defmodule Inconn2Service.Dashboards do
         %{name: "Available", y: Float.ceil(available_hours, 2)},
         %{name: "Not Available", y: Float.ceil(not_available_hours)}
       ],
-      labels: [convert_to_minutes_and_hours(Float.ceil(available_hours, 2)), convert_to_minutes_and_hours(Float.ceil(not_available_hours)) ],
+      labels: [convert_to_minutes_and_hours(Float.ceil(available_hours, 2)), convert_to_minutes_and_hours(Float.ceil(not_available_hours, 2)) ],
       data_available: data_available,
       additional_assets: %{
         critical_assets_information: critical_assets,
@@ -413,9 +413,9 @@ defmodule Inconn2Service.Dashboards do
 
 
   defp convert_to_minutes_and_hours(float_value) do
-    [hours, decimal] = :erlang.float_to_binary(float_value) |> String.split(".")
-   minutes = "0." <> decimal  |> :erlang.binary_to_float()
-  "#{hours}:#{minutes *  60 |> trunc() |> :erlang.integer_to_binary()}"
+    [hours, decimal] = Float.to_string(float_value) |> String.split(".")
+   minutes = "0." <> decimal  |> String.to_float()
+  "#{hours}:#{minutes *  60 |> trunc() |> Integer.to_string()}"
   end
 
   defp add_overdue_flag(work_order, prefix) do
