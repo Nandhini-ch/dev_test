@@ -751,7 +751,9 @@ defmodule Inconn2Service.Workorder do
 
   """
   def list_work_orders(prefix) do
-    Repo.all(WorkOrder, prefix: prefix)
+    limit = Date.utc_today() |> Date.add(-7)
+    from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
+    |> Repo.all(prefix: prefix)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
