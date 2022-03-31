@@ -21,6 +21,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
+  alias Inconn2Service.Staff.User
   # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
@@ -848,6 +849,77 @@ defmodule Inconn2Service.Workorder do
         result
     end
   end
+
+  def enable_start(work_order_id, prefix) do
+    work_order = get_work_order!(work_order_id, prefix)
+
+    result_list =
+      Enum.map(["WOA", "WP", "LOTO LOCK", "PRE"] , fn ap ->
+        get_flag_for_start_enable(work_order,  ap)
+      end)
+
+    enable = Enum.filter(result_list, fn x -> x == true end) |> Enum.count()
+
+    case enable do
+      4 ->
+        %{enable: true}
+
+      _ ->
+        %{enable: false}
+    end
+
+  end
+
+  def get_flag_for_start_enable(work_order, "WOA") do
+    if work_order.is_workorder_approval_required  do
+      if work_order.status == "woaa" do
+        true
+      else
+        false
+      end
+    else
+      true
+    end
+  end
+
+  def get_flag_for_start_enable(work_order, "WP") do
+    if work_order.is_workpermit_required  do
+      if work_order.status == "wpa" do
+        true
+      else
+        false
+      end
+    else
+      true
+    end
+  end
+
+  def get_flag_for_start_enable(work_order, "LOTO LOCK") do
+    if work_order.is_workpermit_required  do
+      if work_order.status == "ltla" do
+        true
+      else
+        false
+      end
+    else
+      true
+    end
+  end
+
+  def get_flag_for_start_enable(work_order, "PRE") do
+    if work_order.pre_check_required  do
+      if work_order.precheck_completed do
+        true
+      else
+        false
+      end
+    else
+      true
+    end
+  end
+
+
+
 
   defp auto_create_workorder_tasks_checks(work_order, prefix) do
     auto_create_workorder_task(work_order, prefix)

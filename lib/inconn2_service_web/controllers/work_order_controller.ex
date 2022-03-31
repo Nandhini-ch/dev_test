@@ -41,6 +41,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def enable_start(conn, %{"id" => id}) do
+    response = Workorder.enable_start(id, conn.assigns.sub_domain_prefix)
+    render(conn, "enable_start.json", response: response)
+  end
+
   def get_work_order_for_mobile(conn, _) do
     work_orders = Workorder.list_work_orders_mobile(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "mobile_index.json", work_orders: work_orders)
