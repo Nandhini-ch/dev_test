@@ -4,11 +4,15 @@ chk1 = %{"label" => "check 1", "type" => "WP"}
 chk2 = %{"label" => "check 2", "type" => "WP"}
 chk3 = %{"label" => "check 3", "type" => "LOTO"}
 chk4 = %{"label" => "check 4", "type" => "LOTO"}
+chk5 = %{"label" => "check 5", "type" => "PRE"}
+chk6 = %{"label" => "check 6", "type" => "PRE"}
 
 {:ok, chk1c} = CheckListConfig.create_check(chk1, "inc_bata")
 {:ok, chk2c} = CheckListConfig.create_check(chk2, "inc_bata")
 {:ok, chk3c} = CheckListConfig.create_check(chk3, "inc_bata")
 {:ok, chk4c} = CheckListConfig.create_check(chk4, "inc_bata")
+{:ok, chk5c} = CheckListConfig.create_check(chk5, "inc_bata")
+{:ok, chk6c} = CheckListConfig.create_check(chk6, "inc_bata")
 
 chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
 chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}
@@ -26,7 +30,7 @@ wkord_tp1 = %{
   "repeat_every" => 4,
   "repeat_unit" => "H",
   "applicable_start" => "2021-10-21",
-  "applicable_end" => "2023-10-23",
+  "applicable_end" => "2021-10-23",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
   "create_new" => "at",
@@ -35,8 +39,8 @@ wkord_tp1 = %{
   "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
   "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
-  "loto_required" => false
+  "is_workpermit_required" => false,
+  "is_loto_required" => false
 }
 
 wkord_tp2 = %{
@@ -49,14 +53,16 @@ wkord_tp2 = %{
   "repeat_every" => 2,
   "repeat_unit" => "D",
   "applicable_start" => "2021-09-27",
-  "applicable_end" => "2023-10-30",
+  "applicable_end" => "2021-10-30",
   "time_start" => nil,
   "time_end" => nil,
-  "create_new" => "at",
+  "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
-  "loto_required" => false
+  "is_workorder_approval_required" => true,
+  "is_workorder_acknowledgement_required" => true,
+  "is_workpermit_required" => false,
+  "is_loto_required" => false,
 }
 
 wkord_tp3 = %{
@@ -69,17 +75,16 @@ wkord_tp3 = %{
   "repeat_every" => 2,
   "repeat_unit" => "W",
   "applicable_start" => "2021-08-27",
-  "applicable_end" => "2023-12-31",
+  "applicable_end" => "2021-12-31",
   "time_start" => nil,
   "time_end" => nil,
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => true,
-  "status" => "wpp",
-  "workpermit_required_from" => [2],
+  "is_workpermit_required" => true,
+  "workpermit_approval_user_ids" => [1],
   "workpermit_check_list_id" => chk_lst1c.id,
-  "loto_required" => false
+  "is_loto_required" => false
 }
 
 wkord_tp4 = %{
@@ -92,16 +97,17 @@ wkord_tp4 = %{
   "repeat_every" => 2,
   "repeat_unit" => "M",
   "applicable_start" => "2021-08-27",
-  "applicable_end" => "2023-08-27",
+  "applicable_end" => "2022-08-27",
   "time_start" => nil,
   "time_end" => nil,
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
-  "loto_required" => true,
+  "is_workpermit_required" => false,
+  "is_loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
-  "loto_release_check_list_id" => chk_lst2c.id
+  "loto_release_check_list_id" => chk_lst2c.id,
+  "loto_checker_user_id" => 1
 }
 
 wkord_tp5 = %{
@@ -120,11 +126,11 @@ wkord_tp5 = %{
   "create_new" => "oc",
   "max_times" => 5,
   "workorder_prior_time" => 180,
-  "workpermit_required" => true,
+  "is_workpermit_required" => true,
   "workpermit_check_list_id" => chk_lst1c.id,
-  "loto_required" => true,
+  "is_loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
-  "loto_release_check_list_id" => chk_lst2c.id
+  "loto_release_check_list_id" => chk_lst2c.id,
 }
 
 wkord_tp6 = %{
@@ -137,7 +143,7 @@ wkord_tp6 = %{
   "repeat_every" => 4,
   "repeat_unit" => "H",
   "applicable_start" => "2021-10-21",
-  "applicable_end" => "2023-10-23",
+  "applicable_end" => "2021-10-23",
   "time_start" => "09:00:00",
   "time_end" => "17:00:00",
   "create_new" => "at",
@@ -146,8 +152,8 @@ wkord_tp6 = %{
   "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
   "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
-  "workpermit_required" => false,
-  "loto_required" => false
+  "is_workpermit_required" => false,
+  "is_loto_required" => false
 }
 
 {:ok, wkord_tp1c} = Workorder.create_workorder_template(wkord_tp1, "inc_bata")
@@ -157,12 +163,12 @@ wkord_tp6 = %{
 {:ok, wkord_tp5c} = Workorder.create_workorder_template(wkord_tp5, "inc_bata")
 {:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_bata")
 
-wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
-wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
-wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
-wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
-wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2022-02-15", "first_occurrence_time" => "09:00:00"}
+wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2}
+wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [2, 4] }
+wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
+wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [1, 2, 4] }
+wkord_sc6 = %{"workorder_template_id" => 6, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 
 {:ok, wkord_sc1c} = Workorder.create_workorder_schedule(wkord_sc1, "inc_bata")
 {:ok, wkord_sc2c} = Workorder.create_workorder_schedule(wkord_sc2, "inc_bata")
@@ -191,9 +197,7 @@ wk_ord1 = %{
   "scheduled_date" => "2021-09-14",
   "scheduled_time" => "09:00:00",
   "workorder_template_id" => 1,
-  "work_request_id" => 1,
-  "status" => "wpp",
-  "workpermit_required_from" => [2]
+  "work_request_id" => 1
 }
 
 wk_ord2 = %{
@@ -287,12 +291,11 @@ work_request1 = %{
   "priority" => "CR",
   "request_type" => "CO",
   "status" => "RS",
-  "raised_date_time" => "2022-02-01 09:00:00",
   "location_id" => 1,
   "assigned_user_id" => 2
 }
 
-{:ok, work_request1c} = Ticket.create_work_request(work_request1, "inc_bata", %{id: 1})
+# {:ok, work_request1c} = Ticket.create_work_request(work_request1, "inc_bata", %{id: 1})
 
 work_request2 = %{
   "site_id" => 1,
@@ -302,11 +305,10 @@ work_request2 = %{
   "request_type" => "RE",
   "is_approvals_required" => true,
   "approvals_required" => [1,2],
-  "raised_date_time" => "2022-02-01 09:00:00",
   "status" => "RS",
   "location_id" => 1,
   "asset_id" => 1,
   "asset_type" => "E"
 }
 
-{:ok, work_request2c} = Ticket.create_work_request(work_request2, "inc_bata")
+# {:ok, work_request2c} = Ticket.create_work_request(work_request2, "inc_bata")

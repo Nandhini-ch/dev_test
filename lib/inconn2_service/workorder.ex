@@ -789,7 +789,7 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
-    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cl"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
     asset_category_workorders =
@@ -800,7 +800,7 @@ defmodule Inconn2Service.Workorder do
 
         employee ->
           query =
-            from wo in WorkOrder,
+            from wo in WorkOrder, where: wo.status not in ["cp", "cl"],
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
