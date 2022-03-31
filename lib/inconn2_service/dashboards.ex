@@ -274,8 +274,8 @@ defmodule Inconn2Service.Dashboards do
         ]
       },
       dataset: [
-        %{name: "Available", y: Float.ceil(available_hours, 2)},
-        %{name: "Not Available", y: Float.ceil(not_available_hours)}
+        %{name: "Available", y: Float.ceil(available_hours, 2), label: convert_to_minutes_and_hours(Float.ceil(available_hours, 2))},
+        %{name: "Not Available", y: Float.ceil(not_available_hours), label: convert_to_minutes_and_hours(Float.ceil(not_available_hours, 2))}
       ],
       labels: [convert_to_minutes_and_hours(Float.ceil(available_hours, 2)), convert_to_minutes_and_hours(Float.ceil(not_available_hours, 2)) ],
       data_available: data_available,
