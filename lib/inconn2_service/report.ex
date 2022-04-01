@@ -363,7 +363,7 @@ defmodule Inconn2Service.Report do
         IO.inspect({wr.response_tat, wr.resolution_tat})
 
         {response_tat_met, resolution_tat_met} =
-          if ticket_response_tat != nil && ticket_resolution_tat != nil && wr.response_tat != nil && wr.resolution_tat != nil do
+          if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
             cond do
               wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
                 {"yes", "yes"}
