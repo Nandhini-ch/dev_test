@@ -577,6 +577,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
+          push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified")
           zone = get_time_zone(workorder_schedule, prefix)
           work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
           case work_scheduler do
@@ -597,6 +598,42 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def push_alert_notification_for_workorder_schedule(updated_schedule, prefix, "modified") do
+    asset = get_asset_from_workorder_schedule(updated_schedule, prefix)
+    description = ~s(Workorder Schedule for #{asset.name} has been modified)
+    create_notification_for_workorder_schedule("WOSE", description, updated_schedule, prefix)
+  end
+
+  def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+
+    case alert_config do
+      nil ->
+        {:ok, updated_schedule}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "type" => alert.type,
+          "description" => description
+        }
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+        {:ok, updated_schedule}
+    end
+  end
+
+  defp get_asset_from_workorder_schedule(workorder_schedule, prefix) do
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(workorder_schedule.asset_id, prefix)
+
+      "E" ->
+        AssetConfig.get_equipment(workorder_schedule.asset_id, prefix)
+    end
+  end
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
@@ -1111,7 +1148,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-
   def push_alert_notification_for_work_order(existing_work_order, updated_work_order, prefix) do
     workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
@@ -1164,13 +1200,24 @@ defmodule Inconn2Service.Workorder do
         description = ~s(Workorder for #{asset.name} has been cancelled)
         create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
-      existing_work_order.scheduled_date != updated_work_order.scheduled_date ->
+      (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
         description = ~s(Workorder for #{asset.name} has been rescheduled)
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
       existing_work_order.user_id != updated_work_order.user_id ->
         description = ~s(Workorder for #{asset.name} has been re-assigned)
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
+
+      (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
+        expected_date_time = NaiveDateTime.new!(updated_work_order.scheduled_date, updated_work_order.scheduled_time)
+                             |> NaiveDateTime.add(workorder_template.estimated_time * 60)
+        completed_date_time = NaiveDateTime.new!(updated_work_order.completed_date, updated_work_order.completed_time)
+        if completed_date_time >= expected_date_time do
+          description = ~s(Workorder for #{asset.name} is not completed by expected time)
+          create_work_order_alert_notification("WONC", existing_work_order, updated_work_order, description, "work_order_not_completed_by_time", prefix)
+        else
+          {:ok, updated_work_order}
+        end
 
       true ->
         {:ok, updated_work_order}
@@ -1260,6 +1307,11 @@ defmodule Inconn2Service.Workorder do
         end)
 
       "work_order_reassigned" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "work_order_not_completed_by_time" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)

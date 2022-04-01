@@ -8,6 +8,9 @@ Common.create_alert_notification_reserve(alert)
 alert = %{"module" => "Asset","description" => "Asset Status change to on/ off","type" => "nt","code" => "ASST"}
 Common.create_alert_notification_reserve(alert)
 
+alert = %{"module" => "Asset","description" => "Asset status change to in transit","type" => "nt","code" => "ASTT"}
+Common.create_alert_notification_reserve(alert)
+
 alert = %{"module" => "Asset","description" => "Asset parameter out of validation","type" => "al","code" => "ASPV"}
 Common.create_alert_notification_reserve(alert)
 
