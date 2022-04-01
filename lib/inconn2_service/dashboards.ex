@@ -274,8 +274,8 @@ defmodule Inconn2Service.Dashboards do
         ]
       },
       dataset: [
-        %{name: "Available", y: Float.ceil(available_hours, 2)},
-        %{name: "Not Available", y: Float.ceil(not_available_hours)}
+        %{name: "Available", y: Float.ceil(available_hours, 2), label: convert_to_minutes_and_hours(Float.ceil(available_hours, 2))},
+        %{name: "Not Available", y: Float.ceil(not_available_hours), label: convert_to_minutes_and_hours(Float.ceil(not_available_hours, 2))}
       ],
       labels: [convert_to_minutes_and_hours(Float.ceil(available_hours, 2)), convert_to_minutes_and_hours(Float.ceil(not_available_hours, 2)) ],
       data_available: data_available,
@@ -799,9 +799,9 @@ defmodule Inconn2Service.Dashboards do
               ],
       additional_information:
               [
-                %{name: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost},
-                %{name: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost},
-                %{name: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost}
+                %{name: top1.asset_name, avg_value: top1.avg_value, cost: top1.avg_value * cost |> Float.ceil(2)},
+                %{name: top2.asset_name, avg_value: top2.avg_value, cost: top2.avg_value * cost |> Float.ceil(2)},
+                %{name: top3.asset_name, avg_value: top3.avg_value, cost: top3.avg_value * cost |> Float.ceil(2)}
               ]
       }
   end
@@ -819,6 +819,7 @@ defmodule Inconn2Service.Dashboards do
 
   defp average_value(data) do
     Enum.sum(data) / length(data)
+    |> Float.ceil(2)
   end
 
   defp add_boolean_flag(data) do
