@@ -2332,6 +2332,7 @@ defmodule Inconn2Service.Workorder do
 
 
   alias Inconn2Service.Workorder.WorkorderCheck
+  alias Inconn2Service.CheckListConfig
 
   @doc """
   Returns the list of workorder_checks.
@@ -2344,12 +2345,14 @@ defmodule Inconn2Service.Workorder do
   """
   def list_workorder_checks(prefix) do
     Repo.all(WorkorderCheck, prefix: prefix)
+    |> Enum.map(fn x -> preload_checks(x, prefix) end)
   end
 
   def list_workorder_checks_by_type(work_order_id, check_type, prefix) do
     WorkorderCheck
     |> where([type: ^check_type, work_order_id: ^work_order_id])
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> preload_checks(x, prefix) end)
   end
 
   @doc """
@@ -2366,8 +2369,12 @@ defmodule Inconn2Service.Workorder do
       ** (Ecto.NoResultsError)
 
   """
-  def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix)
+  def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix) |> preload_checks(prefix)
 
+  defp preload_checks(workorder_check, prefix) do
+    check = CheckListConfig.get_check(workorder_check.check_id, prefix)
+    Map.put(workorder_check, :check, check)
+  end
   @doc """
   Creates a workorder_check.
 
@@ -2381,10 +2388,17 @@ defmodule Inconn2Service.Workorder do
 
   """
   def create_workorder_check(attrs \\ %{}, prefix) do
-    %WorkorderCheck{}
-    |> WorkorderCheck.changeset(attrs)
-    |> validate_check_id(prefix)
-    |> Repo.insert(prefix: prefix)
+    result = %WorkorderCheck{}
+              |> WorkorderCheck.changeset(attrs)
+              |> validate_check_id(prefix)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, workorder_check} ->
+          {:ok, workorder_check |> preload_checks(prefix)}
+
+      _ ->
+        result
+    end
   end
 
   defp validate_check_id(cs, prefix) do
@@ -2414,10 +2428,17 @@ defmodule Inconn2Service.Workorder do
 
   """
   def update_workorder_check(%WorkorderCheck{} = workorder_check, attrs, prefix) do
-    workorder_check
-    |> WorkorderCheck.changeset(attrs)
-    |> validate_check_id(prefix)
-    |> Repo.update(prefix: prefix)
+   result = workorder_check
+            |> WorkorderCheck.changeset(attrs)
+            |> validate_check_id(prefix)
+            |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, workorder_check} ->
+          {:ok, workorder_check |> preload_checks(prefix)}
+
+      _ ->
+        result
+    end
   end
 
   def update_workorder_checks(workorder_check_ids, prefix) do
