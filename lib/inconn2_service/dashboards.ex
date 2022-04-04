@@ -44,8 +44,12 @@ defmodule Inconn2Service.Dashboards do
     open_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status not in ["CL", "CS"] end) |> Enum.count()
     closed_ticket_count = Enum.filter(work_orders, fn wo -> wo.work_request.status in ["CL", "CS"] end) |> Enum.count()
     reopened_tickets =
-      Enum.filter(work_orders, fn wo -> wo.work_request.status == "ROP" end)
-      |> Enum.map(fn wo -> %{id: wo.work_request.id, status: wo.work_request.status} end)
+      Enum.map(work_orders, fn wo ->
+        tracks = Ticket.list_workrequest_status_track_for_work_request(wo.work_request.id, prefix) |> Enum.map(fn wrst -> wrst.status end)
+        Map.put(wo.work_request, :statuses, tracks)
+      end)
+      |> Enum.map(fn wr ->  "ROP" in wr.statuses end)
+      |> Enum.map(fn wr -> %{id: wr.id, status: wr.status} end)
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
 
