@@ -8,6 +8,7 @@ defmodule Inconn2Service.Prompt do
 
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt.AlertNotificationConfig
+  alias Inconn2Service.Workorder
 
   @doc """
   Returns the list of alert_notification_configs.
@@ -236,4 +237,34 @@ defmodule Inconn2Service.Prompt do
   def change_user_alert_notification(%UserAlertNotification{} = user_alert_notification, attrs \\ %{}) do
     UserAlertNotification.changeset(user_alert_notification, attrs)
   end
+
+  def generate_alert_notification(alert_notification) do
+    create_alert_notification(alert_notification.reference_id, alert_notification.code, alert_notification.prefix)
+    Common.delete_alert_notification_generator(alert_notification)
+  end
+
+  defp create_alert_notification(work_order_id, "WOOD", prefix) do
+    work_order = Workorder.get_work_order!(work_order_id, prefix)
+    {asset, _workorder_schedule} = Workorder.get_asset_from_work_order(work_order, prefix)
+    description = ~s(Workorder for #{asset.name} is overdue by 10 mins)
+
+    alert = Common.get_alert_by_code("WOOD")
+    alert_config = get_alert_notification_config_by_alert_id(alert.id, prefix)
+
+    config_user_ids =
+      case alert_config do
+        nil -> []
+        _ -> alert_config.addressed_to_user_ids
+      end
+
+    attrs = %{
+      "alert_notification_id" => alert.id,
+      "type" => alert.type,
+      "description" => description
+    }
+    Enum.map(config_user_ids ++ [work_order.user_id], fn id ->
+      create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+    end)
+  end
+
 end
