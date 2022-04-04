@@ -33,7 +33,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :is_loto_required, :boolean
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
-    field :pre_check_required, :boolean, default: true
+    field :pre_check_required, :boolean, default: false
     field :precheck_completed, :boolean, default: false
     field :loto_checker_user_id, :integer
 

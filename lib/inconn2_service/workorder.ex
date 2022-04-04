@@ -919,6 +919,79 @@ defmodule Inconn2Service.Workorder do
   end
 
 
+  def get_next_steps(id, prefix) do
+    work_order = get_work_order!(id, prefix)
+    work_order_status_tracks = list_status_track_by_work_order_id(id, prefix) |> Enum.sort_by(&(&1.date))
+    get_next_step_for_work_order(work_order, List.last(work_order_status_tracks).status)
+  end
+
+  def get_next_step_for_work_order(work_order, "as") do
+    cond do
+      work_order.is_workorder_approval_required ->
+        "apply_workorder_approval"
+
+      work_order.is_workpermit_required ->
+        "apply_workpermit"
+
+      work_order.is_loto_required ->
+        "apply_loto"
+
+      work_order.pre_check_required ->
+        "apply_pre"
+
+      true ->
+        "start_execution"
+    end
+  end
+
+  def get_next_step_for_work_order(work_order, "woaa") do
+    cond do
+      work_order.is_workpermit_required ->
+        "apply_workpermit"
+
+      work_order.is_loto_required ->
+        "apply_loto"
+
+      work_order.pre_check_required ->
+        "apply_pre"
+
+      true ->
+        "start_execution"
+    end
+  end
+
+    def get_next_step_for_work_order(work_order, "wpa") do
+      cond do
+        work_order.is_loto_required ->
+          "apply_loto"
+
+        work_order.pre_check_required ->
+          "apply_pre"
+
+        true ->
+          "start_execution"
+      end
+    end
+
+
+
+
+    def get_next_step_for_work_order(work_order, "ltla")  do
+      cond do
+        work_order.pre_check_required ->
+          "apply_pre"
+
+        true ->
+          "start_execution"
+      end
+    end
+    def get_next_step_for_work_order(_work_order, "woap"), do: "work_order_approval_pending"
+    def get_next_step_for_work_order(_work_order, "wpp"), do: "work_permit_pre"
+    def get_next_step_for_work_order(_work_order, "ltlp"), do: "loto_pending"
+
+
+
+
 
 
   defp auto_create_workorder_tasks_checks(work_order, prefix) do

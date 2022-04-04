@@ -24,6 +24,10 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
     %{data: %{result: response.result, message: response.message}}
   end
 
+  def render("next_step.json", %{response: response}) do
+    %{data: response.next_step}
+  end
+
   def render("enable_start.json", %{response: response}) do
     %{data: response}
   end

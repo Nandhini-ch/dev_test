@@ -66,6 +66,13 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "show.json", work_order: work_order)
   end
 
+  @spec next_step(Plug.Conn.t(), map) :: Plug.Conn.t()
+  def next_step(conn, %{"id" => id}) do
+    next_step = Workorder.get_next_steps(id, conn.assigns.sub_domain_prefix)
+
+    render(conn, "next_step.json", response: %{next_step: next_step})
+  end
+
   def update(conn, %{"id" => id, "work_order" => work_order_params}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
