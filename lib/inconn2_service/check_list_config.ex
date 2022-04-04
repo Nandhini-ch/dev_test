@@ -43,6 +43,7 @@ defmodule Inconn2Service.CheckListConfig do
 
   """
   def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix)
+  def get_check(id, prefix), do: Repo.get(Check, id, prefix: prefix)
 
   @doc """
   Creates a check.
