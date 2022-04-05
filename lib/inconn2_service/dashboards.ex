@@ -49,7 +49,7 @@ defmodule Inconn2Service.Dashboards do
         Map.put(wo.work_request, :statuses, tracks)
       end)
       |> Enum.map(fn wr ->  "ROP" in wr.statuses end)
-      |> Enum.map(fn wr -> %{id: wr.id, status: wr.status} end)
+      |> Enum.map(fn wr -> %{id: wr.id, status: wr.status, description: wr.description} end)
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
 
