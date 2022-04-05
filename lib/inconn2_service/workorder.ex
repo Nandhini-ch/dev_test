@@ -986,6 +986,7 @@ defmodule Inconn2Service.Workorder do
       end
     end
     def get_next_step_for_work_order(_work_order, "woap"), do: "work_order_approval_pending"
+    def get_next_step_for_work_order(_work_order, "cr"), do: "assign_workorder"
     def get_next_step_for_work_order(_work_order, "wpp"), do: "work_permit_pre"
     def get_next_step_for_work_order(_work_order, "ltlp"), do: "loto_pending"
 
