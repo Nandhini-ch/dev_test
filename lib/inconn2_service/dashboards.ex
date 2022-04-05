@@ -633,7 +633,7 @@ defmodule Inconn2Service.Dashboards do
     data = get_main_meter_readings(site_config, date_list, prefix)
     %{
       labels: date_list,
-      data: [data]
+      data: data
     }
     |> add_boolean_flag()
   end
@@ -641,13 +641,19 @@ defmodule Inconn2Service.Dashboards do
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
     main_meters = site_config.config["main_meters"]
     if main_meters != nil do
-      Enum.map(date_list, fn date ->
-        Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
-        |> Enum.reduce(0, fn x, acc -> x + acc end)
-      end)
-      |> Enum.reduce(0, fn x, acc -> x + acc end)
+      case length(date_list) do
+        1 ->
+          data = Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, List.first(date_list), prefix) end)
+                 |> Enum.reduce(0, fn x, acc -> x + acc end)
+          [data]
+        _ ->
+          Enum.map(date_list, fn date ->
+            Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
+            |> Enum.reduce(0, fn x, acc -> x + acc end)
+          end)
+      end
     else
-      0
+      [0]
     end
   end
 
@@ -776,7 +782,11 @@ defmodule Inconn2Service.Dashboards do
            else
             site_config.config["energy_cost_per_unit"]
           end
-    site_meters = site_config.config["main_meters"]
+    site_meters = if site_config == nil do
+                    0
+                  else
+                    site_config.config["main_meters"]
+                  end
     energy_meters = from(e in Equipment, where: e.site_id == ^site_id)
                     |> Repo.all(prefix: prefix)
                     |> Enum.filter(fn x -> x.id not in site_meters end)
