@@ -642,12 +642,10 @@ defmodule Inconn2Service.Dashboards do
     if main_meters != nil do
       case length(date_list) do
         1 ->
-          IO.puts("111111111111111111111111111111")
           data = Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, List.first(date_list), prefix) end)
                  |> Enum.reduce(0, fn x, acc -> x + acc end)
           [data]
         _ ->
-          IO.puts("222222222222222222222222222222")
           Enum.map(date_list, fn date ->
             Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
             |> Enum.reduce(0, fn x, acc -> x + acc end)
