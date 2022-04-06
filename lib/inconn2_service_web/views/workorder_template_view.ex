@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       is_workpermit_required: workorder_template.is_workpermit_required,
       is_workorder_acknowledgement_required: workorder_template.is_workorder_acknowledgement_required,
       workpermit_check_list_id: workorder_template.workpermit_check_list_id,
-      loto_required: workorder_template.loto_required,
+      is_loto_required: workorder_template.is_loto_required,
       loto_lock_check_list_id: workorder_template.loto_lock_check_list_id,
       loto_release_check_list_id: workorder_template.loto_release_check_list_id
     }
