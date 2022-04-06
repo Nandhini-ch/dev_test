@@ -80,14 +80,27 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
-  def send_for_work_order_approval(conn, %{"id" => id}) do
+  def send_for_workflow_approvals(conn, query_params) do
+    case query_params["type"] do
+      "WOA" ->
+          send_for_work_order_approval(conn, query_params["id"])
+      "WPA" ->
+          send_for_workpermit_approval(conn, query_params["id"])
+      "LLA" ->
+          send_for_loto_lock_approval(conn, query_params["id"])
+      "LRA" ->
+          send_for_loto_release_approval(conn, query_params["id"])
+    end
+  end
+
+  defp send_for_work_order_approval(conn, id) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     with {:ok, %WorkOrder{} = work_order} <- Workorder.send_for_work_order_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
   end
 
-  def send_for_workpermit_approval(conn, %{"id" => id}) do
+  defp send_for_workpermit_approval(conn, id) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     response = Workorder.send_for_workpermit_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     case response.result do
@@ -101,7 +114,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
-  def send_for_loto_lock_approval(conn, %{"id" => id}) do
+  defp send_for_loto_lock_approval(conn, id) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     response = Workorder.send_for_loto_approval(work_order, "lock", conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     case response.result do
@@ -115,7 +128,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
-  def send_for_loto_release_approval(conn, %{"id" => id}) do
+  defp send_for_loto_release_approval(conn, id) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     response = Workorder.send_for_loto_approval(work_order, "release", conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     case response.result do

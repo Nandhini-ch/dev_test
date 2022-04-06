@@ -110,10 +110,11 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     get "/work_orders/enable_start/:id", WorkOrderController, :enable_start
     get "/work_orders/:id/next_step", WorkOrderController, :next_step
-    put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
-    put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
-    put "/work_orders/:id/send_for_loto_lock_approval", WorkOrderController, :send_for_loto_lock_approval
-    put "/work_orders/:id/send_for_loto_release_approval", WorkOrderController, :send_for_loto_release_approval
+    put "/work_orders/:id/send_for_workflow_approvals/:type", WorkOrderController, :send_for_workflow_approvals
+    # put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
+    # put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
+    # put "/work_orders/:id/send_for_loto_lock_approval", WorkOrderController, :send_for_loto_lock_approval
+    # put "/work_orders/:id/send_for_loto_release_approval", WorkOrderController, :send_for_loto_release_approval
     get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
     get "/work_orders/workorder_approvals_pending", WorkOrderController, :work_orders_to_be_approved
     get "/work_orders/workorder_acknowledgement_pending", WorkOrderController, :work_orders_to_be_acknowledged
