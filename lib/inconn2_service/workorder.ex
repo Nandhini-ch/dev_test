@@ -2532,6 +2532,8 @@ defmodule Inconn2Service.Workorder do
       %WorkorderApprovalTrack{}
       |> WorkorderApprovalTrack.changeset(attrs)
       |> set_user_id_for_approval(user)
+      |> set_discrepancy_check_ids(prefix)
+      |> set_approved()
       |> Repo.insert(prefix: prefix)
 
     case workorder_approval_track do
@@ -2648,5 +2650,39 @@ defmodule Inconn2Service.Workorder do
 
   defp set_user_id_for_approval(cs, user) do
     change(cs, approval_user_id: user.id)
+  end
+
+  defp set_discrepancy_check_ids(cs, prefix) do
+    work_order_id = get_field(cs, :work_order_id, nil)
+    type = get_field(cs, :type, nil)
+    accepted_check_ids = get_field(cs, :accepted_check_ids, nil)
+    cond do
+      type in ["WP", "LOTO LOCK", "LOTO RELEASE"] ->
+      check_ids =
+        list_workorder_checks_by_type(work_order_id, type, prefix)
+        |> Enum.map(fn c -> c.id end)
+      if length(accepted_check_ids) != length(check_ids) do
+        change(cs, discrepancy_workorder_check_ids: check_ids -- accepted_check_ids)
+      else
+        cs
+      end
+
+    true ->
+      cs
+    end
+  end
+
+  defp set_approved(cs) do
+    checks = get_field(cs, :discrepancy_workorder_check_ids, nil)
+    type = get_field(cs,  :type, nil)
+    if type in ["WP", "LOTO LOCK", "LOTO RELEASE"] do
+      if is_nil(checks) do
+        change(cs, approved: true)
+      else
+        change(cs, approved: false) |> validate_required([:remarks])
+      end
+    else
+      cs
+    end
   end
 end
