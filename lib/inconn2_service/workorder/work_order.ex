@@ -33,6 +33,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :precheck_completed, :boolean, default: false
     field :is_deactivated, :boolean, null: false, default: false
     field :deactivated_date_time, :naive_datetime
+    has_many :workorder_tasks, Inconn2Service.Workorder.WorkorderTask
 
     timestamps()
   end

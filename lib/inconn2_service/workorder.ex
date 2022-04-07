@@ -1372,11 +1372,14 @@ defmodule Inconn2Service.Workorder do
       left_join: ws in WorkorderSchedule, on: wo.workorder_schedule_id == ws.id,
       left_join: wot in WorkorderTask, on: wot.work_order_id == wo.id,
       left_join: wr in WorkRequest, on: wr.id == wo.work_request_id,
+      left_join: u in User, on: wo.user_id == u.id,
+      left_join: e in Employee, on:  u.employee_id == e.id,
       select: %{
         id: wo.id,
         site_id: wo.site_id,
         site: s,
-        workorder_tasks: wot,
+        asset_id: wo.asset_id,
+        # workorder_tasks: wot,
         work_request: wr,
         user_id: wo.user_id,
         type: wo.type,
@@ -1387,6 +1390,8 @@ defmodule Inconn2Service.Workorder do
         scheduled_date: wo.scheduled_date,
         scheduled_time: wo.scheduled_time,
         start_date: wo.start_date,
+        user: u,
+        employee: e,
         start_time: wo.start_time,
         completed_date: wo.completed_date,
         completed_time: wo.completed_time,
@@ -1402,7 +1407,22 @@ defmodule Inconn2Service.Workorder do
 
 
 
-      work_orders = Repo.all(query_for_assigned, prefix: prefix)
+      work_orders =
+        Repo.all(query_for_assigned, prefix: prefix)
+        |> Stream.map(fn wo ->
+          wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+          Map.put_new(wo, :workorder_tasks,  wots)
+        end)
+        |> Enum.map(fn wo ->
+          asset =
+            case wo.workorder_template.asset_type do
+              "L" ->
+                AssetConfig.get_location!(wo.asset_id, prefix)
+              "E" ->
+                AssetConfig.get_equipment!(wo.asset_id, prefix)
+            end
+          Map.put_new(wo, :asset, asset)
+        end)
       IO.inspect(work_orders)
       work_orders
 

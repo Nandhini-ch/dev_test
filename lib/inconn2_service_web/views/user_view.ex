@@ -10,6 +10,16 @@ defmodule Inconn2ServiceWeb.UserView do
     %{data: render_one(user, UserView, "user.json")}
   end
 
+  def render("user_mobile.json", %{user: user}) do
+    %{
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      mobile_no: user.mobile_no,
+      party_id: user.party_id,
+    }
+  end
+
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
