@@ -21,6 +21,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
+  alias Inconn2Service.Ticket.WorkRequest
   # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
@@ -1353,6 +1354,61 @@ defmodule Inconn2Service.Workorder do
   def list_workorder_tasks(prefix) do
     Repo.all(WorkorderTask, prefix: prefix)
   end
+
+  def list_work_order_mobile_test(user, prefix) do
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+    query_for_assigned =
+      from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+      left_join: s in Site, on: s.id == wo.site_id,
+      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id,
+      left_join: ws in WorkorderSchedule, on: wo.workorder_schedule_id == ws.id,
+      left_join: wot in WorkorderTask, on: wot.work_order_id == wo.id,
+      left_join: wr in WorkRequest, on: wr.id == wo.work_request_id,
+      select: %{
+        id: wo.id,
+        site_id: wo.site_id,
+        site: s,
+        workorder_tasks: wot,
+        work_request: wr,
+        user_id: wo.user_id,
+        type: wo.type,
+        created_date: wo.created_date,
+        created_time: wo.created_time,
+        assigned_date: wo.assigned_date,
+        assigned_time: wo.assigned_time,
+        scheduled_date: wo.scheduled_date,
+        scheduled_time: wo.scheduled_time,
+        start_date: wo.start_date,
+        start_time: wo.start_time,
+        completed_date: wo.completed_date,
+        completed_time: wo.completed_time,
+        status: wo.status,
+        is_deactivated: wo.is_deactivated,
+        deactivated_date_time: wo.deactivated_date_time,
+        workorder_template_id: wo.workorder_template_id,
+        workorder_template: wt,
+        workorder_schedule: ws,
+        workorder_schedule_id: wo.workorder_schedule_id,
+        work_request_id: wo.work_request_id
+      }
+
+
+
+      work_orders = Repo.all(query_for_assigned, prefix: prefix)
+      IO.inspect(work_orders)
+      work_orders
+
+  end
+
+
 
   def list_work_orders_mobile(user, prefix) do
 

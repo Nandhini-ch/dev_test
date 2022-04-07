@@ -3,7 +3,7 @@ defmodule Inconn2Service.Workorder.WorkorderFileUpload do
   import Ecto.Changeset
 
   schema "workorder_file_uploads" do
-    field :file, :string
+    field :file, :binary
     field :file_type, :string
     field :workorder_task_id, :integer
 

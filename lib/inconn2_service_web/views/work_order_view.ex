@@ -16,8 +16,45 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
     %{data: render_many(work_orders, WorkOrderView, "mobile_work_order.json")}
   end
 
+  def render("mobile_index_test.json", %{work_orders: work_orders}) do
+    %{data: render_many(work_orders, WorkOrderView, "mobile_test.json")}
+  end
+
   def render("mobile_show.json", %{work_order: work_order}) do
     %{data: render_one(work_order, WorkOrderView, "mobile_work_order.json")}
+  end
+
+  def render("mobile_test.json", %{work_order: work_order}) do
+    workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
+
+    %{id: work_order.id,
+      site_id: work_order.site_id,
+      site: render_one(work_order.site, SiteView, "site.json"),
+      workorder_tasks: workorder_tasks,
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
+      # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
+      user_id: work_order.user_id,
+      # user: render_one(work_order.user, UserView, "user.json"),
+      # employee: render_one(work_order.employee, EmployeeView, "employee.json"),
+      type: work_order.type,
+      created_date: work_order.created_date,
+      created_time: work_order.created_time,
+      assigned_date: work_order.assigned_date,
+      assigned_time: work_order.assigned_time,
+      scheduled_date: work_order.scheduled_date,
+      scheduled_time: work_order.scheduled_time,
+      start_date: work_order.start_date,
+      start_time: work_order.start_time,
+      completed_date: work_order.completed_date,
+      completed_time: work_order.completed_time,
+      status: work_order.status,
+      is_deactivated: work_order.is_deactivated,
+      deactivated_date_time: work_order.deactivated_date_time,
+      workorder_template_id: work_order.workorder_template_id,
+      workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
+      workorder_schedule_id: work_order.workorder_schedule_id,
+      # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
+      work_request_id: work_order.work_request_id}
   end
 
   def render("mobile_work_order.json", %{work_order: work_order}) do
