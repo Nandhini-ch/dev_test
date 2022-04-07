@@ -79,7 +79,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_workorder_status_report(conn, _) do
-    workorder_status_report_data = Report.csg_workorder_report(conn.assigns.sub_domain_prefix)
+    workorder_status_report_data = Report.csg_workorder_report(conn.assigns.sub_domain_prefix, conn.query_params)
     conn
     |> put_resp_content_type("application/pdf")
     |> send_resp(:ok, workorder_status_report_data)
