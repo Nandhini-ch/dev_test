@@ -469,10 +469,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-<<<<<<< HEAD
-
-=======
->>>>>>> file_upload_for_workorder_task
   defp get_date_time_in_required_time_zone(site_id, prefix) do
     site = Repo.get!(Site, site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
