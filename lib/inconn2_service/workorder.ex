@@ -2339,4 +2339,105 @@ defmodule Inconn2Service.Workorder do
   def change_workorder_check(%WorkorderCheck{} = workorder_check, attrs \\ %{}) do
     WorkorderCheck.changeset(workorder_check, attrs)
   end
+
+  alias Inconn2Service.Workorder.WorkorderFileUpload
+
+  @doc """
+  Returns the list of workorder_file_uploads.
+
+  ## Examples
+
+      iex> list_workorder_file_uploads()
+      [%WorkorderFileUpload{}, ...]
+
+  """
+  def list_workorder_file_uploads(prefix) do
+    Repo.all(WorkorderFileUpload, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workorder_file_upload.
+
+  Raises `Ecto.NoResultsError` if the Workorder file upload does not exist.
+
+  ## Examples
+
+      iex> get_workorder_file_upload!(123)
+      %WorkorderFileUpload{}
+
+      iex> get_workorder_file_upload!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
+
+  def get_workorder_file_upload_by_workorder_task_id(task_id, prefix) do
+    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^task_id)
+    |> Repo.get(prefix: prefix)
+  end
+
+  @doc """
+  Creates a workorder_file_upload.
+
+  ## Examples
+
+      iex> create_workorder_file_upload(%{field: value})
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> create_workorder_file_upload(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_file_upload(attrs \\ %{}, prefix) do
+    %WorkorderFileUpload{}
+    |> WorkorderFileUpload.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a workorder_file_upload.
+
+  ## Examples
+
+      iex> update_workorder_file_upload(workorder_file_upload, %{field: new_value})
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> update_workorder_file_upload(workorder_file_upload, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, attrs, prefix) do
+    workorder_file_upload
+    |> WorkorderFileUpload.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_file_upload.
+
+  ## Examples
+
+      iex> delete_workorder_file_upload(workorder_file_upload)
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> delete_workorder_file_upload(workorder_file_upload)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, prefix) do
+    Repo.delete(workorder_file_upload, prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_file_upload changes.
+
+  ## Examples
+
+      iex> change_workorder_file_upload(workorder_file_upload)
+      %Ecto.Changeset{data: %WorkorderFileUpload{}}
+
+  """
+  def change_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, attrs \\ %{}) do
+    WorkorderFileUpload.changeset(workorder_file_upload, attrs)
+  end
 end
