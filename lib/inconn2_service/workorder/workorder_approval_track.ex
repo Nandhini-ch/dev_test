@@ -5,7 +5,7 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
   schema "workorder_approval_tracks" do
     field :approved, :boolean, default: false
     field :discrepancy_workorder_check_ids, {:array, :integer}
-    field :accepted_workorder_check_ids, {:array, :integer}
+    field :approved_workorder_check_ids, {:array, :integer}
     field :remarks, :string
     field :type, :string
     field :approval_user_id, :integer
