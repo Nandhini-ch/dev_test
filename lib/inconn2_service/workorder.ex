@@ -2655,7 +2655,7 @@ defmodule Inconn2Service.Workorder do
   defp set_discrepancy_check_ids(cs, prefix) do
     work_order_id = get_field(cs, :work_order_id, nil)
     type = get_field(cs, :type, nil)
-    accepted_check_ids = get_field(cs, :accepted_check_ids, nil)
+    accepted_check_ids = get_field(cs, :accepted_workorder_check_ids, nil)
     cond do
       type in ["WP", "LOTO LOCK", "LOTO RELEASE"] ->
       check_ids =
