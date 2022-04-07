@@ -25,6 +25,8 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Measurements
   alias Inconn2Service.Ticket
 
+  alias Inconn2Service.Ticket.WorkRequest
+  # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
 
@@ -467,7 +469,10 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> file_upload_for_workorder_task
   defp get_date_time_in_required_time_zone(site_id, prefix) do
     site = Repo.get!(Site, site_id, prefix: prefix)
     date_time = DateTime.now!(site.time_zone)
@@ -755,7 +760,9 @@ defmodule Inconn2Service.Workorder do
 
   """
   def list_work_orders(prefix) do
-    Repo.all(WorkOrder, prefix: prefix)
+    limit = Date.utc_today() |> Date.add(-7)
+    from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
+    |> Repo.all(prefix: prefix)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -795,7 +802,8 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
-    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status != "cp"
+
+    query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
     asset_category_workorders =
@@ -806,8 +814,9 @@ defmodule Inconn2Service.Workorder do
 
         employee ->
           query =
-            from wo in WorkOrder, where: wo.status != "cp",
-              left_join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+
+            from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
           Repo.all(query, prefix: prefix)
       end
 
@@ -1404,6 +1413,81 @@ defmodule Inconn2Service.Workorder do
   def list_workorder_tasks(prefix) do
     Repo.all(WorkorderTask, prefix: prefix)
   end
+
+  def list_work_order_mobile_test(user, prefix) do
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+    query_for_assigned =
+      from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+      left_join: s in Site, on: s.id == wo.site_id,
+      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id,
+      left_join: ws in WorkorderSchedule, on: wo.workorder_schedule_id == ws.id,
+      left_join: wot in WorkorderTask, on: wot.work_order_id == wo.id,
+      left_join: wr in WorkRequest, on: wr.id == wo.work_request_id,
+      left_join: u in User, on: wo.user_id == u.id,
+      left_join: e in Employee, on:  u.employee_id == e.id,
+      select: %{
+        id: wo.id,
+        site_id: wo.site_id,
+        site: s,
+        asset_id: wo.asset_id,
+        # workorder_tasks: wot,
+        work_request: wr,
+        user_id: wo.user_id,
+        type: wo.type,
+        created_date: wo.created_date,
+        created_time: wo.created_time,
+        assigned_date: wo.assigned_date,
+        assigned_time: wo.assigned_time,
+        scheduled_date: wo.scheduled_date,
+        scheduled_time: wo.scheduled_time,
+        start_date: wo.start_date,
+        user: u,
+        employee: e,
+        start_time: wo.start_time,
+        completed_date: wo.completed_date,
+        completed_time: wo.completed_time,
+        status: wo.status,
+        is_deactivated: wo.is_deactivated,
+        deactivated_date_time: wo.deactivated_date_time,
+        workorder_template_id: wo.workorder_template_id,
+        workorder_template: wt,
+        workorder_schedule: ws,
+        workorder_schedule_id: wo.workorder_schedule_id,
+        work_request_id: wo.work_request_id
+      }
+
+
+
+      work_orders =
+        Repo.all(query_for_assigned, prefix: prefix)
+        |> Stream.map(fn wo ->
+          wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+          Map.put_new(wo, :workorder_tasks,  wots)
+        end)
+        |> Enum.map(fn wo ->
+          asset =
+            case wo.workorder_template.asset_type do
+              "L" ->
+                AssetConfig.get_location!(wo.asset_id, prefix)
+              "E" ->
+                AssetConfig.get_equipment!(wo.asset_id, prefix)
+            end
+          Map.put_new(wo, :asset, asset)
+        end)
+      IO.inspect(work_orders)
+      work_orders
+
+  end
+
+
 
   def list_work_orders_mobile(user, prefix) do
 
@@ -2390,5 +2474,106 @@ defmodule Inconn2Service.Workorder do
   """
   def change_workorder_check(%WorkorderCheck{} = workorder_check, attrs \\ %{}) do
     WorkorderCheck.changeset(workorder_check, attrs)
+  end
+
+  alias Inconn2Service.Workorder.WorkorderFileUpload
+
+  @doc """
+  Returns the list of workorder_file_uploads.
+
+  ## Examples
+
+      iex> list_workorder_file_uploads()
+      [%WorkorderFileUpload{}, ...]
+
+  """
+  def list_workorder_file_uploads(prefix) do
+    Repo.all(WorkorderFileUpload, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single workorder_file_upload.
+
+  Raises `Ecto.NoResultsError` if the Workorder file upload does not exist.
+
+  ## Examples
+
+      iex> get_workorder_file_upload!(123)
+      %WorkorderFileUpload{}
+
+      iex> get_workorder_file_upload!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
+
+  def get_workorder_file_upload_by_workorder_task_id(task_id, prefix) do
+    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^task_id)
+    |> Repo.get(prefix: prefix)
+  end
+
+  @doc """
+  Creates a workorder_file_upload.
+
+  ## Examples
+
+      iex> create_workorder_file_upload(%{field: value})
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> create_workorder_file_upload(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_workorder_file_upload(attrs \\ %{}, prefix) do
+    %WorkorderFileUpload{}
+    |> WorkorderFileUpload.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a workorder_file_upload.
+
+  ## Examples
+
+      iex> update_workorder_file_upload(workorder_file_upload, %{field: new_value})
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> update_workorder_file_upload(workorder_file_upload, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, attrs, prefix) do
+    workorder_file_upload
+    |> WorkorderFileUpload.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a workorder_file_upload.
+
+  ## Examples
+
+      iex> delete_workorder_file_upload(workorder_file_upload)
+      {:ok, %WorkorderFileUpload{}}
+
+      iex> delete_workorder_file_upload(workorder_file_upload)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, prefix) do
+    Repo.delete(workorder_file_upload, prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking workorder_file_upload changes.
+
+  ## Examples
+
+      iex> change_workorder_file_upload(workorder_file_upload)
+      %Ecto.Changeset{data: %WorkorderFileUpload{}}
+
+  """
+  def change_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, attrs \\ %{}) do
+    WorkorderFileUpload.changeset(workorder_file_upload, attrs)
   end
 end

@@ -14,7 +14,7 @@ defmodule Inconn2Service.Workorder.WorkorderCheck do
   @doc false
   def changeset(workorder_check, attrs) do
     workorder_check
-    |> cast(attrs, [:check_id, :type, :approved])
+    |> cast(attrs, [:check_id, :type, :approved, :work_order_id])
     |> validate_required([:check_id, :type])
     |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
     # |> validate_remarks()

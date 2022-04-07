@@ -11,6 +11,8 @@ database_url =
     For example: ecto://USER:PASS@HOST/DATABASE
     """
 
+# database_url="ecto://postgres:fobosHNRpWfHdsmoANaw@database-1.cdihr97wq71b.ap-south-1.rds.amazonaws.com/inconn2_service"
+
 config :inconn2_service, Inconn2Service.Repo,
   # ssl: true,
   url: database_url,
@@ -22,6 +24,8 @@ secret_key_base =
     environment variable SECRET_KEY_BASE is missing.
     You can generate one by calling: mix phx.gen.secret
     """
+
+secret_key_base = "J/msB7xdbQu6gPiO31v6P1QAp8gughdvYFjAUwZXOAViV9nDkpweM4U5wpG0/cGm"
 
 config :inconn2_service, Inconn2ServiceWeb.Endpoint,
   http: [

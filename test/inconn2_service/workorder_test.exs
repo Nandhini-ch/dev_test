@@ -457,4 +457,67 @@ defmodule Inconn2Service.WorkorderTest do
       assert %Ecto.Changeset{} = Workorder.change_workorder_check(workorder_check)
     end
   end
+
+  describe "workorder_file_uploads" do
+    alias Inconn2Service.Workorder.WorkorderFileUpload
+
+    @valid_attrs %{file: "some file", file_type: "some file_type", workorder_task_id: 42}
+    @update_attrs %{file: "some updated file", file_type: "some updated file_type", workorder_task_id: 43}
+    @invalid_attrs %{file: nil, file_type: nil, workorder_task_id: nil}
+
+    def workorder_file_upload_fixture(attrs \\ %{}) do
+      {:ok, workorder_file_upload} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_file_upload()
+
+      workorder_file_upload
+    end
+
+    test "list_workorder_file_uploads/0 returns all workorder_file_uploads" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert Workorder.list_workorder_file_uploads() == [workorder_file_upload]
+    end
+
+    test "get_workorder_file_upload!/1 returns the workorder_file_upload with given id" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert Workorder.get_workorder_file_upload!(workorder_file_upload.id) == workorder_file_upload
+    end
+
+    test "create_workorder_file_upload/1 with valid data creates a workorder_file_upload" do
+      assert {:ok, %WorkorderFileUpload{} = workorder_file_upload} = Workorder.create_workorder_file_upload(@valid_attrs)
+      assert workorder_file_upload.file == "some file"
+      assert workorder_file_upload.file_type == "some file_type"
+      assert workorder_file_upload.workorder_task_id == 42
+    end
+
+    test "create_workorder_file_upload/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_file_upload(@invalid_attrs)
+    end
+
+    test "update_workorder_file_upload/2 with valid data updates the workorder_file_upload" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert {:ok, %WorkorderFileUpload{} = workorder_file_upload} = Workorder.update_workorder_file_upload(workorder_file_upload, @update_attrs)
+      assert workorder_file_upload.file == "some updated file"
+      assert workorder_file_upload.file_type == "some updated file_type"
+      assert workorder_file_upload.workorder_task_id == 43
+    end
+
+    test "update_workorder_file_upload/2 with invalid data returns error changeset" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_file_upload(workorder_file_upload, @invalid_attrs)
+      assert workorder_file_upload == Workorder.get_workorder_file_upload!(workorder_file_upload.id)
+    end
+
+    test "delete_workorder_file_upload/1 deletes the workorder_file_upload" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert {:ok, %WorkorderFileUpload{}} = Workorder.delete_workorder_file_upload(workorder_file_upload)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_file_upload!(workorder_file_upload.id) end
+    end
+
+    test "change_workorder_file_upload/1 returns a workorder_file_upload changeset" do
+      workorder_file_upload = workorder_file_upload_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_file_upload(workorder_file_upload)
+    end
+  end
 end
