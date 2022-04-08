@@ -1189,6 +1189,16 @@ defmodule Inconn2Service.Ticket do
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
 
+      "ticket cancelled" ->
+        assigned_user_id =
+          case updated_work_request.assigned_user_id do
+           nil  -> []
+           _ -> [updated_work_request.assigned_user_id]
+          end
+        Enum.map(config_user_ids ++ assigned_user_id, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
       "ticket reopened" ->
         assigned_user_id =
           case updated_work_request.assigned_user_id do
