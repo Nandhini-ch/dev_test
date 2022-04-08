@@ -683,8 +683,7 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix)
   end
   def get_category_helpdesk_by_workrequest_category(workrequest_catgoery_id, site_id, prefix) do
-    CategoryHelpdesk
-    |> where([workrequest_catgoery_id: ^workrequest_catgoery_id, site_id: ^site_id])
+    from(ch in CategoryHelpdesk, where: ch.workrequest_category_id == ^workrequest_catgoery_id and ch.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
   end
   @doc """
