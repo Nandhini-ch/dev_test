@@ -49,6 +49,7 @@ defmodule Inconn2Service.Dashboards do
         Map.put(wo.work_request, :statuses, tracks)
       end)
       |> Enum.map(fn wr ->  "ROP" in wr.statuses end)
+      IO.puts("@#$%^&*(*&^%$#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2")
       IO.inspect(t)
       Enum.map(t, fn wr -> %{id: wr.id, status: wr.status, description: wr.description} end)
 
