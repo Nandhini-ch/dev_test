@@ -403,7 +403,6 @@ defmodule Inconn2Service.ReferenceDataUploader do
     case Integer.parse(Map.get(record, "reference", "")) do
       {0, _} -> Map.put(record, "reference", nil)
       {num, _} -> Map.put(record, "reference", num)
-      nil -> record
       _ -> Map.put(record, "reference", nil)
     end
   end
@@ -412,7 +411,6 @@ defmodule Inconn2Service.ReferenceDataUploader do
     case Integer.parse(Map.get(record, "parent reference", "")) do
       {0, _} -> Map.put(record, "parent reference", nil)
       {num, _} -> Map.put(record, "parent reference", num)
-      nil -> record
       _ -> Map.put(record, "parent reference", nil)
     end
   end

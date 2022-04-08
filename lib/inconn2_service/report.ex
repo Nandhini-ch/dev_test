@@ -1345,6 +1345,7 @@ defmodule Inconn2Service.Report do
     pdf_content
   end
 
+
   def render_img_qr(qr_list, sub_domain) do
     Enum.map(qr_list, fn x ->
 
