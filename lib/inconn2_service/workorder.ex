@@ -1019,7 +1019,7 @@ defmodule Inconn2Service.Workorder do
         create_workorder_in_alert_notification_generator(work_order, prefix)
           create_status_track(work_order, user, prefix)
 
-          auto_create_workorder_task(work_order, prefix)
+          auto_create_workorder_tasks_checks(work_order, prefix)
           {:ok, get_work_order!(work_order.id, prefix)}
 
       _ ->
@@ -2698,12 +2698,6 @@ defmodule Inconn2Service.Workorder do
                                             "loto_release_check_list_id" => workorder_template.loto_release_check_list_id,
                                             "loto_checker_user_id" => workorder_schedule.loto_checker_user_id,
                                             }, prefix)
-
-
-    # auto_create_workorder_task(work_order, prefix)
-    if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
-    if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
-    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
 
     # auto_assign_user(work_order, prefix)
 
