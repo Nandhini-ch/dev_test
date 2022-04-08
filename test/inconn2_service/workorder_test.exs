@@ -581,7 +581,6 @@ defmodule Inconn2Service.WorkorderTest do
     test "change_workorder_approval_track/1 returns a workorder_approval_track changeset" do
       workorder_approval_track = workorder_approval_track_fixture()
       assert %Ecto.Changeset{} = Workorder.change_workorder_approval_track(workorder_approval_track)
-
     end
   end
 end
