@@ -21,9 +21,29 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
-  def work_order_loto_to_be_checked(conn, _) do
-    work_orders = Workorder.get_work_order_loto_to_be_checked(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+  def work_orders_to_be_approved(conn, _) do
+    work_orders = Workorder.get_work_orders_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_orders_to_be_acknowledged(conn, _) do
+    work_orders = Workorder.get_work_order_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_order_loto_lock_to_be_checked(conn, _) do
+    work_orders = Workorder.get_work_order_loto_to_be_checked(conn.assigns.current_user, "lock", conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_order_loto_release_to_be_checked(conn, _) do
+    work_orders = Workorder.get_work_order_loto_to_be_checked(conn.assigns.current_user, "release", conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def enable_start(conn, %{"id" => id}) do
+    response = Workorder.enable_start(id, conn.assigns.sub_domain_prefix)
+    render(conn, "enable_start.json", response: response)
   end
 
   def get_work_order_for_mobile(conn, _) do
@@ -51,6 +71,13 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "show.json", work_order: work_order)
   end
 
+  @spec next_step(Plug.Conn.t(), map) :: Plug.Conn.t()
+  def next_step(conn, %{"id" => id}) do
+    next_step = Workorder.get_next_steps(id, conn.assigns.sub_domain_prefix)
+
+    render(conn, "next_step.json", response: %{next_step: next_step})
+  end
+
   def update(conn, %{"id" => id, "work_order" => work_order_params}) do
     work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
     with {:ok, %WorkOrder{} = work_order} <- Workorder.update_work_order(work_order, work_order_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
@@ -58,14 +85,76 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     end
   end
 
-  def approve_work_permit(conn, %{"id" => id}) do
-    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+  def send_for_workflow_approvals(conn, query_params) do
+    case query_params["type"] do
+      "WOA" ->
+          send_for_work_order_approval(conn, query_params["id"])
+      "WPA" ->
+          send_for_workpermit_approval(conn, query_params["id"])
+      "LLA" ->
+          send_for_loto_lock_approval(conn, query_params["id"])
+      "LRA" ->
+          send_for_loto_release_approval(conn, query_params["id"])
+    end
+  end
+
+  defp send_for_work_order_approval(conn, id) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.send_for_work_order_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
   end
 
-  def approve_loto(conn, %{"id" => id}) do
-    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_loto(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+  defp send_for_workpermit_approval(conn, id) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    response = Workorder.send_for_workpermit_approval(work_order, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    case response.result do
+      true ->
+        render(conn, "permit_response.json", response: response)
+      false ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> put_view(Inconn2ServiceWeb.WorkOrderView)
+          |> render("permit_response.json", response: response)
+    end
+  end
+
+  defp send_for_loto_lock_approval(conn, id) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    response = Workorder.send_for_loto_approval(work_order, "lock", conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    case response.result do
+      true ->
+        render(conn, "permit_response.json", response: response)
+      false ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> put_view(Inconn2ServiceWeb.WorkOrderView)
+          |> render("permit_response.json", response: response)
+    end
+  end
+
+  defp send_for_loto_release_approval(conn, id) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+    response = Workorder.send_for_loto_approval(work_order, "release", conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    case response.result do
+      true ->
+        render(conn, "permit_response.json", response: response)
+      false ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> put_view(Inconn2ServiceWeb.WorkOrderView)
+          |> render("permit_response.json", response: response)
+    end
+  end
+
+  # def approve_work_permit(conn, %{"id" => id}) do
+  #   with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_work_permit(id, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+  #     render(conn, "show.json", work_order: work_order)
+  #   end
+  # end
+
+  def approve_loto_lock(conn, %{"id" => id}) do
+    with {:ok, %WorkOrder{} = work_order} <- Workorder.approve_loto(id, "lock", conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", work_order: work_order)
     end
   end

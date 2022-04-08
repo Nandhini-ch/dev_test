@@ -518,6 +518,70 @@ defmodule Inconn2Service.WorkorderTest do
     test "change_workorder_file_upload/1 returns a workorder_file_upload changeset" do
       workorder_file_upload = workorder_file_upload_fixture()
       assert %Ecto.Changeset{} = Workorder.change_workorder_file_upload(workorder_file_upload)
+
+  describe "workorder_approval_tracks" do
+    alias Inconn2Service.Workorder.WorkorderApprovalTrack
+
+    @valid_attrs %{approved: true, discrepancy_workorder_check_ids: [], remarks: "some remarks", type: "some type"}
+    @update_attrs %{approved: false, discrepancy_workorder_check_ids: [], remarks: "some updated remarks", type: "some updated type"}
+    @invalid_attrs %{approved: nil, discrepancy_workorder_check_ids: nil, remarks: nil, type: nil}
+
+    def workorder_approval_track_fixture(attrs \\ %{}) do
+      {:ok, workorder_approval_track} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Workorder.create_workorder_approval_track()
+
+      workorder_approval_track
+    end
+
+    test "list_workorder_approval_tracks/0 returns all workorder_approval_tracks" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert Workorder.list_workorder_approval_tracks() == [workorder_approval_track]
+    end
+
+    test "get_workorder_approval_track!/1 returns the workorder_approval_track with given id" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert Workorder.get_workorder_approval_track!(workorder_approval_track.id) == workorder_approval_track
+    end
+
+    test "create_workorder_approval_track/1 with valid data creates a workorder_approval_track" do
+      assert {:ok, %WorkorderApprovalTrack{} = workorder_approval_track} = Workorder.create_workorder_approval_track(@valid_attrs)
+      assert workorder_approval_track.approved == true
+      assert workorder_approval_track.discrepancy_workorder_check_ids == []
+      assert workorder_approval_track.remarks == "some remarks"
+      assert workorder_approval_track.type == "some type"
+    end
+
+    test "create_workorder_approval_track/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Workorder.create_workorder_approval_track(@invalid_attrs)
+    end
+
+    test "update_workorder_approval_track/2 with valid data updates the workorder_approval_track" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert {:ok, %WorkorderApprovalTrack{} = workorder_approval_track} = Workorder.update_workorder_approval_track(workorder_approval_track, @update_attrs)
+      assert workorder_approval_track.approved == false
+      assert workorder_approval_track.discrepancy_workorder_check_ids == []
+      assert workorder_approval_track.remarks == "some updated remarks"
+      assert workorder_approval_track.type == "some updated type"
+    end
+
+    test "update_workorder_approval_track/2 with invalid data returns error changeset" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert {:error, %Ecto.Changeset{}} = Workorder.update_workorder_approval_track(workorder_approval_track, @invalid_attrs)
+      assert workorder_approval_track == Workorder.get_workorder_approval_track!(workorder_approval_track.id)
+    end
+
+    test "delete_workorder_approval_track/1 deletes the workorder_approval_track" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert {:ok, %WorkorderApprovalTrack{}} = Workorder.delete_workorder_approval_track(workorder_approval_track)
+      assert_raise Ecto.NoResultsError, fn -> Workorder.get_workorder_approval_track!(workorder_approval_track.id) end
+    end
+
+    test "change_workorder_approval_track/1 returns a workorder_approval_track changeset" do
+      workorder_approval_track = workorder_approval_track_fixture()
+      assert %Ecto.Changeset{} = Workorder.change_workorder_approval_track(workorder_approval_track)
+
     end
   end
 end

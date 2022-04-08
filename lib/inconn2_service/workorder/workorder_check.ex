@@ -15,8 +15,8 @@ defmodule Inconn2Service.Workorder.WorkorderCheck do
   def changeset(workorder_check, attrs) do
     workorder_check
     |> cast(attrs, [:check_id, :type, :approved, :work_order_id])
-    |> validate_required([:check_id, :type])
-    |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
+    |> validate_required([:check_id, :type, :work_order_id])
+    |> validate_inclusion(:type, ["PRE", "WP", "LOTO LOCK", "LOTO RELEASE", "LOTO"])
     # |> validate_remarks()
     |> assoc_constraint(:work_order)
   end

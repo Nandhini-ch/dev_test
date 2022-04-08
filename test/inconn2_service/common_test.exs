@@ -197,4 +197,138 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_list_of_value(list_of_value)
     end
   end
+
+  describe "alert_notification_reserves" do
+    alias Inconn2Service.Common.AlertNotificationReserve
+
+    @valid_attrs %{addressed_to_user_ids: [], code: "some code", description: "some description", module: "some module", type: "some type"}
+    @update_attrs %{addressed_to_user_ids: [], code: "some updated code", description: "some updated description", module: "some updated module", type: "some updated type"}
+    @invalid_attrs %{addressed_to_user_ids: nil, code: nil, description: nil, module: nil, type: nil}
+
+    def alert_notification_reserve_fixture(attrs \\ %{}) do
+      {:ok, alert_notification_reserve} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_alert_notification_reserve()
+
+      alert_notification_reserve
+    end
+
+    test "list_alert_notification_reserves/0 returns all alert_notification_reserves" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert Common.list_alert_notification_reserves() == [alert_notification_reserve]
+    end
+
+    test "get_alert_notification_reserve!/1 returns the alert_notification_reserve with given id" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert Common.get_alert_notification_reserve!(alert_notification_reserve.id) == alert_notification_reserve
+    end
+
+    test "create_alert_notification_reserve/1 with valid data creates a alert_notification_reserve" do
+      assert {:ok, %AlertNotificationReserve{} = alert_notification_reserve} = Common.create_alert_notification_reserve(@valid_attrs)
+      assert alert_notification_reserve.addressed_to_user_ids == []
+      assert alert_notification_reserve.code == "some code"
+      assert alert_notification_reserve.description == "some description"
+      assert alert_notification_reserve.module == "some module"
+      assert alert_notification_reserve.type == "some type"
+    end
+
+    test "create_alert_notification_reserve/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_alert_notification_reserve(@invalid_attrs)
+    end
+
+    test "update_alert_notification_reserve/2 with valid data updates the alert_notification_reserve" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:ok, %AlertNotificationReserve{} = alert_notification_reserve} = Common.update_alert_notification_reserve(alert_notification_reserve, @update_attrs)
+      assert alert_notification_reserve.addressed_to_user_ids == []
+      assert alert_notification_reserve.code == "some updated code"
+      assert alert_notification_reserve.description == "some updated description"
+      assert alert_notification_reserve.module == "some updated module"
+      assert alert_notification_reserve.type == "some updated type"
+    end
+
+    test "update_alert_notification_reserve/2 with invalid data returns error changeset" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_alert_notification_reserve(alert_notification_reserve, @invalid_attrs)
+      assert alert_notification_reserve == Common.get_alert_notification_reserve!(alert_notification_reserve.id)
+    end
+
+    test "delete_alert_notification_reserve/1 deletes the alert_notification_reserve" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:ok, %AlertNotificationReserve{}} = Common.delete_alert_notification_reserve(alert_notification_reserve)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_alert_notification_reserve!(alert_notification_reserve.id) end
+    end
+
+    test "change_alert_notification_reserve/1 returns a alert_notification_reserve changeset" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert %Ecto.Changeset{} = Common.change_alert_notification_reserve(alert_notification_reserve)
+    end
+  end
+
+  describe "alert_notification_generators" do
+    alias Inconn2Service.Common.AlertNotificationGenerator
+
+    @valid_attrs %{code: "some code", prefix: "some prefix", reference_id: 42, utc_date_time: "2010-04-17T14:00:00Z", zone: "some zone"}
+    @update_attrs %{code: "some updated code", prefix: "some updated prefix", reference_id: 43, utc_date_time: "2011-05-18T15:01:01Z", zone: "some updated zone"}
+    @invalid_attrs %{code: nil, prefix: nil, reference_id: nil, utc_date_time: nil, zone: nil}
+
+    def alert_notification_generator_fixture(attrs \\ %{}) do
+      {:ok, alert_notification_generator} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_alert_notification_generator()
+
+      alert_notification_generator
+    end
+
+    test "list_alert_notification_generators/0 returns all alert_notification_generators" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert Common.list_alert_notification_generators() == [alert_notification_generator]
+    end
+
+    test "get_alert_notification_generator!/1 returns the alert_notification_generator with given id" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert Common.get_alert_notification_generator!(alert_notification_generator.id) == alert_notification_generator
+    end
+
+    test "create_alert_notification_generator/1 with valid data creates a alert_notification_generator" do
+      assert {:ok, %AlertNotificationGenerator{} = alert_notification_generator} = Common.create_alert_notification_generator(@valid_attrs)
+      assert alert_notification_generator.code == "some code"
+      assert alert_notification_generator.prefix == "some prefix"
+      assert alert_notification_generator.reference_id == 42
+      assert alert_notification_generator.utc_date_time == DateTime.from_naive!(~N[2010-04-17T14:00:00Z], "Etc/UTC")
+      assert alert_notification_generator.zone == "some zone"
+    end
+
+    test "create_alert_notification_generator/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_alert_notification_generator(@invalid_attrs)
+    end
+
+    test "update_alert_notification_generator/2 with valid data updates the alert_notification_generator" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert {:ok, %AlertNotificationGenerator{} = alert_notification_generator} = Common.update_alert_notification_generator(alert_notification_generator, @update_attrs)
+      assert alert_notification_generator.code == "some updated code"
+      assert alert_notification_generator.prefix == "some updated prefix"
+      assert alert_notification_generator.reference_id == 43
+      assert alert_notification_generator.utc_date_time == DateTime.from_naive!(~N[2011-05-18T15:01:01Z], "Etc/UTC")
+      assert alert_notification_generator.zone == "some updated zone"
+    end
+
+    test "update_alert_notification_generator/2 with invalid data returns error changeset" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_alert_notification_generator(alert_notification_generator, @invalid_attrs)
+      assert alert_notification_generator == Common.get_alert_notification_generator!(alert_notification_generator.id)
+    end
+
+    test "delete_alert_notification_generator/1 deletes the alert_notification_generator" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert {:ok, %AlertNotificationGenerator{}} = Common.delete_alert_notification_generator(alert_notification_generator)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_alert_notification_generator!(alert_notification_generator.id) end
+    end
+
+    test "change_alert_notification_generator/1 returns a alert_notification_generator changeset" do
+      alert_notification_generator = alert_notification_generator_fixture()
+      assert %Ecto.Changeset{} = Common.change_alert_notification_generator(alert_notification_generator)
+    end
+  end
 end

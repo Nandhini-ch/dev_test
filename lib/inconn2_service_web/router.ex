@@ -28,6 +28,7 @@ defmodule Inconn2ServiceWeb.Router do
 
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
+
     resources "/sites", SiteController, except: [:new, :edit]
     resources "/site_config", SiteConfigController, except: [:new, :edit]
     get "/sites?active=true", SiteController, :index
@@ -45,6 +46,13 @@ defmodule Inconn2ServiceWeb.Router do
     put "/asset_categories/:id/activate", AssetCategoryController, :activate_asset_category
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
+
+    resources "/alert_notification_reserves", AlertNotificationReserveController, except: [:new, :edit]
+    resources "/alert_notification_configs", AlertNotificationConfigController, except: [:new, :edit]
+    resources "/user_alert_notifications", UserAlertNotificationController, except: [:new, :edit]
+    get "/user_alert_notifications_for_logged_in_user", UserAlertNotificationController, :get_user_alert_notifications_for_logged_in_user
+    post "/acknowledge_alert/:id", UserAlertNotificationController, :acknowledge_alert
+    post "/discard_alerts_notifications", UserAlertNotificationController, :discard_alerts_notifications
 
     get "/sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
     resources "/locations", LocationController, except: [:new, :edit, :index]
@@ -114,10 +122,21 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
+    get "/work_orders/enable_start/:id", WorkOrderController, :enable_start
+    get "/work_orders/:id/next_step", WorkOrderController, :next_step
+    put "/work_orders/:id/send_for_workflow_approvals/:type", WorkOrderController, :send_for_workflow_approvals
+    # put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
+    # put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
+    # put "/work_orders/:id/send_for_loto_lock_approval", WorkOrderController, :send_for_loto_lock_approval
+    # put "/work_orders/:id/send_for_loto_release_approval", WorkOrderController, :send_for_loto_release_approval
     get "/work_orders/permit_approvals_pending", WorkOrderController, :work_order_premits_to_be_approved
+    get "/work_orders/workorder_approvals_pending", WorkOrderController, :work_orders_to_be_approved
+    get "/work_orders/workorder_acknowledgement_pending", WorkOrderController, :work_orders_to_be_acknowledged
     post "/work_orders/approve_permit/:id", WorkOrderController, :approve_work_permit
-    post "/work_orders/approve_loto/:id", WorkOrderController, :approve_loto
-    get "/work_orders/loto_pending", WorkOrderController, :work_order_loto_to_be_checked
+    post "/work_orders/approve_loto_lock/:id", WorkOrderController, :approve_loto_lock
+    post "/work_orders/approve_loto_release/:id", WorkOrderController, :approve_loto_release
+    get "/work_orders/loto_lock_pending", WorkOrderController, :work_order_loto_lock_to_be_checked
+    get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
     post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
@@ -277,10 +296,14 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/csg_report", ReportController, :get_workorder_status_report
 
 
-    get "/workorders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
+    get "/work_orders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
     resources "/workorder_checks", WorkorderCheckController, except: [:new, :edit]
+    resources "/workorder_approval_tracks", WorkorderApprovalTrackController, except: [:new, :edit]
+    get "/work_orders/:work_order_id/workorder_approval_tracks/type/:approval_type", WorkorderApprovalTrackController, :index_workorder_approval_tracks_by_workorder_and_type
+    put "/self_approve_workorder_checks", WorkorderCheckController, :update_work_permit_checks
 
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
+
     get "/mobile/work_orders_test", WorkOrderController, :get_work_order_for_mobile_test
 
     get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart

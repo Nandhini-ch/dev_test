@@ -64,6 +64,19 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       work_request_id: work_order.work_request_id}
   end
 
+
+  def render("permit_response.json", %{response: response}) do
+    %{data: %{result: response.result, message: response.message}}
+  end
+
+  def render("next_step.json", %{response: response}) do
+    %{data: response.next_step}
+  end
+
+  def render("enable_start.json", %{response: response}) do
+    %{data: response}
+  end
+
   def render("mobile_work_order.json", %{work_order: work_order}) do
     IO.inspect(work_order)
     asset =
@@ -102,10 +115,12 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_schedule_id: work_order.workorder_schedule_id,
       workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
-      workpermit_required: work_order.workpermit_required,
-      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check_with_check.json"),
-      workpermit_required_from: work_order.workpermit_required_from,
-      workpermit_obtained: work_order.workpermit_obtained,
+      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
+      is_workorder_approval_required: work_order.is_workorder_approval_required,
+      workorder_approval_user_id: work_order.workorder_approval_user_id,
+      is_workpermit_required: work_order.is_workpermit_required,
+      workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
+      workpermit_obtained_from_user_ids: work_order.workpermit_obtained_from_user_ids,
       loto_required: work_order.loto_required,
       loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check_with_check.json"),
       loto_approval_from_user_id: work_order.loto_approval_from_user_id,
@@ -122,7 +137,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset_name: work_order.asset_name,
       asset_type: work_order.asset_type,
       user_id: work_order.user_id,
-      # is_self_assigned: work_order.is_self_assigned,
+      is_self_assigned: work_order.is_self_assigned,
       type: work_order.type,
       created_date: work_order.created_date,
       created_time: work_order.created_time,
@@ -135,15 +150,20 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       completed_date: work_order.completed_date,
       completed_time: work_order.completed_time,
       status: work_order.status,
+      is_workorder_approval_required: work_order.is_workorder_approval_required,
+      workorder_approval_user_id: work_order.workorder_approval_user_id,
+      is_workpermit_required: work_order.is_workpermit_required,
+      workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
+      workpermit_obtained_from_user_ids: work_order.workpermit_obtained_from_user_ids,
+      is_workorder_acknowledgement_required: work_order.is_workorder_acknowledgement_required,
+      workorder_acknowledgement_user_id: work_order.workorder_acknowledgement_user_id,
       workorder_template_id: work_order.workorder_template_id,
       workorder_schedule_id: work_order.workorder_schedule_id,
       work_request_id: work_order.work_request_id,
-      workpermit_required: work_order.workpermit_required,
-      workpermit_required_from: work_order.workpermit_required_from,
-      workpermit_obtained: work_order.workpermit_obtained,
-      loto_required: work_order.loto_required,
-      loto_approval_from_user_id: work_order.loto_approval_from_user_id,
-      is_loto_obtained: work_order.is_loto_obtained,
+      is_loto_required: work_order.is_loto_required,
+      # loto_approval_from_user_id: work_order.loto_approval_from_user_id,
+      loto_checker_user_id: work_order.loto_checker_user_id,
+      # is_loto_obtained: work_order.is_loto_obtained,
       pre_check_required: work_order.pre_check_required,
       precheck_completed: work_order.precheck_completed,
       is_deactivated: work_order.is_deactivated,

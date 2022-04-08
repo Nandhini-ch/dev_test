@@ -32,9 +32,11 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       spares: workorder_template.spares,
       consumables: workorder_template.consumables,
       workorder_prior_time: workorder_template.workorder_prior_time,
-      workpermit_required: workorder_template.workpermit_required,
+      is_workorder_approval_required: workorder_template.is_workorder_approval_required,
+      is_workpermit_required: workorder_template.is_workpermit_required,
+      is_workorder_acknowledgement_required: workorder_template.is_workorder_acknowledgement_required,
       workpermit_check_list_id: workorder_template.workpermit_check_list_id,
-      loto_required: workorder_template.loto_required,
+      is_loto_required: workorder_template.is_loto_required,
       loto_lock_check_list_id: workorder_template.loto_lock_check_list_id,
       loto_release_check_list_id: workorder_template.loto_release_check_list_id
     }

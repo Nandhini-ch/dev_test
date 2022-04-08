@@ -29,9 +29,9 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         applicable_end: workorder_schedule.workorder_template.applicable_end,
         time_start: workorder_schedule.workorder_template.time_start,
         time_end: workorder_schedule.workorder_template.time_end,
-        workpermit_required: workorder_schedule.workorder_template.workpermit_required,
+        workpermit_required: workorder_schedule.workorder_template.is_workpermit_required,
         workpermit_check_list_id: workorder_schedule.workorder_template.workpermit_check_list_id,
-        loto_required: workorder_schedule.workorder_template.loto_required,
+        loto_required: workorder_schedule.workorder_template.is_loto_required,
         loto_lock_check_list_id: workorder_schedule.workorder_template.loto_lock_check_list_id,
         loto_release_check_list_id: workorder_schedule.workorder_template.loto_release_check_list_id,
       holidays: workorder_schedule.holidays,
@@ -60,15 +60,19 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleView do
         applicable_end: workorder_schedule.workorder_template.applicable_end,
         time_start: workorder_schedule.workorder_template.time_start,
         time_end: workorder_schedule.workorder_template.time_end,
-        workpermit_required: workorder_schedule.workorder_template.workpermit_required,
+        workpermit_required: workorder_schedule.workorder_template.is_workpermit_required,
         workpermit_check_list_id: workorder_schedule.workorder_template.workpermit_check_list_id,
-        loto_required: workorder_schedule.workorder_template.loto_required,
+        loto_required: workorder_schedule.workorder_template.is_loto_required,
         loto_lock_check_list_id: workorder_schedule.workorder_template.loto_lock_check_list_id,
         loto_release_check_list_id: workorder_schedule.workorder_template.loto_release_check_list_id,
       holidays: workorder_schedule.holidays,
       first_occurrence_date: workorder_schedule.first_occurrence_date,
       first_occurrence_time: workorder_schedule.first_occurrence_time,
       next_occurrence_date: workorder_schedule.next_occurrence_date,
-      next_occurrence_time: workorder_schedule.next_occurrence_time}
+      next_occurrence_time: workorder_schedule.next_occurrence_time,
+      workorder_approval_user_id: workorder_schedule.workorder_approval_user_id,
+      workpermit_approval_user_ids: workorder_schedule.workpermit_approval_user_ids,
+      workorder_acknowledgement_user_id: workorder_schedule.workorder_acknowledgement_user_id
+    }
   end
 end
