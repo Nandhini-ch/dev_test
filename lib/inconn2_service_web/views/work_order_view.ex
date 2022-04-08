@@ -89,6 +89,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset_name: work_order.asset_name,
       asset_type: work_order.asset_type,
       user_id: work_order.user_id,
+      user: render_one(work_order.user, UserView, "user_without_org_unit.json"),
       is_self_assigned: work_order.is_self_assigned,
       type: work_order.type,
       created_date: work_order.created_date,

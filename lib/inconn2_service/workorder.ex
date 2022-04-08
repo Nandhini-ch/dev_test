@@ -1087,6 +1087,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_work_order_with_asset(work_order, prefix) do
     work_order = add_overdue_flag(work_order, prefix)
+    work_order = preload_user_in_work_orders(work_order, prefix)
     workorder_template_id = work_order.workorder_template_id
     asset_id = work_order.asset_id
     workorder_template = get_workorder_template(workorder_template_id, prefix)
@@ -1114,6 +1115,19 @@ defmodule Inconn2Service.Workorder do
       :lt -> Map.put_new(work_order, :overdue, true)
       _ -> Map.put_new(work_order, :overdue, false)
     end
+  end
+
+  defp preload_user_in_work_orders(work_order, prefix) do
+    user =
+          case work_order.user_id do
+            nil ->
+                nil
+
+            user_id ->
+                Staff.get_user_without_org_unit!(user_id, prefix)
+          end
+
+    Map.put(work_order, :user, user)
   end
 
   def update_asset_status(work_order, attrs, prefix) do
