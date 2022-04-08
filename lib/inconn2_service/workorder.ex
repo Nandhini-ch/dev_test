@@ -1275,6 +1275,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_work_order_with_asset(work_order, prefix) do
     work_order = add_overdue_flag(work_order, prefix)
+    work_order = preload_user_in_work_orders(work_order, prefix)
     workorder_template_id = work_order.workorder_template_id
     asset_id = work_order.asset_id
     workorder_template = get_workorder_template(workorder_template_id, prefix)
@@ -1302,6 +1303,19 @@ defmodule Inconn2Service.Workorder do
       :lt -> Map.put_new(work_order, :overdue, true)
       _ -> Map.put_new(work_order, :overdue, false)
     end
+  end
+
+  defp preload_user_in_work_orders(work_order, prefix) do
+    user =
+          case work_order.user_id do
+            nil ->
+                nil
+
+            user_id ->
+                Staff.get_user_without_org_unit!(user_id, prefix)
+          end
+
+    Map.put(work_order, :user, user)
   end
 
   def update_asset_status(work_order, attrs, prefix) do
@@ -2014,14 +2028,64 @@ defmodule Inconn2Service.Workorder do
         work_request_id: wo.work_request_id
       }
 
+      assigned_work_orders =
+        Repo.all(query_for_assigned, prefix: prefix)
 
+      asset_category_workorders =
+        case employee do
+          nil ->
+            []
+
+          employee ->
+            query =
+                    from wo in WorkOrder,
+                      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id and wo.status not in ["cp", "cn"] and wt.asset_category_id in ^employee.skills,
+                      left_join: s in Site, on: s.id == wo.site_id,
+                      left_join: ws in WorkorderSchedule, on: wo.workorder_schedule_id == ws.id,
+                      left_join: wot in WorkorderTask, on: wot.work_order_id == wo.id,
+                      left_join: wr in WorkRequest, on: wr.id == wo.work_request_id,
+                      left_join: u in User, on: wo.user_id == u.id,
+                      left_join: e in Employee, on:  u.employee_id == e.id,
+                      select: %{
+                        id: wo.id,
+                        site_id: wo.site_id,
+                        site: s,
+                        asset_id: wo.asset_id,
+                        # workorder_tasks: wot,
+                        work_request: wr,
+                        user_id: wo.user_id,
+                        type: wo.type,
+                        created_date: wo.created_date,
+                        created_time: wo.created_time,
+                        assigned_date: wo.assigned_date,
+                        assigned_time: wo.assigned_time,
+                        scheduled_date: wo.scheduled_date,
+                        scheduled_time: wo.scheduled_time,
+                        start_date: wo.start_date,
+                        user: u,
+                        employee: e,
+                        start_time: wo.start_time,
+                        completed_date: wo.completed_date,
+                        completed_time: wo.completed_time,
+                        status: wo.status,
+                        is_deactivated: wo.is_deactivated,
+                        deactivated_date_time: wo.deactivated_date_time,
+                        workorder_template_id: wo.workorder_template_id,
+                        workorder_template: wt,
+                        workorder_schedule: ws,
+                        workorder_schedule_id: wo.workorder_schedule_id,
+                        work_request_id: wo.work_request_id
+                      }
+            Repo.all(query, prefix: prefix)
+        end
+
+      work_orders = Stream.uniq(assigned_work_orders ++ asset_category_workorders)
 
       work_orders =
-        Repo.all(query_for_assigned, prefix: prefix)
-        |> Stream.map(fn wo ->
-          wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
-          Map.put_new(wo, :workorder_tasks,  wots)
-        end)
+        Stream.map(work_orders, fn wo ->
+            wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+            Map.put_new(wo, :workorder_tasks,  wots)
+          end)
         |> Enum.map(fn wo ->
           asset =
             case wo.workorder_template.asset_type do
