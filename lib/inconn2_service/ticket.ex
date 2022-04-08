@@ -329,7 +329,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
         push_alert_notification_for_ticket(nil, work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
         created_work_request
@@ -457,7 +457,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix)
-        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
+        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
       _ ->
         result
 
