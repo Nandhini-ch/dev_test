@@ -38,10 +38,10 @@ defmodule Inconn2ServiceWeb.WorkorderApprovalTrackController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{"id" => id}, prefix) do
     workorder_approval_track = Workorder.get_workorder_approval_track!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderApprovalTrack{}} <- Workorder.delete_workorder_approval_track(workorder_approval_track, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkorderApprovalTrack{}} <- Workorder.delete_workorder_approval_track(workorder_approval_track, prefix) do
       send_resp(conn, :no_content, "")
     end
   end

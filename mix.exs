@@ -68,13 +68,15 @@ defmodule Inconn2Service.MixProject do
       "ecto.setup": [
         "ecto.create",
         "ecto.migrate",
+        "ecto.create_alert_notification_reserves",
         "run priv/repo/seeds.exs",
         "run priv/repo/seeds_party_site.exs",
         "run priv/repo/seeds_shifts.exs",
         "run priv/repo/seeds_holiday.exs",
         "run priv/repo/seed_create_employee_user.exs",
         "run priv/repo/seed_inventory.exs",
-        "run priv/repo/seeds_work_order.exs"
+        "run priv/repo/seeds_work_order.exs",
+        "run priv/repo/seed_alerts_tenant.exs"
       ],
       "ecto.setup_coco": [
         "ecto.create",
@@ -85,6 +87,7 @@ defmodule Inconn2Service.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "ecto.reset_coco": ["ecto.drop", "ecto.setup_coco"],
       "ecto.create_timezones": ["run priv/repo/seed_timezones.exs"],
+      "ecto.create_alert_notification_reserves": ["run priv/repo/seed_alerts.exs"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end

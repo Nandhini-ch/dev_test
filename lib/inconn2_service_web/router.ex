@@ -28,6 +28,7 @@ defmodule Inconn2ServiceWeb.Router do
 
   scope "/api", Inconn2ServiceWeb do
     pipe_through [:api, :authenticate]
+
     resources "/sites", SiteController, except: [:new, :edit]
     resources "/site_config", SiteConfigController, except: [:new, :edit]
     get "/sites?active=true", SiteController, :index
@@ -45,6 +46,10 @@ defmodule Inconn2ServiceWeb.Router do
     put "/asset_categories/:id/activate", AssetCategoryController, :activate_asset_category
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
+
+    resources "/alert_notification_reserves", AlertNotificationReserveController, except: [:new, :edit]
+    resources "/alert_notification_configs", AlertNotificationConfigController, except: [:new, :edit]
+    resources "/user_alerts", UserAlertNotificationController, except: [:new, :edit]
 
     get "/sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
     resources "/locations", LocationController, except: [:new, :edit, :index]

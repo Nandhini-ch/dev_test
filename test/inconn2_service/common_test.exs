@@ -197,4 +197,71 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_list_of_value(list_of_value)
     end
   end
+
+  describe "alert_notification_reserves" do
+    alias Inconn2Service.Common.AlertNotificationReserve
+
+    @valid_attrs %{addressed_to_user_ids: [], code: "some code", description: "some description", module: "some module", type: "some type"}
+    @update_attrs %{addressed_to_user_ids: [], code: "some updated code", description: "some updated description", module: "some updated module", type: "some updated type"}
+    @invalid_attrs %{addressed_to_user_ids: nil, code: nil, description: nil, module: nil, type: nil}
+
+    def alert_notification_reserve_fixture(attrs \\ %{}) do
+      {:ok, alert_notification_reserve} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_alert_notification_reserve()
+
+      alert_notification_reserve
+    end
+
+    test "list_alert_notification_reserves/0 returns all alert_notification_reserves" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert Common.list_alert_notification_reserves() == [alert_notification_reserve]
+    end
+
+    test "get_alert_notification_reserve!/1 returns the alert_notification_reserve with given id" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert Common.get_alert_notification_reserve!(alert_notification_reserve.id) == alert_notification_reserve
+    end
+
+    test "create_alert_notification_reserve/1 with valid data creates a alert_notification_reserve" do
+      assert {:ok, %AlertNotificationReserve{} = alert_notification_reserve} = Common.create_alert_notification_reserve(@valid_attrs)
+      assert alert_notification_reserve.addressed_to_user_ids == []
+      assert alert_notification_reserve.code == "some code"
+      assert alert_notification_reserve.description == "some description"
+      assert alert_notification_reserve.module == "some module"
+      assert alert_notification_reserve.type == "some type"
+    end
+
+    test "create_alert_notification_reserve/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_alert_notification_reserve(@invalid_attrs)
+    end
+
+    test "update_alert_notification_reserve/2 with valid data updates the alert_notification_reserve" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:ok, %AlertNotificationReserve{} = alert_notification_reserve} = Common.update_alert_notification_reserve(alert_notification_reserve, @update_attrs)
+      assert alert_notification_reserve.addressed_to_user_ids == []
+      assert alert_notification_reserve.code == "some updated code"
+      assert alert_notification_reserve.description == "some updated description"
+      assert alert_notification_reserve.module == "some updated module"
+      assert alert_notification_reserve.type == "some updated type"
+    end
+
+    test "update_alert_notification_reserve/2 with invalid data returns error changeset" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_alert_notification_reserve(alert_notification_reserve, @invalid_attrs)
+      assert alert_notification_reserve == Common.get_alert_notification_reserve!(alert_notification_reserve.id)
+    end
+
+    test "delete_alert_notification_reserve/1 deletes the alert_notification_reserve" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert {:ok, %AlertNotificationReserve{}} = Common.delete_alert_notification_reserve(alert_notification_reserve)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_alert_notification_reserve!(alert_notification_reserve.id) end
+    end
+
+    test "change_alert_notification_reserve/1 returns a alert_notification_reserve changeset" do
+      alert_notification_reserve = alert_notification_reserve_fixture()
+      assert %Ecto.Changeset{} = Common.change_alert_notification_reserve(alert_notification_reserve)
+    end
+  end
 end
