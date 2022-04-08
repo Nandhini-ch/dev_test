@@ -630,21 +630,20 @@ defmodule Inconn2Service.Dashboards do
     date_list = form_date_list(from_date, to_date)
     site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
     data = get_main_meter_readings(site_config, date_list, prefix)
-    final_data =
-          case length(date_list) do
-            1 ->
-                %{
-                  labels: date_list,
-                  data: data
-                }
-            _ ->
-                %{
-                  labels: date_list,
-                  datasets: data
-                }
-          end
-    final_data
-    |> add_boolean_flag()
+    case length(date_list) do
+      1 ->
+          %{
+            labels: date_list,
+            data: data
+          }
+          |> add_boolean_flag()
+      _ ->
+          %{
+            labels: date_list,
+            datasets: data
+          }
+          |> add_boolean_flag_energy_linear()
+    end
   end
 
   def get_main_meter_readings(site_config, date_list, prefix) when site_config != nil do
