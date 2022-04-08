@@ -630,10 +630,20 @@ defmodule Inconn2Service.Dashboards do
     date_list = form_date_list(from_date, to_date)
     site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
     data = get_main_meter_readings(site_config, date_list, prefix)
-    %{
-      labels: date_list,
-      data: data
-    }
+    final_data =
+          case length(date_list) do
+            1 ->
+                %{
+                  labels: date_list,
+                  data: data
+                }
+            _ ->
+                %{
+                  labels: date_list,
+                  datasets: data
+                }
+          end
+    final_data
     |> add_boolean_flag()
   end
 
@@ -646,10 +656,16 @@ defmodule Inconn2Service.Dashboards do
                  |> Enum.reduce(0, fn x, acc -> x + acc end)
           [data]
         _ ->
-          Enum.map(date_list, fn date ->
-            Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
-            |> Enum.reduce(0, fn x, acc -> x + acc end)
-          end)
+          data = Enum.map(date_list, fn date ->
+                    Enum.map(main_meters, fn main_meter -> get_energy_meter_reading(main_meter, date, prefix) end)
+                    |> Enum.reduce(0, fn x, acc -> x + acc end)
+                  end)
+          [
+            %{
+              data: data,
+              name: "kWh"
+            }
+          ]
       end
     else
       [0]
