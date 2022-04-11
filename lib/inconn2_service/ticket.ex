@@ -329,7 +329,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
         push_alert_notification_for_ticket(nil, work_request, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
         created_work_request
@@ -457,7 +457,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix)
-        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
+        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
       _ ->
         result
 
@@ -683,8 +683,7 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix)
   end
   def get_category_helpdesk_by_workrequest_category(workrequest_catgoery_id, site_id, prefix) do
-    CategoryHelpdesk
-    |> where([workrequest_catgoery_id: ^workrequest_catgoery_id, site_id: ^site_id])
+    from(ch in CategoryHelpdesk, where: ch.workrequest_category_id == ^workrequest_catgoery_id and ch.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
   end
   @doc """
@@ -1241,6 +1240,16 @@ defmodule Inconn2Service.Ticket do
         end)
 
       "ticket reassigned" ->
+        assigned_user_id =
+          case updated_work_request.assigned_user_id do
+           nil  -> []
+           _ -> [updated_work_request.assigned_user_id]
+          end
+        Enum.map(config_user_ids ++ assigned_user_id, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+      "ticket cancelled" ->
         assigned_user_id =
           case updated_work_request.assigned_user_id do
            nil  -> []

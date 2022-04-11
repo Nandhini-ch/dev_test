@@ -16,5 +16,6 @@ defmodule Inconn2Service.Common.AlertNotificationReserve do
     alert_notification_reserve
     |> cast(attrs, [:module, :description, :type, :code])
     |> validate_required([:module, :description, :type, :code])
+    |> validate_inclusion(:type, ["al", "nt"])
   end
 end

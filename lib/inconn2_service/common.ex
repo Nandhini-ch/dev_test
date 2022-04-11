@@ -550,4 +550,104 @@ defmodule Inconn2Service.Common do
   def change_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve, attrs \\ %{}) do
     AlertNotificationReserve.changeset(alert_notification_reserve, attrs)
   end
+
+  alias Inconn2Service.Common.AlertNotificationGenerator
+
+  @doc """
+  Returns the list of alert_notification_generators.
+
+  ## Examples
+
+      iex> list_alert_notification_generators()
+      [%AlertNotificationGenerator{}, ...]
+
+  """
+  def list_alert_notification_generators do
+    Repo.all(AlertNotificationGenerator)
+  end
+
+  @doc """
+  Gets a single alert_notification_generator.
+
+  Raises `Ecto.NoResultsError` if the Alert notification generator does not exist.
+
+  ## Examples
+
+      iex> get_alert_notification_generator!(123)
+      %AlertNotificationGenerator{}
+
+      iex> get_alert_notification_generator!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_alert_notification_generator!(id), do: Repo.get!(AlertNotificationGenerator, id)
+
+  def get_generator_by_refernce_id_and_code(reference_id, code) do
+    from(an in AlertNotificationGenerator, where: an.refernce_id == ^reference_id and an.code == ^code)
+    |> Repo.one()
+  end
+  @doc """
+  Creates a alert_notification_generator.
+
+  ## Examples
+
+      iex> create_alert_notification_generator(%{field: value})
+      {:ok, %AlertNotificationGenerator{}}
+
+      iex> create_alert_notification_generator(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_alert_notification_generator(attrs \\ %{}) do
+    %AlertNotificationGenerator{}
+    |> AlertNotificationGenerator.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a alert_notification_generator.
+
+  ## Examples
+
+      iex> update_alert_notification_generator(alert_notification_generator, %{field: new_value})
+      {:ok, %AlertNotificationGenerator{}}
+
+      iex> update_alert_notification_generator(alert_notification_generator, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs) do
+    alert_notification_generator
+    |> AlertNotificationGenerator.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a alert_notification_generator.
+
+  ## Examples
+
+      iex> delete_alert_notification_generator(alert_notification_generator)
+      {:ok, %AlertNotificationGenerator{}}
+
+      iex> delete_alert_notification_generator(alert_notification_generator)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator) do
+    Repo.delete(alert_notification_generator)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking alert_notification_generator changes.
+
+  ## Examples
+
+      iex> change_alert_notification_generator(alert_notification_generator)
+      %Ecto.Changeset{data: %AlertNotificationGenerator{}}
+
+  """
+  def change_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs \\ %{}) do
+    AlertNotificationGenerator.changeset(alert_notification_generator, attrs)
+  end
 end

@@ -15,7 +15,6 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveView do
       module: alert_notification_reserve.module,
       description: alert_notification_reserve.description,
       type: alert_notification_reserve.type,
-      addressed_to_user_ids: alert_notification_reserve.addressed_to_user_ids,
       code: alert_notification_reserve.code}
   end
 end

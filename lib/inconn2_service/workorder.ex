@@ -89,7 +89,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_notification_for_workorder_template(updated_template, prefix, "new")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "new")
 
       _ ->
         result
@@ -294,7 +294,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_notification_for_workorder_template(updated_template, prefix, "modified")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "modified")
 
       _ ->
         result
@@ -302,18 +302,18 @@ defmodule Inconn2Service.Workorder do
   end
 
 
-  def push_notification_for_workorder_template(updated_template, prefix, "modified") do
-    description = ~s(Workorder Template #{updated_template.name} Modified)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "modified") do
+    description = ~s(Workorder Template #{updated_template.name} modified)
     create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
   end
 
-  def push_notification_for_workorder_template(updated_template, prefix, "new") do
-    description = ~s(New Workorder Template #{updated_template.name}  created)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "new") do
+    description = ~s(New Workorder Template #{updated_template.name} created)
     create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
   end
 
-  def push_notification_for_workorder_template(updated_template, prefix, "deleted") do
-    description = ~s(Workorder Template #{updated_template.name}  deleted)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted") do
+    description = ~s(Workorder Template #{updated_template.name} deleted)
     create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
   end
 
@@ -352,7 +352,7 @@ defmodule Inconn2Service.Workorder do
   """
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix) do
     Repo.delete(workorder_template, prefix: prefix)
-    push_notification_for_workorder_template(workorder_template, prefix, "deleted")
+    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted")
     {:ok, nil}
   end
 
@@ -410,6 +410,7 @@ defmodule Inconn2Service.Workorder do
 
   """
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
+  def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
 
   @doc """
   Creates a workorder_schedule.
@@ -578,6 +579,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
+          push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified")
           zone = get_time_zone(workorder_schedule, prefix)
           work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
           case work_scheduler do
@@ -598,6 +600,42 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def push_alert_notification_for_workorder_schedule(updated_schedule, prefix, "modified") do
+    asset = get_asset_from_workorder_schedule(updated_schedule, prefix)
+    description = ~s(Workorder Schedule for #{asset.name} has been modified)
+    create_notification_for_workorder_schedule("WOSE", description, updated_schedule, prefix)
+  end
+
+  def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+
+    case alert_config do
+      nil ->
+        {:ok, updated_schedule}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "type" => alert.type,
+          "description" => description
+        }
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+        {:ok, updated_schedule}
+    end
+  end
+
+  defp get_asset_from_workorder_schedule(workorder_schedule, prefix) do
+    case workorder_schedule.asset_type do
+      "L" ->
+        AssetConfig.get_location(workorder_schedule.asset_id, prefix)
+
+      "E" ->
+        AssetConfig.get_equipment(workorder_schedule.asset_id, prefix)
+    end
+  end
 
   defp update_next_occurrence(cs, prefix) do
     workorder_template_id = get_field(cs, :workorder_template_id)
@@ -978,9 +1016,10 @@ defmodule Inconn2Service.Workorder do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
+        create_workorder_in_alert_notification_generator(work_order, prefix)
           create_status_track(work_order, user, prefix)
 
-          auto_create_workorder_task(work_order, prefix)
+          auto_create_workorder_tasks_checks(work_order, prefix)
           {:ok, get_work_order!(work_order.id, prefix)}
 
       _ ->
@@ -1236,6 +1275,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_work_order_with_asset(work_order, prefix) do
     work_order = add_overdue_flag(work_order, prefix)
+    work_order = preload_user_in_work_orders(work_order, prefix)
     workorder_template_id = work_order.workorder_template_id
     asset_id = work_order.asset_id
     workorder_template = get_workorder_template(workorder_template_id, prefix)
@@ -1265,6 +1305,19 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp preload_user_in_work_orders(work_order, prefix) do
+    user =
+          case work_order.user_id do
+            nil ->
+                nil
+
+            user_id ->
+                Staff.get_user_without_org_unit!(user_id, prefix)
+          end
+
+    Map.put(work_order, :user, user)
+  end
+
   def update_asset_status(work_order, attrs, prefix) do
     case work_order.asset_type do
       "L" ->
@@ -1274,6 +1327,32 @@ defmodule Inconn2Service.Workorder do
           equipment = AssetConfig.get_equipment(work_order.asset_id, prefix)
           AssetConfig.update_equipment(equipment, attrs, prefix)
     end
+  end
+
+  defp create_workorder_in_alert_notification_generator(work_order, prefix) do
+    zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
+    {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
+    utc = DateTime.add(utc, 600, :second)
+    attrs = %{
+      "code" => "WOOD",
+      "prefix" => prefix,
+      "reference_id" => work_order.id,
+      "zone" => zone,
+      "utc_date_time" => utc
+    }
+    Common.create_alert_notification_generator(attrs)
+  end
+
+  defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
+    cond do
+      nil in [work_order.start_date, work_order.start_time] && nil not in [updated_work_order.start_date, updated_work_order.start_time] ->
+        Common.get_generator_by_refernce_id_and_code(work_order.id, "WOOD")
+        |> Common.delete_alert_notification_generator()
+
+      true ->
+        {:ok, updated_work_order}
+    end
+    {:ok, updated_work_order}
   end
   @doc """
   Updates a work_order.
@@ -1306,8 +1385,10 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
+          push_alert_notification_for_work_order(work_order, updated_work_order, prefix)
           result
       _ ->
         result
@@ -1366,7 +1447,7 @@ defmodule Inconn2Service.Workorder do
         description = ~s(Workorder for #{asset.name} has been cancelled)
         create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
-      existing_work_order.scheduled_date != updated_work_order.scheduled_date ->
+      (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
         description = ~s(Workorder for #{asset.name} has been rescheduled)
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
@@ -1374,20 +1455,32 @@ defmodule Inconn2Service.Workorder do
         description = ~s(Workorder for #{asset.name} has been re-assigned)
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
 
+      (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
+        expected_date_time = NaiveDateTime.new!(updated_work_order.scheduled_date, updated_work_order.scheduled_time)
+                             |> NaiveDateTime.add(workorder_template.estimated_time * 60)
+        completed_date_time = NaiveDateTime.new!(updated_work_order.completed_date, updated_work_order.completed_time)
+        if completed_date_time >= expected_date_time do
+          description = ~s(Workorder for #{asset.name} is not completed by expected time)
+          create_work_order_alert_notification("WONC", existing_work_order, updated_work_order, description, "work_order_not_completed_by_time", prefix)
+        else
+          {:ok, updated_work_order}
+        end
+
       true ->
         {:ok, updated_work_order}
     end
+    {:ok, updated_work_order}
   end
 
 
   def create_work_order_alert_notification(alert_code, _existing_work_order, updated_work_order, description, action_for, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-    {asset, workorder_schedule}  = get_asset_from_work_order(updated_work_order, prefix)
+    {asset, workorder_template}  = get_asset_from_work_order(updated_work_order, prefix)
     attrs = %{
       "alert_notification_id" => alert.id,
       "asset_id" => asset.id,
-      "asset_type" => workorder_schedule.asset_type,
+      "asset_type" => workorder_template.asset_type,
       "type" => alert.type,
       "description" => description
     }
@@ -1464,17 +1557,22 @@ defmodule Inconn2Service.Workorder do
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+
+      "work_order_not_completed_by_time" ->
+        Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
     end
   end
 
   def get_asset_from_work_order(work_order, prefix) do
-    workorder_schedule = get_workorder_schedule!(work_order.workorder_schedule_id, prefix)
-    case workorder_schedule.asset_type do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    case workorder_template.asset_type do
       "L" ->
-        {AssetConfig.get_location(workorder_schedule.asset_id, prefix), workorder_schedule}
+        {AssetConfig.get_location(work_order.asset_id, prefix), workorder_template}
 
       "E" ->
-        {AssetConfig.get_equipment(workorder_schedule.asset_id, prefix), workorder_schedule}
+        {AssetConfig.get_equipment(work_order.asset_id, prefix), workorder_template}
     end
   end
 
@@ -1930,14 +2028,64 @@ defmodule Inconn2Service.Workorder do
         work_request_id: wo.work_request_id
       }
 
+      assigned_work_orders =
+        Repo.all(query_for_assigned, prefix: prefix)
 
+      asset_category_workorders =
+        case employee do
+          nil ->
+            []
+
+          employee ->
+            query =
+                    from wo in WorkOrder,
+                      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id and wo.status not in ["cp", "cn"] and wt.asset_category_id in ^employee.skills,
+                      left_join: s in Site, on: s.id == wo.site_id,
+                      left_join: ws in WorkorderSchedule, on: wo.workorder_schedule_id == ws.id,
+                      left_join: wot in WorkorderTask, on: wot.work_order_id == wo.id,
+                      left_join: wr in WorkRequest, on: wr.id == wo.work_request_id,
+                      left_join: u in User, on: wo.user_id == u.id,
+                      left_join: e in Employee, on:  u.employee_id == e.id,
+                      select: %{
+                        id: wo.id,
+                        site_id: wo.site_id,
+                        site: s,
+                        asset_id: wo.asset_id,
+                        # workorder_tasks: wot,
+                        work_request: wr,
+                        user_id: wo.user_id,
+                        type: wo.type,
+                        created_date: wo.created_date,
+                        created_time: wo.created_time,
+                        assigned_date: wo.assigned_date,
+                        assigned_time: wo.assigned_time,
+                        scheduled_date: wo.scheduled_date,
+                        scheduled_time: wo.scheduled_time,
+                        start_date: wo.start_date,
+                        user: u,
+                        employee: e,
+                        start_time: wo.start_time,
+                        completed_date: wo.completed_date,
+                        completed_time: wo.completed_time,
+                        status: wo.status,
+                        is_deactivated: wo.is_deactivated,
+                        deactivated_date_time: wo.deactivated_date_time,
+                        workorder_template_id: wo.workorder_template_id,
+                        workorder_template: wt,
+                        workorder_schedule: ws,
+                        workorder_schedule_id: wo.workorder_schedule_id,
+                        work_request_id: wo.work_request_id
+                      }
+            Repo.all(query, prefix: prefix)
+        end
+
+      work_orders = Stream.uniq(assigned_work_orders ++ asset_category_workorders)
 
       work_orders =
-        Repo.all(query_for_assigned, prefix: prefix)
-        |> Stream.map(fn wo ->
-          wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
-          Map.put_new(wo, :workorder_tasks,  wots)
-        end)
+        Stream.map(work_orders, fn wo ->
+            wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+            Map.put_new(wo, :workorder_tasks,  wots)
+          end)
         |> Enum.map(fn wo ->
           asset =
             case wo.workorder_template.asset_type do
@@ -2614,12 +2762,6 @@ defmodule Inconn2Service.Workorder do
                                             "loto_release_check_list_id" => workorder_template.loto_release_check_list_id,
                                             "loto_checker_user_id" => workorder_schedule.loto_checker_user_id,
                                             }, prefix)
-
-
-    # auto_create_workorder_task(work_order, prefix)
-    if workorder_template.workpermit_required, do: auto_create_workorder_checks(work_order, "WP", prefix)
-    if workorder_template.loto_required, do: auto_create_workorder_checks(work_order, "LOTO", prefix)
-    if workorder_template.pre_check_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
 
     # auto_assign_user(work_order, prefix)
 
