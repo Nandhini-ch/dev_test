@@ -105,17 +105,19 @@ defmodule Inconn2Service.Measurements do
   end
 
   def record_meter_readings_from_work_order(work_order, prefix) do
+    scheduled_date_time = NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
     query = from wot in WorkorderTask,
               join: t in Task, on: t.id == wot.task_id,
               where: wot.work_order_id == ^work_order.id and t.task_type == "MT",
               select: %{
                         recorded_value: wot.response["answers"],
                         recorded_type: t.config["type"],
-                        recorded_date_time: wot.actual_end_time,
+                        # recorded_date_time: wot.actual_end_time,
                         unit_of_measurement: t.config["UOM"]
                         }
 
      workorder_tasks = Repo.all(query, prefix: prefix)
+                       |> Enum.map(fn x -> Map.put(x, :recorded_date_time, scheduled_date_time) end)
 
      Enum.map(workorder_tasks, fn workorder_task -> insert_metering_values(work_order, workorder_task, prefix) end)
 
