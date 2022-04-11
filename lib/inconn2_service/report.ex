@@ -385,9 +385,17 @@ defmodule Inconn2Service.Report do
             nil
           end
 
+          workrequest_category =
+            if wr.workrequest_category != nil do
+              wr.workrequest_category.name
+            else
+              nil
+            end
+
         %{
           asset_name: asset_name,
           asset_category: asset_category,
+          ticket_category: workrequest_category,
           raised_by: raised_by,
           assigned_to: assigned_to,
           response_tat: response_tat_met,
@@ -503,7 +511,7 @@ defmodule Inconn2Service.Report do
         utilized_time =
           case length(asset_status_tracks) do
             0 ->
-              IO.inspect("-----------wqe4342")
+              # IO.inspect("-----------wqe4342")
               last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
               if last_entry != nil and last_entry.status_changed == "ON" do
                 NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
@@ -518,7 +526,7 @@ defmodule Inconn2Service.Report do
                   IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
                   NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
                 else
-                  IO.inspect("213123")
+                  # IO.inspect("213123")
                   0.0
                 end
               sum =
@@ -545,12 +553,12 @@ defmodule Inconn2Service.Report do
 
       completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
 
-      IO.inspect("Actual length: #{length(ppm_work_orders)}")
-      IO.inspect("Completed: #{completed_ppm}")
+      # IO.inspect("Actual length: #{length(ppm_work_orders)}")
+      # IO.inspect("Completed: #{completed_ppm}")
 
       completion_percentage =
         if length(ppm_work_orders) != 0 do
-          IO.inspect("Dsadfsdgredfcvsgefd")
+          # IO.inspect("Dsadfsdgredfcvsgefd")
           (completed_ppm/length(ppm_work_orders)) * 100
         else
           0.0
@@ -1103,8 +1111,9 @@ defmodule Inconn2Service.Report do
       "AP" -> "Approved"
       "AS" -> "Assigned"
       "RJ" -> "Rejected"
-      "CL" -> "Cancelled"
-      "CS" -> "Closed"
+      "CL" -> "Closed"
+      "CS" -> "Cancelled"
+      "CP" -> "Completed"
       "ROP" -> "Reopened"
     end
   end
