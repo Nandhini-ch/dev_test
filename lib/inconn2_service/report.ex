@@ -545,6 +545,9 @@ defmodule Inconn2Service.Report do
 
       completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
 
+      IO.inspect(length(ppm_work_orders))
+      IO.inspect(length(completed_ppm))
+
       completion_percentage =
         if length(ppm_work_orders) != 0 do
           div(completed_ppm,length(ppm_work_orders))
@@ -668,7 +671,7 @@ defmodule Inconn2Service.Report do
       #   |> Enum.sum()
 
       ppm_work_orders =
-        (from wo in WorkOrder, where: wo.asset_id == ^l.id and wo.asset_type == ^"E" and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date)
+        (from wo in WorkOrder, where: wo.asset_id == ^l.id and wo.asset_type == ^"L" and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date)
         |> Repo.all(prefix: prefix)
 
       completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
