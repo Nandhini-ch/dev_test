@@ -543,7 +543,7 @@ defmodule Inconn2Service.Report do
       completed_ppm = Enum.filter(ppm_work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
 
       IO.inspect(length(ppm_work_orders))
-      IO.inspect(length(completed_ppm))
+      # IO.inspect(length(completed_ppm))
 
       completion_percentage =
         if length(ppm_work_orders) != 0 do
