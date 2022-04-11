@@ -34,6 +34,8 @@ defmodule Inconn2Service.Report do
         username: u.username,
         first_name: e.first_name,
         last_name: e.last_name,
+        scheduled_date: wo.scheduled_date,
+        scheduled_time: wo.scheduled_time,
         workorder_template_id: wo.workorder_template_id
       }
 
@@ -76,12 +78,12 @@ defmodule Inconn2Service.Report do
               get_asset_from_workorder_template(work_order, prefix)
 
           end
-          Map.put_new(work_order, :asset, asset)
+        Map.put_new(work_order, :asset, asset)
       end)
 
+    # IO.inspect(List.first(work_orders_with_asset))
+
     result =
-
-
       Enum.map(work_orders_with_asset, fn wo ->
         asset_type = get_asset_type_from_workorder_template(wo, prefix)
         {asset_name, asset_code} =
@@ -394,11 +396,6 @@ defmodule Inconn2Service.Report do
             nil
           end
 
-        [raised_date, raised_time] =
-          case String.contains?(wr.raised_date_time,  "T") do
-            true -> String.split(wr.raised_date_time, "T")
-            _ -> String.split(wr.raised_date_time, " ")
-          end
 
 
         %{
@@ -411,8 +408,8 @@ defmodule Inconn2Service.Report do
           resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
           time_taken_to_close: time_taken_to_close,
-          date: raised_date,
-          time: raised_time
+          date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
+          time: "#{wr.raised_date_time.hour}-#{wr.raised_date_time.minute}-#{wr.raised_date_time.second}"
         }
       end)
 
