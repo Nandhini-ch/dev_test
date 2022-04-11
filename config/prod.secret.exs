@@ -27,8 +27,6 @@ config :inconn2_service, Inconn2Service.Repo,
 #     """
 secret_key_base = "J/msB7xdbQu6gPiO31v6P1QAp8gughdvYFjAUwZXOAViV9nDkpweM4U5wpG0/cGm"
 
-secret_key_base = "J/msB7xdbQu6gPiO31v6P1QAp8gughdvYFjAUwZXOAViV9nDkpweM4U5wpG0/cGm"
-
 config :inconn2_service, Inconn2ServiceWeb.Endpoint,
   http: [
     port: String.to_integer(System.get_env("PORT") || "4000"),
