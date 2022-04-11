@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    work_orders = Workorder.list_active_work_orders(conn.assigns.sub_domain_prefix)
+    work_orders = Workorder.list_work_orders(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
   end
 
