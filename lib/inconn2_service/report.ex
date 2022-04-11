@@ -409,7 +409,7 @@ defmodule Inconn2Service.Report do
           status: match_work_request_status(wr.status),
           time_taken_to_close: time_taken_to_close,
           date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
-          time: "#{wr.raised_date_time.hour}-#{wr.raised_date_time.minute}-#{wr.raised_date_time.second}"
+          time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}:#{wr.raised_date_time.second}"
         }
       end)
 
