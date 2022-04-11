@@ -564,7 +564,7 @@ defmodule Inconn2Service.Report do
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: Float.ceil(up_time, 2),
         utilized_time: Float.ceil(utilized_time, 2),
-        ppm_completion_percentage: completion_percentage
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
       }
     end)
   end
@@ -679,9 +679,9 @@ defmodule Inconn2Service.Report do
 
       completion_percentage =
         if length(ppm_work_orders) != 0 do
-          div(completed_ppm,length(ppm_work_orders))
+          (completed_ppm/length(ppm_work_orders)) * 100
         else
-          0
+          0.0
         end
 
       %{
@@ -692,7 +692,7 @@ defmodule Inconn2Service.Report do
         criticality: (if l.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: Float.ceil(up_time, 2),
         utilized_time: Float.ceil(utilized_time, 2),
-        ppm_completion_percentage: completion_percentage
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
       }
     end)
   end
