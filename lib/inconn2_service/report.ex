@@ -114,7 +114,9 @@ defmodule Inconn2Service.Report do
           type: match_workorder_type(wo.type),
           status: wo.status,
           assigned_to: name,
-          manhours_consumed: manhours_consumed * 3600
+          manhours_consumed: manhours_consumed * 3600,
+          date: wo.scheduled_date,
+          time: wo.scheduled_time
         }
       end)
 
@@ -385,12 +387,19 @@ defmodule Inconn2Service.Report do
             nil
           end
 
-          workrequest_category =
-            if wr.workrequest_category != nil do
-              wr.workrequest_category.name
-            else
-              nil
-            end
+        workrequest_category =
+          if wr.workrequest_category != nil do
+            wr.workrequest_category.name
+          else
+            nil
+          end
+
+        [raised_date, raised_time] =
+          case String.contains?(wr.raised_date_time,  "T") do
+            true -> String.split(wr.raised_date_time, "T")
+            _ -> String.split(wr.raised_date_time, " ")
+          end
+
 
         %{
           asset_name: asset_name,
@@ -401,7 +410,9 @@ defmodule Inconn2Service.Report do
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
-          time_taken_to_close: time_taken_to_close
+          time_taken_to_close: time_taken_to_close,
+          date: raised_date,
+          time: raised_time
         }
       end)
 
