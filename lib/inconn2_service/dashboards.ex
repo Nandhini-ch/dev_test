@@ -419,7 +419,13 @@ defmodule Inconn2Service.Dashboards do
   defp convert_to_minutes_and_hours(float_value) do
     [hours, decimal] = Float.to_string(float_value) |> String.split(".")
    minutes = "0." <> decimal  |> String.to_float()
-  "#{hours}:#{minutes *  60 |> trunc() |> Integer.to_string()}"
+   minutes = minutes * 60 |> trunc()
+   minutes = if minutes < 10 do
+               "#{"0" <> Integer.to_string(minutes)}"
+             else
+               "#{Integer.to_string(minutes)}"
+             end
+  "#{hours}:#{minutes}"
   end
 
   defp add_overdue_flag(work_order, prefix) do
