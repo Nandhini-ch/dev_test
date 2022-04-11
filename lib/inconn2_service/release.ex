@@ -7,7 +7,8 @@ defmodule Inconn2Service.Release do
     {:ok, _} = Application.ensure_all_started(@app)
 
     migrate_public_schema()
-    create_time_zones()
+    # create_time_zones()
+    create_alert_notification_reserve()
     migrate_tenant_schemas()
   end
 
@@ -17,17 +18,22 @@ defmodule Inconn2Service.Release do
     Migrator.run(Inconn2Service.Repo, path, :up, all: true)
   end
 
-  defp create_time_zones do
-    path = Application.app_dir(@app, "priv/repo/timezones")
-    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
-  end
-
   defp migrate_tenant_schemas do
     path = Application.app_dir(@app, "priv/repo/tenant_migrations")
 
     Account.list_licensees()
     |> Enum.map(fn licensee -> Map.put_new(licensee, :prefix, "inc_" <> licensee.sub_domain) end)
     |> Enum.each(&Migrator.run(Inconn2Service.Repo, path, :up, all: true, prefix: &1.prefix))
+  end
+
+  defp create_time_zones do
+    path = Application.app_dir(@app, "priv/repo/timezones")
+    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
+  end
+
+  defp create_alert_notification_reserve do
+    path = Application.app_dir(@app, "priv/repo/alerts_and_notifications")
+    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
   end
 
   def rollback(repo, version) do
