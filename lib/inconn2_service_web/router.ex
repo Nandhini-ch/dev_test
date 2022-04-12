@@ -318,5 +318,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
+    get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
+    get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
   end
 end

@@ -40,4 +40,14 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def populate_timezones(conn, _params) do
+    Inconn2Service.Common.build_timezone_db()
+    render(conn, "success.json", alert_notification_reserve: %{data: "success"})
+  end
+
+  def populate_alerts(conn, _params) do
+    Inconn2Service.SeedAlert.seed_alerts()
+    render(conn, "success.json", alert_notification_reserve: %{data: "success"})
+  end
 end
