@@ -10,9 +10,9 @@ use Mix.Config
 #     environment variable DATABASE_URL is missing.
 #     For example: ecto://USER:PASS@HOST/DATABASE
 #     """
-database_url="ecto://postgres:postgres@localhost:5432/inconn2_service_dev"
+# database_url="ecto://postgres:postgres@localhost:5432/inconn2_service_dev"
 
-# database_url="ecto://postgres:fobosHNRpWfHdsmoANaw@database-1.cdihr97wq71b.ap-south-1.rds.amazonaws.com/inconn2_service"
+database_url="ecto://postgres:fobosHNRpWfHdsmoANaw@database-1.cdihr97wq71b.ap-south-1.rds.amazonaws.com/inconn2_service"
 
 config :inconn2_service, Inconn2Service.Repo,
   # ssl: true,
