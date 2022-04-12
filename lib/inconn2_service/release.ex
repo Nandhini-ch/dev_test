@@ -7,11 +7,13 @@ defmodule Inconn2Service.Release do
     {:ok, _} = Application.ensure_all_started(@app)
 
     migrate_public_schema()
-    # create_time_zones()
-    create_alert_notification_reserve()
     migrate_tenant_schemas()
   end
 
+  def evaluate_script_files do
+    create_time_zones()
+    create_alert_notification_reserve()
+  end
 
   defp migrate_public_schema do
     path = Application.app_dir(@app, "priv/repo/migrations")
@@ -27,13 +29,13 @@ defmodule Inconn2Service.Release do
   end
 
   defp create_time_zones do
-    path = Application.app_dir(@app, "priv/repo/timezones")
-    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
+    path = Application.app_dir(@app, "priv/repo/timezones/seed_timezones.exs")
+    Code.eval_file(path)
   end
 
   defp create_alert_notification_reserve do
-    path = Application.app_dir(@app, "priv/repo/alerts_and_notifications")
-    Migrator.run(Inconn2Service.Repo, path, :up, all: true)
+    path = Application.app_dir(@app, "priv/repo/alerts_and_notifications/seed_alerts.exs")
+    Code.eval_file(path)
   end
 
   def rollback(repo, version) do
