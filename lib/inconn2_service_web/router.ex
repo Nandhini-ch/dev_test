@@ -24,6 +24,9 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/iot_meterings", IotMeteringController, only: [:create, :show]
     get "/fill_asset_type_in_workorders", AssetController, :fill_asset_type_in_work_orders
+
+    get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
+    get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
   end
 
   scope "/api", Inconn2ServiceWeb do
@@ -318,7 +321,5 @@ defmodule Inconn2ServiceWeb.Router do
     get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
-    get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
-    get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
   end
 end
