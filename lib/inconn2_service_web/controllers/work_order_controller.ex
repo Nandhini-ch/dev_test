@@ -41,6 +41,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def get_work_orders_mobile_flutter(conn, _) do
+    work_orders = Workorder.workorder_mobile_flutter(conn.assigns.current_user,  conn.assigns.sub_domain_prefix)
+    render(conn, "flutter_mobile.json", work_orders: work_orders)
+  end
+
   def enable_start(conn, %{"id" => id}) do
     response = Workorder.enable_start(id, conn.assigns.sub_domain_prefix)
     render(conn, "enable_start.json", response: response)
