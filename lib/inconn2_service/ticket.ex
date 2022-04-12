@@ -8,6 +8,7 @@ defmodule Inconn2Service.Ticket do
   import Ecto.Changeset
 
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
+  alias Inconn2Service.Staff
   alias Inconn2Service.Staff.User
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Site
@@ -295,7 +296,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        push_alert_notification_for_ticket(nil, work_request, prefix)
+        push_alert_notification_for_ticket(nil, work_request, prefix, user)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix)}
 
       _ ->
@@ -422,7 +423,7 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
-        push_alert_notification_for_ticket(work_request, updated_work_request, prefix)
+        push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix)}
       _ ->
         result
@@ -1092,36 +1093,79 @@ defmodule Inconn2Service.Ticket do
     create_ticket_alert_notification("WRCN", description, nil, "category/sub_category created", prefix)
   end
 
-  def push_alert_notification_for_ticket(nil, updated_work_request, prefix) do
-    description = ~s(A ticket has been raised)
+  def push_alert_notification_for_ticket(nil, updated_work_request, prefix, _user) do
+    work_request_type =
+      case updated_work_request.request_type do
+        "CO" -> "Complaint"
+        "RE" -> "Request"
+      end
+
+    requested_user = Staff.get_user!(updated_work_request.requested_user_id, prefix)
+
+    user =
+      case requested_user.employee do
+        nil -> requested_user.username
+        _ -> requested_user.employee.first_name
+      end
+
+    description = ~s(#{work_request_type} #{updated_work_request.id} created by #{user} at #{updated_work_request.raised_date_time})
     create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
   end
 
-  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix) do
+  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix, user) do
+    work_request_type =
+      case updated_work_request.request_type do
+        "CO" -> "Complaint"
+        "RE" -> "Request"
+      end
+
+    status =
+      case updated_work_request.status do
+        "RS" -> "Raised"
+        "AP" -> "Approved"
+        "AS" -> "Assigned"
+        "RJ" -> "Rejected"
+        "CL" -> "Closed"
+        "CS" -> "Cancelled"
+        "RO" -> "Reopened"
+      end
+
+    user =
+      case user do
+        nil -> user.username
+        _ -> user.employee.first_name
+      end
+
     cond do
       existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
-        description = ~s(A ticket has been assigned)
+        description = ~s(Ticket #{updated_work_request.id} status changed to assigned by #{user})
         create_ticket_alert_notification("WRAR", description, updated_work_request, "new ticket assigned", prefix)
 
       updated_work_request.status in ["AP", "RJ"] ->
-        description = ~s(A ticket has been approved/rejected)
+        description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
         create_ticket_alert_notification("WRAR", description, updated_work_request, "ticket approved/rejected", prefix)
 
       updated_work_request.status == "CP" ->
-        description = ~s(A ticket has been completed)
+        description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
         create_ticket_alert_notification("WRCP", description, updated_work_request, "ticket completed", prefix)
 
       updated_work_request.status == "CL" ->
-        description = ~s(A ticket has been cancelled)
+        status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "CL")
+                       |> Repo.one(prefix: prefix)
+
+        description = ~s(#{work_request_type} #{updated_work_request.id} cancelled by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
         create_ticket_alert_notification("WRCL", description, updated_work_request, "ticket cancelled", prefix)
 
       updated_work_request.status == "ROP" ->
-        description = ~s(A ticket has been reopened)
+        status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "ROP")
+                       |> Repo.one(prefix: prefix)
+
+        description = ~s(Ticket #{updated_work_request.id} reopened by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
         create_ticket_alert_notification("WRRO", description, updated_work_request, "ticket reopened", prefix)
 
 
       existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
-        description = ~s(A ticket has been re-assigned)
+        description = ~s(Ticket #{updated_work_request.id} reassigned by #{user})
         create_ticket_alert_notification("WRRE", description, updated_work_request, "ticket reassigned", prefix)
 
       true ->
