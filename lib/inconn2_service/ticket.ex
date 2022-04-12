@@ -1188,7 +1188,7 @@ defmodule Inconn2Service.Ticket do
         "RJ" -> "Rejected"
         "CL" -> "Closed"
         "CS" -> "Cancelled"
-        "RO" -> "Reopened"
+        "ROP" -> "Reopened"
         "CP" -> "Completed"
       end
 
