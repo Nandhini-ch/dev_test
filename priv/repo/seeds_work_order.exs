@@ -311,4 +311,4 @@ work_request2 = %{
   "asset_type" => "E"
 }
 
-# {:ok, work_request2c} = Ticket.create_work_request(work_request2, "inc_bata")
+{:ok, work_request2c} = Ticket.create_work_request(work_request2, "inc_bata", %{id: 1})
