@@ -408,7 +408,7 @@ defmodule Inconn2Service.Report do
           resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
           time_taken_to_close: time_taken_to_close,
-          date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
+          date: "#{wr.raised_date_time.year}-#{wr.raised_date_time.month}-#{wr.raised_date_time.date}",
           time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}:#{wr.raised_date_time.second}"
         }
       end)
