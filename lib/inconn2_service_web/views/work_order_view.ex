@@ -37,7 +37,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset_id: work_order.asset_id,
       asset_name: work_order.asset_name,
       qr_code: work_order.qr_code,
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
+      work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       type: work_order.type,
       scheduled_date: work_order.scheduled_date,
       scheduled_time: work_order.scheduled_time,
