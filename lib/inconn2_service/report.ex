@@ -51,6 +51,9 @@ defmodule Inconn2Service.Report do
         {"asset_id", asset_id}, main_query ->
           from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
 
+        {"status", "incomplete"}, main_query ->
+          from q in main_query, where: q.status not in ["cp", "cn"]
+
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
 
