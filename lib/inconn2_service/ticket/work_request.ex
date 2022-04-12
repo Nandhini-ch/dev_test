@@ -43,7 +43,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
                     :time_of_requirement, :requested_user_id, :assigned_user_id, :approvals_required,
                     :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id, :raised_date_time,
                     :response_tat, :resolution_tat])
-    |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type, :raised_date_time])
+    |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :description, :request_type])
     |> validate_inclusion(:asset_type, ["L", "E"])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])
     |> validate_inclusion(:request_type, ["CO", "RE"])
