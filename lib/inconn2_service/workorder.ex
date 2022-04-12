@@ -1978,6 +1978,56 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderTask, prefix: prefix)
   end
 
+  def workorder_mobile_flutter(user, prefix) do
+    flutter_query =
+      from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+      left_join: s in Site, on: s.id == wo.site_id,
+      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id,
+      left_join: wr in WorkRequest, on: wo.work_request_id == wr.id,
+      left_join: u in User, on: wo.user_id == u.id,
+      left_join: e in Employee, on: u.employee_id == e.id,
+      select: %{
+        id: wo.id,
+        site_id: s.id,
+        site_name: s.name,
+        asset_id: wo.asset_id,
+        work_request: wr,
+        type: wo.type,
+        workorder_template: wt,
+        scheduled_date: wo.scheduled_date,
+        scheduled_time: wo.scheduled_time,
+        start_date: wo.start_date,
+        start_time: wo.start_time,
+        user: u,
+        employee: e,
+        completed_date: wo.completed_date,
+        completed_time: wo.completed_time,
+        status: wo.status,
+        is_workorder_approval_required: wo.is_workorder_approval_required,
+        is_loto_required: wo.is_loto_required,
+        is_workorder_acknowledgement_required: wo.is_workorder_acknowledgement_required,
+        is_workpermit_required: wo.is_workpermit_required
+      }
+
+    work_orders = Repo.all(flutter_query, prefix: prefix)
+
+    Stream.map(work_orders, fn wo ->
+      wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+      Map.put_new(wo, :workorder_tasks,  wots)
+    end)
+    |> Enum.map(fn wo ->
+      asset =
+        case wo.workorder_template.asset_type do
+          "L" ->
+            AssetConfig.get_location!(wo.asset_id, prefix)
+          "E" ->
+            AssetConfig.get_equipment!(wo.asset_id, prefix)
+        end
+      Map.put_new(wo, :asset_name, asset.name)
+    end)
+  end
+
+
   def list_work_order_mobile_test(user, prefix) do
     employee =
       case user.employee_id do

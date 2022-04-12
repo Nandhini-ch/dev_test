@@ -303,6 +303,7 @@ defmodule Inconn2ServiceWeb.Router do
     put "/self_approve_workorder_checks", WorkorderCheckController, :update_work_permit_checks
 
     get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile_test
+    get "/mobile/flutter",  WorkOrderController, :get_work_orders_mobile_flutter
 
     # get "/mobile/work_orders_test", WorkOrderController, :get_work_order_for_mobile_test
 

@@ -20,8 +20,40 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
     %{data: render_many(work_orders, WorkOrderView, "mobile_test.json")}
   end
 
+  def render("flutter_mobile.json", %{work_orders: work_orders}) do
+    %{data: render_many(work_orders, WorkOrderView, "flutter.json")}
+  end
+
   def render("mobile_show.json", %{work_order: work_order}) do
     %{data: render_one(work_order, WorkOrderView, "mobile_work_order.json")}
+  end
+
+  def render("flutter.json", %{work_order: work_order}) do
+    workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
+
+    %{id: work_order.id ,
+      site_id: work_order.site_id,
+      site_name: work_order.site_name,
+      asset_id: work_order.asset_id,
+      asset_name: work_order.asset_name,
+      work_request: work_order.work_request,
+      type: work_order.type,
+      scheduled_date: work_order.scheduled_date,
+      scheduled_time: work_order.scheduled_time,
+      start_date: work_order.start_date,
+      start_time: work_order.start_time,
+      user: (if is_nil(work_order.user), do: nil, else: work_order.user.username),
+      # employee: work_order.employee,
+      workorder_tasks: workorder_tasks,
+      employee: (if is_nil(work_order.employee), do: nil, else: work_order.employee.first_name),
+      completed_date: work_order.completed_date,
+      completed_time: work_order.completed_time,
+      status: work_order.status,
+      is_workorder_approval_required: work_order.is_workorder_approval_required,
+      is_loto_required: work_order.is_loto_required,
+      is_workorder_acknowledgement_required: work_order.is_workorder_acknowledgement_required,
+      is_workpermit_required: work_order.is_workpermit_required
+    }
   end
 
   def render("mobile_test.json", %{work_order: work_order}) do
