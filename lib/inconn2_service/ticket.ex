@@ -1189,6 +1189,7 @@ defmodule Inconn2Service.Ticket do
         "CL" -> "Closed"
         "CS" -> "Cancelled"
         "RO" -> "Reopened"
+        "CP" -> "Completed"
       end
 
     user =
