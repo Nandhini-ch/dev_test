@@ -434,7 +434,7 @@ defmodule Inconn2Service.Dashboards do
                "#{Integer.to_string(minutes)}"
              end
 
-  "#{hours}:#{minutes}"
+  "#{hours} H : #{minutes} M"
   end
 
   defp add_overdue_flag(work_order, prefix) do
