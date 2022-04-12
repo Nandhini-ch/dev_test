@@ -1193,7 +1193,7 @@ defmodule Inconn2Service.Ticket do
       end
 
     user =
-      case user do
+      case user.employee do
         nil -> user.username
         _ -> user.employee.first_name
       end
