@@ -2023,7 +2023,7 @@ defmodule Inconn2Service.Workorder do
           "E" ->
             AssetConfig.get_equipment!(wo.asset_id, prefix)
         end
-      Map.put_new(wo, :asset_name, asset.name)
+      Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code)
     end)
   end
 
