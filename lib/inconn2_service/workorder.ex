@@ -2455,7 +2455,7 @@ defmodule Inconn2Service.Workorder do
 
   defp validate_mt(cs, response) do
     answer = response["answers"]
-    if is_integer(answer) or answer == nil do
+    if is_integer(answer) or is_float(answer) or answer == nil do
       cs
     else
       add_error(cs, :response, "answer should be integer")
