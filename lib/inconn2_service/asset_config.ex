@@ -1819,7 +1819,9 @@ defmodule Inconn2Service.AssetConfig do
   """
   def get_site_config!(id, prefix), do: Repo.get!(SiteConfig, id, prefix: prefix)
   def get_site_config_by_site_id(site_id, prefix) do
-    Repo.get_by(SiteConfig, [site_id: site_id], prefix: prefix)
+    from(sc in SiteConfig, where: sc.site_id == ^site_id)
+    |> Repo.all(prefix: prefix)
+    |> List.first()
   end
 
   @doc """
