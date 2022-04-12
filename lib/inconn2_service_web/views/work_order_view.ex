@@ -70,7 +70,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       site_id: work_order.site_id,
       site: render_one(work_order.site, SiteView, "site.json"),
       workorder_tasks: workorder_tasks,
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       asset: asset,
       user_id: work_order.user_id,
