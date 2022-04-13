@@ -2254,29 +2254,29 @@ defmodule Inconn2Service.Workorder do
 
 
 
-      workpermit_checks =
-        if workorder_template.workpermit_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"WP"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # workpermit_checks =
+      #   if workorder_template.workpermit_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"WP"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
-      loto_checks =
-        if workorder_template.loto_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"LOTO"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # loto_checks =
+      #   if workorder_template.loto_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"LOTO"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
-      pre_checks =
-        if workorder_template.pre_check_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"PRE"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # pre_checks =
+      #   if workorder_template.pre_check_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"PRE"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
       scheduled_date_time = NaiveDateTime.new!(wo.scheduled_date, wo.scheduled_time)
 
@@ -2290,10 +2290,10 @@ defmodule Inconn2Service.Workorder do
       |> Map.put_new(:workorder_template, workorder_template)
       |> Map.put_new(:workorder_schedule, workorder_schedule)
       |> Map.put_new(:workorder_tasks, workorder_tasks)
-      |> Map.put_new(:workorder_tasks, workorder_tasks)
-      |> Map.put_new(:workpermit_checks, workpermit_checks)
-      |> Map.put_new(:loto_checks, loto_checks)
-      |> Map.put_new(:pre_checks, pre_checks)
+      # |> Map.put_new(:workorder_tasks, workorder_tasks)
+      # |> Map.put_new(:workpermit_checks, workpermit_checks)
+      # |> Map.put_new(:loto_checks, loto_checks)
+      # |> Map.put_new(:pre_checks, pre_checks)
       |> Map.put_new(:work_request, work_request)
       |> Map.put_new(:scheduled_date_time, scheduled_date_time)
 
