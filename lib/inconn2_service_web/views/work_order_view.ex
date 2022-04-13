@@ -124,7 +124,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset: asset,
       asset_qr_code: work_order.asset_qr_code,
       workorder_tasks: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json"),
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       user_id: work_order.user_id,
       user: render_one(work_order.user, UserView, "user.json"),
@@ -147,19 +147,20 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
       workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
-      work_request_id: work_order.work_request_id,
-      workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
-      is_workorder_approval_required: work_order.is_workorder_approval_required,
-      workorder_approval_user_id: work_order.workorder_approval_user_id,
-      is_workpermit_required: work_order.is_workpermit_required,
-      workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
-      workpermit_obtained_from_user_ids: work_order.workpermit_obtained_from_user_ids,
-      loto_required: work_order.loto_required,
-      loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check_with_check.json"),
-      loto_approval_from_user_id: work_order.loto_approval_from_user_id,
-      pre_check_required: work_order.pre_check_required,
-      pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
-      precheck_completed: work_order.precheck_completed}
+      # work_request_id: work_order.work_request_id,
+      # workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
+      # is_workorder_approval_required: work_order.is_workorder_approval_required,
+      # workorder_approval_user_id: work_order.workorder_approval_user_id,
+      # is_workpermit_required: work_order.is_workpermit_required,
+      # workpermit_approval_user_ids: work_order.workpermit_approval_user_ids,
+      # workpermit_obtained_from_user_ids: work_order.workpermit_obtained_from_user_ids,
+      # loto_required: work_order.loto_required,
+      # loto_checks: render_many(work_order.loto_checks, WorkorderCheckView, "workorder_check_with_check.json"),
+      # loto_approval_from_user_id: work_order.loto_approval_from_user_id,
+      # pre_check_required: work_order.pre_check_required,
+      # pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
+      # precheck_completed: work_order.precheck_completed}
+    }
   end
 
 
