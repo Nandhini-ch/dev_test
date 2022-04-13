@@ -2239,7 +2239,7 @@ defmodule Inconn2Service.Workorder do
       workorder_tasks =
         list_workorder_tasks(prefix, wo.id)
         |> Enum.map(fn wot ->
-          Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix))
+          Map.put(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix))
         end)
 
 
@@ -2281,21 +2281,21 @@ defmodule Inconn2Service.Workorder do
       scheduled_date_time = NaiveDateTime.new!(wo.scheduled_date, wo.scheduled_time)
 
       wo
-      |> Map.put_new(:asset, asset)
-      |> Map.put_new(:asset_type, workorder_template.asset_type)
-      |> Map.put_new(:asset_qr_code, asset.qr_code)
-      |> Map.put_new(:site, site)
-      |> Map.put_new(:user, user)
-      |> Map.put_new(:employee, employee)
-      |> Map.put_new(:workorder_template, workorder_template)
-      |> Map.put_new(:workorder_schedule, workorder_schedule)
-      |> Map.put_new(:workorder_tasks, workorder_tasks)
-      # |> Map.put_new(:workorder_tasks, workorder_tasks)
-      # |> Map.put_new(:workpermit_checks, workpermit_checks)
-      # |> Map.put_new(:loto_checks, loto_checks)
-      # |> Map.put_new(:pre_checks, pre_checks)
-      |> Map.put_new(:work_request, work_request)
-      |> Map.put_new(:scheduled_date_time, scheduled_date_time)
+      |> Map.put(:asset, asset)
+      |> Map.put(:asset_type, workorder_template.asset_type)
+      |> Map.put(:asset_qr_code, asset.qr_code)
+      |> Map.put(:site, site)
+      |> Map.put(:user, user)
+      |> Map.put(:employee, employee)
+      |> Map.put(:workorder_template, workorder_template)
+      |> Map.put(:workorder_schedule, workorder_schedule)
+      |> Map.put(:workorder_tasks, workorder_tasks)
+      # |> Map.put(:workorder_tasks, workorder_tasks)
+      # |> Map.put(:workpermit_checks, workpermit_checks)
+      # |> Map.put(:loto_checks, loto_checks)
+      # |> Map.put(:pre_checks, pre_checks)
+      |> Map.put(:work_request, work_request)
+      |> Map.put(:scheduled_date_time, scheduled_date_time)
 
     end)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
