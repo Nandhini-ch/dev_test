@@ -30,14 +30,13 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
 
   def render("flutter.json", %{work_order: work_order}) do
     workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
-
     %{id: work_order.id ,
       site_id: work_order.site_id,
       site_name: work_order.site_name,
       asset_id: work_order.asset_id,
       asset_name: work_order.asset_name,
       qr_code: work_order.qr_code,
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       type: work_order.type,
       scheduled_date: work_order.scheduled_date,
       scheduled_time: work_order.scheduled_time,
