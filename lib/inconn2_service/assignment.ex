@@ -290,16 +290,43 @@ defmodule Inconn2Service.Assignment do
       [%Attendance{}, ...]
 
   """
+  # def list_attendances(query_params, prefix) do
+  #   {:ok, date} = date_convert(query_params["date"])
+  #   query =
+  #     from(a in Attendance,
+  #       where:
+  #         a.shift_id == ^query_params["shift_id"] and
+  #         a.date == ^date
+  #     )
+  #   Repo.all(query, prefix: prefix)
+  # end
+
   def list_attendances(query_params, prefix) do
-    {:ok, date} = date_convert(query_params["date"])
-    query =
-      from(a in Attendance,
-        where:
-          a.shift_id == ^query_params["shift_id"] and
-          a.date == ^date
-      )
+    query_params = get_date_time_for_query(query_params)
+    query = from a in Attendance
+    query = Enum.reduce(query_params, query, fn
+              {"employee_id", employee_id}, query ->
+                from q in query, where: q.employee_id == ^employee_id
+
+              {"site_id", site_id}, query ->
+                from q in query, where: q.site_id == ^site_id
+
+              {"from_date", from_date}, query ->
+                from q in query, where: q.date_time >= ^from_date
+
+              {"to_date", to_date}, query ->
+                from q in query, where: q.date_time <= ^to_date
+
+              _ , query ->
+                query
+            end)
     Repo.all(query, prefix: prefix)
-    # |> Repo.preload(:shift)
+  end
+
+  defp get_date_time_for_query(query_params) do
+    {from_date, to_date} = {Date.from_iso8601!(query_params["from_date"] <> "00:00:00"), Date.from_iso8601!(query_params["to_date"] <> "23:59:59")}
+    Map.put(query_params, "from_date", from_date)
+    |> Map.put("to_date", to_date)
   end
 
   @doc """
@@ -406,6 +433,10 @@ defmodule Inconn2Service.Assignment do
     Repo.all(AttendanceReference, prefix: prefix)
   end
 
+  def get_attendance_reference_for_employee(query_params, prefix) do
+    from(ar in AttendanceReference, where: ar.employee_id == ^query_params["employee_id"])
+    |> Repo.all(prefix: prefix)
+  end
   @doc """
   Gets a single attendance_reference.
 
@@ -486,5 +517,110 @@ defmodule Inconn2Service.Assignment do
   """
   def change_attendance_reference(%AttendanceReference{} = attendance_reference, attrs \\ %{}) do
     AttendanceReference.changeset(attendance_reference, attrs)
+  end
+
+  alias Inconn2Service.Assignment.AttendanceFailureLog
+
+  @doc """
+  Returns the list of attendance_failure_logs.
+
+  ## Examples
+
+      iex> list_attendance_failure_logs()
+      [%AttendanceFailureLog{}, ...]
+
+  """
+  def list_attendance_failure_logs(query_params, prefix) do
+    query = from afl in AttendanceFailureLog
+    query = Enum.reduce(query_params, query, fn
+              {"employee_id", employee_id}, query ->
+                from q in query, where: q.employee_id == ^employee_id
+
+              _ , query ->
+                query
+            end)
+    Repo.all(query, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single attendance_failure_log.
+
+  Raises `Ecto.NoResultsError` if the Attendance failure log does not exist.
+
+  ## Examples
+
+      iex> get_attendance_failure_log!(123)
+      %AttendanceFailureLog{}
+
+      iex> get_attendance_failure_log!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_attendance_failure_log!(id, prefix), do: Repo.get!(AttendanceFailureLog, id, prefix: prefix)
+
+  @doc """
+  Creates a attendance_failure_log.
+
+  ## Examples
+
+      iex> create_attendance_failure_log(%{field: value})
+      {:ok, %AttendanceFailureLog{}}
+
+      iex> create_attendance_failure_log(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_attendance_failure_log(attrs \\ %{}, prefix, user) do
+    employee_id = get_employee_current_user(user.username, prefix).id
+    %AttendanceFailureLog{}
+    |> AttendanceFailureLog.changeset(Map.put(attrs, "employee_id", employee_id))
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a attendance_failure_log.
+
+  ## Examples
+
+      iex> update_attendance_failure_log(attendance_failure_log, %{field: new_value})
+      {:ok, %AttendanceFailureLog{}}
+
+      iex> update_attendance_failure_log(attendance_failure_log, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs, prefix) do
+    attendance_failure_log
+    |> AttendanceFailureLog.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a attendance_failure_log.
+
+  ## Examples
+
+      iex> delete_attendance_failure_log(attendance_failure_log)
+      {:ok, %AttendanceFailureLog{}}
+
+      iex> delete_attendance_failure_log(attendance_failure_log)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, prefix) do
+    Repo.delete(attendance_failure_log, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking attendance_failure_log changes.
+
+  ## Examples
+
+      iex> change_attendance_failure_log(attendance_failure_log)
+      %Ecto.Changeset{data: %AttendanceFailureLog{}}
+
+  """
+  def change_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs \\ %{}) do
+    AttendanceFailureLog.changeset(attendance_failure_log, attrs)
   end
 end

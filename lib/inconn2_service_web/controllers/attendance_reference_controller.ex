@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.AttendanceReferenceController do
     render(conn, "index.json", attendance_references: attendance_references)
   end
 
+  def get_attendance_reference_for_employee(conn, _params) do
+    attendance_references = Assignment.get_attendance_reference_for_employee(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", attendance_references: attendance_references)
+  end
+
   def create(conn, %{"attendance_reference" => attendance_reference_params}) do
     with {:ok, %AttendanceReference{} = attendance_reference} <- Assignment.create_attendance_reference(attendance_reference_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
