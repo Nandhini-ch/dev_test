@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.AttendanceController do
   end
 
   def create(conn, %{"attendance" => attendance_params}) do
-    with {:ok, %Attendance{} = attendance} <- Assignment.create_attendance(attendance_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %Attendance{} = attendance} <- Assignment.create_attendance(attendance_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.attendance_path(conn, :show, attendance))

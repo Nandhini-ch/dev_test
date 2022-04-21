@@ -126,4 +126,67 @@ defmodule Inconn2Service.AssignmentTest do
       assert %Ecto.Changeset{} = Assignment.change_attendance(attendance)
     end
   end
+
+  describe "attendance_references" do
+    alias Inconn2Service.Assignment.AttendanceReference
+
+    @valid_attrs %{employee_id: 42, reference_image: "some reference_image", status: "some status"}
+    @update_attrs %{employee_id: 43, reference_image: "some updated reference_image", status: "some updated status"}
+    @invalid_attrs %{employee_id: nil, reference_image: nil, status: nil}
+
+    def attendance_reference_fixture(attrs \\ %{}) do
+      {:ok, attendance_reference} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Assignment.create_attendance_reference()
+
+      attendance_reference
+    end
+
+    test "list_attendance_references/0 returns all attendance_references" do
+      attendance_reference = attendance_reference_fixture()
+      assert Assignment.list_attendance_references() == [attendance_reference]
+    end
+
+    test "get_attendance_reference!/1 returns the attendance_reference with given id" do
+      attendance_reference = attendance_reference_fixture()
+      assert Assignment.get_attendance_reference!(attendance_reference.id) == attendance_reference
+    end
+
+    test "create_attendance_reference/1 with valid data creates a attendance_reference" do
+      assert {:ok, %AttendanceReference{} = attendance_reference} = Assignment.create_attendance_reference(@valid_attrs)
+      assert attendance_reference.employee_id == 42
+      assert attendance_reference.reference_image == "some reference_image"
+      assert attendance_reference.status == "some status"
+    end
+
+    test "create_attendance_reference/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Assignment.create_attendance_reference(@invalid_attrs)
+    end
+
+    test "update_attendance_reference/2 with valid data updates the attendance_reference" do
+      attendance_reference = attendance_reference_fixture()
+      assert {:ok, %AttendanceReference{} = attendance_reference} = Assignment.update_attendance_reference(attendance_reference, @update_attrs)
+      assert attendance_reference.employee_id == 43
+      assert attendance_reference.reference_image == "some updated reference_image"
+      assert attendance_reference.status == "some updated status"
+    end
+
+    test "update_attendance_reference/2 with invalid data returns error changeset" do
+      attendance_reference = attendance_reference_fixture()
+      assert {:error, %Ecto.Changeset{}} = Assignment.update_attendance_reference(attendance_reference, @invalid_attrs)
+      assert attendance_reference == Assignment.get_attendance_reference!(attendance_reference.id)
+    end
+
+    test "delete_attendance_reference/1 deletes the attendance_reference" do
+      attendance_reference = attendance_reference_fixture()
+      assert {:ok, %AttendanceReference{}} = Assignment.delete_attendance_reference(attendance_reference)
+      assert_raise Ecto.NoResultsError, fn -> Assignment.get_attendance_reference!(attendance_reference.id) end
+    end
+
+    test "change_attendance_reference/1 returns a attendance_reference changeset" do
+      attendance_reference = attendance_reference_fixture()
+      assert %Ecto.Changeset{} = Assignment.change_attendance_reference(attendance_reference)
+    end
+  end
 end

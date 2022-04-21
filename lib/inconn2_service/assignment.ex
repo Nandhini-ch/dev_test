@@ -9,6 +9,7 @@ defmodule Inconn2Service.Assignment do
 
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Staff.Employee
+  alias Inconn2Service.Staff
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
@@ -298,7 +299,7 @@ defmodule Inconn2Service.Assignment do
           a.date == ^date
       )
     Repo.all(query, prefix: prefix)
-    |> Repo.preload(:shift)
+    # |> Repo.preload(:shift)
   end
 
   @doc """
@@ -329,16 +330,20 @@ defmodule Inconn2Service.Assignment do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_attendance(attrs \\ %{}, prefix) do
-    result = %Attendance{}
-            |> Attendance.changeset(attrs)
+  def create_attendance(attrs \\ %{}, prefix, user) do
+    employee_id = get_employee_current_user(user.username, prefix).id
+    _result = %Attendance{}
+            |> Attendance.changeset(Map.put(attrs, "employee_id", employee_id))
             |> Repo.insert(prefix: prefix)
-    case result do
-      {:ok, attendance} -> {:ok, attendance |> Repo.preload(:shift)}
-      _ -> result
-    end
   end
 
+  defp get_employee_current_user(username, prefix) do
+    employee = Staff.get_employee_email!(username, prefix)
+    case employee do
+      nil -> %{first_name: nil, last_name: nil}
+      _ -> employee
+    end
+  end
   @doc """
   Updates a attendance.
 
@@ -384,5 +389,102 @@ defmodule Inconn2Service.Assignment do
   """
   def change_attendance(%Attendance{} = attendance, attrs \\ %{}) do
     Attendance.changeset(attendance, attrs)
+  end
+
+  alias Inconn2Service.Assignment.AttendanceReference
+
+  @doc """
+  Returns the list of attendance_references.
+
+  ## Examples
+
+      iex> list_attendance_references()
+      [%AttendanceReference{}, ...]
+
+  """
+  def list_attendance_references(prefix) do
+    Repo.all(AttendanceReference, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single attendance_reference.
+
+  Raises `Ecto.NoResultsError` if the Attendance reference does not exist.
+
+  ## Examples
+
+      iex> get_attendance_reference!(123)
+      %AttendanceReference{}
+
+      iex> get_attendance_reference!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_attendance_reference!(id, prefix), do: Repo.get!(AttendanceReference, id, prefix: prefix)
+
+  @doc """
+  Creates a attendance_reference.
+
+  ## Examples
+
+      iex> create_attendance_reference(%{field: value})
+      {:ok, %AttendanceReference{}}
+
+      iex> create_attendance_reference(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_attendance_reference(attrs \\ %{}, prefix, user) do
+    employee_id = get_employee_current_user(user.username, prefix).id
+    %AttendanceReference{}
+    |> AttendanceReference.changeset(Map.put(attrs, "employee_id", employee_id))
+    |> Repo.insert(prefix: prefix)
+  end
+
+  @doc """
+  Updates a attendance_reference.
+
+  ## Examples
+
+      iex> update_attendance_reference(attendance_reference, %{field: new_value})
+      {:ok, %AttendanceReference{}}
+
+      iex> update_attendance_reference(attendance_reference, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_attendance_reference(%AttendanceReference{} = attendance_reference, attrs, prefix) do
+    attendance_reference
+    |> AttendanceReference.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a attendance_reference.
+
+  ## Examples
+
+      iex> delete_attendance_reference(attendance_reference)
+      {:ok, %AttendanceReference{}}
+
+      iex> delete_attendance_reference(attendance_reference)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_attendance_reference(%AttendanceReference{} = attendance_reference, prefix) do
+    Repo.delete(attendance_reference, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking attendance_reference changes.
+
+  ## Examples
+
+      iex> change_attendance_reference(attendance_reference)
+      %Ecto.Changeset{data: %AttendanceReference{}}
+
+  """
+  def change_attendance_reference(%AttendanceReference{} = attendance_reference, attrs \\ %{}) do
+    AttendanceReference.changeset(attendance_reference, attrs)
   end
 end
