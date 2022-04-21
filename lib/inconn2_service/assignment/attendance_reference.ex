@@ -14,7 +14,7 @@ defmodule Inconn2Service.Assignment.AttendanceReference do
   def changeset(attendance_reference, attrs) do
     attendance_reference
     |> cast(attrs, [:employee_id, :reference_image, :status])
-    |> validate_required([:employee_id, :reference_image])
+    |> validate_required([:reference_image])
     |> validate_inclusion(:status, ["AP", "NA"])
   end
 end
