@@ -189,4 +189,67 @@ defmodule Inconn2Service.AssignmentTest do
       assert %Ecto.Changeset{} = Assignment.change_attendance_reference(attendance_reference)
     end
   end
+
+  describe "attendance_failure_logs" do
+    alias Inconn2Service.Assignment.AttendanceFailureLog
+
+    @valid_attrs %{date_time: ~N[2010-04-17 14:00:00], employee_id: 42, failure_image: "some failure_image"}
+    @update_attrs %{date_time: ~N[2011-05-18 15:01:01], employee_id: 43, failure_image: "some updated failure_image"}
+    @invalid_attrs %{date_time: nil, employee_id: nil, failure_image: nil}
+
+    def attendance_failure_log_fixture(attrs \\ %{}) do
+      {:ok, attendance_failure_log} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Assignment.create_attendance_failure_log()
+
+      attendance_failure_log
+    end
+
+    test "list_attendance_failure_logs/0 returns all attendance_failure_logs" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert Assignment.list_attendance_failure_logs() == [attendance_failure_log]
+    end
+
+    test "get_attendance_failure_log!/1 returns the attendance_failure_log with given id" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert Assignment.get_attendance_failure_log!(attendance_failure_log.id) == attendance_failure_log
+    end
+
+    test "create_attendance_failure_log/1 with valid data creates a attendance_failure_log" do
+      assert {:ok, %AttendanceFailureLog{} = attendance_failure_log} = Assignment.create_attendance_failure_log(@valid_attrs)
+      assert attendance_failure_log.date_time == ~N[2010-04-17 14:00:00]
+      assert attendance_failure_log.employee_id == 42
+      assert attendance_failure_log.failure_image == "some failure_image"
+    end
+
+    test "create_attendance_failure_log/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Assignment.create_attendance_failure_log(@invalid_attrs)
+    end
+
+    test "update_attendance_failure_log/2 with valid data updates the attendance_failure_log" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert {:ok, %AttendanceFailureLog{} = attendance_failure_log} = Assignment.update_attendance_failure_log(attendance_failure_log, @update_attrs)
+      assert attendance_failure_log.date_time == ~N[2011-05-18 15:01:01]
+      assert attendance_failure_log.employee_id == 43
+      assert attendance_failure_log.failure_image == "some updated failure_image"
+    end
+
+    test "update_attendance_failure_log/2 with invalid data returns error changeset" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert {:error, %Ecto.Changeset{}} = Assignment.update_attendance_failure_log(attendance_failure_log, @invalid_attrs)
+      assert attendance_failure_log == Assignment.get_attendance_failure_log!(attendance_failure_log.id)
+    end
+
+    test "delete_attendance_failure_log/1 deletes the attendance_failure_log" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert {:ok, %AttendanceFailureLog{}} = Assignment.delete_attendance_failure_log(attendance_failure_log)
+      assert_raise Ecto.NoResultsError, fn -> Assignment.get_attendance_failure_log!(attendance_failure_log.id) end
+    end
+
+    test "change_attendance_failure_log/1 returns a attendance_failure_log changeset" do
+      attendance_failure_log = attendance_failure_log_fixture()
+      assert %Ecto.Changeset{} = Assignment.change_attendance_failure_log(attendance_failure_log)
+    end
+  end
 end
