@@ -17,7 +17,7 @@ defmodule Inconn2Service.Assignment.Attendance do
   def changeset(attendance, attrs) do
     attendance
     |> cast(attrs, [:date_time, :latitude, :longitude, :site_id, :employee_id])
-    |> validate_required([:date_time, :latitude, :longitude, :employee_id])
+    |> validate_required([:date_time, :latitude, :longitude])
     # |> validate_attendance_params()
     # |> assoc_constraint(:shift)
   end

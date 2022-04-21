@@ -14,6 +14,6 @@ defmodule Inconn2Service.Assignment.AttendanceFailureLog do
   def changeset(attendance_failure_log, attrs) do
     attendance_failure_log
     |> cast(attrs, [:employee_id, :failure_image, :date_time])
-    |> validate_required([:employee_id, :failure_image, :date_time])
+    |> validate_required([:failure_image, :date_time])
   end
 end
