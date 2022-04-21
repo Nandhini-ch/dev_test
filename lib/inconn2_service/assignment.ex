@@ -358,17 +358,18 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_attendance(attrs \\ %{}, prefix, user) do
-    employee_id = get_employee_current_user(user.username, prefix).id
+    # employee_id = get_employee_current_user(user.username, prefix).id
     _result = %Attendance{}
-            |> Attendance.changeset(Map.put(attrs, "employee_id", employee_id))
+            |> Attendance.changeset(attrs)
+            |> get_employee_current_user(user, prefix)
             |> Repo.insert(prefix: prefix)
   end
 
-  defp get_employee_current_user(username, prefix) do
-    employee = Staff.get_employee_email!(username, prefix)
+  defp get_employee_current_user(cs, user, prefix) do
+    employee = Staff.get_employee_email!(user.username, prefix)
     case employee do
-      nil -> %{first_name: nil, last_name: nil}
-      _ -> employee
+      nil -> add_error(cs, :employee_id, "Employee doesnot exist")
+      _ -> change(cs, %{employee_id: employee.id})
     end
   end
   @doc """
@@ -466,9 +467,10 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_attendance_reference(attrs \\ %{}, prefix, user) do
-    employee_id = get_employee_current_user(user.username, prefix).id
+    # employee_id = get_employee_current_user(user.username, prefix).id
     %AttendanceReference{}
-    |> AttendanceReference.changeset(Map.put(attrs, "employee_id", employee_id))
+    |> AttendanceReference.changeset(attrs)
+    |> get_employee_current_user(user, prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -571,9 +573,10 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_attendance_failure_log(attrs \\ %{}, prefix, user) do
-    employee_id = get_employee_current_user(user.username, prefix).id
+    # employee_id = get_employee_current_user(user.username, prefix).id
     %AttendanceFailureLog{}
-    |> AttendanceFailureLog.changeset(Map.put(attrs, "employee_id", employee_id))
+    |> AttendanceFailureLog.changeset(attrs)
+    |> get_employee_current_user(user, prefix)
     |> Repo.insert(prefix: prefix)
   end
 
