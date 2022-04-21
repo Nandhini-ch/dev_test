@@ -582,8 +582,8 @@ defmodule Inconn2Service.Common do
   """
   def get_alert_notification_generator!(id), do: Repo.get!(AlertNotificationGenerator, id)
 
-  def get_generator_by_refernce_id_and_code(reference_id, code) do
-    from(an in AlertNotificationGenerator, where: an.refernce_id == ^reference_id and an.code == ^code)
+  def get_generator_by_reference_id_and_code(reference_id, code) do
+    from(an in AlertNotificationGenerator, where: an.reference_id == ^reference_id and an.code == ^code)
     |> Repo.one()
   end
   @doc """

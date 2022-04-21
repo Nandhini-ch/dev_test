@@ -1346,7 +1346,7 @@ defmodule Inconn2Service.Workorder do
   defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
     cond do
       nil in [work_order.start_date, work_order.start_time] && nil not in [updated_work_order.start_date, updated_work_order.start_time] ->
-        Common.get_generator_by_refernce_id_and_code(work_order.id, "WOOD")
+        Common.get_generator_by_reference_id_and_code(work_order.id, "WOOD")
         |> Common.delete_alert_notification_generator()
 
       true ->
