@@ -12,8 +12,10 @@ defmodule Inconn2ServiceWeb.AttendanceView do
 
   def render("attendance.json", %{attendance: attendance}) do
     %{id: attendance.id,
-      shift: render_one(attendance.shift, ShiftView, "shift.json"),
-      date: attendance.date,
-      attendance_record: attendance.attendance_record}
+      date_time: attendance.date_time,
+      latitude: attendance.latitude,
+      longitude: attendance.longitude,
+      site_id: attendance.site_id,
+      employee_id: attendance.employee_id}
   end
 end
