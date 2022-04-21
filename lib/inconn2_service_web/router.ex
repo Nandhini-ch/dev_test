@@ -299,7 +299,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders/:work_order_id/workorder_approval_tracks/type/:approval_type", WorkorderApprovalTrackController, :index_workorder_approval_tracks_by_workorder_and_type
     put "/self_approve_workorder_checks", WorkorderCheckController, :update_work_permit_checks
 
-    get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile_test
+    get "/mobile/work_orders", WorkOrderController, :get_work_order_for_mobile
     get "/mobile/flutter",  WorkOrderController, :get_work_orders_mobile_flutter
 
     # get "/mobile/work_orders_test", WorkOrderController, :get_work_order_for_mobile_test

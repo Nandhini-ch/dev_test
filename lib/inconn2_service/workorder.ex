@@ -2027,6 +2027,93 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
+  def list_work_order_mobile_optimized(user, prefix) do
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+      query = work_order_mobile_query(user)
+
+      common_query =
+        from q in query, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
+        select_merge: %{
+          workorder_template: wt
+        }
+
+      assigned_work_orders = Repo.all(common_query, prefix: prefix)
+
+      asset_category_work_orders =
+        case employee do
+          nil ->
+            []
+
+          _ ->
+            asset_category_query =
+              from q in query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              select_merge: %{
+                workorder_template: wt
+              }
+            Repo.all(asset_category_query, prefix: prefix)
+        end
+
+      work_orders = assigned_work_orders ++ asset_category_work_orders
+
+      Stream.map(work_orders, fn wo ->
+        wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+        Map.put(wo, :workorder_tasks,  wots)
+      end)
+      |> Enum.map(fn wo ->
+        asset =
+          case wo.workorder_template.asset_type do
+            "L" ->
+              AssetConfig.get_location!(wo.asset_id, prefix)
+            "E" ->
+              AssetConfig.get_equipment!(wo.asset_id, prefix)
+          end
+        Map.put_new(wo, :asset, asset) |> Map.put(:asset_qr_code, asset.qr_code)
+      end)
+  end
+
+  def work_order_mobile_query(user) do
+    from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+      left_join: s in Site, on: s.id == wo.site_id,
+      left_join: u in User, on: wo.user_id == u.id,
+      left_join: e in Employee, on:  u.employee_id == e.id,
+      select: %{
+        id: wo.id,
+        site_id: wo.site_id,
+        site: s,
+        asset_id: wo.asset_id,
+        asset_type: wo.asset_type,
+        type: wo.type,
+        created_date: wo.created_date,
+        created_date: wo.created_date,
+        created_time: wo.created_time,
+        assigned_date: wo.assigned_date,
+        assigned_time: wo.assigned_time,
+        scheduled_date: wo.scheduled_date,
+        scheduled_time: wo.scheduled_time,
+        start_date: wo.start_date,
+        user: u,
+        user_id: wo.user_id,
+        employee: e,
+        start_time: wo.start_time,
+        completed_date: wo.completed_date,
+        completed_time: wo.completed_time,
+        status: wo.status,
+        is_deactivated: wo.is_deactivated,
+        deactivated_date_time: wo.deactivated_date_time,
+        workorder_template_id: wo.workorder_template_id,
+        workorder_schedule_id: wo.workorder_schedule_id,
+        work_request_id: wo.work_request_id
+      }
+  end
+
 
   def list_work_order_mobile_test(user, prefix) do
     employee =
