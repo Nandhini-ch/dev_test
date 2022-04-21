@@ -30,14 +30,13 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
 
   def render("flutter.json", %{work_order: work_order}) do
     workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
-
     %{id: work_order.id ,
       site_id: work_order.site_id,
       site_name: work_order.site_name,
       asset_id: work_order.asset_id,
       asset_name: work_order.asset_name,
       qr_code: work_order.qr_code,
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       type: work_order.type,
       scheduled_date: work_order.scheduled_date,
       scheduled_time: work_order.scheduled_time,
@@ -127,8 +126,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       # work_request: render_one(work_order.work_request, WorkRequestView, "work_request.json"),
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       user_id: work_order.user_id,
-      user: render_one(work_order.user, UserView, "user.json"),
-      employee: render_one(work_order.employee, EmployeeView, "employee.json"),
+      user: render_one(work_order.user, UserView, "user_mobile.json"),
+      employee: (if is_nil(work_order.employee), do:  nil, else: render_one(work_order.employee, EmployeeView, "employee.json")),
       type: work_order.type,
       created_date: work_order.created_date,
       created_time: work_order.created_time,
@@ -146,8 +145,10 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template_id: work_order.workorder_template_id,
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
-      workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
+      # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       # work_request_id: work_order.work_request_id,
+      # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
+      work_request_id: work_order.work_request_id,
       # workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
       # is_workorder_approval_required: work_order.is_workorder_approval_required,
       # workorder_approval_user_id: work_order.workorder_approval_user_id,

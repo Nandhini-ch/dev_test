@@ -192,9 +192,6 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
 
-    get "/employees_for_attendance", EmployeeRosterController, :employees
-    resources "/attendances", AttendanceController, only: [:index, :create, :show]
-
     get "/sessions/current_user", SessionController, :current_user
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
@@ -321,5 +318,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
+    get "/employees_for_attendance", EmployeeRosterController, :employees
+    resources "/attendances", AttendanceController, only: [:index, :create, :show]
+    resources "/attendance_references", AttendanceReferenceController, except: [:new, :edit]
+    get "/attendance_reference_for_employee", AttendanceReferenceController, :get_attendance_reference_for_employee
+    resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
   end
 end

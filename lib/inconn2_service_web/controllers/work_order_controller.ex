@@ -52,7 +52,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
   end
 
   def get_work_order_for_mobile(conn, _) do
-    work_orders = Workorder.list_work_orders_mobile(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    work_orders = Workorder.list_work_order_mobile_optimized(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "mobile_index.json", work_orders: work_orders)
   end
 
