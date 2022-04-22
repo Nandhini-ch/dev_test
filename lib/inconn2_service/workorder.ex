@@ -2097,6 +2097,7 @@ defmodule Inconn2Service.Workorder do
         scheduled_date: wo.scheduled_date,
         scheduled_time: wo.scheduled_time,
         start_date: wo.start_date,
+        user_id: wo.user_id,
         start_time: wo.start_time,
         completed_date: wo.completed_date,
         completed_time: wo.completed_time,
