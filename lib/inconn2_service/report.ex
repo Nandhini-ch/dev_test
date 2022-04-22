@@ -1090,7 +1090,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.manhours_consumed]
+        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.manhours_consumed]
       end)
 
     [report_headers] ++ body
@@ -1099,7 +1099,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workrequest_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
+        [d.asset_name, d.date, d.time, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
 
     [report_headers] ++ body
