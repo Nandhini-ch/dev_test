@@ -313,14 +313,14 @@ defmodule Inconn2Service.Staff do
   end
 
   def list_employees(user, prefix) do
-    filters = check_user_is_licensee(user, prefix)
+    filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:org_unit)
   end
 
-  defp check_user_is_licensee(user, prefix) do
+  defp filter_by_user_is_licensee(user, prefix) do
     case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
       false -> [party_id: user.party_id]
       true -> []
@@ -540,8 +540,9 @@ defmodule Inconn2Service.Staff do
   end
 
   def list_users(user, prefix) do
+    filters = filter_by_user_is_licensee(user, prefix)
     User
-    |> where(party_id: ^user.party_id)
+    |> where(^filters)
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
   end
