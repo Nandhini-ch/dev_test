@@ -125,7 +125,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Consumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -416,7 +416,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
+    report_headers = ["Asset Name", "Date", "Time", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
     filters = filter_data(query_params, prefix)
 
@@ -940,6 +940,16 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.asset_category
         ],
         [
@@ -1061,6 +1071,16 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.scheduled_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.scheduled_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.manhours_consumed
         ],
       ]
@@ -1070,7 +1090,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.manhours_consumed]
+        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.manhours_consumed]
       end)
 
     [report_headers] ++ body
@@ -1079,7 +1099,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workrequest_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
+        [d.asset_name, d.date, d.time, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
 
     [report_headers] ++ body
