@@ -125,7 +125,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Manhours Consumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -416,7 +416,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
+    report_headers = ["Asset Name", "Date", "Time", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
     filters = filter_data(query_params, prefix)
 
@@ -940,6 +940,16 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.asset_category
         ],
         [
@@ -1057,6 +1067,16 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.assigned_to
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.scheduled_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.scheduled_time
         ],
         [
           :td,
