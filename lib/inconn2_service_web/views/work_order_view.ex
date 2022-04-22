@@ -127,7 +127,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       # asset: render_one(work_order.asset, WorkOrderView, "asset.json"),
       user_id: work_order.user_id,
       user: render_one(work_order.user, UserView, "user_mobile.json"),
-      employee: (if is_nil(work_order.employee), do:  nil, else: render_one(work_order.employee, EmployeeView, "employee.json")),
+      employee: (if is_nil(work_order.employee), do:  nil, else: render_one(work_order.employee, EmployeeView, "employee_without_org_unit.json")),
       type: work_order.type,
       created_date: work_order.created_date,
       created_time: work_order.created_time,
