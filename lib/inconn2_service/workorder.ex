@@ -2037,15 +2037,15 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
-      query = work_order_mobile_query(user)
+      common_query = work_order_mobile_query(user)
 
-      common_query =
-        from q in query, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
+      assigned_query =
+        from q in common_query, where: q.user_id == ^user.id, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
         select_merge: %{
           workorder_template: wt
         }
 
-      assigned_work_orders = Repo.all(common_query, prefix: prefix)
+      assigned_work_orders = Repo.all(assigned_query, prefix: prefix)
 
       asset_category_work_orders =
         case employee do
@@ -2054,7 +2054,7 @@ defmodule Inconn2Service.Workorder do
 
           _ ->
             asset_category_query =
-              from q in query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
               select_merge: %{
                 workorder_template: wt
               }
@@ -2080,7 +2080,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def work_order_mobile_query(user) do
-    from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+    from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_deactivated == false,
       left_join: s in Site, on: s.id == wo.site_id,
       left_join: u in User, on: wo.user_id == u.id,
       left_join: e in Employee, on:  u.employee_id == e.id,
