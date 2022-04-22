@@ -2080,7 +2080,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def work_order_mobile_query(user) do
-    from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_deactivated == false,
+    from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,
       left_join: s in Site, on: s.id == wo.site_id,
       left_join: u in User, on: wo.user_id == u.id,
       left_join: e in Employee, on:  u.employee_id == e.id,
