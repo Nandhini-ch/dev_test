@@ -2079,11 +2079,9 @@ defmodule Inconn2Service.Workorder do
       end)
   end
 
-  def work_order_mobile_query(user) do
+  def work_order_mobile_query(_user) do
     from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,
       left_join: s in Site, on: s.id == wo.site_id,
-      left_join: u in User, on: wo.user_id == u.id,
-      left_join: e in Employee, on:  u.employee_id == e.id,
       select: %{
         id: wo.id,
         site_id: wo.site_id,
@@ -2099,9 +2097,6 @@ defmodule Inconn2Service.Workorder do
         scheduled_date: wo.scheduled_date,
         scheduled_time: wo.scheduled_time,
         start_date: wo.start_date,
-        user: u,
-        user_id: wo.user_id,
-        employee: e,
         start_time: wo.start_time,
         completed_date: wo.completed_date,
         completed_time: wo.completed_time,
