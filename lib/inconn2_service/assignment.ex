@@ -31,7 +31,7 @@ defmodule Inconn2Service.Assignment do
   def list_employee_rosters(user, prefix) do
     EmployeeRoster
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   # def list_employee_rosters(query_params, prefix) do
@@ -51,7 +51,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   def list_employee_roster_for_site_and_date(%{"site_id" => site_id, "date" => date}, user, prefix) do
@@ -64,7 +64,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   def list_employees_for_date_range(%{"site_id" => site_id, "from_date" => from_date, "to_date" => to_date}, user, prefix) do
@@ -79,7 +79,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
     |> Enum.uniq()
   end
@@ -94,11 +94,11 @@ defmodule Inconn2Service.Assignment do
       )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
-  defp check_user_is_licensee(emp_roster, user, prefix) do
+  defp filter_by_user_is_licensee(emp_roster, user, prefix) do
     case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
       false ->
               user.party_id == emp_roster.employee.party_id
