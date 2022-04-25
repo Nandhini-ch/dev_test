@@ -31,7 +31,7 @@ defmodule Inconn2Service.Assignment do
   def list_employee_rosters(user, prefix) do
     EmployeeRoster
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   # def list_employee_rosters(query_params, prefix) do
@@ -51,7 +51,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   def list_employee_roster_for_site_and_date(%{"site_id" => site_id, "date" => date}, user, prefix) do
@@ -64,7 +64,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
   def list_employees_for_date_range(%{"site_id" => site_id, "from_date" => from_date, "to_date" => to_date}, user, prefix) do
@@ -79,7 +79,7 @@ defmodule Inconn2Service.Assignment do
     )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
     |> Enum.uniq()
   end
@@ -94,11 +94,11 @@ defmodule Inconn2Service.Assignment do
       )
     Repo.all(query, prefix: prefix)
     |> Repo.preload([employee: :org_unit])
-    |> Enum.filter(fn x -> check_user_is_licensee(x, user, prefix) end)
+    |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
-  defp check_user_is_licensee(emp_roster, user, prefix) do
+  defp filter_by_user_is_licensee(emp_roster, user, prefix) do
     case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
       false ->
               user.party_id == emp_roster.employee.party_id
@@ -302,7 +302,7 @@ defmodule Inconn2Service.Assignment do
   # end
 
   def list_attendances(query_params, prefix) do
-    query_params = get_date_time_for_query(query_params)
+    query_params = get_date_time_for_query(query_params, prefix)
     query = from a in Attendance
     query = Enum.reduce(query_params, query, fn
               {"employee_id", employee_id}, query ->
@@ -321,12 +321,26 @@ defmodule Inconn2Service.Assignment do
                 query
             end)
     Repo.all(query, prefix: prefix)
+    |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
   end
 
-  defp get_date_time_for_query(query_params) do
-    {from_date, to_date} = {Date.from_iso8601!(query_params["from_date"] <> "00:00:00"), Date.from_iso8601!(query_params["to_date"] <> "23:59:59")}
-    Map.put(query_params, "from_date", from_date)
-    |> Map.put("to_date", to_date)
+  defp preload_employee(attendance, prefix) do
+    employee = Staff.get_employee!(attendance.employee_id, prefix)
+    Map.put(attendance, :employee, employee)
+  end
+
+  defp get_date_time_for_query(query_params, prefix) do
+    if query_params["from_date"] != nil and query_params["to_date"] != nil do
+      {from_date, to_date} = {NaiveDateTime.from_iso8601!(query_params["from_date"] <> " 00:00:00"), NaiveDateTime.from_iso8601!(query_params["to_date"] <> " 23:59:59")}
+      Map.put(query_params, "from_date", from_date)
+      |> Map.put("to_date", to_date)
+    else
+      site = AssetConfig.get_site!(query_params["site_id"], prefix)
+      date = DateTime.now!(site.time_zone) |> DateTime.to_date()
+      {from_date, to_date} = {DateTime.new!(date, Time.new!(0, 0, 0)), DateTime.new!(date, Time.new!(23, 59, 59))}
+      Map.put(query_params, "from_date", from_date)
+      |> Map.put("to_date", to_date)
+    end
   end
 
   @doc """
@@ -343,7 +357,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> Repo.preload(:shift)
+  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> preload_employee(prefix)
 
   @doc """
   Creates a attendance.
@@ -359,10 +373,16 @@ defmodule Inconn2Service.Assignment do
   """
   def create_attendance(attrs \\ %{}, prefix, user) do
     # employee_id = get_employee_current_user(user.username, prefix).id
-    _result = %Attendance{}
+    result = %Attendance{}
             |> Attendance.changeset(attrs)
             |> get_employee_current_user(user, prefix)
             |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, attendance} ->
+              {:ok, preload_employee(attendance, prefix)}
+      _ ->
+          result
+    end
   end
 
   defp get_employee_current_user(cs, user, prefix) do

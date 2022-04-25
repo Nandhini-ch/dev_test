@@ -1979,10 +1979,65 @@ defmodule Inconn2Service.Workorder do
   end
 
   def workorder_mobile_flutter(user, prefix) do
-    flutter_query =
-      from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"],
+
+    employee =
+      case user.employee_id do
+        nil ->
+          nil
+
+        id ->
+          Staff.get_employee!(id, prefix)
+      end
+
+
+    common_query = flutter_query()
+
+    assigned_query =
+      from q in common_query, where: q.user_id == ^user.id, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
+      select_merge: %{
+        workorder_template: wt
+      }
+
+      assigned_work_orders = Repo.all(assigned_query, prefix: prefix)
+
+      asset_category_work_orders =
+        case employee do
+          nil ->
+            []
+
+          _ ->
+            asset_category_query =
+              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              select_merge: %{
+                workorder_template: wt
+              }
+            Repo.all(asset_category_query, prefix: prefix)
+        end
+
+    work_orders = assigned_work_orders ++ asset_category_work_orders
+
+
+    Stream.map(work_orders, fn wo ->
+      wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+      Map.put_new(wo, :workorder_tasks,  wots)
+    end)
+    |> Enum.map(fn wo ->
+      {asset, code} =
+        case wo.workorder_template.asset_type do
+          "L" ->
+            asset = AssetConfig.get_location!(wo.asset_id, prefix)
+            {asset, asset.location_code}
+          "E" ->
+            asset = AssetConfig.get_equipment!(wo.asset_id, prefix)
+            {asset, asset.equipment_code}
+        end
+      Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
+    end)
+  end
+
+  def flutter_query() do
+    from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,
       left_join: s in Site, on: s.id == wo.site_id,
-      left_join: wt in WorkorderTemplate, on: wo.workorder_template_id == wt.id,
       left_join: wr in WorkRequest, on: wo.work_request_id == wr.id,
       left_join: u in User, on: wo.user_id == u.id,
       left_join: e in Employee, on: u.employee_id == e.id,
@@ -1993,7 +2048,6 @@ defmodule Inconn2Service.Workorder do
         asset_id: wo.asset_id,
         work_request: wr,
         type: wo.type,
-        workorder_template: wt,
         scheduled_date: wo.scheduled_date,
         scheduled_time: wo.scheduled_time,
         start_date: wo.start_date,
@@ -2008,23 +2062,6 @@ defmodule Inconn2Service.Workorder do
         is_workorder_acknowledgement_required: wo.is_workorder_acknowledgement_required,
         is_workpermit_required: wo.is_workpermit_required
       }
-
-    work_orders = Repo.all(flutter_query, prefix: prefix)
-
-    Stream.map(work_orders, fn wo ->
-      wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
-      Map.put_new(wo, :workorder_tasks,  wots)
-    end)
-    |> Enum.map(fn wo ->
-      asset =
-        case wo.workorder_template.asset_type do
-          "L" ->
-            AssetConfig.get_location!(wo.asset_id, prefix)
-          "E" ->
-            AssetConfig.get_equipment!(wo.asset_id, prefix)
-        end
-      Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code)
-    end)
   end
 
   def list_work_order_mobile_optimized(user, prefix) do
