@@ -1,8 +1,8 @@
 defmodule Inconn2ServiceWeb.WorkOrderView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView, WorkRequestView}
-  alias Inconn2ServiceWeb.{UserView, WorkorderTemplateView, WorkorderScheduleView}
-  alias Inconn2ServiceWeb.{SiteView, EmployeeView, WorkorderCheckView, WorkorderTaskView}
+  alias Inconn2ServiceWeb.{UserView, WorkorderTemplateView}
+  alias Inconn2ServiceWeb.{SiteView, EmployeeView, WorkorderTaskView}
 
   def render("index.json", %{work_orders: work_orders}) do
     %{data: render_many(work_orders, WorkOrderView, "work_order.json")}
@@ -35,6 +35,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       site_name: work_order.site_name,
       asset_id: work_order.asset_id,
       asset_name: work_order.asset_name,
+      asset_code: work_order.asset_code,
       qr_code: work_order.qr_code,
       # work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       type: work_order.type,
