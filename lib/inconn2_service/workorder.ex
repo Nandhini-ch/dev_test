@@ -2026,7 +2026,7 @@ defmodule Inconn2Service.Workorder do
         case wo.workorder_template.asset_type do
           "L" ->
             asset = AssetConfig.get_location!(wo.asset_id, prefix)
-            {asset, asset.location_location}
+            {asset, asset.location_code}
           "E" ->
             asset = AssetConfig.get_equipment!(wo.asset_id, prefix)
             {asset, asset.equipment_code}
