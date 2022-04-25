@@ -357,7 +357,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> Repo.preload(:shift)
+  def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> preload_employee(attendance, prefix)
 
   @doc """
   Creates a attendance.
@@ -373,10 +373,16 @@ defmodule Inconn2Service.Assignment do
   """
   def create_attendance(attrs \\ %{}, prefix, user) do
     # employee_id = get_employee_current_user(user.username, prefix).id
-    _result = %Attendance{}
+    result = %Attendance{}
             |> Attendance.changeset(attrs)
             |> get_employee_current_user(user, prefix)
             |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, attendance} ->
+              {:ok, preload_employee(attendance, prefix)}
+      _ ->
+          result
+    end
   end
 
   defp get_employee_current_user(cs, user, prefix) do
