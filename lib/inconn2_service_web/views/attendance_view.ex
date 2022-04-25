@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.AttendanceView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{AttendanceView, ShiftView}
+  alias Inconn2ServiceWeb.{AttendanceView, EmployeeView}
 
   def render("index.json", %{attendances: attendances}) do
     %{data: render_many(attendances, AttendanceView, "attendance.json")}
@@ -16,6 +16,7 @@ defmodule Inconn2ServiceWeb.AttendanceView do
       latitude: attendance.latitude,
       longitude: attendance.longitude,
       site_id: attendance.site_id,
-      employee_id: attendance.employee_id}
+      employee_id: attendance.employee_id,
+      employee: render_one(attendance.employee, EmployeeView, "employee_without_org_unit.json")}
   end
 end
