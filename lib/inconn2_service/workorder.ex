@@ -2022,14 +2022,16 @@ defmodule Inconn2Service.Workorder do
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
     |> Enum.map(fn wo ->
-      asset =
+      {asset, code} =
         case wo.workorder_template.asset_type do
           "L" ->
-            AssetConfig.get_location!(wo.asset_id, prefix)
+            asset = AssetConfig.get_location!(wo.asset_id, prefix)
+            {asset, asset.location_location}
           "E" ->
-            AssetConfig.get_equipment!(wo.asset_id, prefix)
+            asset = AssetConfig.get_equipment!(wo.asset_id, prefix)
+            {asset, asset.equipment_code}
         end
-      Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code)
+      Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
     end)
   end
 
