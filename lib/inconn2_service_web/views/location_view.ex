@@ -18,6 +18,22 @@ defmodule Inconn2ServiceWeb.LocationView do
     %{data: render_many(locations, LocationView, "asset_qr.json")}
   end
 
+  def render("location_asset.json", %{location: location}) do
+    %{
+      id: location.id,
+      name: location.name,
+      description: location.description,
+      location_code: location.location_code,
+      site_id: location.site_id,
+      status: location.status,
+      criticality: location.criticality,
+      asset_category_id: location.asset_category_id,
+      qr_code: location.qr_code,
+      parent: (if is_nil(location.parent), do: nil, else: %{id: location.parent.id, name: location.parent.name})
+    }
+  end
+
+
   def render("asset_qr.json", %{location: location}) do
     %{
       id: location.id,

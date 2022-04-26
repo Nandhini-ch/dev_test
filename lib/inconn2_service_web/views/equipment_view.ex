@@ -27,6 +27,25 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     }
   end
 
+  def render("equipment_asset.json", %{equipment: equipment}) do
+    %{
+      id: equipment.id,
+      name: equipment.name,
+      equipment_code: equipment.equipment_code,
+      location_id: equipment.location_id,
+      site_id: equipment.site_id,
+      qr_code: equipment.qr_code,
+      parent: (if is_nil(equipment.parent), do: nil, else: %{id: equipment.parent.id, name: equipment.parent.name}),
+      asset_category_id: equipment.asset_category_id,
+      status: equipment.status,
+      criticality: equipment.criticality,
+      connections_in: equipment.connections_in,
+      connections_out: equipment.connections_out,
+      parent_id: List.last(equipment.path)
+    }
+  end
+
+
   def render("equipment.json", %{equipment: equipment}) do
     %{
       id: equipment.id,

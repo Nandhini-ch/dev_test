@@ -81,6 +81,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_equipments", ReferenceUploadController, :upload_equipments
 
 
+    get "/assets/:site_id/list/locations", AssetController, :get_locations_with_offset
+    get "/assets/:site_id/list/equipments", AssetController, :get_equipments_with_offset
     get "/assets/:qr_code/", AssetController, :get_asset_from_qr_code
 
     resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]
