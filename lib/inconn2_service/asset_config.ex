@@ -825,6 +825,22 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  def update_locations(location_changes, prefix) do
+    locations_failed_to_update =
+      Stream.map(location_changes["ids"], fn id ->
+        location = get_location!(id, prefix)
+        case update_location(location, Map.drop(location_changes, ["ids"]), prefix) do
+          {:ok, _updated_location} -> true
+          _ -> id
+        end
+      end) |> Enum.filter(fn x -> x != true end)
+
+    %{
+      success: (if length(locations_failed_to_update) > 0, do: false, else: true),
+      falied_location_ids: locations_failed_to_update
+    }
+  end
+
   @doc """
   Deletes a location.
 
@@ -1208,6 +1224,21 @@ defmodule Inconn2Service.AssetConfig do
       {:ok, eq} -> {:ok, Map.get(eq, :"equipment#{equipment.id}")}
       _ -> {:error, head_cs}
     end
+  end
+
+  def update_equipments(equipment_changes, prefix) do
+    equipments_failed_to_update =
+      Stream.map(equipment_changes["ids"],  fn id ->
+        equipment = get_equipment!(id, prefix)
+        case update_equipment(equipment, Map.drop(equipment_changes, ["ids"]), prefix) do
+          {:ok, _updated_equipment} -> true
+          _ -> id
+        end
+      end) |> Enum.filter(fn x -> x != true end)
+    %{
+      success: (if length(equipments_failed_to_update) > 0, do: false, else: true),
+      failed_equipment_ids: equipments_failed_to_update
+    }
   end
 
   defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, _prefix) do
@@ -1927,6 +1958,11 @@ defmodule Inconn2Service.AssetConfig do
     }
   end
 
+  @spec preload_parent(%{:path => list, optional(any) => any}, any, any) :: %{
+          :parent => any,
+          :path => list,
+          optional(any) => any
+        }
   def preload_parent(asset, asset_type, prefix) do
     cond do
       length(asset.path) != 0 && asset_type == "E" ->

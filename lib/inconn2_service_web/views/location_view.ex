@@ -33,6 +33,10 @@ defmodule Inconn2ServiceWeb.LocationView do
     }
   end
 
+  def render("group_update.json", %{update_json: update_json}) do
+    update_json
+  end
+
 
   def render("asset_qr.json", %{location: location}) do
     %{

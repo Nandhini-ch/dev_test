@@ -79,6 +79,11 @@ defmodule Inconn2ServiceWeb.EquipmentController do
     end
   end
 
+  def group_update(conn, %{"equipment_changes" => equipment_changes}) do
+    update_info = AssetConfig.update_equipments(equipment_changes, conn.assigns.sub_domain_prefix)
+    render(conn, "group_update.json", update_info: update_info)
+  end
+
   def delete(conn, %{"id" => id}) do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 

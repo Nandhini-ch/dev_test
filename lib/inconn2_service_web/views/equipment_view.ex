@@ -45,6 +45,10 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     }
   end
 
+  def render("group_update.json", %{update_info: update_info}) do
+    update_info
+  end
+
 
   def render("equipment.json", %{equipment: equipment}) do
     %{
