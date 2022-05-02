@@ -1400,7 +1400,7 @@ defmodule Inconn2Service.Workorder do
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
     cond do
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        description = ~s(New Work Order Assigned, #{asset.name} with template #{workorder_template.name})
+        description = ~s(Work Order #{updated_work_order.id} assigned at #{updated_work_order.assigned_time})
         create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
@@ -1412,19 +1412,25 @@ defmodule Inconn2Service.Workorder do
         create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
-        description = ~s(Loto Required for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+        description = ~s(#{check_list.name} for #{updated_work_order.id} requested by #{employee})
         create_work_order_alert_notification("LTAR", existing_work_order, updated_work_order, description, "loto_required", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "lta" ->
-        description = ~s(Loto Approved for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id(updated_work_order.loto_checker_user_id, prefix)
+        description = ~s(#{check_list.name} approved by #{employee})
         create_work_order_alert_notification("LTAP", existing_work_order, updated_work_order, description, "loto_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woap" ->
-        description = ~s(Workorder Approval Required for #{asset.name} with template #{workorder_template.name})
+        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+        description = ~s(Workorder Approval resuested for #{updated_work_order.id} by #{employee})
         create_work_order_alert_notification("WOAR", existing_work_order, updated_work_order, description, "work_order_approval_required", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woaa" ->
-        description = ~s(Workorder for #{asset.name} with template #{workorder_template.name} approved)
+        employee = get_employee_from_user_id(updated_work_order.workorder_approval_user_id, prefix)
+        description = ~s(Workorder #{updated_work_order.id}  for #{asset.name} approved by #{employee})
         create_work_order_alert_notification("WOAP", existing_work_order, updated_work_order, description, "work_order_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
@@ -3566,5 +3572,10 @@ defmodule Inconn2Service.Workorder do
     else
       cs
     end
+  end
+
+  def get_employee_from_user_id(user_id, prefix) do
+    user = Staff.get_user!(user_id, prefix)
+    if is_nil(user.employee_id), do: user.username, else: Staff.get_employee!(user.employee_id, prefix).first_name
   end
 end
