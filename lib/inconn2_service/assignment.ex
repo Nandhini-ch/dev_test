@@ -98,6 +98,19 @@ defmodule Inconn2Service.Assignment do
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
   end
 
+  def list_manual_employee_for_attendance(query_params, user, prefix) do
+    site = AssetConfig.get_site!(query_params["site_id"], prefix)
+    date = DateTime.now!(site.time_zone) |> DateTime.to_date()
+    user = user |> Repo.preload(:employee)
+    from(er in EmployeeRoster,
+         where: er.shift_id == ^query_params["shift_id"] and
+                fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date),
+        join: e in Employee, on: er.employee_id == e.id, where: e.reports_to == ^user.employee.id and e.org_unit_id == ^user.employee.org_unit_id,
+        select: e
+    )
+    |> Repo.all(prefix: prefix)
+  end
+
   defp filter_by_user_is_licensee(emp_roster, user, prefix) do
     case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
       false ->
@@ -645,5 +658,118 @@ defmodule Inconn2Service.Assignment do
   """
   def change_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs \\ %{}) do
     AttendanceFailureLog.changeset(attendance_failure_log, attrs)
+  end
+
+  alias Inconn2Service.Assignment.ManualAttendance
+
+  @doc """
+  Returns the list of manual_attendances.
+
+  ## Examples
+
+      iex> list_manual_attendances()
+      [%ManualAttendance{}, ...]
+
+  """
+  def list_manual_attendances(prefix) do
+    Repo.all(ManualAttendance, prefix: prefix)
+  end
+
+  @doc """
+  Gets a single manual_attendance.
+
+  Raises `Ecto.NoResultsError` if the Manual attendance does not exist.
+
+  ## Examples
+
+      iex> get_manual_attendance!(123)
+      %ManualAttendance{}
+
+      iex> get_manual_attendance!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_manual_attendance!(id, prefix), do: Repo.get!(ManualAttendance, id, prefix: prefix)
+
+  @doc """
+  Creates a manual_attendance.
+
+  ## Examples
+
+      iex> create_manual_attendance(%{field: value})
+      {:ok, %ManualAttendance{}}
+
+      iex> create_manual_attendance(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_manual_attendance(attrs \\ %{}, prefix, user) do
+    %ManualAttendance{}
+    |> ManualAttendance.changeset(attrs)
+    |> validate_employee_id(prefix)
+    |> validate_shift_id(prefix)
+    |> record_user(user)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp record_user(cs, user) do
+    in_time = get_change(cs, :in_time)
+    out_time = get_change(cs, :out_time)
+    if in_time != nil, do: in_time_marked_by(cs, user.id)
+    if out_time != nil, do: out_time_marked_by(cs, user.id)
+  end
+
+  defp in_time_marked_by(cs, user_id), do: change(cs, %{in_time_marked_by: user_id})
+
+  defp out_time_marked_by(cs, user_id), do: change(cs, %{out_time_marked_by: user_id})
+
+  @doc """
+  Updates a manual_attendance.
+
+  ## Examples
+
+      iex> update_manual_attendance(manual_attendance, %{field: new_value})
+      {:ok, %ManualAttendance{}}
+
+      iex> update_manual_attendance(manual_attendance, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user) do
+    manual_attendance
+    |> ManualAttendance.changeset(attrs)
+    |> validate_employee_id(prefix)
+    |> validate_shift_id(prefix)
+    |> record_user(user)
+    |> Repo.update(prefix: prefix)
+  end
+
+  @doc """
+  Deletes a manual_attendance.
+
+  ## Examples
+
+      iex> delete_manual_attendance(manual_attendance)
+      {:ok, %ManualAttendance{}}
+
+      iex> delete_manual_attendance(manual_attendance)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_manual_attendance(%ManualAttendance{} = manual_attendance, prefix) do
+    Repo.delete(manual_attendance, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking manual_attendance changes.
+
+  ## Examples
+
+      iex> change_manual_attendance(manual_attendance)
+      %Ecto.Changeset{data: %ManualAttendance{}}
+
+  """
+  def change_manual_attendance(%ManualAttendance{} = manual_attendance, attrs \\ %{}) do
+    ManualAttendance.changeset(manual_attendance, attrs)
   end
 end
