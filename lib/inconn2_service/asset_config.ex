@@ -1932,7 +1932,7 @@ defmodule Inconn2Service.AssetConfig do
   def get_assets_with_offset(asset_type, site_id,query_params, prefix) do
     page_no = if is_nil(query_params["page_no"]), do: 1, else: String.to_integer(query_params["page_no"]) - 1
     per_page = String.to_integer(query_params["per_page"])
-    assets_query =
+    {assets_query, total_query} =
       case asset_type do
         "E" ->
           get_equipments_with_offset_query(per_page, page_no * per_page, query_params, site_id)
@@ -1955,15 +1955,11 @@ defmodule Inconn2Service.AssetConfig do
 
     %{
         page_no: page_no,
-        assets: Repo.all(sorted_assets_query, prefix: prefix) |> Enum.map(fn asset -> preload_parent(asset, asset_type, prefix) end)
+        assets: Repo.all(sorted_assets_query, prefix: prefix) |> Enum.map(fn asset -> preload_parent(asset, asset_type, prefix) end),
+        last_page: (if Repo.one(total_query, prefix: prefix) - page_no * per_page < per_page, do: true, else: false)
     }
   end
 
-  @spec preload_parent(%{:path => list, optional(any) => any}, any, any) :: %{
-          :parent => any,
-          :path => list,
-          optional(any) => any
-        }
   def preload_parent(asset, asset_type, prefix) do
     cond do
       length(asset.path) != 0 && asset_type == "E" ->
@@ -1979,8 +1975,21 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def get_equipments_with_offset_query(per_page, offset, _query_params, site_id) do
-    from(e in Equipment, where: e.site_id == ^site_id, limit: ^per_page, offset: ^offset)
+    common_query = common_query_for_equipments(site_id)
+    {
+      from(q  in common_query, limit: ^per_page, offset: ^offset),
+      from(q in common_query, select: count(q.id))
+    }
   end
+
+  def common_query_for_equipments(site_id) do
+    from(e in Equipment, where: e.site_id == ^site_id)
+  end
+
+  def common_query_for_locations(site_id) do
+    from(l in Location, where: l.site_id == ^site_id)
+  end
+
 
   def get_dynamic_query_for_offset_assets(query, column_name, sort \\ "asc") do
     order_by_list = [{:"#{sort}", :"#{column_name}"}]
@@ -1988,6 +1997,10 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def get_locations_with_offset_query(per_page, offset, _query_params, site_id) do
-    from(l in Location, where: l.site_id == ^site_id, limit: ^per_page, offset: ^offset)
+    common_query = common_query_for_locations(site_id)
+    {
+      from(from q in common_query, limit: ^per_page, offset: ^offset),
+      from(q in common_query, select: count(q.id))
+    }
   end
 end
