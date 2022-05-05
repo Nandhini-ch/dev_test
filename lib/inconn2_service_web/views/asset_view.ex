@@ -15,6 +15,7 @@ defmodule Inconn2ServiceWeb.AssetView do
     IO.inspect(asset_info)
     %{
       page_no: asset_info.page_no,
+      last_page: asset_info.last_page,
       assets: render_many(asset_info.assets, EquipmentView, "equipment_asset.json")
     }
   end
@@ -23,6 +24,7 @@ defmodule Inconn2ServiceWeb.AssetView do
     IO.inspect(asset_info.assets)
     %{
       page_no: asset_info.page_no,
+      last_page: asset_info.last_page,
       assets: render_many(asset_info.assets, LocationView, "location_asset.json")
     }
   end
