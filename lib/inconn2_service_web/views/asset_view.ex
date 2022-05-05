@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.AssetView do
   use Inconn2ServiceWeb, :view
-  # alias Inconn2ServiceWeb.AssetView
+  alias Inconn2ServiceWeb.AssetView
   alias Inconn2ServiceWeb.{EquipmentView, LocationView}
 
   def render("location_render.json", %{location: asset}) do
@@ -11,11 +11,28 @@ defmodule Inconn2ServiceWeb.AssetView do
     %{data: render_one(asset, EquipmentView, "equipment.json")}
   end
 
+  def render("equipments_with_offset.json", %{asset_info: asset_info}) do
+    IO.inspect(asset_info)
+    %{
+      page_no: asset_info.page_no,
+      assets: render_many(asset_info.assets, EquipmentView, "equipment_asset.json")
+    }
+  end
+
+  def render("locations_with_offset.json", %{asset_info: asset_info}) do
+    IO.inspect(asset_info.assets)
+    %{
+      page_no: asset_info.page_no,
+      assets: render_many(asset_info.assets, LocationView, "location_asset.json")
+    }
+  end
+
   def render("success.json", %{success: success}) do
     %{
       data: success
     }
   end
+
 
   def render("asset_details.json", %{asset: asset}) do
     %{

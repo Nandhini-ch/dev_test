@@ -825,6 +825,22 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  def update_locations(location_changes, prefix) do
+    locations_failed_to_update =
+      Stream.map(location_changes["ids"], fn id ->
+        location = get_location!(id, prefix)
+        case update_location(location, Map.drop(location_changes, ["ids"]), prefix) do
+          {:ok, _updated_location} -> true
+          _ -> id
+        end
+      end) |> Enum.filter(fn x -> x != true end)
+
+    %{
+      success: (if length(locations_failed_to_update) > 0, do: false, else: true),
+      falied_location_ids: locations_failed_to_update
+    }
+  end
+
   @doc """
   Deletes a location.
 
@@ -1208,6 +1224,21 @@ defmodule Inconn2Service.AssetConfig do
       {:ok, eq} -> {:ok, Map.get(eq, :"equipment#{equipment.id}")}
       _ -> {:error, head_cs}
     end
+  end
+
+  def update_equipments(equipment_changes, prefix) do
+    equipments_failed_to_update =
+      Stream.map(equipment_changes["ids"],  fn id ->
+        equipment = get_equipment!(id, prefix)
+        case update_equipment(equipment, Map.drop(equipment_changes, ["ids"]), prefix) do
+          {:ok, _updated_equipment} -> true
+          _ -> id
+        end
+      end) |> Enum.filter(fn x -> x != true end)
+    %{
+      success: (if length(equipments_failed_to_update) > 0, do: false, else: true),
+      failed_equipment_ids: equipments_failed_to_update
+    }
   end
 
   defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, _prefix) do
@@ -1894,5 +1925,68 @@ defmodule Inconn2Service.AssetConfig do
   """
   def change_site_config(%SiteConfig{} = site_config, attrs \\ %{}) do
     SiteConfig.changeset(site_config, attrs)
+  end
+
+
+  def get_assets_with_offset(asset_type, site_id,query_params, prefix) do
+    page_no = if is_nil(query_params["page_no"]), do: 1, else: String.to_integer(query_params["page_no"]) - 1
+    per_page = String.to_integer(query_params["per_page"])
+    assets_query =
+      case asset_type do
+        "E" ->
+          get_equipments_with_offset_query(per_page, page_no * per_page, query_params, site_id)
+
+        "L" ->
+          get_locations_with_offset_query(per_page, page_no * per_page, query_params, site_id)
+      end
+
+    sorted_assets_query =
+      cond do
+        !is_nil(query_params["column"]) && !is_nil(query_params["sort"]) ->
+          get_dynamic_query_for_offset_assets(assets_query, query_params["column"], query_params["sort"])
+
+        !is_nil(query_params["column"]) ->
+          get_dynamic_query_for_offset_assets(assets_query, query_params["column"])
+
+        true ->
+          assets_query
+      end
+
+    %{
+        page_no: page_no,
+        assets: Repo.all(sorted_assets_query, prefix: prefix) |> Enum.map(fn asset -> preload_parent(asset, asset_type, prefix) end)
+    }
+  end
+
+  @spec preload_parent(%{:path => list, optional(any) => any}, any, any) :: %{
+          :parent => any,
+          :path => list,
+          optional(any) => any
+        }
+  def preload_parent(asset, asset_type, prefix) do
+    cond do
+      length(asset.path) != 0 && asset_type == "E" ->
+        Map.put(asset, :parent, get_equipment(List.last(asset.path), prefix))
+
+
+      length(asset.path) != 0 && asset_type == "L" ->
+        Map.put(asset, :parent, get_location(List.last(asset.path), prefix))
+
+      true ->
+        Map.put(asset, :parent, nil)
+    end
+  end
+
+  def get_equipments_with_offset_query(per_page, offset, _query_params, site_id) do
+    from(e in Equipment, where: e.site_id == ^site_id, limit: ^per_page, offset: ^offset)
+  end
+
+  def get_dynamic_query_for_offset_assets(query, column_name, sort \\ "asc") do
+    order_by_list = [{:"#{sort}", :"#{column_name}"}]
+    from(q in query, order_by: ^order_by_list)
+  end
+
+  def get_locations_with_offset_query(per_page, offset, _query_params, site_id) do
+    from(l in Location, where: l.site_id == ^site_id, limit: ^per_page, offset: ^offset)
   end
 end
