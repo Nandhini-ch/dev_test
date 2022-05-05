@@ -68,6 +68,11 @@ defmodule Inconn2ServiceWeb.LocationController do
     end
   end
 
+  def group_update(conn, %{"location_changes" => location_changes}) do
+    update_info = AssetConfig.update_locations(location_changes, conn.assigns.sub_domain_prefix)
+    render(conn, "group_update.json", update_info: update_info)
+  end
+
   def delete(conn, %{"id" => id}) do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 

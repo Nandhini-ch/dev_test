@@ -55,6 +55,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/discard_alerts_notifications", UserAlertNotificationController, :discard_alerts_notifications
 
     get "/sites/:site_id/locations/qr_codes", LocationController, :list_locations_qr
+    put "/locations/group_update", LocationController, :group_update
     resources "/locations", LocationController, except: [:new, :edit, :index]
     # get "/locations/:id/qr_code", LocationController, :display_qr_code
     get "/locations/qr_code/:qr_code", LocationController, :get_location_from_qr_code
@@ -67,6 +68,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
     get "/sites/:site_id/equipments/qr_codes", EquipmentController, :list_equipments_qr
+    put "/equipments/group_update", EquipmentController, :update_equipments
     resources "/equipments", EquipmentController, except: [:new, :edit, :index]
     # get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/equipments/qr_code/:qr_code", EquipmentController, :get_equipment_from_qr_code
@@ -81,6 +83,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_equipments", ReferenceUploadController, :upload_equipments
 
 
+    get "/assets/:site_id/list/locations", AssetController, :get_locations_with_offset
+    get "/assets/:site_id/list/equipments", AssetController, :get_equipments_with_offset
     get "/assets/:qr_code/", AssetController, :get_asset_from_qr_code
 
     resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]

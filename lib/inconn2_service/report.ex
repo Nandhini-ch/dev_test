@@ -3,7 +3,7 @@ defmodule Inconn2Service.Report do
 
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
-  alias Inconn2Service.AssetConfig.Equipment
+  alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
@@ -22,14 +22,18 @@ defmodule Inconn2Service.Report do
       from wo in WorkOrder,
       left_join: u in User, on: wo.user_id == u.id,
       left_join: e in Employee, on: u.employee_id == e.id,
+      left_join: s in Site, on: wo.site_id == s.id,
       select: %{
         site_id: wo.site_id,
+        site: s,
         asset_id: wo.asset_id,
         asset_type: wo.asset_type,
         type: wo.type,
         status: wo.status,
         assigned_to: e.first_name,
+        start_date: wo.start_date,
         start_time: wo.start_time,
+        completed_date: wo.start_date,
         completed_time: wo.completed_time,
         username: u.username,
         first_name: e.first_name,
@@ -103,14 +107,15 @@ defmodule Inconn2Service.Report do
 
         manhours_consumed =
           cond do
-            is_nil(wo.start_time) && is_nil(wo.completed_time) ->
+            is_nil(wo.start_time) || is_nil(wo.start_date) ->
               0
 
-            is_nil(wo.completed_time) ->
-              Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
+            is_nil(wo.completed_time) || is_nil(wo.completed_date) ->
+              Time.diff(get_site_date_time(wo.site), NaiveDateTime.new!(wo.start_date, wo.start_time))
 
             true ->
-              Time.diff(wo.completed_time, wo.start_time)
+              # Time.diff(wo.completed_time, wo.start_time)
+              Time.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.new!(wo.start_date, wo.start_time))
           end
 
         %{
@@ -120,12 +125,16 @@ defmodule Inconn2Service.Report do
           status: wo.status,
           assigned_to: name,
           manhours_consumed: manhours_consumed * 3600,
-          date: wo.scheduled_date,
-          time: wo.scheduled_time
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          start_date: wo.start_date,
+          start_time: wo.start_time,
+          completed_date: wo.completed_date,
+          completed_time: wo.completed_time
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Manhours Consumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -432,6 +441,10 @@ defmodule Inconn2Service.Report do
     end
   end
 
+  defp get_site_date_time(site) do
+    date_time = DateTime.now!(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
+  end
 
   def asset_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
@@ -1077,6 +1090,26 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.scheduled_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.start_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.start_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.completed_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.completed_time
         ],
         [
           :td,

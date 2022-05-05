@@ -2,17 +2,27 @@ defmodule Inconn2ServiceWeb.AssetController do
   use Inconn2ServiceWeb, :controller
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
-
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder
+  alias Inconn2Service.Account
+  # alias Inconn2ServiceWeb.AssetView
 
   def get_asset_from_qr_code(conn, %{"qr_code" => qr_code}) do
     {_asset_type, asset} = AssetConfig.get_asset_from_qr_code(qr_code, conn.assigns.sub_domain_prefix)
     render(conn, "asset_details.json", asset: asset)
   end
 
-  alias Inconn2Service.Workorder.WorkOrder
-  alias Inconn2Service.Workorder
-  alias Inconn2Service.Account
+  def get_locations_with_offset(conn, %{"site_id" => site_id}) do
+    assets = AssetConfig.get_assets_with_offset("L", site_id, conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "locations_with_offset.json", asset_info: assets)
+  end
+
+  def get_equipments_with_offset(conn, %{"site_id" => site_id}) do
+    assets = AssetConfig.get_assets_with_offset("E", site_id, conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "equipments_with_offset.json", asset_info: assets)
+  end
+
 
   def fill_asset_type_in_work_orders(conn, _params) do
     licensees = Account.list_licensees()
