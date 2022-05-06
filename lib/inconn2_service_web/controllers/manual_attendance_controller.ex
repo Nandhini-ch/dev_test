@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.ManualAttendanceController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    manual_attendances = Assignment.list_manual_attendances(conn.assigns.sub_domain_prefix)
+    manual_attendances = Assignment.list_manual_attendances(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", manual_attendances: manual_attendances)
   end
 

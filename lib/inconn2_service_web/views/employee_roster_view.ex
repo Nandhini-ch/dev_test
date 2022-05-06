@@ -20,7 +20,7 @@ defmodule Inconn2ServiceWeb.EmployeeRosterView do
   end
 
   def render("employee_index.json", %{employees: employees}) do
-    %{data: render_many(employees, EmployeeView, "employee.json")}
+    %{data: render_many(employees, EmployeeView, "employee_without_org_unit.json")}
   end
 
 end

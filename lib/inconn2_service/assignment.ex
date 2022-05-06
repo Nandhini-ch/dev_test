@@ -13,6 +13,7 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.Assignment.ManualAttendance
 
   @doc """
   Returns the list of employee_rosters.
@@ -99,16 +100,43 @@ defmodule Inconn2Service.Assignment do
   end
 
   def list_manual_employee_for_attendance(query_params, user, prefix) do
-    site = AssetConfig.get_site!(query_params["site_id"], prefix)
-    date = DateTime.now!(site.time_zone) |> DateTime.to_date()
+    date = get_site_date(query_params["site_id"], prefix)
     user = user |> Repo.preload(:employee)
-    from(er in EmployeeRoster,
-         where: er.shift_id == ^query_params["shift_id"] and
-                fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date),
-        join: e in Employee, on: er.employee_id == e.id, where: e.reports_to == ^user.employee.id and e.org_unit_id == ^user.employee.org_unit_id,
-        select: e
+    manual_attendance_employee_ids = get_manual_attendance_employees(query_params["shift_id"], prefix)
+    case user.employee do
+      nil ->
+        []
+
+      _ ->
+            from(er in EmployeeRoster,
+                where: er.shift_id == ^query_params["shift_id"] and
+                        fragment("? BETWEEN ? AND ?", ^date, er.start_date, er.end_date),
+                join: e in Employee, on: er.employee_id == e.id, where: e.id not in ^manual_attendance_employee_ids and (e.reports_to == ^user.employee.id or e.org_unit_id == ^user.employee.org_unit_id),
+                select: e
+            )
+            |> Repo.all(prefix: prefix)
+    end
+  end
+
+  defp get_manual_attendance_employees(shift_id, prefix) do
+    {start_time, end_time} = convert_shift_times_to_datetimes(shift_id, prefix)
+    from(ma in ManualAttendance,
+         where: ma.shift_id == ^shift_id and
+                fragment("? BETWEEN ? AND ?", ma.in_time, ^start_time, ^end_time),
     )
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> x.employee_id end)
+  end
+
+  defp convert_shift_times_to_datetimes(shift_id, prefix) do
+    shift = Settings.get_shift!(shift_id, prefix)
+    date = get_site_date(shift.site_id, prefix)
+    {NaiveDateTime.new!(date, shift.start_time), NaiveDateTime.new!(date, shift.end_time)}
+  end
+
+  defp get_site_date(site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    DateTime.now!(site.time_zone) |> DateTime.to_date()
   end
 
   defp filter_by_user_is_licensee(emp_roster, user, prefix) do
@@ -660,7 +688,6 @@ defmodule Inconn2Service.Assignment do
     AttendanceFailureLog.changeset(attendance_failure_log, attrs)
   end
 
-  alias Inconn2Service.Assignment.ManualAttendance
 
   @doc """
   Returns the list of manual_attendances.
@@ -673,6 +700,16 @@ defmodule Inconn2Service.Assignment do
   """
   def list_manual_attendances(prefix) do
     Repo.all(ManualAttendance, prefix: prefix)
+  end
+
+  def list_manual_attendances(query_params, prefix) do
+    date = get_site_date(query_params["site_id"], prefix)
+    start_time = NaiveDateTime.new!(date, Time.new!(00, 00, 00))
+    end_time = NaiveDateTime.new!(date, Time.new!(23, 59, 59))
+    from(ma in ManualAttendance,
+          where: ma.shift_id == ^query_params["shift_id"] and (fragment("? BETWEEN ? AND ?", ma.in_time, ^start_time, ^end_time) or is_nil(ma.out_time)),
+          )
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -706,17 +743,30 @@ defmodule Inconn2Service.Assignment do
   def create_manual_attendance(attrs \\ %{}, prefix, user) do
     %ManualAttendance{}
     |> ManualAttendance.changeset(attrs)
-    |> validate_employee_id(prefix)
-    |> validate_shift_id(prefix)
+    |> validate_in_time_in_shift(prefix)
     |> record_user(user)
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_in_time_in_shift(cs, prefix) do
+    shift_id = get_field(cs, :shift_id)
+    in_time = get_change(cs, :in_time)
+    if shift_id != nil and in_time != nil do
+      {start_time, end_time} = convert_shift_times_to_datetimes(shift_id, prefix)
+      case in_time >= start_time and in_time <= end_time do
+        true -> cs
+        false -> add_error(cs, :in_time, "Not within shift timing")
+      end
+    else
+      cs
+    end
   end
 
   defp record_user(cs, user) do
     in_time = get_change(cs, :in_time)
     out_time = get_change(cs, :out_time)
-    if in_time != nil, do: in_time_marked_by(cs, user.id)
-    if out_time != nil, do: out_time_marked_by(cs, user.id)
+    if in_time != nil, do: in_time_marked_by(cs, user.id), else: cs
+    if out_time != nil, do: out_time_marked_by(cs, user.id), else: cs
   end
 
   defp in_time_marked_by(cs, user_id), do: change(cs, %{in_time_marked_by: user_id})
@@ -738,8 +788,7 @@ defmodule Inconn2Service.Assignment do
   def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user) do
     manual_attendance
     |> ManualAttendance.changeset(attrs)
-    |> validate_employee_id(prefix)
-    |> validate_shift_id(prefix)
+    |> validate_in_time_in_shift(prefix)
     |> record_user(user)
     |> Repo.update(prefix: prefix)
   end

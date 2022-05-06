@@ -21,7 +21,7 @@ defmodule Inconn2Service.Assignment.ManualAttendance do
   def changeset(manual_attendance, attrs) do
     manual_attendance
     |> cast(attrs, [:shift_id, :employee_id, :in_time, :out_time, :worked_hours_in_minutes, :is_overtime, :overtime_hours_in_minutes, :in_time_marked_by, :out_time_marked_by, :status])
-    |> validate_required([:shift_id, :employee_id, :in_time, :out_time])
+    |> validate_required([:shift_id, :employee_id, :in_time])
     |> validate_inclusion(:status, ["PT", "AB", "LT"])
     |> validate_out_time()
     |> validate_ot_required()
