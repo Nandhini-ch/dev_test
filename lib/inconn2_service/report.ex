@@ -6,7 +6,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule}
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
@@ -725,6 +725,130 @@ defmodule Inconn2Service.Report do
         up_time: Float.ceil(up_time, 2),
         utilized_time: Float.ceil(utilized_time, 2),
         ppm_completion_percentage: Float.ceil(completion_percentage, 2)
+      }
+    end)
+  end
+
+
+  def calendar(query_params, prefix) do
+    rectified_query_params = rectify_query_params(query_params)
+    asset_id = rectified_query_params["asset_id"]
+    asset_type = rectified_query_params["asset_type"]
+    cond do
+      !is_nil(asset_id) && !is_nil(asset_type) ->
+        IO.inspect("Get directly from schedules")
+        schedules = get_schedule_for_asset(asset_id, asset_type, prefix)
+        IO.inspect("Get Dates for each schedule")
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"])
+
+
+      !is_nil(rectified_query_params["asset_category_id"]) ->
+        IO.inspect("Navigate from Templates to schedules")
+
+      true ->
+        IO.inspect("Not enough information is query params")
+    end
+  end
+
+  def get_calculated_dates_for_schedules(schedule_array, to_date) do
+    Stream.map(schedule_array, fn schedule ->
+      %{
+          schedule_id: schedule.schedule_id,
+          schedule_name: schedule.schedule_name,
+          template_id: schedule.template_id,
+          template_name: schedule.template_name,
+          dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+        }
+    end)
+  |> Enum.map(fn schedule_with_date ->
+        Stream.map(schedule_with_date.dates, fn date ->
+          Map.put(schedule_with_date, :date, date)
+        end)
+      end)
+  |> List.flatten()
+  |> Enum.sort_by(&(&1.date))
+  end
+
+  # def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list \\ []) do
+  #   date_list =
+  #     case length(date_list) do
+  #       0 -> [first_occurrence]
+  #       _ -> date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
+  #     end
+  #   # calculate_dates_for_schedule()
+  # end
+
+  def calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, []) do
+    calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, [first_occurrence_date])
+  end
+
+  def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+    case Date.compare(List.last(date_list), to_date) do
+      :lt ->
+        new_date_list = date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
+        calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
+
+      :gt ->
+        date_list
+    end
+  end
+
+  def next_date("W", repeat_every, date) do
+    date |> Date.add(repeat_every *  7)
+  end
+
+  def next_date("M", repeat_every, date) do
+    new_month =  date.month + repeat_every
+    cond do
+      new_month > 12 -> Date.new!(date.year + 1, new_month - 12, date.day)
+      true -> Date.new!(date.year, new_month, date.day)
+    end
+  end
+
+  def next_date("Y", _repeat_every, date) do
+    Date.new!(date.year + 1, date.month, date.day)
+  end
+
+  def get_schedule_for_asset(asset_id, asset_type, prefix) do
+    query =
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id,
+        join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
+        select: %{
+          schedule: wos,
+          template: wot
+        }
+
+    execute_queryand_return_stream(query, prefix)
+
+  end
+
+  def asset_schedule_for_asset_category(asset_category_id, prefix) do
+    query =
+      from wot in WorkorderTemplate, where: wot.asset_category_id == ^asset_category_id,
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_schedule_id,
+       select: %{
+         schedule: wos,
+         template: wot
+       }
+
+    execute_queryand_return_stream(query, prefix)
+  end
+
+  def execute_queryand_return_stream(query, prefix) do
+    schedule_template_data = Repo.all(query, prefix: prefix)
+
+    Stream.map(schedule_template_data, fn st ->
+      %{
+        schedule_id: st.schedule.id,
+        schedule_name: st.schedule.name,
+        asset_id: st.schedule.asset_id,
+        asset_type: st.schedule.asset_type,
+        template_id: st.template.id,
+        template_name: st.template.name,
+        first_occurance: st.schedule.first_occurrence_date,
+        next_occurrence: st.schedule.next_occurrence_date,
+        repeat_unit: st.template.repeat_unit,
+        repeat_every: st.template.repeat_every
       }
     end)
   end
