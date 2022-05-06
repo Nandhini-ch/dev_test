@@ -11,16 +11,16 @@ alias Inconn2Service.Settings
 
 
 {:ok, shiftstartdate1} = Date.new(2021, 08, 01)
-{:ok, shiftenddate1} = Date.new(2021, 08, 30)
+{:ok, shiftenddate1} = Date.new(2022, 08, 30)
 
 {:ok, shiftstartdate2} = Date.new(2021, 08, 20)
-{:ok, shiftenddate2} = Date.new(2021, 08, 21)
+{:ok, shiftenddate2} = Date.new(2022, 08, 21)
 
 {:ok, shiftstartdate3} = Date.new(2021, 08, 23)
-{:ok, shiftenddate3} = Date.new(2021, 08, 24)
+{:ok, shiftenddate3} = Date.new(2022, 08, 24)
 
 {:ok, shiftstartdate4} = Date.new(2021, 08, 01)
-{:ok, shiftenddate4} = Date.new(2021, 08, 30)
+{:ok, shiftenddate4} = Date.new(2022, 08, 30)
 
 
 shift1 = %{"name" => "shift1", "start_date" => shiftstartdate1, "end_date" => shiftenddate1,

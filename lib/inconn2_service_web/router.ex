@@ -324,5 +324,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/attendance_references", AttendanceReferenceController, except: [:new, :edit]
     get "/attendance_reference_for_employee", AttendanceReferenceController, :get_attendance_reference_for_employee
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
+    get "/employees_for_manual_attendance", EmployeeRosterController, :employees_for_manual_attendance
+    resources "/manual_attendances", ManualAttendanceController, except: [:new, :edit]
   end
 end
