@@ -1849,10 +1849,15 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_site_config!(id, prefix), do: Repo.get!(SiteConfig, id, prefix: prefix)
+
   def get_site_config_by_site_id(site_id, prefix) do
     from(sc in SiteConfig, where: sc.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
-    |> List.first()
+  end
+
+  def get_site_config_by_site_id_and_type(site_id, type, prefix) do
+    from(sc in SiteConfig, where: sc.site_id == ^site_id and sc.type == ^type)
+    |> Repo.one(prefix: prefix)
   end
 
   @doc """
@@ -1870,7 +1875,23 @@ defmodule Inconn2Service.AssetConfig do
   def create_site_config(attrs \\ %{}, prefix) do
     %SiteConfig{}
     |> SiteConfig.changeset(attrs)
+    |> validate_type_one_time(prefix)
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_type_one_time(cs, prefix) do
+    site_id = get_field(cs, :site_id)
+    type = get_field(cs, :type)
+    if site_id != nil and type != nil do
+      case get_site_config_by_site_id_and_type(site_id, type, prefix) do
+        nil ->
+            cs
+        _ ->
+            add_error(cs, :type, "already exists for this site")
+      end
+    else
+      cs
+    end
   end
 
   @doc """

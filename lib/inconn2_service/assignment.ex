@@ -700,6 +700,7 @@ defmodule Inconn2Service.Assignment do
   """
   def list_manual_attendances(prefix) do
     Repo.all(ManualAttendance, prefix: prefix)
+    |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
   end
 
   def list_manual_attendances(query_params, prefix) do
@@ -710,6 +711,7 @@ defmodule Inconn2Service.Assignment do
           where: ma.shift_id == ^query_params["shift_id"] and (fragment("? BETWEEN ? AND ?", ma.in_time, ^start_time, ^end_time) or is_nil(ma.out_time)),
           )
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
   end
 
   @doc """
@@ -726,7 +728,7 @@ defmodule Inconn2Service.Assignment do
       ** (Ecto.NoResultsError)
 
   """
-  def get_manual_attendance!(id, prefix), do: Repo.get!(ManualAttendance, id, prefix: prefix)
+  def get_manual_attendance!(id, prefix), do: Repo.get!(ManualAttendance, id, prefix: prefix) |> preload_employee(prefix)
 
   @doc """
   Creates a manual_attendance.
@@ -741,11 +743,17 @@ defmodule Inconn2Service.Assignment do
 
   """
   def create_manual_attendance(attrs \\ %{}, prefix, user) do
-    %ManualAttendance{}
-    |> ManualAttendance.changeset(attrs)
-    |> validate_in_time_in_shift(prefix)
-    |> record_user(user)
-    |> Repo.insert(prefix: prefix)
+    result = %ManualAttendance{}
+              |> ManualAttendance.changeset(attrs)
+              |> validate_in_time_in_shift(prefix)
+              |> record_user(user)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, manual_attendance} ->
+          {:ok, manual_attendance |> preload_employee(prefix)}
+      _ ->
+        result
+    end
   end
 
   defp validate_in_time_in_shift(cs, prefix) do
@@ -765,7 +773,7 @@ defmodule Inconn2Service.Assignment do
   defp record_user(cs, user) do
     in_time = get_change(cs, :in_time)
     out_time = get_change(cs, :out_time)
-    if in_time != nil, do: in_time_marked_by(cs, user.id), else: cs
+    cs = if in_time != nil, do: in_time_marked_by(cs, user.id), else: cs
     if out_time != nil, do: out_time_marked_by(cs, user.id), else: cs
   end
 
@@ -786,11 +794,17 @@ defmodule Inconn2Service.Assignment do
 
   """
   def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user) do
-    manual_attendance
-    |> ManualAttendance.changeset(attrs)
-    |> validate_in_time_in_shift(prefix)
-    |> record_user(user)
-    |> Repo.update(prefix: prefix)
+    result = manual_attendance
+              |> ManualAttendance.changeset(attrs)
+              |> validate_in_time_in_shift(prefix)
+              |> record_user(user)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, manual_attendance} ->
+          {:ok, manual_attendance |> preload_employee(prefix)}
+      _ ->
+        result
+    end
   end
 
   @doc """

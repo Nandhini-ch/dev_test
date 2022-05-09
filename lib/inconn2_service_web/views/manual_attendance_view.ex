@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ManualAttendanceView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ManualAttendanceView
+  alias Inconn2ServiceWeb.{ManualAttendanceView, EmployeeView}
 
   def render("index.json", %{manual_attendances: manual_attendances}) do
     %{data: render_many(manual_attendances, ManualAttendanceView, "manual_attendance.json")}
@@ -13,6 +13,7 @@ defmodule Inconn2ServiceWeb.ManualAttendanceView do
   def render("manual_attendance.json", %{manual_attendance: manual_attendance}) do
     %{id: manual_attendance.id,
       employee_id: manual_attendance.employee_id,
+      employee: render_one(manual_attendance.employee, EmployeeView, "employee_without_org_unit.json"),
       shift_id: manual_attendance.shift_id,
       in_time: manual_attendance.in_time,
       out_time: manual_attendance.out_time,
