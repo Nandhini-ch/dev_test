@@ -3,8 +3,7 @@ defmodule Inconn2ServiceWeb.AssetController do
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
-  alias Inconn2Service.Workorder.WorkOrder
-  alias Inconn2Service.Workorder
+  alias Inconn2Service.AssetConfig.SiteConfig
   alias Inconn2Service.Account
   # alias Inconn2ServiceWeb.AssetView
 
@@ -23,8 +22,12 @@ defmodule Inconn2ServiceWeb.AssetController do
     render(conn, "equipments_with_offset.json", asset_info: assets)
   end
 
+#Manage Data Discrepancy
 
-  def fill_asset_type_in_work_orders(conn, _params) do
+  alias Inconn2Service.Account
+  alias Inconn2Service.AssetConfig.SiteConfig
+
+  def manage_data_discrepancy(conn, _params) do
     licensees = Account.list_licensees()
     prefixes = Enum.map(licensees, fn x -> "inc_" <> x.sub_domain end)
     Enum.map(prefixes, fn prefix ->
@@ -35,15 +38,14 @@ defmodule Inconn2ServiceWeb.AssetController do
   end
 
   def enum_licensee(prefix) do
-    query = from(wo in WorkOrder, where: is_nil(wo.asset_type))
-    work_orders = Repo.all(query, prefix: prefix)
-    Enum.map(work_orders, fn x -> update_asset_type(x, prefix) end)
+    query = from(sc in SiteConfig, where: is_nil(sc.type))
+    site_configs = Repo.all(query, prefix: prefix)
+    Enum.map(site_configs, fn x -> update_type(x, prefix) end)
   end
 
-  defp update_asset_type(work_order, prefix) do
-    wot = Workorder.get_workorder_template!(work_order.workorder_template_id, prefix)
-    work_order
-            |> WorkOrder.changeset(%{"asset_type" => wot.asset_type})
+  defp update_type(site_config, prefix) do
+    site_config
+            |> SiteConfig.changeset(%{"type" => "DASH"})
             |> Repo.update(prefix: prefix)
   end
 

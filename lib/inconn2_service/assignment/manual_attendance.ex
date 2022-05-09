@@ -33,7 +33,7 @@ defmodule Inconn2Service.Assignment.ManualAttendance do
     if in_time != nil and out_time != nil do
       case NaiveDateTime.compare(in_time, out_time) do
         :lt -> cs
-        _ -> add_error(cs, :out_time, "should be less than in_time")
+        _ -> add_error(cs, :out_time, "should be greater than in_time")
       end
     else
       cs

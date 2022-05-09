@@ -643,7 +643,7 @@ defmodule Inconn2Service.Dashboards do
   def get_energy_meter_speedometer(query_params, prefix) do
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_list = form_date_list(from_date, to_date)
-    site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(query_params["site_id"], "DASH", prefix)
     data = get_main_meter_readings(site_config, date_list, prefix)
     case length(date_list) do
       1 ->
@@ -742,7 +742,7 @@ defmodule Inconn2Service.Dashboards do
 
 
   defp calculate_datasets_for_energy_meter(query_params, data, prefix) do
-    site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], prefix)
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(query_params["site_id"], "DASH", prefix)
     case query_params["type"] do
       "EC" ->
         cost = if site_config == nil do
@@ -805,7 +805,7 @@ defmodule Inconn2Service.Dashboards do
   end
 
   def get_top_three_energy_meter_linear_chart(site_id, date_list, prefix) do
-    site_config = AssetConfig.get_site_config_by_site_id(site_id, prefix)
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(site_id, "DASH", prefix)
     cost = if site_config == nil do
             0
            else

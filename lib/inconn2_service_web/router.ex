@@ -23,7 +23,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/sessions/login", SessionController, :login
 
     resources "/iot_meterings", IotMeteringController, only: [:create, :show]
-    get "/fill_asset_type_in_workorders", AssetController, :fill_asset_type_in_work_orders
+    get "/manage_data_discrepancy_site_config", AssetController, :manage_data_discrepancy
   end
 
   scope "/api", Inconn2ServiceWeb do
