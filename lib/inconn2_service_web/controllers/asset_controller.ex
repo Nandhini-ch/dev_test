@@ -41,6 +41,15 @@ defmodule Inconn2ServiceWeb.AssetController do
     query = from(sc in SiteConfig, where: is_nil(sc.type))
     site_configs = Repo.all(query, prefix: prefix)
     Enum.map(site_configs, fn x -> update_type(x, prefix) end)
+    query = from(sc in SiteConfig)
+    configs = Repo.all(query, prefix: prefix)
+    configs = Enum.filter(configs, fn x -> x.type == "DASH" end)
+    if length(configs) != 0 do
+      [_ | t] = configs
+      Enum.map(t, fn x -> AssetConfig.delete_site_config(x, prefix) end)
+    else
+      []
+    end
   end
 
   defp update_type(site_config, prefix) do

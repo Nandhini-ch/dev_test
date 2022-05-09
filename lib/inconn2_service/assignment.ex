@@ -378,7 +378,7 @@ defmodule Inconn2Service.Assignment do
     else
       site = AssetConfig.get_site!(query_params["site_id"], prefix)
       date = DateTime.now!(site.time_zone) |> DateTime.to_date()
-      {from_date, to_date} = {DateTime.new!(date, Time.new!(0, 0, 0)), DateTime.new!(date, Time.new!(23, 59, 59))}
+      {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
       Map.put(query_params, "from_date", from_date)
       |> Map.put("to_date", to_date)
     end
