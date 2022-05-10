@@ -1312,7 +1312,7 @@ defmodule Inconn2Service.Workorder do
                 nil
 
             user_id ->
-                Staff.get_user_without_org_unit!(user_id, prefix)
+                Staff.get_user_without_org_unit(user_id, prefix)
           end
 
     Map.put(work_order, :user, user)
