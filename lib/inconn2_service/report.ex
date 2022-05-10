@@ -30,7 +30,9 @@ defmodule Inconn2Service.Report do
         type: wo.type,
         status: wo.status,
         assigned_to: e.first_name,
+        start_date: wo.start_date,
         start_time: wo.start_time,
+        completed_date: wo.completed_date,
         completed_time: wo.completed_time,
         username: u.username,
         first_name: e.first_name,
@@ -121,12 +123,16 @@ defmodule Inconn2Service.Report do
           status: wo.status,
           assigned_to: name,
           manhours_consumed: manhours_consumed * 3600,
-          date: wo.scheduled_date,
-          time: wo.scheduled_time
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          start_date: wo.start_date,
+          start_time: wo.start_time,
+          completed_date: wo.completed_date,
+          completed_time: wo.completed_time
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Manhours Consumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled Date", "Scheduled Time", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1078,6 +1084,26 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.scheduled_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.start_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.start_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.completed_date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.completed_time
         ],
         [
           :td,
