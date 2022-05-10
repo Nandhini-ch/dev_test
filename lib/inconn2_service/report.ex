@@ -56,7 +56,7 @@ defmodule Inconn2Service.Report do
         {"asset_id", asset_id}, main_query ->
           from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
 
-        {"status", "incomplete"}, main_query ->
+        {"status", "incp"}, main_query ->
           from q in main_query, where: q.status not in ["cp", "cn"]
 
         {"status", status}, main_query ->
@@ -125,7 +125,7 @@ defmodule Inconn2Service.Report do
           type: match_workorder_type(wo.type),
           status: wo.status,
           assigned_to: name,
-          manhours_consumed: manhours_consumed * 3600,
+          manhours_consumed: manhours_consumed / 60,
           scheduled_date: wo.scheduled_date,
           scheduled_time: wo.scheduled_time,
           start_date: wo.start_date,
