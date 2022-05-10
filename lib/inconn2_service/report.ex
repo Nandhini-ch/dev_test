@@ -152,7 +152,7 @@ defmodule Inconn2Service.Report do
   end
 
   defp get_site_date_time(site) do
-    date_time = DateTime.now(site.time_zone)
+    date_time = DateTime.now!(site.time_zone)
     NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
