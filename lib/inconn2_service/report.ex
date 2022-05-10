@@ -106,14 +106,15 @@ defmodule Inconn2Service.Report do
 
         manhours_consumed =
           cond do
-            is_nil(wo.start_time) && is_nil(wo.completed_time) ->
+            is_nil(wo.start_time) || is_nil(wo.start_date) ->
               0
 
-            is_nil(wo.completed_time) ->
-              Time.diff(get_site_time(wo.site_id, prefix), wo.start_time)
+            is_nil(wo.completed_time) || is_nil(wo.completed_date) ->
+              Time.diff(get_site_date_time(wo.site), NaiveDateTime.new!(wo.start_date, wo.start_time))
 
             true ->
-              Time.diff(wo.completed_time, wo.start_time)
+              # Time.diff(wo.completed_time, wo.start_time)
+              Time.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.new!(wo.start_date, wo.start_time))
           end
 
         %{
@@ -146,6 +147,11 @@ defmodule Inconn2Service.Report do
       _ ->
         result
     end
+  end
+
+  defp get_site_date_time(site) do
+    date_time = DateTime.now(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
   def inventory_report(prefix, query_params) do
