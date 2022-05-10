@@ -23,8 +23,10 @@ defmodule Inconn2Service.Report do
       from wo in WorkOrder,
       left_join: u in User, on: wo.user_id == u.id,
       left_join: e in Employee, on: u.employee_id == e.id,
+      left_join: s in Site, on: wo.site_id == s.id,
       select: %{
         site_id: wo.site_id,
+        site: s,
         asset_id: wo.asset_id,
         asset_type: wo.asset_type,
         type: wo.type,
