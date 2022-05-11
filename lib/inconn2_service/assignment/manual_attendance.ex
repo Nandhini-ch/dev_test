@@ -10,9 +10,9 @@ defmodule Inconn2Service.Assignment.ManualAttendance do
     field :in_time, :naive_datetime
     field :is_overtime, :boolean, default: false
     field :out_time, :naive_datetime
-    field :overtime_hours_in_minutes, :integer
+    field :overtime_hours_in_minutes, :float
     field :status, :string
-    field :worked_hours_in_minutes, :integer
+    field :worked_hours_in_minutes, :float
 
     timestamps()
   end
