@@ -11,6 +11,7 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.Staff.Employee
   alias Inconn2Service.Staff
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.AssetConfig.{Site, SiteConfig}
   alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.ManualAttendance
@@ -742,7 +743,7 @@ defmodule Inconn2Service.Assignment do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_manual_attendance(attrs \\ %{}, prefix, user) do
+  def create_manual_attendance(attrs \\ %{}, prefix, user \\ %{}) do
     result = %ManualAttendance{}
               |> ManualAttendance.changeset(attrs)
               |> validate_in_time_in_shift(prefix)
@@ -750,6 +751,7 @@ defmodule Inconn2Service.Assignment do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, manual_attendance} ->
+          {:ok, manual_attendance} = calculate_and_update_attendance(manual_attendance, prefix)
           {:ok, manual_attendance |> preload_employee(prefix)}
       _ ->
         result
@@ -781,6 +783,45 @@ defmodule Inconn2Service.Assignment do
 
   defp out_time_marked_by(cs, user_id), do: change(cs, %{out_time_marked_by: user_id})
 
+  defp calculate_and_update_attendance(manual_attendance, prefix) do
+    attendance_config = get_attendance_site_config_from_shift(manual_attendance.shift_id, prefix)
+    {worked_hrs, overtime_hrs} = calculate_worked_and_overtime_hrs(manual_attendance, attendance_config)
+    attrs =
+            %{
+              "worked_hours_in_minutes" => worked_hrs,
+              "overtime_hours_in_minutes" => overtime_hrs
+            }
+    manual_attendance
+    |> ManualAttendance.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  defp calculate_worked_and_overtime_hrs(manual_attendance, attendance_config) when not is_nil(manual_attendance.out_time) do
+    worked_hrs = Time.diff(manual_attendance.out_time, manual_attendance.in_time) / 60
+    case manual_attendance.is_overtime do
+      false ->
+        {worked_hrs, 0}
+      true ->
+        overtime_hrs = worked_hrs - attendance_config.config["preferred_total_work_hours"]
+        if overtime_hrs < 0 do
+          {worked_hrs, 0}
+        else
+          {attendance_config.config["preferred_total_work_hours"], overtime_hrs}
+        end
+    end
+  end
+
+  defp calculate_worked_and_overtime_hrs(_manual_attendance, _attendance_config), do: {nil, nil}
+
+  defp get_attendance_site_config_from_shift(shift_id, prefix) do
+    from(sh in Shift, where: sh.id == ^shift_id,
+         join: si in Site, on: si.id == sh.site_id,
+         join: sc in SiteConfig, on: sc.site_id == si.id, where: sc.type == "ATT",
+         select: sc
+    )
+    |> Repo.one(prefix: prefix)
+  end
+
   @doc """
   Updates a manual_attendance.
 
@@ -793,7 +834,7 @@ defmodule Inconn2Service.Assignment do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user) do
+  def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user \\ %{}) do
     result = manual_attendance
               |> ManualAttendance.changeset(attrs)
               |> validate_in_time_in_shift(prefix)
@@ -801,6 +842,7 @@ defmodule Inconn2Service.Assignment do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, manual_attendance} ->
+          {:ok, manual_attendance} = calculate_and_update_attendance(manual_attendance, prefix)
           {:ok, manual_attendance |> preload_employee(prefix)}
       _ ->
         result
