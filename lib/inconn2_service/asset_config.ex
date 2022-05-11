@@ -714,7 +714,15 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_status_track_for_asset(asset, _previous_status, asset_type, user, prefix) do
     update_last_status_record(asset, asset_type, prefix)
-    create_track_for_asset_status(asset, asset_type, prefix, user.id)
+    user_id =
+      case length(Map.keys(user)) do
+        0 ->
+          nil
+
+        _ ->
+          user.id
+      end
+    create_track_for_asset_status(asset, asset_type, prefix, user_id)
   end
 
   defp update_last_status_record(asset, asset_type, prefix) do
@@ -742,6 +750,14 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def create_status_track_for_asset(result, asset_before_insertion, attrs, asset_type, user, prefix) do
+    user_id =
+      case length(Map.keys(user)) do
+        0 ->
+          nil
+
+        _ ->
+          user.id
+      end
     case result do
       {:ok, asset} ->
         if attrs["status"] != asset_before_insertion.status do
@@ -750,7 +766,7 @@ defmodule Inconn2Service.AssetConfig do
             "asset_id" => asset.id,
             "asset_type" => asset_type,
             "status_changed" => asset.status,
-            "user_id" => user.id,
+            "user_id" => user_id,
             "changed_date_time" => NaiveDateTime.utc_now(),
           }
           IO.inspect(create_asset_status_track(asset_status_update_attrs, prefix))

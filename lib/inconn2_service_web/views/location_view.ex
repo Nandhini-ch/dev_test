@@ -33,8 +33,8 @@ defmodule Inconn2ServiceWeb.LocationView do
     }
   end
 
-  def render("group_update.json", %{update_json: update_json}) do
-    update_json
+  def render("group_update.json", %{update_info: update_info}) do
+    update_info
   end
 
 
