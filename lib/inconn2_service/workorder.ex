@@ -2014,7 +2014,7 @@ defmodule Inconn2Service.Workorder do
             Repo.all(asset_category_query, prefix: prefix)
         end
 
-    work_orders = assigned_work_orders ++ asset_category_work_orders
+    work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
 
     Stream.map(work_orders, fn wo ->
@@ -2098,7 +2098,7 @@ defmodule Inconn2Service.Workorder do
             Repo.all(asset_category_query, prefix: prefix)
         end
 
-      work_orders = assigned_work_orders ++ asset_category_work_orders
+      work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
       Stream.map(work_orders, fn wo ->
         wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
