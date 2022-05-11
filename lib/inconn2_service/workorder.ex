@@ -951,7 +951,7 @@ defmodule Inconn2Service.Workorder do
   def get_work_order_premits_to_be_approved(user, prefix) do
     work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
     Enum.map(work_orders, fn wo ->
-      if List.first(wo.workpermit_approval_user_ids -- wo.workpermit_obtained_from_user_ids) == user.id do
+      if List.first(wo.workpermit_approval_user_ids -- wo.workpermit_obtained_from_user_ids) == [user.id] do
         wo
       else
         "not_required"
