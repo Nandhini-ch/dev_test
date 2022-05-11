@@ -7,8 +7,20 @@ defmodule Inconn2ServiceWeb.SiteConfigController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, query_params) do
-    site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", site_config: site_config)
+    case Map.keys(query_params) do
+      ["site_id"] ->
+              site_config = AssetConfig.get_site_config_by_site_id(query_params["site_id"], conn.assigns.sub_domain_prefix)
+              render(conn, "index.json", site_config: site_config)
+
+      ["site_id", "type"] ->
+              site_config = AssetConfig.get_site_config_by_site_id_and_type(query_params["site_id"], query_params["type"], conn.assigns.sub_domain_prefix)
+              render(conn, "show.json", site_config: site_config)
+
+      _ ->
+              site_config = AssetConfig.list_site_config(conn.assigns.sub_domain_prefix)
+              render(conn, "index.json", site_config: site_config)
+    end
+
   end
 
   def create(conn, %{"site_config" => site_config_params}) do
