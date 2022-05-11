@@ -68,7 +68,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
     get "/sites/:site_id/equipments/qr_codes", EquipmentController, :list_equipments_qr
-    put "/equipments/group_update", EquipmentController, :update_equipments
+    put "/equipments/group_update", EquipmentController, :group_update
     resources "/equipments", EquipmentController, except: [:new, :edit, :index]
     # get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/equipments/qr_code/:qr_code", EquipmentController, :get_equipment_from_qr_code

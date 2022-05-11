@@ -124,7 +124,7 @@ defmodule Inconn2Service.Report do
           type: match_workorder_type(wo.type),
           status: wo.status,
           assigned_to: name,
-          manhours_consumed: manhours_consumed * 3600,
+          manhours_consumed: Float.ceil(manhours_consumed /60, 2),
           scheduled_date: wo.scheduled_date,
           scheduled_time: wo.scheduled_time,
           start_date: wo.start_date,
@@ -134,7 +134,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled date", "Scheduled Date", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
+    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled Date", "Scheduled Time", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1123,7 +1123,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.manhours_consumed]
+        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_time, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
     [report_headers] ++ body

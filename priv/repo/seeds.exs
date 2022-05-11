@@ -107,13 +107,19 @@ site = %{
 #   }
 # }
 
-sc =
-  case IO.inspect(AssetConfig.create_site(site, "inc_bata")) do
-    {:ok, site_created} -> IO.inspect(site_created)
-    {:error, cs} -> IO.inspect(cs)
-    nil -> IO.puts("null value returned")
-  end
+{:ok, sc} = AssetConfig.create_site(site, "inc_bata")
 
+si_cf1 = %{
+  "site_id" => sc.id,
+  "type" => "ATT",
+  "config" => %{
+    "preferred_total_work_hours" => 480,
+    "half_day_work_hours" => 210,
+    "grace_period_for_in_time" => 15
+  }
+}
+
+{:ok, si_cf1c} = AssetConfig.create_site_config(si_cf1, "inc_bata")
 # sc2 =
 #   case IO.inspect(AssetConfig.create_site(site2, "inc_cola")) do
 #     {:ok, site_created} -> IO.inspect(site_created)
