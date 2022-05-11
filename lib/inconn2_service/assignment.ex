@@ -13,6 +13,7 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.Assignment.ManualAttendance
 
   @doc """
   Returns the list of employee_rosters.
@@ -96,6 +97,46 @@ defmodule Inconn2Service.Assignment do
     |> Repo.preload([employee: :org_unit])
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
+  end
+
+  def list_manual_employee_for_attendance(query_params, user, prefix) do
+    date = get_site_date(query_params["site_id"], prefix)
+    user = user |> Repo.preload(:employee)
+    manual_attendance_employee_ids = get_manual_attendance_employees(query_params["shift_id"], prefix)
+    case user.employee do
+      nil ->
+        []
+
+      _ ->
+            from(er in EmployeeRoster,
+                where: er.shift_id == ^query_params["shift_id"] and
+                        fragment("? BETWEEN ? AND ?", ^date, er.start_date, er.end_date),
+                join: e in Employee, on: er.employee_id == e.id, where: e.id not in ^manual_attendance_employee_ids and (e.reports_to == ^user.employee.id or e.org_unit_id == ^user.employee.org_unit_id),
+                select: e
+            )
+            |> Repo.all(prefix: prefix)
+    end
+  end
+
+  defp get_manual_attendance_employees(shift_id, prefix) do
+    {start_time, end_time} = convert_shift_times_to_datetimes(shift_id, prefix)
+    from(ma in ManualAttendance,
+         where: ma.shift_id == ^shift_id and
+                fragment("? BETWEEN ? AND ?", ma.in_time, ^start_time, ^end_time),
+    )
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> x.employee_id end)
+  end
+
+  defp convert_shift_times_to_datetimes(shift_id, prefix) do
+    shift = Settings.get_shift!(shift_id, prefix)
+    date = get_site_date(shift.site_id, prefix)
+    {NaiveDateTime.new!(date, shift.start_time), NaiveDateTime.new!(date, shift.end_time)}
+  end
+
+  defp get_site_date(site_id, prefix) do
+    site = AssetConfig.get_site!(site_id, prefix)
+    DateTime.now!(site.time_zone) |> DateTime.to_date()
   end
 
   defp filter_by_user_is_licensee(emp_roster, user, prefix) do
@@ -337,7 +378,7 @@ defmodule Inconn2Service.Assignment do
     else
       site = AssetConfig.get_site!(query_params["site_id"], prefix)
       date = DateTime.now!(site.time_zone) |> DateTime.to_date()
-      {from_date, to_date} = {DateTime.new!(date, Time.new!(0, 0, 0)), DateTime.new!(date, Time.new!(23, 59, 59))}
+      {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
       Map.put(query_params, "from_date", from_date)
       |> Map.put("to_date", to_date)
     end
@@ -645,5 +686,153 @@ defmodule Inconn2Service.Assignment do
   """
   def change_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs \\ %{}) do
     AttendanceFailureLog.changeset(attendance_failure_log, attrs)
+  end
+
+
+  @doc """
+  Returns the list of manual_attendances.
+
+  ## Examples
+
+      iex> list_manual_attendances()
+      [%ManualAttendance{}, ...]
+
+  """
+  def list_manual_attendances(prefix) do
+    Repo.all(ManualAttendance, prefix: prefix)
+    |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
+  end
+
+  def list_manual_attendances(query_params, prefix) do
+    date = get_site_date(query_params["site_id"], prefix)
+    start_time = NaiveDateTime.new!(date, Time.new!(00, 00, 00))
+    end_time = NaiveDateTime.new!(date, Time.new!(23, 59, 59))
+    from(ma in ManualAttendance,
+          where: ma.shift_id == ^query_params["shift_id"] and (fragment("? BETWEEN ? AND ?", ma.in_time, ^start_time, ^end_time) or is_nil(ma.out_time)),
+          )
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
+  end
+
+  @doc """
+  Gets a single manual_attendance.
+
+  Raises `Ecto.NoResultsError` if the Manual attendance does not exist.
+
+  ## Examples
+
+      iex> get_manual_attendance!(123)
+      %ManualAttendance{}
+
+      iex> get_manual_attendance!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_manual_attendance!(id, prefix), do: Repo.get!(ManualAttendance, id, prefix: prefix) |> preload_employee(prefix)
+
+  @doc """
+  Creates a manual_attendance.
+
+  ## Examples
+
+      iex> create_manual_attendance(%{field: value})
+      {:ok, %ManualAttendance{}}
+
+      iex> create_manual_attendance(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_manual_attendance(attrs \\ %{}, prefix, user) do
+    result = %ManualAttendance{}
+              |> ManualAttendance.changeset(attrs)
+              |> validate_in_time_in_shift(prefix)
+              |> record_user(user)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, manual_attendance} ->
+          {:ok, manual_attendance |> preload_employee(prefix)}
+      _ ->
+        result
+    end
+  end
+
+  defp validate_in_time_in_shift(cs, prefix) do
+    shift_id = get_field(cs, :shift_id)
+    in_time = get_change(cs, :in_time)
+    if shift_id != nil and in_time != nil do
+      {start_time, end_time} = convert_shift_times_to_datetimes(shift_id, prefix)
+      case in_time >= start_time and in_time <= end_time do
+        true -> cs
+        false -> add_error(cs, :in_time, "Not within shift timing")
+      end
+    else
+      cs
+    end
+  end
+
+  defp record_user(cs, user) do
+    in_time = get_change(cs, :in_time)
+    out_time = get_change(cs, :out_time)
+    cs = if in_time != nil, do: in_time_marked_by(cs, user.id), else: cs
+    if out_time != nil, do: out_time_marked_by(cs, user.id), else: cs
+  end
+
+  defp in_time_marked_by(cs, user_id), do: change(cs, %{in_time_marked_by: user_id})
+
+  defp out_time_marked_by(cs, user_id), do: change(cs, %{out_time_marked_by: user_id})
+
+  @doc """
+  Updates a manual_attendance.
+
+  ## Examples
+
+      iex> update_manual_attendance(manual_attendance, %{field: new_value})
+      {:ok, %ManualAttendance{}}
+
+      iex> update_manual_attendance(manual_attendance, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user) do
+    result = manual_attendance
+              |> ManualAttendance.changeset(attrs)
+              |> validate_in_time_in_shift(prefix)
+              |> record_user(user)
+              |> Repo.update(prefix: prefix)
+    case result do
+      {:ok, manual_attendance} ->
+          {:ok, manual_attendance |> preload_employee(prefix)}
+      _ ->
+        result
+    end
+  end
+
+  @doc """
+  Deletes a manual_attendance.
+
+  ## Examples
+
+      iex> delete_manual_attendance(manual_attendance)
+      {:ok, %ManualAttendance{}}
+
+      iex> delete_manual_attendance(manual_attendance)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_manual_attendance(%ManualAttendance{} = manual_attendance, prefix) do
+    Repo.delete(manual_attendance, prefix: prefix)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking manual_attendance changes.
+
+  ## Examples
+
+      iex> change_manual_attendance(manual_attendance)
+      %Ecto.Changeset{data: %ManualAttendance{}}
+
+  """
+  def change_manual_attendance(%ManualAttendance{} = manual_attendance, attrs \\ %{}) do
+    ManualAttendance.changeset(manual_attendance, attrs)
   end
 end

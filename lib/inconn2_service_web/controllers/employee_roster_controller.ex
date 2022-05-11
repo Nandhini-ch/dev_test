@@ -37,6 +37,11 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
     render(conn, "employee_index.json", employees: employees)
   end
 
+  def employees_for_manual_attendance(conn, _) do
+    employees = Assignment.list_manual_employee_for_attendance(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "employee_index.json", employees: employees)
+  end
+
   def create(conn, %{"employee_roster" => employee_roster_params}) do
     with {:ok, %EmployeeRoster{} = employee_roster} <- Assignment.create_employee_roster(employee_roster_params, conn.assigns.sub_domain_prefix) do
       conn

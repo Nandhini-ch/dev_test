@@ -23,7 +23,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/sessions/login", SessionController, :login
 
     resources "/iot_meterings", IotMeteringController, only: [:create, :show]
-    get "/fill_asset_type_in_workorders", AssetController, :fill_asset_type_in_work_orders
+    get "/manage_data_discrepancy_site_config", AssetController, :manage_data_discrepancy
   end
 
   scope "/api", Inconn2ServiceWeb do
@@ -324,5 +324,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/attendance_references", AttendanceReferenceController, except: [:new, :edit]
     get "/attendance_reference_for_employee", AttendanceReferenceController, :get_attendance_reference_for_employee
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
+    get "/employees_for_manual_attendance", EmployeeRosterController, :employees_for_manual_attendance
+    resources "/manual_attendances", ManualAttendanceController, except: [:new, :edit]
   end
 end

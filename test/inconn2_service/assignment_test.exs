@@ -252,4 +252,77 @@ defmodule Inconn2Service.AssignmentTest do
       assert %Ecto.Changeset{} = Assignment.change_attendance_failure_log(attendance_failure_log)
     end
   end
+
+  describe "manual_attendances" do
+    alias Inconn2Service.Assignment.ManualAttendance
+
+    @valid_attrs %{attendance_marked_by: 42, employee_id: 42, in_time: ~N[2010-04-17 14:00:00], is_overtime: true, out_time: ~N[2010-04-17 14:00:00], overtime_hours_in_minutes: 42, status: "some status", worked_hours_in_minutes: 42}
+    @update_attrs %{attendance_marked_by: 43, employee_id: 43, in_time: ~N[2011-05-18 15:01:01], is_overtime: false, out_time: ~N[2011-05-18 15:01:01], overtime_hours_in_minutes: 43, status: "some updated status", worked_hours_in_minutes: 43}
+    @invalid_attrs %{attendance_marked_by: nil, employee_id: nil, in_time: nil, is_overtime: nil, out_time: nil, overtime_hours_in_minutes: nil, status: nil, worked_hours_in_minutes: nil}
+
+    def manual_attendance_fixture(attrs \\ %{}) do
+      {:ok, manual_attendance} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Assignment.create_manual_attendance()
+
+      manual_attendance
+    end
+
+    test "list_manual_attendances/0 returns all manual_attendances" do
+      manual_attendance = manual_attendance_fixture()
+      assert Assignment.list_manual_attendances() == [manual_attendance]
+    end
+
+    test "get_manual_attendance!/1 returns the manual_attendance with given id" do
+      manual_attendance = manual_attendance_fixture()
+      assert Assignment.get_manual_attendance!(manual_attendance.id) == manual_attendance
+    end
+
+    test "create_manual_attendance/1 with valid data creates a manual_attendance" do
+      assert {:ok, %ManualAttendance{} = manual_attendance} = Assignment.create_manual_attendance(@valid_attrs)
+      assert manual_attendance.attendance_marked_by == 42
+      assert manual_attendance.employee_id == 42
+      assert manual_attendance.in_time == ~N[2010-04-17 14:00:00]
+      assert manual_attendance.is_overtime == true
+      assert manual_attendance.out_time == ~N[2010-04-17 14:00:00]
+      assert manual_attendance.overtime_hours_in_minutes == 42
+      assert manual_attendance.status == "some status"
+      assert manual_attendance.worked_hours_in_minutes == 42
+    end
+
+    test "create_manual_attendance/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Assignment.create_manual_attendance(@invalid_attrs)
+    end
+
+    test "update_manual_attendance/2 with valid data updates the manual_attendance" do
+      manual_attendance = manual_attendance_fixture()
+      assert {:ok, %ManualAttendance{} = manual_attendance} = Assignment.update_manual_attendance(manual_attendance, @update_attrs)
+      assert manual_attendance.attendance_marked_by == 43
+      assert manual_attendance.employee_id == 43
+      assert manual_attendance.in_time == ~N[2011-05-18 15:01:01]
+      assert manual_attendance.is_overtime == false
+      assert manual_attendance.out_time == ~N[2011-05-18 15:01:01]
+      assert manual_attendance.overtime_hours_in_minutes == 43
+      assert manual_attendance.status == "some updated status"
+      assert manual_attendance.worked_hours_in_minutes == 43
+    end
+
+    test "update_manual_attendance/2 with invalid data returns error changeset" do
+      manual_attendance = manual_attendance_fixture()
+      assert {:error, %Ecto.Changeset{}} = Assignment.update_manual_attendance(manual_attendance, @invalid_attrs)
+      assert manual_attendance == Assignment.get_manual_attendance!(manual_attendance.id)
+    end
+
+    test "delete_manual_attendance/1 deletes the manual_attendance" do
+      manual_attendance = manual_attendance_fixture()
+      assert {:ok, %ManualAttendance{}} = Assignment.delete_manual_attendance(manual_attendance)
+      assert_raise Ecto.NoResultsError, fn -> Assignment.get_manual_attendance!(manual_attendance.id) end
+    end
+
+    test "change_manual_attendance/1 returns a manual_attendance changeset" do
+      manual_attendance = manual_attendance_fixture()
+      assert %Ecto.Changeset{} = Assignment.change_manual_attendance(manual_attendance)
+    end
+  end
 end
