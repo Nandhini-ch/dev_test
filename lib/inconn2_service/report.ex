@@ -6,7 +6,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule}
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
@@ -729,6 +729,145 @@ defmodule Inconn2Service.Report do
     end)
   end
 
+
+  def calendar(query_params, prefix) do
+    rectified_query_params = rectify_query_params(query_params)
+    asset_id = rectified_query_params["asset_id"]
+    # asset_type = rectified_query_params["asset_type"]
+    asset_category_id = rectified_query_params["asset_category_id"]
+    cond do
+      !is_nil(asset_category_id) && !is_nil(asset_id) ->
+        IO.inspect("Get directly from schedules")
+        asset_category = AssetConfig.get_asset_category(asset_category_id, prefix)
+        IO.inspect(asset_category)
+        schedules = get_schedule_for_asset(asset_id, asset_category.asset_type, prefix)
+        IO.inspect("Get Dates for each schedule")
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], prefix)
+
+
+      !is_nil(asset_category_id) ->
+        IO.inspect("Navigate from Templates to schedules")
+        schedules = asset_schedule_for_asset_category(asset_category_id, prefix)
+        IO.inspect("Get Dates for each schedule")
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], prefix)
+
+      true ->
+        IO.inspect("Not enough information is query params")
+    end
+  end
+
+  def get_calculated_dates_for_schedules(schedule_array, to_date, prefix) do
+    Stream.map(schedule_array, fn schedule ->
+      %{
+          schedule_id: schedule.schedule_id,
+          # schedule_name: schedule.schedule_name,
+          asset_name: get_asset_from_type(schedule.asset_id, schedule.asset_type, prefix).name,
+          template_id: schedule.template_id,
+          template_name: schedule.template_name,
+          dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+        }
+    end)
+  |> Enum.map(fn schedule_with_date ->
+        Enum.map(schedule_with_date.dates, fn date ->
+          Map.put(schedule_with_date, :date, date) |> Map.drop([:dates])
+        end)
+      end)
+  |> List.flatten()
+  |> Enum.sort_by(fn x ->  {x.date.year, x.date.month, x.date.day} end)
+  # |> Enum.group_by(&(&1.date))
+  end
+
+  def get_asset_from_type(asset_id, asset_type, prefix) do
+    case asset_type do
+      "E" -> AssetConfig.get_equipment(asset_id, prefix)
+      "L" -> AssetConfig.get_location(asset_id, prefix)
+    end
+  end
+
+  # def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list \\ []) do
+  #   date_list =
+  #     case length(date_list) do
+  #       0 -> [first_occurrence]
+  #       _ -> date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
+  #     end
+  #   # calculate_dates_for_schedule()
+  # end
+
+  def calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, []) do
+    calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, [first_occurrence_date])
+  end
+
+  def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+    case Date.compare(List.last(date_list), convert_string_to_date(to_date)) do
+      :lt ->
+        new_date_list = date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
+        calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
+
+      :gt ->
+        date_list
+    end
+  end
+
+  def next_date("W", repeat_every, date) do
+    date |> Date.add(repeat_every *  7)
+  end
+
+  def next_date("M", repeat_every, date) do
+    new_month =  date.month + repeat_every
+    cond do
+      new_month > 12 -> Date.new!(date.year + 1, new_month - 12, date.day)
+      true -> Date.new!(date.year, new_month, date.day)
+    end
+  end
+
+  def next_date("Y", _repeat_every, date) do
+    Date.new!(date.year + 1, date.month, date.day)
+  end
+
+  def get_schedule_for_asset(asset_id, asset_type, prefix) do
+    query =
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id,
+        join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
+        select: %{
+          schedule: wos,
+          template: wot
+        }
+
+    execute_queryand_return_stream(query, prefix)
+
+  end
+
+  def asset_schedule_for_asset_category(asset_category_id, prefix) do
+    query =
+      from wot in WorkorderTemplate, where: wot.asset_category_id == ^asset_category_id, where: wot.repeat_unit not in ["H", "D"],
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id,
+       select: %{
+         schedule: wos,
+         template: wot
+       }
+
+    execute_queryand_return_stream(query, prefix)
+  end
+
+  def execute_queryand_return_stream(query, prefix) do
+    schedule_template_data = Repo.all(query, prefix: prefix)
+
+    Stream.map(schedule_template_data, fn st ->
+      %{
+        schedule_id: st.schedule.id,
+        # schedule_name: st.schedule.name,
+        asset_id: st.schedule.asset_id,
+        asset_type: st.schedule.asset_type,
+        template_id: st.template.id,
+        template_name: st.template.name,
+        first_occurrence: st.schedule.next_occurrence_date,
+        repeat_unit: st.template.repeat_unit,
+        repeat_every: st.template.repeat_every
+      }
+
+    end)
+  end
+
   defp get_last_entry_previous(asset_id, asset_type, date_time, prefix) do
     query =
       from(ast in AssetStatusTrack,
@@ -755,6 +894,11 @@ defmodule Inconn2Service.Report do
   defp get_asset_type_from_workorder_template(work_order, prefix) do
     workorder_template = Workorder.get_workorder_template!(work_order.workorder_template_id, prefix)
     workorder_template.asset_type
+  end
+
+  defp convert_string_to_date(date_string) do
+    [year, month, date] = String.split(date_string, "-") |> Enum.map(fn x -> String.to_integer(x) end)
+    Date.new!(year, month, date)
   end
 
   defp get_site_time(site_id, prefix) do

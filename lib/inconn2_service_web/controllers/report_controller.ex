@@ -36,6 +36,11 @@ defmodule Inconn2ServiceWeb.ReportController do
     end
   end
 
+  def get_calendar(conn, _params) do
+    calendar = Report.calendar(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "calendar.json", calendar: calendar)
+  end
+
   def get_work_request_report(conn, _params) do
     result = Report.work_request_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do

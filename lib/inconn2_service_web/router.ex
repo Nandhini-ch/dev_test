@@ -295,6 +295,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/:site_id/equipments_qr_code", ReportController, :get_equipments_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
     get "/reports/csg_report", ReportController, :get_workorder_status_report
+    get "/reports/calendar/", ReportController, :get_calendar
 
 
     get "/work_orders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
