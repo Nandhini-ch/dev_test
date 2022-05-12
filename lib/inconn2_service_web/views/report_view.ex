@@ -13,4 +13,10 @@ defmodule Inconn2ServiceWeb.ReportView do
       data: inventory_info
     }
   end
+
+  def render("calendar.json", %{calendar: calendar}) do
+    %{
+      data: calendar
+    }
+  end
 end
