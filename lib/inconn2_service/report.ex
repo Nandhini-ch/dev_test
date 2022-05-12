@@ -735,6 +735,7 @@ defmodule Inconn2Service.Report do
     asset_id = rectified_query_params["asset_id"]
     # asset_type = rectified_query_params["asset_type"]
     asset_category_id = rectified_query_params["asset_category_id"]
+    asset_ids = asset_ids_based_on_filters(rectified_query_params, prefix)
     cond do
       !is_nil(asset_category_id) && !is_nil(asset_id) ->
         IO.inspect("Get directly from schedules")
@@ -742,26 +743,52 @@ defmodule Inconn2Service.Report do
         IO.inspect(asset_category)
         schedules = get_schedule_for_asset(asset_id, asset_category.asset_type, prefix)
         IO.inspect("Get Dates for each schedule")
-        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], prefix)
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], asset_ids, prefix)
 
 
       !is_nil(asset_category_id) ->
         IO.inspect("Navigate from Templates to schedules")
         schedules = asset_schedule_for_asset_category(asset_category_id, prefix)
         IO.inspect("Get Dates for each schedule")
-        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], prefix)
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], asset_ids, prefix)
 
       true ->
         IO.inspect("Not enough information is query params")
     end
   end
 
-  def get_calculated_dates_for_schedules(schedule_array, to_date, prefix) do
+  def asset_ids_based_on_filters(query_params, prefix) do
+    # location_query = from l in Location
+    equipment_query = from e in Equipment
+    dynamic_equipment_query = get_dynamic_query(query_params, equipment_query)
+    case dynamic_equipment_query do
+      "NO" -> []
+      _  -> Repo.all(dynamic_equipment_query, prefix: prefix) |> Enum.map(fn e -> e.id end)
+    end
+  end
+
+  def get_dynamic_query(query_params, query) do
+    Enum.reduce(query_params, query, fn
+      {"site_id", site_id}, query ->
+        from q in query, where: q.site_id == ^site_id
+
+      {"location_id", location_id}, query ->
+        from q in query, where: q.location_id == ^location_id
+
+      _, _query ->
+        "NO"
+    end)
+  end
+
+  def get_calculated_dates_for_schedules(schedule_array, to_date, asset_ids, prefix) do
     Stream.map(schedule_array, fn schedule ->
+        {asset_name, asset_code} = get_asset_from_type(schedule.asset_id, schedule.asset_type, prefix)
       %{
           schedule_id: schedule.schedule_id,
           # schedule_name: schedule.schedule_name,
-          asset_name: get_asset_from_type(schedule.asset_id, schedule.asset_type, prefix).name,
+          asset_id: schedule.asset_id,
+          asset_name: asset_name,
+          asset_code: asset_code,
           template_id: schedule.template_id,
           template_name: schedule.template_name,
           dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
@@ -773,14 +800,26 @@ defmodule Inconn2Service.Report do
         end)
       end)
   |> List.flatten()
+  |> filter_for_assets(asset_ids)
   |> Enum.sort_by(fn x ->  {x.date.year, x.date.month, x.date.day} end)
   # |> Enum.group_by(&(&1.date))
   end
 
+  def filter_for_assets(list, []), do: list
+
+  def filter_for_assets(list, asset_ids) do
+    Stream.filter(list, fn x -> x.asset_id in asset_ids end)
+  end
+
   def get_asset_from_type(asset_id, asset_type, prefix) do
     case asset_type do
-      "E" -> AssetConfig.get_equipment(asset_id, prefix)
-      "L" -> AssetConfig.get_location(asset_id, prefix)
+      "E" ->
+        asset = AssetConfig.get_equipment(asset_id, prefix)
+        {asset.name, asset.equipment_code}
+
+      "L" ->
+        asset = AssetConfig.get_location(asset_id, prefix)
+        {asset.name, asset.location_code}
     end
   end
 
