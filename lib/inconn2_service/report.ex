@@ -774,7 +774,7 @@ defmodule Inconn2Service.Report do
       end)
   |> List.flatten()
   |> Enum.sort_by(fn x ->  {x.date.year, x.date.month, x.date.day} end)
-  |> Enum.group_by(&(&1.date))
+  # |> Enum.group_by(&(&1.date))
   end
 
   def get_asset_from_type(asset_id, asset_type, prefix) do
