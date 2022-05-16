@@ -786,10 +786,12 @@ defmodule Inconn2Service.Assignment do
   defp calculate_and_update_attendance(manual_attendance, prefix) do
     attendance_config = get_attendance_site_config_from_shift(manual_attendance.shift_id, prefix)
     {worked_hrs, overtime_hrs} = calculate_worked_and_overtime_hrs(manual_attendance, attendance_config)
+    status = calculate_attendance_status(manual_attendance, worked_hrs, attendance_config, prefix)
     attrs =
             %{
               "worked_hours_in_minutes" => worked_hrs,
-              "overtime_hours_in_minutes" => overtime_hrs
+              "overtime_hours_in_minutes" => overtime_hrs,
+              "status" => status
             }
     manual_attendance
     |> ManualAttendance.changeset(attrs)
@@ -812,6 +814,22 @@ defmodule Inconn2Service.Assignment do
   end
 
   defp calculate_worked_and_overtime_hrs(_manual_attendance, _attendance_config), do: {nil, nil}
+
+  defp calculate_attendance_status(_manual_attendance, nil, _attendance_config, _prefix), do: nil
+
+  defp calculate_attendance_status(manual_attendance, worked_hrs, attendance_config, prefix) do
+    shift = Settings.get_shift!(manual_attendance.shift_id, prefix)
+    cond do
+      worked_hrs <= attendance_config.config["half_day_work_hours"] ->
+        "AB"
+
+      (Time.diff(manual_attendance.in_time, shift.start_time) / 60) > attendance_config.config["grace_period_for_in_time"] ->
+        "LT"
+
+      true ->
+        "PT"
+    end
+  end
 
   defp get_attendance_site_config_from_shift(shift_id, prefix) do
     from(sh in Shift, where: sh.id == ^shift_id,
