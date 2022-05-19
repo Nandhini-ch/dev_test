@@ -10,8 +10,8 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToEquipments do
       add :is_movable, :boolean
       add :department, :string
       add :asset_manager_id, :integer
-      add :maintenance_manager_id
-      add :created_on, :naive_date_time
+      add :maintenance_manager_id, :integer
+      add :created_on, :naive_datetime
       add :asset_class, :string
     end
   end
