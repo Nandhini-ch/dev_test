@@ -29,7 +29,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
   @doc false
   def changeset(equipment_manufacturer, attrs) do
     equipment_manufacturer
-    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin])
-    |> validate_required([:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin])
+    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch, :equipment_id])
+    |> validate_required([:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch])
   end
 end
