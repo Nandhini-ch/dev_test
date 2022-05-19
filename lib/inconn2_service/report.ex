@@ -743,14 +743,14 @@ defmodule Inconn2Service.Report do
         IO.inspect(asset_category)
         schedules = get_schedule_for_asset(asset_id, asset_category.asset_type, prefix)
         IO.inspect("Get Dates for each schedule")
-        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], asset_ids, prefix)
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["from_date"], rectified_query_params["to_date"], asset_ids, prefix)
 
 
       !is_nil(asset_category_id) ->
         IO.inspect("Navigate from Templates to schedules")
         schedules = asset_schedule_for_asset_category(asset_category_id, prefix)
         IO.inspect("Get Dates for each schedule")
-        get_calculated_dates_for_schedules(schedules, rectified_query_params["to_date"], asset_ids, prefix)
+        get_calculated_dates_for_schedules(schedules, rectified_query_params["from_date"], rectified_query_params["to_date"], asset_ids, prefix)
 
       true ->
         IO.inspect("Not enough information is query params")
@@ -780,7 +780,7 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-  def get_calculated_dates_for_schedules(schedule_array, to_date, asset_ids, prefix) do
+  def get_calculated_dates_for_schedules(schedule_array, from_date, to_date, asset_ids, prefix) do
     Stream.map(schedule_array, fn schedule ->
         {asset_name, asset_code} = get_asset_from_type(schedule.asset_id, schedule.asset_type, prefix)
       %{
@@ -791,7 +791,7 @@ defmodule Inconn2Service.Report do
           asset_code: asset_code,
           template_id: schedule.template_id,
           template_name: schedule.template_name,
-          dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+          dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, []) |> Enum.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
         }
     end)
   |> Enum.map(fn schedule_with_date ->
@@ -837,7 +837,6 @@ defmodule Inconn2Service.Report do
   end
 
   def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
-    IO.inspect(date_list)
     case Date.compare(List.last(date_list), convert_string_to_date(to_date)) do
       :lt ->
         new_date_list = date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
@@ -900,7 +899,7 @@ defmodule Inconn2Service.Report do
         asset_type: st.schedule.asset_type,
         template_id: st.template.id,
         template_name: st.template.name,
-        first_occurrence: st.schedule.next_occurrence_date,
+        first_occurrence: st.schedule.first_occurrence_date,
         repeat_unit: st.template.repeat_unit,
         repeat_every: st.template.repeat_every
       }
