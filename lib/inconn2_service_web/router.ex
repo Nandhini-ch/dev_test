@@ -327,5 +327,14 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
     get "/employees_for_manual_attendance", EmployeeRosterController, :employees_for_manual_attendance
     resources "/manual_attendances", ManualAttendanceController, except: [:new, :edit]
+
+
+    resources "/manufacturers", ManufacturerController, except: [:new, :edit]
+    resources "/vendors", VendorController, except: [:new, :edit]
+    resources "/service_branches", ServiceBranchController, except: [:new, :edit]
+    resources "/equipment_manufacturers", EquipmentManufacturerController, except: [:new, :edit]
+    resources "/equipment_dlp_vendors", EquipmentDlpVendorController, except: [:new, :edit]
+    resources "/equipment_maintenance_vendors", EquipmentMaintenanceVendorController, except: [:new, :edit]
+    resources "/equipment_insurance_vendors", EquipmentInsuranceVendorController, except: [:new, :edit]
   end
 end
