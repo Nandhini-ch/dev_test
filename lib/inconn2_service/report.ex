@@ -837,6 +837,7 @@ defmodule Inconn2Service.Report do
   end
 
   def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+    IO.inspect(date_list)
     case Date.compare(List.last(date_list), convert_string_to_date(to_date)) do
       :lt ->
         new_date_list = date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
