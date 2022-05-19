@@ -17,8 +17,8 @@ defmodule Inconn2Service.AssetInfo do
       [%Manufacturer{}, ...]
 
   """
-  def list_manufacturers do
-    Repo.all(Manufacturer)
+  def list_manufacturers(prefix) do
+    Repo.all(Manufacturer, prefix: prefix)
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_manufacturer!(id), do: Repo.get!(Manufacturer, id)
+  def get_manufacturer!(id, prefix), do: Repo.get!(Manufacturer, id, prefix: prefix)
 
   @doc """
   Creates a manufacturer.
@@ -49,10 +49,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_manufacturer(attrs \\ %{}) do
+  def create_manufacturer(attrs \\ %{}, prefix) do
     %Manufacturer{}
     |> Manufacturer.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -67,10 +67,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_manufacturer(%Manufacturer{} = manufacturer, attrs) do
+  def update_manufacturer(%Manufacturer{} = manufacturer, attrs, prefix) do
     manufacturer
     |> Manufacturer.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -85,8 +85,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_manufacturer(%Manufacturer{} = manufacturer) do
-    Repo.delete(manufacturer)
+  def delete_manufacturer(%Manufacturer{} = manufacturer, prefix) do
+    Repo.delete(manufacturer, prefix: prefix)
   end
 
   @doc """
@@ -113,8 +113,8 @@ defmodule Inconn2Service.AssetInfo do
       [%Vendor{}, ...]
 
   """
-  def list_vendors do
-    Repo.all(Vendor)
+  def list_vendors(prefix) do
+    Repo.all(Vendor, prefix: prefix)
   end
 
   @doc """
@@ -131,7 +131,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_vendor!(id), do: Repo.get!(Vendor, id)
+  def get_vendor!(id, prefix), do: Repo.get!(Vendor, id, prefix: prefix)
 
   @doc """
   Creates a vendor.
@@ -145,10 +145,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_vendor(attrs \\ %{}) do
+  def create_vendor(attrs \\ %{}, prefix) do
     %Vendor{}
     |> Vendor.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -163,10 +163,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_vendor(%Vendor{} = vendor, attrs) do
+  def update_vendor(%Vendor{} = vendor, attrs, prefix) do
     vendor
     |> Vendor.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -181,8 +181,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_vendor(%Vendor{} = vendor) do
-    Repo.delete(vendor)
+  def delete_vendor(%Vendor{} = vendor, prefix) do
+    Repo.delete(vendor, prefix: prefix)
   end
 
   @doc """
@@ -209,8 +209,8 @@ defmodule Inconn2Service.AssetInfo do
       [%ServiceBranch{}, ...]
 
   """
-  def list_service_branches do
-    Repo.all(ServiceBranch)
+  def list_service_branches(prefix) do
+    Repo.all(ServiceBranch, prefix: prefix)
   end
 
   @doc """
@@ -227,7 +227,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_service_branch!(id), do: Repo.get!(ServiceBranch, id)
+  def get_service_branch!(id, prefix), do: Repo.get!(ServiceBranch, id, prefix: prefix)
 
   @doc """
   Creates a service_branch.
@@ -241,10 +241,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_service_branch(attrs \\ %{}) do
+  def create_service_branch(attrs \\ %{}, prefix) do
     %ServiceBranch{}
     |> ServiceBranch.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -259,10 +259,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_service_branch(%ServiceBranch{} = service_branch, attrs) do
+  def update_service_branch(%ServiceBranch{} = service_branch, attrs, prefix) do
     service_branch
     |> ServiceBranch.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -277,8 +277,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_service_branch(%ServiceBranch{} = service_branch) do
-    Repo.delete(service_branch)
+  def delete_service_branch(%ServiceBranch{} = service_branch, prefix) do
+    Repo.delete(service_branch, prefix: prefix)
   end
 
   @doc """
@@ -305,8 +305,8 @@ defmodule Inconn2Service.AssetInfo do
       [%EquipmentManufacturer{}, ...]
 
   """
-  def list_equipment_manufacturers do
-    Repo.all(EquipmentManufacturer)
+  def list_equipment_manufacturers(prefix) do
+    Repo.all(EquipmentManufacturer, prefix: prefix)
   end
 
   @doc """
@@ -323,7 +323,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_equipment_manufacturer!(id), do: Repo.get!(EquipmentManufacturer, id)
+  def get_equipment_manufacturer!(id, prefix), do: Repo.get!(EquipmentManufacturer, id, prefix: prefix)
 
   @doc """
   Creates a equipment_manufacturer.
@@ -337,10 +337,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_equipment_manufacturer(attrs \\ %{}) do
+  def create_equipment_manufacturer(attrs \\ %{}, prefix) do
     %EquipmentManufacturer{}
     |> EquipmentManufacturer.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -355,10 +355,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment_manufacturer(%EquipmentManufacturer{} = equipment_manufacturer, attrs) do
+  def update_equipment_manufacturer(%EquipmentManufacturer{} = equipment_manufacturer, attrs, prefix) do
     equipment_manufacturer
     |> EquipmentManufacturer.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -373,8 +373,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_equipment_manufacturer(%EquipmentManufacturer{} = equipment_manufacturer) do
-    Repo.delete(equipment_manufacturer)
+  def delete_equipment_manufacturer(%EquipmentManufacturer{} = equipment_manufacturer, prefix) do
+    Repo.delete(equipment_manufacturer, prefix: prefix)
   end
 
   @doc """
@@ -401,8 +401,8 @@ defmodule Inconn2Service.AssetInfo do
       [%EquipmentDlpVendor{}, ...]
 
   """
-  def list_equipment_dlp_vendors do
-    Repo.all(EquipmentDlpVendor)
+  def list_equipment_dlp_vendors(prefix) do
+    Repo.all(EquipmentDlpVendor, prefix: prefix)
   end
 
   @doc """
@@ -419,7 +419,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_equipment_dlp_vendor!(id), do: Repo.get!(EquipmentDlpVendor, id)
+  def get_equipment_dlp_vendor!(id, prefix), do: Repo.get!(EquipmentDlpVendor, id, prefix: prefix)
 
   @doc """
   Creates a equipment_dlp_vendor.
@@ -433,10 +433,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_equipment_dlp_vendor(attrs \\ %{}) do
+  def create_equipment_dlp_vendor(attrs \\ %{}, prefix) do
     %EquipmentDlpVendor{}
     |> EquipmentDlpVendor.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -451,10 +451,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment_dlp_vendor(%EquipmentDlpVendor{} = equipment_dlp_vendor, attrs) do
+  def update_equipment_dlp_vendor(%EquipmentDlpVendor{} = equipment_dlp_vendor, attrs, prefix) do
     equipment_dlp_vendor
     |> EquipmentDlpVendor.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -469,8 +469,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_equipment_dlp_vendor(%EquipmentDlpVendor{} = equipment_dlp_vendor) do
-    Repo.delete(equipment_dlp_vendor)
+  def delete_equipment_dlp_vendor(%EquipmentDlpVendor{} = equipment_dlp_vendor, prefix) do
+    Repo.delete(equipment_dlp_vendor, prefix: prefix)
   end
 
   @doc """
@@ -497,8 +497,8 @@ defmodule Inconn2Service.AssetInfo do
       [%EquipmentMaintenanceVendor{}, ...]
 
   """
-  def list_equipment_maintenance_vendors do
-    Repo.all(EquipmentMaintenanceVendor)
+  def list_equipment_maintenance_vendors(prefix) do
+    Repo.all(EquipmentMaintenanceVendor, prefix: prefix)
   end
 
   @doc """
@@ -515,7 +515,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_equipment_maintenance_vendor!(id), do: Repo.get!(EquipmentMaintenanceVendor, id)
+  def get_equipment_maintenance_vendor!(id, prefix), do: Repo.get!(EquipmentMaintenanceVendor, id, prefix: prefix)
 
   @doc """
   Creates a equipment_maintenance_vendor.
@@ -529,10 +529,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_equipment_maintenance_vendor(attrs \\ %{}) do
+  def create_equipment_maintenance_vendor(attrs \\ %{}, prefix) do
     %EquipmentMaintenanceVendor{}
     |> EquipmentMaintenanceVendor.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -547,10 +547,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment_maintenance_vendor(%EquipmentMaintenanceVendor{} = equipment_maintenance_vendor, attrs) do
+  def update_equipment_maintenance_vendor(%EquipmentMaintenanceVendor{} = equipment_maintenance_vendor, attrs, prefix) do
     equipment_maintenance_vendor
     |> EquipmentMaintenanceVendor.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -565,8 +565,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_equipment_maintenance_vendor(%EquipmentMaintenanceVendor{} = equipment_maintenance_vendor) do
-    Repo.delete(equipment_maintenance_vendor)
+  def delete_equipment_maintenance_vendor(%EquipmentMaintenanceVendor{} = equipment_maintenance_vendor, prefix) do
+    Repo.delete(equipment_maintenance_vendor, prefix: prefix)
   end
 
   @doc """
@@ -593,8 +593,8 @@ defmodule Inconn2Service.AssetInfo do
       [%EquipmentInsuranceVendor{}, ...]
 
   """
-  def list_equipment_insurance_vendors do
-    Repo.all(EquipmentInsuranceVendor)
+  def list_equipment_insurance_vendors(prefix) do
+    Repo.all(EquipmentInsuranceVendor, prefix: prefix)
   end
 
   @doc """
@@ -611,7 +611,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_equipment_insurance_vendor!(id), do: Repo.get!(EquipmentInsuranceVendor, id)
+  def get_equipment_insurance_vendor!(id, prefix), do: Repo.get!(EquipmentInsuranceVendor, id, prefix: prefix)
 
   @doc """
   Creates a equipment_insurance_vendor.
@@ -625,10 +625,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_equipment_insurance_vendor(attrs \\ %{}) do
+  def create_equipment_insurance_vendor(attrs \\ %{}, prefix) do
     %EquipmentInsuranceVendor{}
     |> EquipmentInsuranceVendor.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
   end
 
   @doc """
@@ -643,10 +643,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment_insurance_vendor(%EquipmentInsuranceVendor{} = equipment_insurance_vendor, attrs) do
+  def update_equipment_insurance_vendor(%EquipmentInsuranceVendor{} = equipment_insurance_vendor, attrs, prefix) do
     equipment_insurance_vendor
     |> EquipmentInsuranceVendor.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -661,8 +661,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_equipment_insurance_vendor(%EquipmentInsuranceVendor{} = equipment_insurance_vendor) do
-    Repo.delete(equipment_insurance_vendor)
+  def delete_equipment_insurance_vendor(%EquipmentInsuranceVendor{} = equipment_insurance_vendor, prefix) do
+    Repo.delete(equipment_insurance_vendor, prefix: prefix)
   end
 
   @doc """
