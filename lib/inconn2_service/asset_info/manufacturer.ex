@@ -18,7 +18,7 @@ defmodule Inconn2Service.AssetInfo.Manufacturer do
   def changeset(manufacturer, attrs) do
     manufacturer
     |> cast(attrs, [:name, :register_no, :description])
-    |> validate_required([:name, :register_no, :description])
+    |> validate_required([:name])
     |> cast_embed(:contact)
   end
 end

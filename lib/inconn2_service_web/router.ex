@@ -347,5 +347,10 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/equipment_insurance_vendors", EquipmentInsuranceVendorController, except: [:new, :edit]
     get "/equipments/:equipment_id/equipment_insurance_vendors", EquipmentInsuranceVendorController, :index_by_equipment_id
+
+    resources "/equipment_attachments", EquipmentAttachmentController, only: [:create, :show, :delete]
+    get "/equipments/:equipment_id/equipment_attachments", EquipmentAttachmentController, :list_for_equipment
+    get "/equipment_attachment_download/:id", EquipmentAttachmentController, :get_attachment
+
   end
 end

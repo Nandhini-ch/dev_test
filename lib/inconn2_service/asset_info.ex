@@ -720,8 +720,13 @@ defmodule Inconn2Service.AssetInfo do
       [%EquipmentAttachment{}, ...]
 
   """
-  def list_equipment_attachments do
-    Repo.all(EquipmentAttachment)
+  def list_equipment_attachments(prefix) do
+    Repo.all(EquipmentAttachment, prefix: prefix)
+  end
+
+  def list_equipment_attachments_for_equipment(equipment_id, prefix) do
+    from(ea in EquipmentAttachment, where: ea.equipment_id == ^equipment_id)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -738,7 +743,7 @@ defmodule Inconn2Service.AssetInfo do
       ** (Ecto.NoResultsError)
 
   """
-  def get_equipment_attachment!(id), do: Repo.get!(EquipmentAttachment, id)
+  def get_equipment_attachment!(id, prefix), do: Repo.get!(EquipmentAttachment, id, prefix: prefix)
 
   @doc """
   Creates a equipment_attachment.
@@ -752,10 +757,24 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_equipment_attachment(attrs \\ %{}) do
+  def create_equipment_attachment(attrs \\ %{}, prefix) do
+    attrs = read_attachment(attrs)
     %EquipmentAttachment{}
     |> EquipmentAttachment.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp read_attachment(attrs) do
+    attachment = Map.get(attrs, "attachment")
+    if attachment != nil and attachment != "" do
+      {:ok, attachment_binary} = File.read(attachment.path)
+      attachment_type = attachment.content_type
+      attrs
+      |> Map.put("attachment", attachment_binary)
+      |> Map.put("attachment_type", attachment_type)
+    else
+      attrs
+    end
   end
 
   @doc """
@@ -770,10 +789,10 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_equipment_attachment(%EquipmentAttachment{} = equipment_attachment, attrs) do
+  def update_equipment_attachment(%EquipmentAttachment{} = equipment_attachment, attrs, prefix) do
     equipment_attachment
     |> EquipmentAttachment.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(prefix: prefix)
   end
 
   @doc """
@@ -788,8 +807,8 @@ defmodule Inconn2Service.AssetInfo do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_equipment_attachment(%EquipmentAttachment{} = equipment_attachment) do
-    Repo.delete(equipment_attachment)
+  def delete_equipment_attachment(%EquipmentAttachment{} = equipment_attachment, prefix) do
+    Repo.delete(equipment_attachment, prefix: prefix)
   end
 
   @doc """

@@ -18,7 +18,7 @@ defmodule Inconn2Service.AssetInfo.Vendor do
   def changeset(vendor, attrs) do
     vendor
     |> cast(attrs, [:name, :description, :register_no])
-    |> validate_required([:name, :description, :register_no])
+    |> validate_required([:name])
     |> cast_embed(:contact)
   end
 end
