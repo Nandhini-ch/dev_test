@@ -11,6 +11,16 @@ defmodule Inconn2ServiceWeb.ServiceBranchController do
     render(conn, "index.json", service_branches: service_branches)
   end
 
+  def index_by_vendor_id(conn, %{"vendor_id" => vendor_id}) do
+    service_branches = AssetInfo.list_service_branches_by_vendor_id(vendor_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", service_branches: service_branches)
+  end
+
+  def index_by_manufacturer_id(conn, %{"manufacturer_id" => manufacturer_id}) do
+    service_branches = AssetInfo.list_service_branches_by_manufacturer_id(manufacturer_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", service_branches: service_branches)
+  end
+
   def create(conn, %{"service_branch" => service_branch_params}) do
     with {:ok, %ServiceBranch{} = service_branch} <- AssetInfo.create_service_branch(service_branch_params, conn.assigns.sub_domain_prefix) do
       conn
