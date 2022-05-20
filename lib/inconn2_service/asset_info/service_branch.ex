@@ -22,4 +22,15 @@ defmodule Inconn2Service.AssetInfo.ServiceBranch do
     |> cast_embed(:address)
     |> cast_embed(:contact)
   end
+
+  def validate_vendor_manufacturer_id(cs) do
+    cond do
+      is_nil(get_field(cs, :manufacturer_id, nil)) or is_nil(get_field(cs, :manufacturer_id, nil)) ->
+        add_error(cs, :manufacturer_id, "Either manufacturer or vendor should be present")
+        |> add_error(:vendor_id, "Either manufacturer or vendor should be present")
+
+      true ->
+        cs
+    end
+  end
 end
