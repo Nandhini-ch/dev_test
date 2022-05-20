@@ -21,7 +21,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentMaintenanceVendor do
   def changeset(equipment_maintenance_vendor, attrs) do
     equipment_maintenance_vendor
     |> cast(attrs, [:vendor_scope, :is_asset_under_amc, :amc_from, :amc_to, :amc_frequency, :response_time_in_minutes, :vendor_id, :service_branch_id, :equipment_id])
-    |> validate_required([:vendor_scope, :is_asset_under_amc, :amc_from, :amc_to, :amc_frequency, :response_time_in_minutes, :vendor_id, :service_branch_id])
+    |> validate_required([:is_asset_under_amc, :vendor_id, :service_branch_id, :equipment_id])
     |> validate_dates()
   end
 

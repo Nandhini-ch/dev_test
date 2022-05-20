@@ -29,8 +29,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
   @doc false
   def changeset(equipment_manufacturer, attrs) do
     equipment_manufacturer
-    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch, :equipment_id])
-    |> validate_required([:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch])
+    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch_id, :equipment_id])
+    |> validate_required([:manufacturer_id, :equipment_id])
     |> validate_dates()
     |> validate_commissioned_date()
   end
@@ -51,7 +51,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
   defp validate_commissioned_date(cs) do
     accuired_date = get_field(cs, :accuired_date)
     commissioned_date = get_field(cs, :commissioned_date)
-    if not is_nil(accuired_date) or not is_nil(commissioned_date) do
+    if not is_nil(accuired_date) and not is_nil(commissioned_date) do
       case Date.compare(accuired_date, commissioned_date) do
         :gt -> add_error(cs, :commissioned_date, "should be greater than equal to accuired date")
         _ -> cs
