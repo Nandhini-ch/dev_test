@@ -214,6 +214,16 @@ defmodule Inconn2Service.AssetInfo do
     Repo.all(ServiceBranch, prefix: prefix)
   end
 
+  def list_service_branches_by_vendor_id(vendor_id, prefix) do
+    from(sb in ServiceBranch, where: sb.vendor_id == ^vendor_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_service_branches_by_manufacturer_id(manufacturer_id, prefix) do
+    from(sb in ServiceBranch, where: sb.manufacturer_id == ^manufacturer_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single service_branch.
 
