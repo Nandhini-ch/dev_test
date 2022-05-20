@@ -38,7 +38,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
   defp validate_dates(cs) do
     from_date = get_field(cs, :warranty_from)
     to_date = get_field(cs, :warranty_to)
-    if not is_nil(from_date) or not is_nil(to_date) do
+    if not is_nil(from_date) and not is_nil(to_date) do
       case Date.compare(from_date, to_date) do
         :lt -> cs
         _ -> add_error(cs, :warranty_from, "should be less than end date")

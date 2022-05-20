@@ -19,14 +19,14 @@ defmodule Inconn2Service.AssetInfo.EquipmentDlpVendor do
   def changeset(equipment_dlp_vendor, attrs) do
     equipment_dlp_vendor
     |> cast(attrs, [:vendor_scope, :is_asset_under_dlp, :dlp_from, :dlp_to, :vendor_id, :service_branch_id, :equipment_id])
-    |> validate_required([:vendor_id, :service_branch_id])
+    |> validate_required([:vendor_id, :service_branch_id, :equipment_id])
     |> validate_dates()
   end
 
   defp validate_dates(cs) do
     from_date = get_field(cs, :dlp_from)
     to_date = get_field(cs, :dlp_to)
-    if not is_nil(from_date) or not is_nil(to_date) do
+    if not is_nil(from_date) and not is_nil(to_date) do
       case Date.compare(from_date, to_date) do
         :lt -> cs
         _ -> add_error(cs, :dlp_from, "should be less than end date")

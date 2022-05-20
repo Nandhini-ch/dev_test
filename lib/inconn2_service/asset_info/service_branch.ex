@@ -25,9 +25,13 @@ defmodule Inconn2Service.AssetInfo.ServiceBranch do
 
   def validate_vendor_manufacturer_id(cs) do
     cond do
-      is_nil(get_field(cs, :manufacturer_id, nil)) or is_nil(get_field(cs, :manufacturer_id, nil)) ->
+      is_nil(get_field(cs, :manufacturer_id, nil)) and is_nil(get_field(cs, :vendor_id, nil)) ->
         add_error(cs, :manufacturer_id, "Either manufacturer or vendor should be present")
         |> add_error(:vendor_id, "Either manufacturer or vendor should be present")
+
+      not is_nil(get_field(cs, :manufacturer_id, nil)) and not is_nil(get_field(cs, :vendor_id, nil)) ->
+        add_error(cs, :manufacturer_id, "Both manufacturer and vendor cannot be present")
+        |> add_error(:vendor_id, "Both manufacturer or vendor cannot be present")
 
       true ->
         cs
