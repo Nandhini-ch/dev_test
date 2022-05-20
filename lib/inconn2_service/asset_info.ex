@@ -7,6 +7,7 @@ defmodule Inconn2Service.AssetInfo do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetInfo.Manufacturer
+  alias Inconn2Service.AssetConfig.Equipment
 
   @doc """
   Returns the list of manufacturers.
@@ -309,6 +310,11 @@ defmodule Inconn2Service.AssetInfo do
     Repo.all(EquipmentManufacturer, prefix: prefix)
   end
 
+  def list_equipment_manufacturers_by_equipment_id(equipment_id, prefix) do
+    from(em in EquipmentManufacturer, where: em.equipment_id == ^equipment_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single equipment_manufacturer.
 
@@ -403,6 +409,11 @@ defmodule Inconn2Service.AssetInfo do
   """
   def list_equipment_dlp_vendors(prefix) do
     Repo.all(EquipmentDlpVendor, prefix: prefix)
+  end
+
+  def list_equipment_dlp_vendors_by_equipment_id(equipment_id, prefix) do
+    from(edv in EquipmentDlpVendor, where: edv.equipment_id == ^equipment_id)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -501,6 +512,11 @@ defmodule Inconn2Service.AssetInfo do
     Repo.all(EquipmentMaintenanceVendor, prefix: prefix)
   end
 
+  def list_equipment_maintenance_vendors_by_equipment_id(equipment_id, prefix) do
+    from(emv in EquipmentMaintenanceVendor, where: emv.equipment_id == ^equipment_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   @doc """
   Gets a single equipment_maintenance_vendor.
 
@@ -595,6 +611,11 @@ defmodule Inconn2Service.AssetInfo do
   """
   def list_equipment_insurance_vendors(prefix) do
     Repo.all(EquipmentInsuranceVendor, prefix: prefix)
+  end
+
+  def list_equipment_insurance_vendors_by_equipment_id(equipment_id, prefix) do
+    from(eiv in EquipmentInsuranceVendor, where: eiv.equipment_id == ^equipment_id)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """

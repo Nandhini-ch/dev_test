@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.EquipmentDlpVendorController do
     render(conn, "index.json", equipment_dlp_vendors: equipment_dlp_vendors)
   end
 
+  def index_by_equipment_id(conn, %{"equipment_id" => equipment_id}) do
+    equipment_dlp_vendors = AssetInfo.list_equipment_dlp_vendors_by_equipment_id(equipment_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", equipment_dlp_vendors: equipment_dlp_vendors)
+  end
+
   def create(conn, %{"equipment_dlp_vendor" => equipment_dlp_vendor_params}) do
     with {:ok, %EquipmentDlpVendor{} = equipment_dlp_vendor} <- AssetInfo.create_equipment_dlp_vendor(equipment_dlp_vendor_params, conn.assigns.sub_domain_prefix) do
       conn

@@ -332,9 +332,17 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/manufacturers", ManufacturerController, except: [:new, :edit]
     resources "/vendors", VendorController, except: [:new, :edit]
     resources "/service_branches", ServiceBranchController, except: [:new, :edit]
+
     resources "/equipment_manufacturers", EquipmentManufacturerController, except: [:new, :edit]
+    get "/equipmments/:equipment_id/equipment_manufacturers", EquipmentManufacturerController, :index_by_equipment_id
+
     resources "/equipment_dlp_vendors", EquipmentDlpVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_dpl_vendors", EquipmentDlpVendorController, :index_by_equipment_id
+
     resources "/equipment_maintenance_vendors", EquipmentMaintenanceVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_maintenance_vendors", EquipmentMaintenanceVendorController, :index_by_equipment_id
+
     resources "/equipment_insurance_vendors", EquipmentInsuranceVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_insurance_vendors", EquipmentInsuranceVendorController, :index_by_equipment_id
   end
 end

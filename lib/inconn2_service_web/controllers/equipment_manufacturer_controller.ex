@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.EquipmentManufacturerController do
     render(conn, "index.json", equipment_manufacturers: equipment_manufacturers)
   end
 
+  def index_by_equipment_id(conn, %{"equipment_id" => equipment_id}) do
+    equipment_manufacturers = AssetInfo.list_equipment_manufacturers_by_equipment_id(equipment_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", equipment_manufacturers: equipment_manufacturers)
+  end
+
   def create(conn, %{"equipment_manufacturer" => equipment_manufacturer_params}) do
     with {:ok, %EquipmentManufacturer{} = equipment_manufacturer} <- AssetInfo.create_equipment_manufacturer(equipment_manufacturer_params, conn.assigns.sub_domain_prefix) do
       conn
