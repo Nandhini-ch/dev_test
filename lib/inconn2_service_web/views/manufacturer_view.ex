@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.ManufacturerView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ManufacturerView
+  alias Inconn2ServiceWeb.{ManufacturerView, AddressContactView}
 
   def render("index.json", %{manufacturers: manufacturers}) do
     %{data: render_many(manufacturers, ManufacturerView, "manufacturer.json")}
@@ -15,6 +15,6 @@ defmodule Inconn2ServiceWeb.ManufacturerView do
       name: manufacturer.name,
       register_no: manufacturer.register_no,
       description: manufacturer.description,
-      contact: manufacturer.contact}
+      contact: render_one(manufacturer.contact, AddressContactView, "contact.json")}
   end
 end

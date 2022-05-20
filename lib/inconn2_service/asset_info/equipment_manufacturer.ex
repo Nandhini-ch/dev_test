@@ -31,5 +31,34 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
     equipment_manufacturer
     |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch, :equipment_id])
     |> validate_required([:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch])
+    |> validate_dates()
+    |> validate_commissioned_date()
   end
+
+  defp validate_dates(cs) do
+    from_date = get_field(cs, :warranty_from)
+    to_date = get_field(cs, :warranty_to)
+    if not is_nil(from_date) or not is_nil(to_date) do
+      case Date.compare(from_date, to_date) do
+        :lt -> cs
+        _ -> add_error(cs, :warranty_from, "should be less than end date")
+      end
+    else
+      cs
+    end
+  end
+
+  defp validate_commissioned_date(cs) do
+    accuired_date = get_field(cs, :accuired_date)
+    commissioned_date = get_field(cs, :commissioned_date)
+    if not is_nil(accuired_date) or not is_nil(commissioned_date) do
+      case Date.compare(accuired_date, commissioned_date) do
+        :gt -> add_error(cs, :commissioned_date, "should be greater than equal to accuired date")
+        _ -> cs
+      end
+    else
+      cs
+    end
+  end
+
 end

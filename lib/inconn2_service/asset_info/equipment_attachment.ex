@@ -16,6 +16,6 @@ defmodule Inconn2Service.AssetInfo.EquipmentAttachment do
   def changeset(equipment_attachment, attrs) do
     equipment_attachment
     |> cast(attrs, [:name, :attachment, :attachment_type, :equipment_id])
-    |> validate_required([:name, :attachment, :attachment_type])
+    |> validate_required([:name, :attachment, :attachment_type, :equipment_id])
   end
 end
