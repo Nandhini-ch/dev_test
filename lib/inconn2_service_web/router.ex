@@ -327,5 +327,30 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
     get "/employees_for_manual_attendance", EmployeeRosterController, :employees_for_manual_attendance
     resources "/manual_attendances", ManualAttendanceController, except: [:new, :edit]
+
+
+    resources "/manufacturers", ManufacturerController, except: [:new, :edit]
+    resources "/vendors", VendorController, except: [:new, :edit]
+
+    resources "/service_branches", ServiceBranchController, except: [:new, :edit]
+    get "/vendors/:vendor_id/service_branches", ServiceBranchController, :index_by_vendor_id
+    get "/manufacturers/:manufacturer_id/service_branches", ServiceBranchController, :index_by_manufacturer_id
+
+    resources "/equipment_manufacturers", EquipmentManufacturerController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_manufacturers", EquipmentManufacturerController, :index_by_equipment_id
+
+    resources "/equipment_dlp_vendors", EquipmentDlpVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_dpl_vendors", EquipmentDlpVendorController, :index_by_equipment_id
+
+    resources "/equipment_maintenance_vendors", EquipmentMaintenanceVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_maintenance_vendors", EquipmentMaintenanceVendorController, :index_by_equipment_id
+
+    resources "/equipment_insurance_vendors", EquipmentInsuranceVendorController, except: [:new, :edit]
+    get "/equipments/:equipment_id/equipment_insurance_vendors", EquipmentInsuranceVendorController, :index_by_equipment_id
+
+    resources "/equipment_attachments", EquipmentAttachmentController, only: [:create, :show, :delete]
+    get "/equipments/:equipment_id/equipment_attachments", EquipmentAttachmentController, :list_for_equipment
+    get "/equipment_attachment_download/:id", EquipmentAttachmentController, :get_attachment
+
   end
 end

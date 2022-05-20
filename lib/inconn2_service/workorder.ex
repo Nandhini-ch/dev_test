@@ -2091,7 +2091,8 @@ defmodule Inconn2Service.Workorder do
 
           _ ->
             asset_category_query =
-              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              from q in common_query, where: is_nil(q.user_id),
+               join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
               select_merge: %{
                 workorder_template: wt
               }
@@ -2251,23 +2252,20 @@ defmodule Inconn2Service.Workorder do
 
       work_orders = Stream.uniq(assigned_work_orders ++ asset_category_workorders)
 
-      work_orders =
-        Stream.map(work_orders, fn wo ->
-            wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
-            Map.put_new(wo, :workorder_tasks,  wots)
-          end)
-        |> Enum.map(fn wo ->
-          asset =
-            case wo.workorder_template.asset_type do
-              "L" ->
-                AssetConfig.get_location!(wo.asset_id, prefix)
-              "E" ->
-                AssetConfig.get_equipment!(wo.asset_id, prefix)
-            end
-          Map.put_new(wo, :asset, asset)
-        end)
-      IO.inspect(work_orders)
-      work_orders
+      Stream.map(work_orders, fn wo ->
+          wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+          Map.put_new(wo, :workorder_tasks,  wots)
+      end)
+      |> Enum.map(fn wo ->
+        asset =
+          case wo.workorder_template.asset_type do
+            "L" ->
+              AssetConfig.get_location!(wo.asset_id, prefix)
+            "E" ->
+              AssetConfig.get_equipment!(wo.asset_id, prefix)
+          end
+        Map.put_new(wo, :asset, asset)
+      end)
 
   end
 
