@@ -5,8 +5,8 @@ defmodule Inconn2Service.Assignment.Attendance do
 
   schema "attendances" do
     field :date_time, :naive_datetime
-    field :latitude, :string
-    field :longitude, :string
+    field :latitude, :float
+    field :longitude, :float
     field :site_id, :integer
     field :employee_id, :integer
 

@@ -36,13 +36,6 @@ defmodule Inconn2Service.Assignment do
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
 
-  # def list_employee_rosters(query_params, prefix) do
-  #   EmployeeRoster
-  #   |> Repo.add_active_filter(query_params)
-  #   |> Repo.all(prefix: prefix)
-  #   |> Repo.preload([:site, :employee, :shift])
-  # end
-
   def list_employee_roster_for_shift_and_date(%{"shift_id" => shift_id, "date" => date}, user, prefix) do
     {:ok, date} = date_convert(date)
     query =
@@ -127,6 +120,22 @@ defmodule Inconn2Service.Assignment do
     )
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn x -> x.employee_id end)
+  end
+
+  def list_sites_from_roster(user, prefix) do
+    user = user |> Repo.preload(:employee)
+    case user.employee do
+      nil ->
+        []
+
+      _ ->
+            from(er in EmployeeRoster,
+                where: er.employee_id == ^user.employee.id,
+                join: s in Site, on: er.site_id == s.id,
+                select: s
+            )
+            |> Repo.all(prefix: prefix)
+    end
   end
 
   defp convert_shift_times_to_datetimes(shift_id, prefix) do

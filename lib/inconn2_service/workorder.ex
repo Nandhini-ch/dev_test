@@ -1662,6 +1662,24 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def update_pause_time_in_work_order(work_order, date_time, prefix) do
+    date_time = NaiveDateTime.from_iso8601!(date_time)
+    attrs = %{"pause_resume_times" => work_order.pause_resume_times ++ [%{"pause" => date_time}]}
+    work_order
+    |> WorkOrder.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def update_resume_time_in_work_order(work_order, date_time, prefix) do
+    date_time = NaiveDateTime.from_iso8601!(date_time)
+    last_pause = List.last(work_order.pause_resume_times)
+    pause_resume = work_order.pause_resume_times -- [last_pause]
+    attrs = %{"pause_resume_times" => pause_resume ++ [Map.put(last_pause, "resume", date_time)]}
+    work_order
+    |> WorkOrder.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   def send_for_workpermit_approval(work_order, prefix, user) do
     query = from wc in WorkorderCheck, where: wc.work_order_id == ^work_order.id and wc.type == ^"WP"
     workorder_checks = Repo.all(query, prefix: prefix)
