@@ -17,7 +17,7 @@ defmodule Inconn2ServiceWeb.EquipmentAttachmentController do
   end
 
 
-  def create(conn, %{"equipment_attachment" => equipment_attachment_params}) do
+  def create(conn, equipment_attachment_params) do
     with {:ok, %EquipmentAttachment{} = equipment_attachment} <- AssetInfo.create_equipment_attachment(equipment_attachment_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
