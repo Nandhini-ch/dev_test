@@ -311,8 +311,8 @@ tsk1 = %{
   "task_type" => "IO",
   "estimated_time" => 60,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "a"},
-                           %{"label" => "xyz", "value" => "b"} ]
+            "options" => [ %{"label" => "abc", "value" => "P"},
+                           %{"label" => "xyz", "value" => "F"} ]
             }
 }
 
@@ -321,8 +321,9 @@ tsk2 = %{
   "task_type" => "IM",
   "estimated_time" => 120,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "a"},
-                           %{"label" => "xyz", "value" => "b"} ]
+            "options" => [ %{"label" => "abc", "value" => "P"},
+                           %{"label" => "xyz", "value" => "F"},
+                           %{"label" => "qwe", "value" => "F"} ]
             }
 }
 

@@ -86,6 +86,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   defp validate_values_of_map(options) do
     list = Enum.map(options, fn map ->
                         Enum.map(Map.values(map), fn x -> Kernel.is_bitstring(x) end) end)
-    List.flatten(list)
+    values_list = Enum.map(options, fn map -> map["value"] in ["P", "F"] end)
+    List.flatten(list ++ values_list)
   end
 end

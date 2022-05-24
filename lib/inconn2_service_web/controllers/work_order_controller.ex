@@ -76,7 +76,6 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "show.json", work_order: work_order)
   end
 
-  @spec next_step(Plug.Conn.t(), map) :: Plug.Conn.t()
   def next_step(conn, %{"id" => id}) do
     next_step = Workorder.get_next_steps(id, conn.assigns.sub_domain_prefix)
 
@@ -188,6 +187,22 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
 
     with {:ok, asset} <- Workorder.update_asset_status(work_order, asset_params, conn.assigns.sub_domain_prefix) do
       render(conn, "asset.json", asset: asset, asset_type: work_order.asset_type)
+    end
+  end
+
+  def pause_work_order(conn, %{"id" => id, "date_time" => date_time}) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, work_order} <- Workorder.update_pause_time_in_work_order(work_order, date_time, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", work_order: work_order)
+    end
+  end
+
+  def resume_work_order(conn, %{"id" => id, "date_time" => date_time}) do
+    work_order = Workorder.get_work_order!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, work_order} <- Workorder.update_resume_time_in_work_order(work_order, date_time, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", work_order: work_order)
     end
   end
 end
