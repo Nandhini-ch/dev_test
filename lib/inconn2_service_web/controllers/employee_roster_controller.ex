@@ -32,6 +32,11 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
     end
   end
 
+  def index_sites_for_attendance(conn, _params) do
+    sites = Assignment.list_sites_from_roster(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "site_index.json", sites: sites)
+  end
+
   def employees(conn, _params) do
     employees = Assignment.list_employee_for_attendance(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "employee_index.json", employees: employees)
