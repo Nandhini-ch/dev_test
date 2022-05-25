@@ -24,6 +24,14 @@ defmodule Inconn2ServiceWeb.LocationController do
     |> send_resp(200, png)
   end
 
+  def display_qr_code_as_pdf(conn, %{"id" => id}) do
+    {name, pdf} = AssetConfig.get_location_qr_as_pdf(id, conn.assigns.sub_domain_prefix)
+    conn
+    |> put_resp_content_type("application/pdf")
+    |> put_resp_header("content-disposition", "attachment; filename=\"#{name}.pdf\"")
+    |> send_resp(200, pdf)
+  end
+
   def list_locations_qr(conn, %{"site_id" => site_id}) do
     locations = AssetConfig.list_locations_qr(site_id, conn.assigns.sub_domain_prefix)
     render(conn, "asset_qrs.json", locations: locations)
