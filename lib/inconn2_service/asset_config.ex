@@ -953,6 +953,76 @@ defmodule Inconn2Service.AssetConfig do
     {EQRCode.encode("E:" <> equipment.qr_code) |> EQRCode.png, equipment}
   end
 
+  defp style(style_map) do
+    style_map
+    |> Enum.map(fn {key, value} ->
+      "#{key}: #{value}"
+    end)
+    |> Enum.join(";")
+  end
+
+  def get_equipment_qr_as_pdf(id, prefix) do
+    "inc_" <> sub_domain = prefix
+    equipment = get_equipment!(id, prefix)
+    string =
+      Sneeze.render(
+        [
+          :center,
+          [
+            :img,
+            %{
+              src: "http://#{sub_domain}.localhost:4000/api/equipments/#{id}/qr_code",
+              style: style(%{
+                "margin-top" => "150px",
+                "height" => "800px",
+                "width" => "800px"
+              })
+            }
+          ],
+          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{equipment.name}"],
+          [
+            :span,
+            %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
+            "Powered By InConn"
+          ]
+        ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    {equipment.name, pdf_content}
+  end
+
+  def get_location_qr_as_pdf(id, prefix) do
+    "inc_" <> sub_domain = prefix
+    location = get_location!(id, prefix)
+    string =
+      Sneeze.render(
+        [
+          :center,
+          [
+            :img,
+            %{
+              src: "http://#{sub_domain}.localhost:4000/api/locations/#{id}/qr_code",
+              style: style(%{
+                "margin-top" => "150px",
+                "height" => "800px",
+                "width" => "800px"
+              })
+            }
+          ],
+          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{location.name}"],
+          [
+            :span,
+            %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
+            "Powered By InConn"
+          ]
+        ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    {location.name, pdf_content}
+  end
+
   def get_equipment_by_qr_code(qr_code, prefix), do: Repo.get_by(Equipment, [qr_code: qr_code], prefix: prefix)
 
   @spec get_root_equipments(any, any) :: any
