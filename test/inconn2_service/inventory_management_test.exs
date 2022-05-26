@@ -63,4 +63,65 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_uom_category(uom_category)
     end
   end
+
+  describe "unit_of_measurements" do
+    alias Inconn2Service.InventoryManagement.UnitOfMeasurement
+
+    @valid_attrs %{name: "some name", unit: "some unit"}
+    @update_attrs %{name: "some updated name", unit: "some updated unit"}
+    @invalid_attrs %{name: nil, unit: nil}
+
+    def unit_of_measurement_fixture(attrs \\ %{}) do
+      {:ok, unit_of_measurement} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_unit_of_measurement()
+
+      unit_of_measurement
+    end
+
+    test "list_unit_of_measurements/0 returns all unit_of_measurements" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert InventoryManagement.list_unit_of_measurements() == [unit_of_measurement]
+    end
+
+    test "get_unit_of_measurement!/1 returns the unit_of_measurement with given id" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert InventoryManagement.get_unit_of_measurement!(unit_of_measurement.id) == unit_of_measurement
+    end
+
+    test "create_unit_of_measurement/1 with valid data creates a unit_of_measurement" do
+      assert {:ok, %UnitOfMeasurement{} = unit_of_measurement} = InventoryManagement.create_unit_of_measurement(@valid_attrs)
+      assert unit_of_measurement.name == "some name"
+      assert unit_of_measurement.unit == "some unit"
+    end
+
+    test "create_unit_of_measurement/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_unit_of_measurement(@invalid_attrs)
+    end
+
+    test "update_unit_of_measurement/2 with valid data updates the unit_of_measurement" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert {:ok, %UnitOfMeasurement{} = unit_of_measurement} = InventoryManagement.update_unit_of_measurement(unit_of_measurement, @update_attrs)
+      assert unit_of_measurement.name == "some updated name"
+      assert unit_of_measurement.unit == "some updated unit"
+    end
+
+    test "update_unit_of_measurement/2 with invalid data returns error changeset" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_unit_of_measurement(unit_of_measurement, @invalid_attrs)
+      assert unit_of_measurement == InventoryManagement.get_unit_of_measurement!(unit_of_measurement.id)
+    end
+
+    test "delete_unit_of_measurement/1 deletes the unit_of_measurement" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert {:ok, %UnitOfMeasurement{}} = InventoryManagement.delete_unit_of_measurement(unit_of_measurement)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_unit_of_measurement!(unit_of_measurement.id) end
+    end
+
+    test "change_unit_of_measurement/1 returns a unit_of_measurement changeset" do
+      unit_of_measurement = unit_of_measurement_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_unit_of_measurement(unit_of_measurement)
+    end
+  end
 end
