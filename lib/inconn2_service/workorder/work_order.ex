@@ -39,7 +39,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :deactivated_date_time, :naive_datetime
     has_many :workorder_tasks, Inconn2Service.Workorder.WorkorderTask
     field :loto_checker_user_id, :integer
-    field :pause_resume_times, {:array, :map}
+    field :pause_resume_times, {:array, :map}, default: []
 
     timestamps()
   end
