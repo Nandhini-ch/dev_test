@@ -4,6 +4,8 @@ defmodule Inconn2Service.InventoryManagement do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement, Store}
+  alias Inconn2Service.InventoryManagement.InventorySupplier
+
 
 
   def list_uom_categories(prefix) do
@@ -94,5 +96,31 @@ defmodule Inconn2Service.InventoryManagement do
 
   def change_store(%Store{} = store, attrs \\ %{}) do
     Store.changeset(store, attrs)
+  end
+
+  def list_inventory_suppliers(prefix) do
+    Repo.all(InventorySupplier, prefix: prefix)
+  end
+
+  def get_inventory_supplier!(id, prefix), do: Repo.get!(InventorySupplier, id, prefix: prefix)
+
+  def create_inventory_supplier(attrs \\ %{}, prefix) do
+    %InventorySupplier{}
+    |> InventorySupplier.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_inventory_supplier(%InventorySupplier{} = inventory_supplier, attrs, prefix) do
+    inventory_supplier
+    |> InventorySupplier.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_inventory_supplier(%InventorySupplier{} = inventory_supplier, prefix) do
+    Repo.delete(inventory_supplier, prefix: prefix)
+  end
+
+  def change_inventory_supplier(%InventorySupplier{} = inventory_supplier, attrs \\ %{}) do
+    InventorySupplier.changeset(inventory_supplier, attrs)
   end
 end
