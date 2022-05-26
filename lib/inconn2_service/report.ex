@@ -33,7 +33,7 @@ defmodule Inconn2Service.Report do
         assigned_to: e.first_name,
         start_date: wo.start_date,
         start_time: wo.start_time,
-        completed_date: wo.start_date,
+        completed_date: wo.completed_date,
         completed_time: wo.completed_time,
         username: u.username,
         first_name: e.first_name,
@@ -55,7 +55,7 @@ defmodule Inconn2Service.Report do
         {"asset_id", asset_id}, main_query ->
           from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
 
-        {"status", "incomplete"}, main_query ->
+        {"status", "incp"}, main_query ->
           from q in main_query, where: q.status not in ["cp", "cn"]
 
         {"status", status}, main_query ->
@@ -148,6 +148,11 @@ defmodule Inconn2Service.Report do
       _ ->
         result
     end
+  end
+
+  defp get_site_date_time(site) do
+    date_time = DateTime.now!(site.time_zone)
+    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
   def inventory_report(prefix, query_params) do

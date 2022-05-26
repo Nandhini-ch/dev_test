@@ -458,7 +458,6 @@ defmodule Inconn2Service.WorkorderTest do
     end
   end
 
-<<<<<<< HEAD
   describe "workorder_file_uploads" do
     alias Inconn2Service.Workorder.WorkorderFileUpload
 
@@ -519,7 +518,7 @@ defmodule Inconn2Service.WorkorderTest do
     test "change_workorder_file_upload/1 returns a workorder_file_upload changeset" do
       workorder_file_upload = workorder_file_upload_fixture()
       assert %Ecto.Changeset{} = Workorder.change_workorder_file_upload(workorder_file_upload)
-=======
+
   describe "workorder_approval_tracks" do
     alias Inconn2Service.Workorder.WorkorderApprovalTrack
 
@@ -582,7 +581,6 @@ defmodule Inconn2Service.WorkorderTest do
     test "change_workorder_approval_track/1 returns a workorder_approval_track changeset" do
       workorder_approval_track = workorder_approval_track_fixture()
       assert %Ecto.Changeset{} = Workorder.change_workorder_approval_track(workorder_approval_track)
->>>>>>> work-permits
     end
   end
 end

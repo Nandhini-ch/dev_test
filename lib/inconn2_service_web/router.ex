@@ -23,7 +23,12 @@ defmodule Inconn2ServiceWeb.Router do
     post "/sessions/login", SessionController, :login
 
     resources "/iot_meterings", IotMeteringController, only: [:create, :show]
+
     get "/manage_data_discrepancy_site_config", AssetController, :manage_data_discrepancy
+
+    get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
+    get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
+
   end
 
   scope "/api", Inconn2ServiceWeb do

@@ -17,4 +17,10 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveView do
       type: alert_notification_reserve.type,
       code: alert_notification_reserve.code}
   end
+
+  def render("success.json", %{alert_notification_reserve: alert_notification_reserve}) do
+    %{
+      data: alert_notification_reserve
+    }
+  end
 end
