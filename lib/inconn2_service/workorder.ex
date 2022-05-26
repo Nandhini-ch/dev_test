@@ -2078,7 +2078,9 @@ defmodule Inconn2Service.Workorder do
         is_workorder_approval_required: wo.is_workorder_approval_required,
         is_loto_required: wo.is_loto_required,
         is_workorder_acknowledgement_required: wo.is_workorder_acknowledgement_required,
-        is_workpermit_required: wo.is_workpermit_required
+        is_workpermit_required: wo.is_workpermit_required,
+        pause_resume_times: wo.pause_resume_times,
+        is_paused: wo.is_paused
       }
   end
 
