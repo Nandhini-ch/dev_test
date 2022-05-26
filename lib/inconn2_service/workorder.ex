@@ -1664,7 +1664,7 @@ defmodule Inconn2Service.Workorder do
 
   def update_pause_time_in_work_order(work_order, date_time, prefix) do
     date_time = NaiveDateTime.from_iso8601!(date_time)
-    attrs = %{"pause_resume_times" => work_order.pause_resume_times ++ [%{"pause" => date_time}]}
+    attrs = %{"is_paused" => true, "pause_resume_times" => work_order.pause_resume_times ++ [%{"pause" => date_time}]}
     work_order
     |> WorkOrder.changeset(attrs)
     |> Repo.update(prefix: prefix)
@@ -1674,7 +1674,7 @@ defmodule Inconn2Service.Workorder do
     date_time = NaiveDateTime.from_iso8601!(date_time)
     last_pause = List.last(work_order.pause_resume_times)
     pause_resume = work_order.pause_resume_times -- [last_pause]
-    attrs = %{"pause_resume_times" => pause_resume ++ [Map.put(last_pause, "resume", date_time)]}
+    attrs = %{"is_paused" => false, "pause_resume_times" => pause_resume ++ [Map.put(last_pause, "resume", date_time)]}
     work_order
     |> WorkOrder.changeset(attrs)
     |> Repo.update(prefix: prefix)
