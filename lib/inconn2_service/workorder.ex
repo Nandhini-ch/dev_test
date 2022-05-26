@@ -28,6 +28,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.Util.HierarchyManager
   # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
@@ -906,10 +907,11 @@ defmodule Inconn2Service.Workorder do
           []
 
         employee ->
-          query =
+          asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
 
+          query =
             from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
       end
 
@@ -2006,8 +2008,10 @@ defmodule Inconn2Service.Workorder do
             []
 
           _ ->
+            asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+
             asset_category_query =
-              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
@@ -2033,6 +2037,15 @@ defmodule Inconn2Service.Workorder do
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
     end)
+  end
+
+  defp get_skills_with_subtree_asset_category(skills, prefix) do
+    Stream.map(skills, fn ac_id -> AssetConfig.get_asset_category(ac_id, prefix) end)
+    |> Stream.filter(fn x -> x != nil end)
+    |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
+    |> List.flatten()
+    |> Stream.uniq()
+    |> Enum.map(fn asset_category -> asset_category.id end)
   end
 
   def flutter_query() do
