@@ -28,6 +28,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.Util.HierarchyManager
   # alias Inconn2Service.Ticket
   @doc """
   Returns the list of workorder_templates.
@@ -906,10 +907,11 @@ defmodule Inconn2Service.Workorder do
           []
 
         employee ->
-          query =
+          asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
 
+          query =
             from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^employee.skills
+              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
       end
 
@@ -1312,7 +1314,7 @@ defmodule Inconn2Service.Workorder do
                 nil
 
             user_id ->
-                Staff.get_user_without_org_unit!(user_id, prefix)
+                Staff.get_user_without_org_unit(user_id, prefix)
           end
 
     Map.put(work_order, :user, user)
@@ -2024,15 +2026,17 @@ defmodule Inconn2Service.Workorder do
             []
 
           _ ->
+            asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+
             asset_category_query =
-              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^employee.skills,
+              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
             Repo.all(asset_category_query, prefix: prefix)
         end
 
-    work_orders = assigned_work_orders ++ asset_category_work_orders
+    work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
 
     Stream.map(work_orders, fn wo ->
@@ -2051,6 +2055,15 @@ defmodule Inconn2Service.Workorder do
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
     end)
+  end
+
+  defp get_skills_with_subtree_asset_category(skills, prefix) do
+    Stream.map(skills, fn ac_id -> AssetConfig.get_asset_category(ac_id, prefix) end)
+    |> Stream.filter(fn x -> x != nil end)
+    |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
+    |> List.flatten()
+    |> Stream.uniq()
+    |> Enum.map(fn asset_category -> asset_category.id end)
   end
 
   def flutter_query() do
@@ -2119,7 +2132,7 @@ defmodule Inconn2Service.Workorder do
             Repo.all(asset_category_query, prefix: prefix)
         end
 
-      work_orders = assigned_work_orders ++ asset_category_work_orders
+      work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
       Stream.map(work_orders, fn wo ->
         wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
@@ -2377,7 +2390,7 @@ defmodule Inconn2Service.Workorder do
       workorder_tasks =
         list_workorder_tasks(prefix, wo.id)
         |> Enum.map(fn wot ->
-          Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix))
+          Map.put(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix))
         end)
 
 
@@ -2392,48 +2405,48 @@ defmodule Inconn2Service.Workorder do
 
 
 
-      workpermit_checks =
-        if workorder_template.workpermit_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"WP"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # workpermit_checks =
+      #   if workorder_template.workpermit_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"WP"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
-      loto_checks =
-        if workorder_template.loto_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"LOTO"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # loto_checks =
+      #   if workorder_template.loto_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"LOTO"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
-      pre_checks =
-        if workorder_template.pre_check_required do
-          query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"PRE"
-          Repo.all(query, prefix: prefix)
-        else
-          []
-        end
+      # pre_checks =
+      #   if workorder_template.pre_check_required do
+      #     query = from wc in WorkorderCheck, where: wc.work_order_id == ^wo.id and wc.type == ^"PRE"
+      #     Repo.all(query, prefix: prefix)
+      #   else
+      #     []
+      #   end
 
       scheduled_date_time = NaiveDateTime.new!(wo.scheduled_date, wo.scheduled_time)
 
       wo
-      |> Map.put_new(:asset, asset)
-      |> Map.put_new(:asset_type, workorder_template.asset_type)
-      |> Map.put_new(:asset_qr_code, asset.qr_code)
-      |> Map.put_new(:site, site)
-      |> Map.put_new(:user, user)
-      |> Map.put_new(:employee, employee)
-      |> Map.put_new(:workorder_template, workorder_template)
-      |> Map.put_new(:workorder_schedule, workorder_schedule)
-      |> Map.put_new(:workorder_tasks, workorder_tasks)
-      |> Map.put_new(:workorder_tasks, workorder_tasks)
-      |> Map.put_new(:workpermit_checks, workpermit_checks)
-      |> Map.put_new(:loto_checks, loto_checks)
-      |> Map.put_new(:pre_checks, pre_checks)
-      |> Map.put_new(:work_request, work_request)
-      |> Map.put_new(:scheduled_date_time, scheduled_date_time)
+      |> Map.put(:asset, asset)
+      |> Map.put(:asset_type, workorder_template.asset_type)
+      |> Map.put(:asset_qr_code, asset.qr_code)
+      |> Map.put(:site, site)
+      |> Map.put(:user, user)
+      |> Map.put(:employee, employee)
+      |> Map.put(:workorder_template, workorder_template)
+      |> Map.put(:workorder_schedule, workorder_schedule)
+      |> Map.put(:workorder_tasks, workorder_tasks)
+      # |> Map.put(:workorder_tasks, workorder_tasks)
+      # |> Map.put(:workpermit_checks, workpermit_checks)
+      # |> Map.put(:loto_checks, loto_checks)
+      # |> Map.put(:pre_checks, pre_checks)
+      |> Map.put(:work_request, work_request)
+      |> Map.put(:scheduled_date_time, scheduled_date_time)
 
     end)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
