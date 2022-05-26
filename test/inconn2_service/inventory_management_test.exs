@@ -124,4 +124,79 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_unit_of_measurement(unit_of_measurement)
     end
   end
+
+  describe "stores" do
+    alias Inconn2Service.InventoryManagement.Store
+
+    @valid_attrs %{aisle_count: 42, aisle_notation: "some aisle_notation", bin_count: 42, bin_notation: "some bin_notation", description: "some description", location_id: 42, name: "some name", row_count: 42, row_notation: "some row_notation"}
+    @update_attrs %{aisle_count: 43, aisle_notation: "some updated aisle_notation", bin_count: 43, bin_notation: "some updated bin_notation", description: "some updated description", location_id: 43, name: "some updated name", row_count: 43, row_notation: "some updated row_notation"}
+    @invalid_attrs %{aisle_count: nil, aisle_notation: nil, bin_count: nil, bin_notation: nil, description: nil, location_id: nil, name: nil, row_count: nil, row_notation: nil}
+
+    def store_fixture(attrs \\ %{}) do
+      {:ok, store} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_store()
+
+      store
+    end
+
+    test "list_stores/0 returns all stores" do
+      store = store_fixture()
+      assert InventoryManagement.list_stores() == [store]
+    end
+
+    test "get_store!/1 returns the store with given id" do
+      store = store_fixture()
+      assert InventoryManagement.get_store!(store.id) == store
+    end
+
+    test "create_store/1 with valid data creates a store" do
+      assert {:ok, %Store{} = store} = InventoryManagement.create_store(@valid_attrs)
+      assert store.aisle_count == 42
+      assert store.aisle_notation == "some aisle_notation"
+      assert store.bin_count == 42
+      assert store.bin_notation == "some bin_notation"
+      assert store.description == "some description"
+      assert store.location_id == 42
+      assert store.name == "some name"
+      assert store.row_count == 42
+      assert store.row_notation == "some row_notation"
+    end
+
+    test "create_store/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_store(@invalid_attrs)
+    end
+
+    test "update_store/2 with valid data updates the store" do
+      store = store_fixture()
+      assert {:ok, %Store{} = store} = InventoryManagement.update_store(store, @update_attrs)
+      assert store.aisle_count == 43
+      assert store.aisle_notation == "some updated aisle_notation"
+      assert store.bin_count == 43
+      assert store.bin_notation == "some updated bin_notation"
+      assert store.description == "some updated description"
+      assert store.location_id == 43
+      assert store.name == "some updated name"
+      assert store.row_count == 43
+      assert store.row_notation == "some updated row_notation"
+    end
+
+    test "update_store/2 with invalid data returns error changeset" do
+      store = store_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_store(store, @invalid_attrs)
+      assert store == InventoryManagement.get_store!(store.id)
+    end
+
+    test "delete_store/1 deletes the store" do
+      store = store_fixture()
+      assert {:ok, %Store{}} = InventoryManagement.delete_store(store)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_store!(store.id) end
+    end
+
+    test "change_store/1 returns a store changeset" do
+      store = store_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_store(store)
+    end
+  end
 end

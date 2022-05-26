@@ -362,5 +362,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/unit_of_measurements", UnitOfMeasurementController, except: [:new, :edit]
     get "/uom_categories/:uom_category_id/unit_of_measurements", UnitOfMeasurementController, :index_by_uom_category
+
+    resources "/stores", StoreController, except: [:new, :edit]
+    get "/sites/:site_id/stores", StoreController, :index_by_site
   end
 end
