@@ -21,6 +21,6 @@ defmodule Inconn2Service.InventoryManagement.Store do
   def changeset(store, attrs) do
     store
     |> cast(attrs, [:name, :description, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
-    |> validate_required([:name, :description, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
+    |> validate_required([:name, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
   end
 end
