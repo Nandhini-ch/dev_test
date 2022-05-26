@@ -55,7 +55,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_loto_required: work_order.is_loto_required,
       is_workorder_acknowledgement_required: work_order.is_workorder_acknowledgement_required,
       is_workpermit_required: work_order.is_workpermit_required,
-      pause_resume_times: work_order.pause_resume_times
+      pause_resume_times: work_order.pause_resume_times,
+      is_paused: work_order.is_paused
     }
   end
 
@@ -97,7 +98,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_schedule_id: work_order.workorder_schedule_id,
       # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
-      pause_resume_times: work_order.pause_resume_times}
+      pause_resume_times: work_order.pause_resume_times,
+      is_paused: work_order.is_paused}
   end
 
 
@@ -151,7 +153,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_schedule_id: work_order.workorder_schedule_id,
       # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
-      pause_resume_times: work_order.pause_resume_times
+      pause_resume_times: work_order.pause_resume_times,
+      is_paused: work_order.is_paused
       # workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
       # is_workorder_approval_required: work_order.is_workorder_approval_required,
       # workorder_approval_user_id: work_order.workorder_approval_user_id,
@@ -208,7 +211,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_deactivated: work_order.is_deactivated,
       deactivated_date_time: work_order.deactivated_date_time,
       overdue: work_order.overdue,
-      pause_resume_times: work_order.pause_resume_times}
+      pause_resume_times: work_order.pause_resume_times,
+      is_paused: work_order.is_paused}
   end
 
   def render("asset.json", %{asset: asset, asset_type: asset_type}) do
