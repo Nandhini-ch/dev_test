@@ -151,6 +151,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
       # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
+      # work_request_id: work_order.work_request_id,
+      # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
       pause_resume_times: work_order.pause_resume_times,
       is_paused: work_order.is_paused
@@ -165,7 +167,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       # loto_approval_from_user_id: work_order.loto_approval_from_user_id,
       # pre_check_required: work_order.pre_check_required,
       # pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
-      # precheck_completed: work_order.precheck_completed
+      # precheck_completed: work_order.precheck_completed}
     }
   end
 

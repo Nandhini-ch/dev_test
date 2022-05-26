@@ -71,6 +71,7 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       # workrequest_subcategory: render_one(work_request.workrequest_subcategory, WorkrequestSubcategoryView, "workrequest_subcategory.json"),
       location: location,
       # location: (if is_nil(work_request.location), do: nil, else: render_one(work_request.location, LocationView, "location.json")),
+
       asset_id: work_request.asset_id,
       asset_type: work_request.asset_type,
       description: work_request.description,
