@@ -357,5 +357,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/equipments/:equipment_id/equipment_attachments", EquipmentAttachmentController, :list_for_equipment
     get "/equipment_attachment_download/:id", EquipmentAttachmentController, :get_attachment
 
+
+    resources "/uom_categories", UomCategoryController, except: [:new, :edit]
+
   end
 end
