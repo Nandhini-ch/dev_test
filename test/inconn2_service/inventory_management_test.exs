@@ -280,4 +280,83 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_inventory_supplier(inventory_supplier)
     end
   end
+
+  describe "inventory_items" do
+    alias Inconn2Service.InventoryManagement.InventoryItem
+
+    @valid_attrs %{approval_user_id: 42, asset_category_ids: [], attachment: "some attachment", is_approval_required: true, iten_type: "some iten_type", minumum_stock_level: 42, name: "some name", part_no: "some part_no", remarks: "some remarks", unit_price: 120.5, uom_category_id: 42}
+    @update_attrs %{approval_user_id: 43, asset_category_ids: [], attachment: "some updated attachment", is_approval_required: false, iten_type: "some updated iten_type", minumum_stock_level: 43, name: "some updated name", part_no: "some updated part_no", remarks: "some updated remarks", unit_price: 456.7, uom_category_id: 43}
+    @invalid_attrs %{approval_user_id: nil, asset_category_ids: nil, attachment: nil, is_approval_required: nil, iten_type: nil, minumum_stock_level: nil, name: nil, part_no: nil, remarks: nil, unit_price: nil, uom_category_id: nil}
+
+    def inventory_item_fixture(attrs \\ %{}) do
+      {:ok, inventory_item} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_inventory_item()
+
+      inventory_item
+    end
+
+    test "list_inventory_items/0 returns all inventory_items" do
+      inventory_item = inventory_item_fixture()
+      assert InventoryManagement.list_inventory_items() == [inventory_item]
+    end
+
+    test "get_inventory_item!/1 returns the inventory_item with given id" do
+      inventory_item = inventory_item_fixture()
+      assert InventoryManagement.get_inventory_item!(inventory_item.id) == inventory_item
+    end
+
+    test "create_inventory_item/1 with valid data creates a inventory_item" do
+      assert {:ok, %InventoryItem{} = inventory_item} = InventoryManagement.create_inventory_item(@valid_attrs)
+      assert inventory_item.approval_user_id == 42
+      assert inventory_item.asset_category_ids == []
+      assert inventory_item.attachment == "some attachment"
+      assert inventory_item.is_approval_required == true
+      assert inventory_item.iten_type == "some iten_type"
+      assert inventory_item.minumum_stock_level == 42
+      assert inventory_item.name == "some name"
+      assert inventory_item.part_no == "some part_no"
+      assert inventory_item.remarks == "some remarks"
+      assert inventory_item.unit_price == 120.5
+      assert inventory_item.uom_category_id == 42
+    end
+
+    test "create_inventory_item/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_inventory_item(@invalid_attrs)
+    end
+
+    test "update_inventory_item/2 with valid data updates the inventory_item" do
+      inventory_item = inventory_item_fixture()
+      assert {:ok, %InventoryItem{} = inventory_item} = InventoryManagement.update_inventory_item(inventory_item, @update_attrs)
+      assert inventory_item.approval_user_id == 43
+      assert inventory_item.asset_category_ids == []
+      assert inventory_item.attachment == "some updated attachment"
+      assert inventory_item.is_approval_required == false
+      assert inventory_item.iten_type == "some updated iten_type"
+      assert inventory_item.minumum_stock_level == 43
+      assert inventory_item.name == "some updated name"
+      assert inventory_item.part_no == "some updated part_no"
+      assert inventory_item.remarks == "some updated remarks"
+      assert inventory_item.unit_price == 456.7
+      assert inventory_item.uom_category_id == 43
+    end
+
+    test "update_inventory_item/2 with invalid data returns error changeset" do
+      inventory_item = inventory_item_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_inventory_item(inventory_item, @invalid_attrs)
+      assert inventory_item == InventoryManagement.get_inventory_item!(inventory_item.id)
+    end
+
+    test "delete_inventory_item/1 deletes the inventory_item" do
+      inventory_item = inventory_item_fixture()
+      assert {:ok, %InventoryItem{}} = InventoryManagement.delete_inventory_item(inventory_item)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_inventory_item!(inventory_item.id) end
+    end
+
+    test "change_inventory_item/1 returns a inventory_item changeset" do
+      inventory_item = inventory_item_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_inventory_item(inventory_item)
+    end
+  end
 end
