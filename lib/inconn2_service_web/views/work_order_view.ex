@@ -30,7 +30,6 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
 
   def render("flutter.json", %{work_order: work_order}) do
     workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
-
     %{id: work_order.id ,
       site_id: work_order.site_id,
       site_name: work_order.site_name,
@@ -38,7 +37,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       asset_name: work_order.asset_name,
       asset_code: work_order.asset_code,
       qr_code: work_order.qr_code,
-      work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
+      # work_request: render_one(work_order.work_request, WorkRequestView, "work_request_mobile.json"),
       type: work_order.type,
       scheduled_date: work_order.scheduled_date,
       scheduled_time: work_order.scheduled_time,
@@ -152,6 +151,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       workorder_template: render_one(work_order.workorder_template, WorkorderTemplateView, "workorder_template.json"),
       workorder_schedule_id: work_order.workorder_schedule_id,
       # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
+      # work_request_id: work_order.work_request_id,
+      # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
       pause_resume_times: work_order.pause_resume_times,
       is_paused: work_order.is_paused
@@ -166,7 +167,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       # loto_approval_from_user_id: work_order.loto_approval_from_user_id,
       # pre_check_required: work_order.pre_check_required,
       # pre_checks: render_many(work_order.pre_checks, WorkorderCheckView, "workorder_check_with_check.json"),
-      # precheck_completed: work_order.precheck_completed
+      # precheck_completed: work_order.precheck_completed}
     }
   end
 

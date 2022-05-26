@@ -48,7 +48,7 @@ defmodule Inconn2Service.Dashboards do
         tracks = Ticket.list_workrequest_status_track_for_work_request(wo.work_request.id, prefix) |> Enum.map(fn wrst -> wrst.status end)
         Map.put(wo.work_request, :statuses, tracks)
       end)
-      |> Enum.map(fn wr ->  "ROP" in wr.statuses end)
+      |> Enum.filter(fn wr ->  "ROP" in wr.statuses end)
       |> Enum.map(fn wr -> %{id: wr.id, status: wr.status, description: wr.description} end)
 
     grouped_by_tickets = Enum.group_by(open_tickets, &(&1.work_request.workrequest_category_id))
@@ -418,14 +418,23 @@ defmodule Inconn2Service.Dashboards do
 
   defp convert_to_minutes_and_hours(float_value) do
     [hours, decimal] = Float.to_string(float_value) |> String.split(".")
-   minutes = "0." <> decimal  |> String.to_float()
+
+   hours = String.to_integer(hours)
+   hours = if hours < 10 do
+             "#{"0" <> Integer.to_string(hours)}"
+           else
+             "#{Integer.to_string(hours)}"
+           end
+
+   minutes = String.to_float("0." <> decimal)
    minutes = minutes * 60 |> trunc()
    minutes = if minutes < 10 do
                "#{"0" <> Integer.to_string(minutes)}"
              else
                "#{Integer.to_string(minutes)}"
              end
-  "#{hours}:#{minutes}"
+
+  "#{hours} H : #{minutes} M"
   end
 
   defp add_overdue_flag(work_order, prefix) do

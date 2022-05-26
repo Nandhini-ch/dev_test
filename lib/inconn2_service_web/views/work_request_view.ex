@@ -55,12 +55,23 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
   end
 
   def render("work_request_mobile.json", %{work_request: work_request}) do
-    IO.inspect(work_request)
+
+    location =
+      case work_request.location do
+        nil ->
+          nil
+
+        _ ->
+          render_one(work_request.location, LocationView, "location.json")
+      end
+
     %{id: work_request.id,
       # site: render_one(work_request.site, SiteView, "site.json"),
       # workrequest_category: render_one(work_request.workrequest_category, WorkrequestCategoryView, "workrequest_category_without_preload.json"),
       # workrequest_subcategory: render_one(work_request.workrequest_subcategory, WorkrequestSubcategoryView, "workrequest_subcategory.json"),
+      location: location,
       # location: (if is_nil(work_request.location), do: nil, else: render_one(work_request.location, LocationView, "location.json")),
+
       asset_id: work_request.asset_id,
       asset_type: work_request.asset_type,
       description: work_request.description,
