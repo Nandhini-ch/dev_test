@@ -9,7 +9,7 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
     field :attachment, :binary
     field :is_approval_required, :boolean, default: false
     field :item_type, :string
-    field :minumum_stock_level, :integer
+    field :minimum_stock_level, :integer
     field :name, :string
     field :part_no, :string
     field :remarks, :string
@@ -25,10 +25,21 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
   @doc false
   def changeset(inventory_item, attrs) do
     inventory_item
-    |> cast(attrs, [:name, :part_no, :item_type, :minumum_stock_level, :remarks, :attachment, :uom_category_id, :unit_price, :is_approval_required, :approval_user_id, :asset_category_ids,
-                              :cosume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
-    |> validate_required([:name, :part_no, :item_type, :minumum_stock_level, :remarks, :attachment, :uom_category_id, :unit_price, :is_approval_required, :approval_user_id, :asset_category_ids,
-                                            :cosume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
-    |> validate_inclusion(:item_type, ["Spare", "Parts", "Tools", "Consumables"])
+    |> cast(attrs, [:name, :part_no, :item_type, :minimum_stock_level, :remarks, :attachment, :uom_category_id, :unit_price, :is_approval_required, :approval_user_id, :asset_category_ids,
+                              :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
+    |> validate_required([:name, :part_no, :item_type, :minimum_stock_level, :remarks,  :uom_category_id, :unit_price, :is_approval_required, :asset_category_ids,
+                                            :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
+    |> validate_inclusion(:item_type, ["Spare", "Part", "Tool", "Consumable"])
+    |> foreign_key_constraint(:consume_unit_of_measurement_id)
+    |> foreign_key_constraint(:inventory_unit_of_measurement_id)
+    |> foreign_key_constraint(:purchase_unit_of_measurement_id)
+  end
+
+  def validate_approval_user_id(cs) do
+    is_approval_required = get_change(cs, :is_approval_required, nil)
+    cond do
+      !is_nil(is_approval_required) and is_approval_required  -> validate_required(cs, [:approval_user_id])
+      true -> cs
+    end
   end
 end

@@ -16,5 +16,6 @@ defmodule Inconn2Service.InventoryManagement.UnitOfMeasurement do
     unit_of_measurement
     |> cast(attrs, [:name, :unit, :uom_category_id])
     |> validate_required([:name, :unit])
+    |> foreign_key_constraint(:uom_category_id)
   end
 end

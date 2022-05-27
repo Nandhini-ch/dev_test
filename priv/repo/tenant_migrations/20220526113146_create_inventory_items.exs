@@ -6,7 +6,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateInventoryItems do
       add :name, :string
       add :part_no, :string
       add :item_type, :string
-      add :minumum_stock_level, :integer
+      add :minimum_stock_level, :integer
       add :remarks, :string
       add :attachment, :binary
       add :uom_category_id, :integer

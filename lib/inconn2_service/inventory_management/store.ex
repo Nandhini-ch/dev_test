@@ -12,7 +12,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
     field :name, :string
     field :row_count, :integer
     field :row_notation, :string
-    field :site_id, :id
+    belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()
   end
@@ -20,7 +20,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
   @doc false
   def changeset(store, attrs) do
     store
-    |> cast(attrs, [:name, :description, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
+    |> cast(attrs, [:name, :description, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id])
     |> validate_required([:name, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
   end
 end

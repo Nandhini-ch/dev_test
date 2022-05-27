@@ -41,7 +41,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   def list_unit_of_measurements_by_uom_category(uom_category_id, prefix) do
     from(uom in UnitOfMeasurement, where: uom.uom_category_id == ^uom_category_id)
-    |> Repo.all(prefis: prefix)
+    |> Repo.all(prefix: prefix)
   end
 
   def get_unit_of_measurement!(id, prefix), do: Repo.get!(UnitOfMeasurement, id, prefix: prefix)
