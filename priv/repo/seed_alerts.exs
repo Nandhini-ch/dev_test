@@ -1,9 +1,7 @@
-defmodule Inconn2Service.SeedAlert do
 
-  alias Inconn2Service.Common
+alias Inconn2Service.Common
   # alias Inconn2Service.Common.Alert
 
-def seed_alerts do
 #alerts for asset module
 alert = %{"module" => "Asset","description" => "Asset Status Change to breakdown","type" => "al","code" => "ASSB"}
 Common.create_alert_notification_reserve(alert)
@@ -148,6 +146,3 @@ Common.create_alert_notification_reserve(alert)
 
 alert = %{"module" => "People","description" => "Employee absent in shift","type" => "al","code" => "PEEA"}
 Common.create_alert_notification_reserve(alert)
-
-end
-end
