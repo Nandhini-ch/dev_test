@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.UnitOfMeasurementController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    unit_of_measurements = InventoryManagement.list_unit_of_measurements(conn.assigns.sub_domain_prefix)
+    unit_of_measurements = InventoryManagement.list_unit_of_measurements(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", unit_of_measurements: unit_of_measurements)
   end
 

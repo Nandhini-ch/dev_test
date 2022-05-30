@@ -35,13 +35,18 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   #Context functions for %UnitOfMeasurement{}
-  def list_unit_of_measurements(prefix) do
-    Repo.all(UnitOfMeasurement, prefix: prefix)
+  def list_unit_of_measurements(%{"uom_category_id" => uom_category_id}, prefix) when not is_nil(uom_category_id) do
+    from(uom in UnitOfMeasurement, where: uom.uom_category_id == ^uom_category_id)
+    |> Repo.all(prefix: prefix) |> Repo.preload(:uom_category)
+  end
+
+  def list_unit_of_measurements(_query_params, prefix) do
+    Repo.all(UnitOfMeasurement, prefix: prefix) |> Repo.preload(:uom_category)
   end
 
   def list_unit_of_measurements_by_uom_category(uom_category_id, prefix) do
     from(uom in UnitOfMeasurement, where: uom.uom_category_id == ^uom_category_id)
-    |> Repo.all(prefix: prefix)
+    |> Repo.all(prefix: prefix) |> Repo.preload(:uom_category)
   end
 
   def get_unit_of_measurement!(id, prefix), do: Repo.get!(UnitOfMeasurement, id, prefix: prefix)
@@ -50,12 +55,14 @@ defmodule Inconn2Service.InventoryManagement do
     %UnitOfMeasurement{}
     |> UnitOfMeasurement.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> preload_uom_category()
   end
 
   def update_unit_of_measurement(%UnitOfMeasurement{} = unit_of_measurement, attrs, prefix) do
     unit_of_measurement
     |> UnitOfMeasurement.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_uom_category()
   end
 
   def delete_unit_of_measurement(%UnitOfMeasurement{} = unit_of_measurement, prefix) do
@@ -65,6 +72,10 @@ defmodule Inconn2Service.InventoryManagement do
   def change_unit_of_measurement(%UnitOfMeasurement{} = unit_of_measurement, attrs \\ %{}) do
     UnitOfMeasurement.changeset(unit_of_measurement, attrs)
   end
+
+  defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
+
+  defp preload_uom_category(result), do: result
 
   # Context functions for %Store{}
   def list_stores(prefix) do
