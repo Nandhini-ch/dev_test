@@ -18,6 +18,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/timezones", TimezoneController, :index
     get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/locations/:id/qr_code", LocationController, :display_qr_code
+    resources "/apk_versions", Apk_versionController, only: [:create, :show, :index]
 
 
     post "/sessions/login", SessionController, :login
