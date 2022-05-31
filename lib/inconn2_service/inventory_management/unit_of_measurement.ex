@@ -7,6 +7,7 @@ defmodule Inconn2Service.InventoryManagement.UnitOfMeasurement do
     field :name, :string
     field :unit, :string
     belongs_to :uom_category, UomCategory
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -14,7 +15,7 @@ defmodule Inconn2Service.InventoryManagement.UnitOfMeasurement do
   @doc false
   def changeset(unit_of_measurement, attrs) do
     unit_of_measurement
-    |> cast(attrs, [:name, :unit, :uom_category_id])
+    |> cast(attrs, [:name, :unit, :uom_category_id, :active])
     |> validate_required([:name, :unit])
     |> foreign_key_constraint(:uom_category_id)
   end

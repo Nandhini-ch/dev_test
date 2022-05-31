@@ -18,6 +18,7 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
     belongs_to :consume_unit_of_measurement, UnitOfMeasurement
     belongs_to :inventory_unit_of_measurement, UnitOfMeasurement
     belongs_to :purchase_unit_of_measurement, UnitOfMeasurement
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -26,7 +27,7 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
   def changeset(inventory_item, attrs) do
     inventory_item
     |> cast(attrs, [:name, :part_no, :item_type, :minimum_stock_level, :remarks, :attachment, :uom_category_id, :unit_price, :is_approval_required, :approval_user_id, :asset_category_ids,
-                              :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
+                              :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id, :active])
     |> validate_required([:name, :part_no, :item_type, :minimum_stock_level, :remarks,  :uom_category_id, :unit_price, :is_approval_required, :asset_category_ids,
                                             :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
     |> validate_inclusion(:item_type, ["Spare", "Part", "Tool", "Consumable"])
