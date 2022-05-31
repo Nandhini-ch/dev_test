@@ -73,10 +73,6 @@ defmodule Inconn2Service.InventoryManagement do
     UnitOfMeasurement.changeset(unit_of_measurement, attrs)
   end
 
-  defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
-
-  defp preload_uom_category(result), do: result
-
   # Context functions for %Store{}
   def list_stores(prefix) do
     Repo.all(Store, prefix: prefix)
@@ -91,13 +87,13 @@ defmodule Inconn2Service.InventoryManagement do
 
   def create_store(attrs \\ %{}, prefix) do
     %Store{}
-    |> Store.changeset(attrs)
+    |> Store.changeset(read_attachment(attrs))
     |> Repo.insert(prefix: prefix)
   end
 
   def update_store(%Store{} = store, attrs, prefix) do
     store
-    |> Store.changeset(attrs)
+    |> Store.update_changeset(read_attachment(attrs))
     |> Repo.update(prefix: prefix)
   end
 
@@ -109,6 +105,7 @@ defmodule Inconn2Service.InventoryManagement do
     Store.changeset(store, attrs)
   end
 
+  #Context functions for %InventorySupplier{}
   def list_inventory_suppliers(prefix) do
     Repo.all(InventorySupplier, prefix: prefix)
   end
@@ -135,6 +132,7 @@ defmodule Inconn2Service.InventoryManagement do
     InventorySupplier.changeset(inventory_supplier, attrs)
   end
 
+  #Context functions for %InventoryItem{}
   def list_inventory_items(prefix) do
     Repo.all(InventoryItem, prefix: prefix)
   end
@@ -160,4 +158,23 @@ defmodule Inconn2Service.InventoryManagement do
   def change_inventory_item(%InventoryItem{} = inventory_item, attrs \\ %{}) do
     InventoryItem.changeset(inventory_item, attrs)
   end
+
+  #ALl private functions related to the context
+  defp read_attachment(attrs) do
+    attachment = Map.get(attrs, "attachment")
+    if attachment != nil and attachment != "" do
+      {:ok, attachment_binary} = File.read(attachment.path)
+      attachment_type = attachment.content_type
+      attrs
+      |> Map.put("attachment", attachment_binary)
+      |> Map.put("attachment_type", attachment_type)
+    else
+      attrs
+    end
+  end
+
+  defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
+
+  defp preload_uom_category(result), do: result
+
 end

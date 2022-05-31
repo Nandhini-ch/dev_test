@@ -14,7 +14,8 @@ defmodule Inconn2Service.InventoryManagement.Store do
     field :row_notation, :string
     field :person_or_location_based, :string
     field :user_id, :integer
-    field :is_layout_configuration_required, :boolean, default: false
+    field :is_layout_configuration_required, :boolean
+    field :store_image, :binary
     belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()
@@ -23,45 +24,42 @@ defmodule Inconn2Service.InventoryManagement.Store do
   @doc false
   def changeset(store, attrs) do
     store
-    |> cast(attrs, [:name, :description, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id])
-    |> validate_required([:name, :location_id, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
-    |> validate_inclusion(:aisle_notation, ["U", "L", "N"])
-    |> validate_inclusion(:bin_notation, ["U", "L", "N"])
-    |> validate_inclusion(:row_notation, ["U", "L", "N"])
+    |> cast(attrs, [:name, :description, :location_id, :site_id, :person_or_location_based, :user_id, :is_layout_configuration_required, :store_image, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id])
+    |> validate_required([:name, :person_or_location_based])
     |> validate_inclusion(:person_or_location_based, ["P", "L"])
-    |> validate_user_id_if_person_based()
-    |> validate_location_and_site_if_location_based()
+    |> validate_user_id_if_person_based_store()
+    |> validate_location_and_site_if_location_based_store()
+    |> validate_bin_details_if_layout_configuration_required()
   end
 
-  defp validate_user_id_if_person_based(cs) do
-    person_or_location_based = get_field(cs, :person_or_location_based)
-    user_id = get_field(cs, :user_id)
-    cond do
-      person_or_location_based == "P" && is_nil(user_id) ->
-        add_error(cs, :user_id, "User Id needs to be provided for Person based store")
+  def update_changeset(store, attrs), do: cast(store, attrs, [:name, :description, :store_image])
 
-      true ->
-        cs
+  defp validate_user_id_if_person_based_store(cs) do
+    if get_field(cs, :person_or_location_based, nil) == "P" do
+      validate_required(cs, [:user_id])
+    else
+      cs
     end
   end
 
-  def validate_location_and_site_if_location_based(cs) do
-    person_or_location_based = get_field(cs, :person_or_location_based)
-    site_id = get_field(cs, :site_id)
-    location_id = get_field(cs, :location_id)
-    cond do
-      person_or_location_based == "L" && is_nil(site_id) && is_nil(location_id) ->
-        add_error(cs, :site_id, "Site is required for Location based store")
-        |> add_error(:location_id, "Location is required for location based store")
-
-      person_or_location_based == "L" && is_nil(site_id) ->
-        add_error(cs, :site_id, "Site is required for Location based store")
-
-      person_or_location_based == "L" && is_nil(location_id) ->
-        add_error(cs, :location_id, "Location is required for Location based store")
-
-      true ->
-        cs
+  def validate_location_and_site_if_location_based_store(cs) do
+    if get_field(cs, :person_or_location_based, nil) == "L" do
+      validate_required(cs, [:site_id, :location_id, :is_layout_configuration_required])
+    else
+      cs
     end
   end
+
+  def validate_bin_details_if_layout_configuration_required(cs) do
+    if get_change(cs, :is_layout_configuration_required, nil) do
+      cs
+       |> validate_required([:aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation])
+       |> validate_inclusion(:aisle_notation, ["U", "L", "N"])
+       |> validate_inclusion(:bin_notation, ["U", "L", "N"])
+       |> validate_inclusion(:row_notation, ["U", "L", "N"])
+    else
+      cs
+    end
+  end
+
 end
