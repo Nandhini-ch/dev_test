@@ -3,8 +3,9 @@ defmodule Inconn2Service.InventoryManagement do
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
-  alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement, Store}
+  alias Inconn2Service.{AssetConfig, Staff}
   alias Inconn2Service.InventoryManagement.{InventorySupplier, InventoryItem}
+  alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement, Store}
 
 
 
@@ -75,31 +76,45 @@ defmodule Inconn2Service.InventoryManagement do
 
   # Context functions for %Store{}
   def list_stores(prefix) do
-    Repo.all(Store, prefix: prefix)
+      Repo.all(Store, prefix: prefix)
+      |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
+      |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
   end
 
   def list_stores_by_site(site_id, prefix) do
     from(s in Store, where: s.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
+    |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
   end
 
   def list_stores_by_location(location_id, prefix) do
     from(s in Store, where: s.location_id == ^location_id)
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
+    |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
   end
 
-  def get_store!(id, prefix), do: Repo.get!(Store, id, prefix: prefix)
+  def get_store!(id, prefix) do
+    Repo.get!(Store, id, prefix: prefix)
+    |> preload_site_and_location_for_store(prefix, "get")
+    |> preload_user_for_store(prefix, "get")
+  end
 
   def create_store(attrs \\ %{}, prefix) do
-    %Store{}
-    |> Store.changeset(read_attachment(attrs))
-    |> Repo.insert(prefix: prefix)
+      %Store{}
+      |> Store.changeset(read_attachment(attrs))
+      |> Repo.insert(prefix: prefix)
+      |> preload_site_and_location_for_store(prefix, "post")
+      |> preload_user_for_store(prefix, "post")
   end
 
   def update_store(%Store{} = store, attrs, prefix) do
     store
     |> Store.update_changeset(read_attachment(attrs))
     |> Repo.update(prefix: prefix)
+    |> preload_site_and_location_for_store(prefix, "post")
+    |> preload_user_for_store(prefix, "post")
   end
 
   def delete_store(%Store{} = store, prefix) do
@@ -164,7 +179,7 @@ defmodule Inconn2Service.InventoryManagement do
     InventoryItem.changeset(inventory_item, attrs)
   end
 
-  #ALl private functions related to the context
+  #All private functions related to the context
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "attachment")
     if attachment != nil and attachment != "" do
@@ -177,6 +192,43 @@ defmodule Inconn2Service.InventoryManagement do
       attrs
     end
   end
+
+  defp preload_user_for_store({:ok, store}, prefix, request_type) do
+    if store.user_id != nil do
+      case request_type do
+        "post" -> {:ok, Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))}
+         _ -> Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
+      end
+    else
+      case request_type do
+        "post" -> {:ok, Map.put(store, :user, nil)}
+        _ -> Map.put(store, :user, nil)
+      end
+    end
+  end
+
+  defp preload_user_for_store(result, _prefix, _request_type), do: result
+
+  defp preload_site_and_location_for_store({:ok, store}, prefix, request_type) do
+    cond do
+      !is_nil(store.site_id) && !is_nil(store.location_id) ->
+        site = AssetConfig.get_site!(store.site_id, prefix)
+        location = AssetConfig.get_location!(store.site_id, prefix)
+        case request_type do
+          "post" -> {:ok, Map.put(store, :location, location) |> Map.put(:site, site)}
+          _ -> Map.put(store, :location, location) |> Map.put(:site, site)
+        end
+
+
+      true ->
+        case request_type do
+          "post" -> {:ok, Map.put(store, :location, nil) |> Map.put(:site, nil)}
+          _ -> Map.put(store, :location, nil) |> Map.put(:site, nil)
+        end
+    end
+  end
+
+  defp preload_site_and_location_for_store(result, _prefix, _request_type), do: result
 
   defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
 

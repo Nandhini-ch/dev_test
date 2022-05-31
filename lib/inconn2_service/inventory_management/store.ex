@@ -16,7 +16,8 @@ defmodule Inconn2Service.InventoryManagement.Store do
     field :user_id, :integer
     field :is_layout_configuration_required, :boolean
     field :store_image, :binary
-    belongs_to :site, Inconn2Service.AssetConfig.Site
+    field :site_id, :integer
+    # belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()
   end
