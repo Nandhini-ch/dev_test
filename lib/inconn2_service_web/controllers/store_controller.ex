@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.StoreController do
     render(conn, "index.json", stores: stores)
   end
 
+  def index_by_location(conn, %{"location_id" => location_id}) do
+    stores = InventoryManagement.list_stores_by_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", stores: stores)
+  end
+
   def create(conn, store_params) do
     with {:ok, %Store{} = store} <- InventoryManagement.create_store(store_params, conn.assigns.sub_domain_prefix) do
       conn
