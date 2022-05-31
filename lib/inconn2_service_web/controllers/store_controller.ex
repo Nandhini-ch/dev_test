@@ -16,7 +16,12 @@ defmodule Inconn2ServiceWeb.StoreController do
     render(conn, "index.json", stores: stores)
   end
 
-  def create(conn, %{"store" => store_params}) do
+  def index_by_location(conn, %{"location_id" => location_id}) do
+    stores = InventoryManagement.list_stores_by_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", stores: stores)
+  end
+
+  def create(conn, store_params) do
     with {:ok, %Store{} = store} <- InventoryManagement.create_store(store_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
@@ -25,13 +30,14 @@ defmodule Inconn2ServiceWeb.StoreController do
     end
   end
 
+
   def show(conn, %{"id" => id}) do
     store = InventoryManagement.get_store!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", store: store)
   end
 
-  def update(conn, %{"id" => id, "store" => store_params}) do
-    store = InventoryManagement.get_store!(id, conn.assigns.sub_domain_prefix)
+  def update(conn, store_params) do
+    store = InventoryManagement.get_store!(store_params["id"], conn.assigns.sub_domain_prefix)
 
     with {:ok, %Store{} = store} <- InventoryManagement.update_store(store, store_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", store: store)

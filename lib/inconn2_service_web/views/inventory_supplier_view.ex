@@ -13,6 +13,7 @@ defmodule Inconn2ServiceWeb.InventorySupplierView do
   def render("inventory_supplier.json", %{inventory_supplier: inventory_supplier}) do
     %{id: inventory_supplier.id,
       name: inventory_supplier.name,
+      supplier_code: inventory_supplier.supplier_code,
       description: inventory_supplier.description,
       business_type: inventory_supplier.business_type,
       website: inventory_supplier.website,

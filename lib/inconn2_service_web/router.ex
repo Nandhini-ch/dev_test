@@ -363,13 +363,14 @@ defmodule Inconn2ServiceWeb.Router do
     get "/equipment_attachment_download/:id", EquipmentAttachmentController, :get_attachment
 
 
-    resources "/uom_categories", UomCategoryController, except: [:new, :edit]
+    resources "/uom_categories", UomCategoryController, except: [:new, :edit, :delete]
 
     resources "/unit_of_measurements", UnitOfMeasurementController, except: [:new, :edit]
     get "/uom_categories/:uom_category_id/unit_of_measurements", UnitOfMeasurementController, :index_by_uom_category
 
     resources "/stores", StoreController, except: [:new, :edit]
     get "/sites/:site_id/stores", StoreController, :index_by_site
+    get "/locations/:location_id/stores", StoreController, :index_by_location
 
     resources "/inventory_suppliers", InventorySupplierController, except: [:new, :edit]
 
