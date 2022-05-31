@@ -83,6 +83,11 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_stores_by_location(location_id, prefix) do
+    from(s in Store, where: s.location_id == ^location_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_store!(id, prefix), do: Repo.get!(Store, id, prefix: prefix)
 
   def create_store(attrs \\ %{}, prefix) do
