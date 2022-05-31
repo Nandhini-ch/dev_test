@@ -112,7 +112,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def list_stores_by_location(location_id, prefix) do
-    from(s in Store, where: s.location_id == ^location_id and and s.active)
+    from(s in Store, where: s.location_id == ^location_id and s.active)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
     |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
