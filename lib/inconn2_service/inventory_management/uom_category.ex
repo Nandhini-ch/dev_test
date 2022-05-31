@@ -5,6 +5,7 @@ defmodule Inconn2Service.InventoryManagement.UomCategory do
   schema "uom_categories" do
     field :description, :string
     field :name, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule Inconn2Service.InventoryManagement.UomCategory do
   @doc false
   def changeset(uom_category, attrs) do
     uom_category
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
   end
 end

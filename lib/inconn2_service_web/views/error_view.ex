@@ -11,6 +11,10 @@ defmodule Inconn2ServiceWeb.ErrorView do
     %{errors: %{detail: "Error in operations"}}
   end
 
+  def render("error_delete.json", %{msg: msg}) do
+    %{errors: %{detail: msg}}
+  end
+
   # By default, Phoenix returns the status message from
   # the template name. For example, "404.json" becomes
   # "Not Found".
