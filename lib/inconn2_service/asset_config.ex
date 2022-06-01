@@ -56,6 +56,7 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
+  def get_site(id, prefix), do: Repo.get(Site, id, prefix: prefix)
 
   @doc """
   Creates a site.
