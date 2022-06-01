@@ -124,7 +124,7 @@ defmodule Inconn2Service.Report do
           type: match_workorder_type(wo.type),
           status: wo.status,
           assigned_to: name,
-          manhours_consumed: Float.ceil(manhours_consumed /60, 2),
+          manhours_consumed: convert_man_hours_consumed(manhours_consumed),
           scheduled_date: wo.scheduled_date,
           scheduled_time: wo.scheduled_time,
           start_date: wo.start_date,
@@ -149,6 +149,22 @@ defmodule Inconn2Service.Report do
         result
     end
   end
+
+  def convert_man_hours_consumed(manhours_consumed) do
+    time = to_string(manhours_consumed/3600) |> String.split(".")
+    hour = List.first(time)
+    float_string = "0." <> List.last(time)
+    minute = String.to_float(float_string) *60 |> Float.ceil()  |> Kernel.trunc()  |> Integer.to_string()
+    hour_and_minute(hour) <> ":" <> hour_and_minute(minute)
+  end
+
+  defp hour_and_minute(t) do
+    case String.length(t) do
+      1 -> "0" <> t
+      _ -> t
+    end
+ end
+
 
   defp get_site_date_time(site) do
     date_time = DateTime.now!(site.time_zone)
