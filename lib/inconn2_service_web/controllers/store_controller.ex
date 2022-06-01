@@ -30,7 +30,6 @@ defmodule Inconn2ServiceWeb.StoreController do
     end
   end
 
-
   def show(conn, %{"id" => id}) do
     store = InventoryManagement.get_store!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", store: store)
@@ -49,6 +48,18 @@ defmodule Inconn2ServiceWeb.StoreController do
 
     with {:ok, %Store{}} <- InventoryManagement.delete_store(store, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def get_store_image(conn, %{"store_id" => store_id}) do
+    store = InventoryManagement.get_store!(store_id, conn.assigns.sub_domain_prefix)
+    case store.store_image do
+      nil ->
+        {:error, :not_found}
+      binary ->
+        conn
+        |> put_resp_content_type(store.store_image_type)
+        |> send_resp(200, binary)
     end
   end
 end
