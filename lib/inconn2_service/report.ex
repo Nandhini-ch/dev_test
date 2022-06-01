@@ -331,7 +331,7 @@ defmodule Inconn2Service.Report do
               AssetConfig.get_equipment(work_request.asset_id, prefix)
 
             work_request.asset_type == "L" && !is_nil(work_request.asset_id) ->
-              AssetConfig.get_equipment(work_request.asset_id, prefix)
+              AssetConfig.get_location(work_request.asset_id, prefix)
 
             true ->
               nil
