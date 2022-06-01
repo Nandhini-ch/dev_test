@@ -258,13 +258,13 @@ defmodule Inconn2Service.InventoryManagement do
 
   #All private functions related to the context
   defp read_attachment(attrs) do
-    attachment = Map.get(attrs, "attachment")
+    attachment = Map.get(attrs, "store_image")
     if attachment != nil and attachment != "" do
       {:ok, attachment_binary} = File.read(attachment.path)
       attachment_type = attachment.content_type
       attrs
-      |> Map.put("attachment", attachment_binary)
-      |> Map.put("attachment_type", attachment_type)
+      |> Map.put("store_image", attachment_binary)
+      |> Map.put("store_image_type", attachment_type)
     else
       attrs
     end
@@ -289,8 +289,8 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_site_and_location_for_store({:ok, store}, prefix, request_type) do
     cond do
       !is_nil(store.site_id) && !is_nil(store.location_id) ->
-        site = AssetConfig.get_site!(store.site_id, prefix)
-        location = AssetConfig.get_location!(store.site_id, prefix)
+        site = AssetConfig.get_site(store.site_id, prefix)
+        location = AssetConfig.get_location(store.location_id, prefix)
         case request_type do
           "post" -> {:ok, Map.put(store, :location, location) |> Map.put(:site, site)}
           _ -> Map.put(store, :location, location) |> Map.put(:site, site)
