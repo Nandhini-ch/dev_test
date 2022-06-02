@@ -13,6 +13,7 @@ defmodule Inconn2Service.Staff do
   import Comeonin
   alias Inconn2Service.Staff.Role
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Staff
 
   @doc """
   Returns the list of org_units.
@@ -317,6 +318,8 @@ defmodule Inconn2Service.Staff do
     Employee
     |> where(^filters)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
   end
 
@@ -334,12 +337,38 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  defp preload_employee({:ok, employee}, prefix) do
+    {:ok, employee |> preload_employee(prefix)}
+  end
+
+  defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: employee
+
+  defp preload_employee(employee, prefix) when not is_nil(employee.reports_to) do
+    employee = Repo.get!(Employee, employee.reports_to, prefix: prefix)
+    Map.put(employee, :reports_to, employee)
+  end
+
+  defp preload_skills({:ok, employee}, prefix) do
+    {:ok, employee |> preload_skills(prefix)}
+  end
+
+  defp preload_skills(employee, prefix) when not is_nil(employee.skills) do
+    asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end)
+    Map.put(employee, :skills, asset_categories)
+  end
+
+  defp preload_skills(employee, prefix) when is_nil(employee.skills) do
+    Map.put(employee, :skills, [])
+  end
+
   def get_reportees_for_logged_in_user(user, prefix) do
     employee = user.employee
     if employee != nil do
       Employee
       |> where(reports_to: ^employee.id)
       |> Repo.all(prefix: prefix)
+      |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
       |> Repo.preload(:org_unit)
     else
       []
@@ -350,6 +379,8 @@ defmodule Inconn2Service.Staff do
     Employee
     |> where(reports_to: ^employee_id)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
   end
   @doc """
@@ -366,7 +397,12 @@ defmodule Inconn2Service.Staff do
       ** (Ecto.NoResultsError)
 
   """
-  def get_employee!(id, prefix), do: Repo.get!(Employee, id, prefix: prefix) |> Repo.preload(:org_unit)
+  def get_employee!(id, prefix) do
+    Repo.get!(Employee, id, prefix: prefix)
+    |> preload_employee(prefix)
+    |> preload_skills(prefix)
+    |> Repo.preload(:org_unit)
+  end
 
   def get_employee_email!(email, prefix) do
     query =
@@ -405,7 +441,7 @@ defmodule Inconn2Service.Staff do
          {:ok, emp_set} ->
                  case create_employee_user(emp_set, attrs, prefix) do
                    {:ok, _user} ->
-                       {:ok, emp_set |> Repo.preload(:org_unit)}
+                       {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
 
                    {:error, changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
@@ -422,7 +458,7 @@ defmodule Inconn2Service.Staff do
                       |> validate_skill_ids(prefix)
                       |> Repo.insert(prefix: prefix)
       case employee_set do
-        {:ok, emp_set} -> {:ok, emp_set |> Repo.preload(:org_unit)}
+        {:ok, emp_set} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
         _ -> employee_set
       end
     end
@@ -467,7 +503,7 @@ defmodule Inconn2Service.Staff do
         case employee_set do
           {:ok, emp_set} ->
                   create_employee_user(emp_set, attrs, prefix)
-                  {:ok, emp_set |> Repo.preload(:org_unit)}
+                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
           _ ->
                   employee_set
         end
@@ -479,7 +515,7 @@ defmodule Inconn2Service.Staff do
                     |> Repo.update(prefix: prefix)
       case employee_set do
           {:ok, emp_set} ->
-                  {:ok, emp_set |> Repo.preload(:org_unit)}
+                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
           _ ->
                   employee_set
       end

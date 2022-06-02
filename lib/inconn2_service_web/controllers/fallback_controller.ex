@@ -29,4 +29,14 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> put_view(Inconn2ServiceWeb.ErrorView)
     |> render(:"404")
   end
+
+  def call(conn, {:could_not_delete, msg}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(Inconn2ServiceWeb.ErrorView)
+    |> render("error_delete.json", msg: msg)
+  end
+
+  def call(conn, {:deleted, _msg}), do: send_resp(conn, :no_content, "")
+
 end

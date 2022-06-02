@@ -12,9 +12,11 @@ defmodule Inconn2Service.InventoryManagement.InventorySupplier do
     field :escalation2_contact_name, :string
     field :escalation2_contact_no, :string
     field :gst_no, :string
+    field :supplier_code, :string
     field :name, :string
     field :reference_no, :string
     field :website, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -22,7 +24,7 @@ defmodule Inconn2Service.InventoryManagement.InventorySupplier do
   @doc false
   def changeset(inventory_supplier, attrs) do
     inventory_supplier
-    |> cast(attrs, [:name, :description, :business_type, :website, :gst_no, :reference_no, :contact_person, :contact_no, :escalation1_contact_name, :escalation2_contact_name, :escalation1_contact_no, :escalation2_contact_no])
-    |> validate_required([:name, :business_type, :gst_no, :reference_no, :contact_person, :contact_no, :escalation1_contact_name, :escalation1_contact_no])
+    |> cast(attrs, [:name, :description, :supplier_code, :business_type, :website, :gst_no, :reference_no, :contact_person, :contact_no, :escalation1_contact_name, :escalation2_contact_name, :escalation1_contact_no, :escalation2_contact_no, :active])
+    |> validate_required([:name, :business_type, :contact_person, :contact_no, :escalation1_contact_name, :escalation1_contact_no])
   end
 end
