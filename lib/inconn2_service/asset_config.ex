@@ -1039,7 +1039,7 @@ defmodule Inconn2Service.AssetConfig do
     equipment = get_equipment!(id, prefix)
     parent_string = Enum.map(equipment.path, fn id ->  get_equipment(id, prefix).name end) |> Enum.join("/")
     parent_string_with_slash =
-      case length(parent_string) do
+      case String.length(parent_string) do
         0 -> ""
         _ -> parent_string <> "/"
       end
