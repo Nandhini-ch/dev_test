@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.StoreView do
       description: store.description,
       person_or_location_based: store.person_or_location_based,
       user_id: store.user_id,
-      user: (if is_nil(store.user), do: nil, else: render_one(store.user, UserView, "user.json")),
+      user: (if is_nil(store.user), do: nil, else: render_one(store.user, UserView, "user_without_org_unit.json")),
       site_id: store.site_id,
       site: (if is_nil(store.site), do: nil, else: render_one(store.site, SiteView, "site.json")),
       is_layout_configuration_required: store.is_layout_configuration_required,
