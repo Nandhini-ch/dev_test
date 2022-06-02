@@ -1074,6 +1074,12 @@ defmodule Inconn2Service.AssetConfig do
   def get_location_qr_as_pdf(id, prefix) do
     "inc_" <> sub_domain = prefix
     location = get_location!(id, prefix)
+    parent_string = Enum.map(location.path, fn id ->  get_location(id, prefix).name end) |> Enum.join("/")
+    parent_string_with_slash =
+      case String.length(parent_string) do
+        0 -> ""
+        _ -> parent_string <> "/"
+      end
     string =
       Sneeze.render(
         [
