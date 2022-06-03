@@ -26,8 +26,24 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
   end
 
+  # Function commented because soft delete was implemented with the same
+  # def delete_uom_category(%UomCategory{} = uom_category, prefix) do
+  #   Repo.delete(uom_category, prefix: prefix)
+  # end
+
   def delete_uom_category(%UomCategory{} = uom_category, prefix) do
-    Repo.delete(uom_category, prefix: prefix)
+    cond do
+      has_unit_of_measurements?(uom_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as the UOM category has UOMs associated with it"
+        }
+
+      true ->
+        update_uom_category(uom_category, %{"active" => false}, prefix)
+        {:deleted,
+        "The UOM category was disabled, you will be able to see transactions associated with the UOM"
+        }
+    end
   end
 
   def change_uom_category(%UomCategory{} = uom_category, attrs \\ %{}) do
@@ -97,47 +113,47 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   # Context functions for %Store{}
-  def list_stores(prefix) do
-    from(s in Store, where: s.active)
+  def list_stores(prefix, query_params) do
+    from(s in Store, where: s.active and s.person_or_location_based == ^query_params["type"])
       |> Repo.all(prefix: prefix)
-      |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
-      |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
+      |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+      |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
   def list_stores_by_site(site_id, prefix) do
     from(s in Store, where: s.site_id == ^site_id and s.active)
     |> Repo.all(prefix: prefix)
-    |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
-    |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
+    |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+    |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
   def list_stores_by_location(location_id, prefix) do
     from(s in Store, where: s.location_id == ^location_id and s.active)
     |> Repo.all(prefix: prefix)
-    |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
-    |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
+    |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+    |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
   def get_store!(id, prefix) do
-    {:ok, Repo.get!(Store, id, prefix: prefix)}
-    |> preload_site_and_location_for_store(prefix, "get")
-    |> preload_user_for_store(prefix, "get")
+    Repo.get!(Store, id, prefix: prefix)
+    |> preload_site_and_location_for_store(prefix)
+    |> preload_user_for_store(prefix)
   end
 
   def create_store(attrs \\ %{}, prefix) do
       %Store{}
       |> Store.changeset(read_attachment(attrs))
       |> Repo.insert(prefix: prefix)
-      |> preload_site_and_location_for_store(prefix, "post")
-      |> preload_user_for_store(prefix, "post")
+      |> preload_site_and_location_for_store(prefix)
+      |> preload_user_for_store(prefix)
   end
 
   def update_store(%Store{} = store, attrs, prefix) do
     store
     |> Store.update_changeset(read_attachment(attrs))
     |> Repo.update(prefix: prefix)
-    |> preload_site_and_location_for_store(prefix, "post")
-    |> preload_user_for_store(prefix, "post")
+    |> preload_site_and_location_for_store(prefix)
+    |> preload_user_for_store(prefix)
   end
 
   # Function commented because soft delete was implemented with the same
@@ -270,46 +286,50 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp preload_user_for_store({:ok, store}, prefix, request_type) do
-    if store.user_id != nil do
-      case request_type do
-        "post" -> {:ok, Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))}
-         _ -> Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
-      end
+  defp preload_user_for_store({:error, reason}, _prefix), do: {:error, reason}
+
+  defp preload_user_for_store({:ok, store}, prefix) do
+    {:ok, preload_user_for_store(store, prefix)}
+  end
+
+  defp preload_user_for_store(store, prefix) do
+    if !is_nil(store.user_id) do
+      Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
     else
-      case request_type do
-        "post" -> {:ok, Map.put(store, :user, nil)}
-        _ -> Map.put(store, :user, nil)
-      end
+      Map.put(store, :user, nil)
     end
   end
 
-  defp preload_user_for_store(result, _prefix, _request_type), do: result
+  defp preload_site_and_location_for_store({:error, reason}, _prefix), do: {:error, reason}
 
-  defp preload_site_and_location_for_store({:ok, store}, prefix, request_type) do
+  defp preload_site_and_location_for_store({:ok, store}, prefix) do
+    {:ok, preload_site_and_location_for_store(store, prefix)}
+  end
+
+  defp preload_site_and_location_for_store(store, prefix) do
     cond do
-      !is_nil(store.site_id) && !is_nil(store.location_id) ->
-        site = AssetConfig.get_site(store.site_id, prefix)
-        location = AssetConfig.get_location(store.location_id, prefix)
-        case request_type do
-          "post" -> {:ok, Map.put(store, :location, location) |> Map.put(:site, site)}
-          _ -> Map.put(store, :location, location) |> Map.put(:site, site)
-        end
-
+      !is_nil(store.site_id) and !is_nil(store.location_id) ->
+        Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
 
       true ->
-        case request_type do
-          "post" -> {:ok, Map.put(store, :location, nil) |> Map.put(:site, nil)}
-          _ -> Map.put(store, :location, nil) |> Map.put(:site, nil)
-        end
+        Map.put(store, :location, nil) |> Map.put(:site, nil)
     end
   end
-
-  defp preload_site_and_location_for_store(result, _prefix, _request_type), do: result
 
   defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
 
   defp preload_uom_category(result), do: result
+
+  defp has_unit_of_measurements?(uom_category, prefix) do
+    query = from(uom in UnitOfMeasurement,
+        where: uom.uom_category_id == ^uom_category.id and
+               uom.active
+    )
+    case length(Repo.all(query, prefix: prefix)) do
+      0 -> false
+      _ -> true
+    end
+  end
 
   defp has_items?(unit_of_measurement, prefix) do
     item_query = from(i in InventoryItem,
