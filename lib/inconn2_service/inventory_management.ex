@@ -119,7 +119,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def get_store!(id, prefix) do
-    Repo.get!(Store, id, prefix: prefix)
+    {:ok, Repo.get!(Store, id, prefix: prefix)}
     |> preload_site_and_location_for_store(prefix, "get")
     |> preload_user_for_store(prefix, "get")
   end
