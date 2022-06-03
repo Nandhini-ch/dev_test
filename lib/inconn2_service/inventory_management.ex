@@ -26,8 +26,24 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
   end
 
+  # Function commented because soft delete was implemented with the same
+  # def delete_uom_category(%UomCategory{} = uom_category, prefix) do
+  #   Repo.delete(uom_category, prefix: prefix)
+  # end
+
   def delete_uom_category(%UomCategory{} = uom_category, prefix) do
-    Repo.delete(uom_category, prefix: prefix)
+    cond do
+      has_unit_of_measurements?(uom_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as the UOM category has UOMs associated with it"
+        }
+
+      true ->
+        update_uom_category(uom_category, %{"active" => false}, prefix)
+        {:deleted,
+        "The UOM category was disabled, you will be able to see transactions associated with the UOM"
+        }
+    end
   end
 
   def change_uom_category(%UomCategory{} = uom_category, attrs \\ %{}) do
@@ -97,8 +113,8 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   # Context functions for %Store{}
-  def list_stores(prefix) do
-    from(s in Store, where: s.active)
+  def list_stores(prefix, query_params) do
+    from(s in Store, where: s.active and s.person_or_location_based == ^query_params["type"])
       |> Repo.all(prefix: prefix)
       |> Stream.map(fn store -> preload_user_for_store({:ok, store}, prefix, "get") end)
       |> Enum.map(fn store -> preload_site_and_location_for_store({:ok, store}, prefix, "get") end)
@@ -310,6 +326,17 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
 
   defp preload_uom_category(result), do: result
+
+  defp has_unit_of_measurements?(uom_category, prefix) do
+    query = from(uom in UnitOfMeasurement,
+        where: uom.uom_category_id == ^uom_category.id and
+               uom.active
+    )
+    case length(Repo.all(query, prefix: prefix)) do
+      0 -> false
+      _ -> true
+    end
+  end
 
   defp has_items?(unit_of_measurement, prefix) do
     item_query = from(i in InventoryItem,
