@@ -113,7 +113,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   # Context functions for %Store{}
-  def list_stores(prefix, query_params) do
+  def list_stores(query_params, prefix) do
     from(s in Store, where: s.active and s.person_or_location_based == ^query_params["type"])
       |> Repo.all(prefix: prefix)
       |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
