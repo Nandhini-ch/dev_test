@@ -123,10 +123,10 @@ defmodule Inconn2Service.InventoryManagement do
         from q in query, where: q.site_id == ^site_id
 
       {"location_id", location_id}, query ->
-        from q in query, where: q.location_id >= ^location_id
+        from q in query, where: q.location_id == ^location_id
 
       {"user_id", user_id}, query ->
-        from q in query, where: q.user_id <= ^user_id
+        from q in query, where: q.user_id == ^user_id
 
       _ , query ->
         query
