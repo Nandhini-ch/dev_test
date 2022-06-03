@@ -123,10 +123,10 @@ defmodule Inconn2Service.InventoryManagement do
         from q in query, where: q.site_id == ^site_id
 
       {"location_id", location_id}, query ->
-        from q in query, where: q.location_id >= ^location_id
+        from q in query, where: q.location_id == ^location_id
 
       {"user_id", user_id}, query ->
-        from q in query, where: q.user_id <= ^user_id
+        from q in query, where: q.user_id == ^user_id
 
       _ , query ->
         query
@@ -303,37 +303,17 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   defp preload_user_for_store({:error, reason}, _prefix), do: {:error, reason}
-
-  defp preload_user_for_store({:ok, store}, prefix) do
-    {:ok, preload_user_for_store(store, prefix)}
-  end
-
-  defp preload_user_for_store(store, prefix) do
-    if !is_nil(store.user_id) do
-      Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
-    else
-      Map.put(store, :user, nil)
-    end
-  end
+  defp preload_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
+  defp preload_user_for_store(store, _prefix) when is_nil(store.user_id), do: Map.put(store, :user, nil)
+  defp preload_user_for_store(store, prefix), do: Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
 
   defp preload_site_and_location_for_store({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_site_and_location_for_store({:ok, store}, prefix), do: {:ok, preload_site_and_location_for_store(store, prefix)}
+  defp preload_site_and_location_for_store(store, _prefix) when is_nil(store.site_id) or is_nil(store.location_id), do:  Map.put(store, :location, nil) |> Map.put(:site, nil)
+  defp preload_site_and_location_for_store(store, prefix), do: Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
 
-  defp preload_site_and_location_for_store({:ok, store}, prefix) do
-    {:ok, preload_site_and_location_for_store(store, prefix)}
-  end
-
-  defp preload_site_and_location_for_store(store, prefix) do
-    cond do
-      !is_nil(store.site_id) and !is_nil(store.location_id) ->
-        Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
-
-      true ->
-        Map.put(store, :location, nil) |> Map.put(:site, nil)
-    end
-  end
 
   defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
-
   defp preload_uom_category(result), do: result
 
   defp has_unit_of_measurements?(uom_category, prefix) do
