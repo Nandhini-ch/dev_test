@@ -114,7 +114,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   # Context functions for %Store{}
   def list_stores(query_params, prefix) do
-    query = from s in Store
+    query = from s in Store, where: s.active
     query = Enum.reduce(query_params, query, fn
       {"type", type}, query ->
         from q in query, where: q.person_or_location_based == ^type
