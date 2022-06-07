@@ -17,6 +17,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
     field :is_layout_configuration_required, :boolean
     field :store_image, :binary
     field :store_image_type, :string
+    field :store_image_name, :string
     field :site_id, :integer
     field :active, :boolean, default: true
 
@@ -26,7 +27,8 @@ defmodule Inconn2Service.InventoryManagement.Store do
   @doc false
   def changeset(store, attrs) do
     store
-    |> cast(attrs, [:name, :description, :location_id, :site_id, :person_or_location_based, :user_id, :is_layout_configuration_required, :store_image, :store_image_type, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id])
+    |> cast(attrs, [:name, :description, :location_id, :site_id, :person_or_location_based, :user_id, :is_layout_configuration_required, :store_image,
+                              :store_image_type, :store_image_name, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id])
     |> validate_required([:name, :person_or_location_based])
     |> validate_inclusion(:person_or_location_based, ["P", "L"])
     |> validate_inclusion(:store_image_type, ["image/apng", "image/avif", "image/gif", "image/jpeg", "image/png", "image/webp"])
@@ -37,7 +39,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
 
   def update_changeset(store, attrs) do
     store
-    |> cast(attrs, [:name, :description, :store_image, :store_image_type])
+    |> cast(attrs, [:name, :description, :store_image, :store_image_type, :store_image_name])
     |> validate_inclusion(:store_image_type, ["image/apng", "image/avif", "image/gif", "image/jpeg", "image/png", "image/webp"])
   end
 

@@ -27,6 +27,8 @@ defmodule Inconn2ServiceWeb.StoreView do
       row_count: store.row_count,
       row_notation: store.row_notation,
       bin_count: store.bin_count,
-      bin_notation: store.bin_notation}
+      bin_notation: store.bin_notation,
+      store_image_name: store.store_image_name,
+      store_image_type: store.store_image_type}
   end
 end
