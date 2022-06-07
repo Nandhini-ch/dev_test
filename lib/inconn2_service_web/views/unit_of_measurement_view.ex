@@ -10,6 +10,12 @@ defmodule Inconn2ServiceWeb.UnitOfMeasurementView do
     %{data: render_one(unit_of_measurement, UnitOfMeasurementView, "unit_of_measurement.json")}
   end
 
+  def render("unit_of_measurement_without_category.json", %{unit_of_measurement: unit_of_measurement}) do
+    %{id: unit_of_measurement.id,
+      name: unit_of_measurement.name,
+      unit: unit_of_measurement.unit}
+  end
+
   def render("unit_of_measurement.json", %{unit_of_measurement: unit_of_measurement}) do
     %{id: unit_of_measurement.id,
       name: unit_of_measurement.name,

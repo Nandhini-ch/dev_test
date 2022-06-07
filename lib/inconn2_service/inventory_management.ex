@@ -245,20 +245,32 @@ defmodule Inconn2Service.InventoryManagement do
   def list_inventory_items(prefix) do
     from(ii in InventoryItem, where: ii.active)
     |> Repo.all(prefix: prefix)
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement, :uom_category])
+    |> preload_asset_categories(prefix)
   end
 
-  def get_inventory_item!(id, prefix), do: Repo.get!(InventoryItem, id, prefix: prefix)
+  def get_inventory_item!(id, prefix) do
+    Repo.get!(InventoryItem, id, prefix: prefix)
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement, :uom_category])
+    |> preload_asset_categories(prefix)
+  end
 
   def create_inventory_item(attrs \\ %{}, prefix) do
     %InventoryItem{}
     |> InventoryItem.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> preload_uoms_for_items()
+    |> preload_uom_category()
+    |> preload_asset_categories(prefix)
   end
 
   def update_inventory_item(%InventoryItem{} = inventory_item, attrs, prefix) do
     inventory_item
     |> InventoryItem.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_uoms_for_items()
+    |> preload_uom_category()
+    |> preload_asset_categories(prefix)
   end
 
   # Function commented because soft delete was implemented with the same
@@ -304,6 +316,14 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
+  defp preload_uoms_for_items({:ok, inventory_item}), do: {:ok, inventory_item |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement])}
+  defp preload_uoms_for_items(result), do: result
+
+  defp preload_asset_categories({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_asset_categories({:ok, item}, prefix), do: {:ok, preload_asset_categories(item, prefix)}
+  defp preload_asset_categories(items, prefix) when is_list(items), do: Enum.map(items, fn i -> preload_asset_categories(i, prefix) end)
+  defp preload_asset_categories(item, prefix) when is_map(item), do: Map.put(item, :asset_categories, Enum.map(item.asset_category_ids, fn id -> AssetConfig.get_asset_category(id, prefix) end) |> Enum.filter(fn a -> not is_nil(a) end))
+
   defp preload_user_for_store({:error, reason}, _prefix), do: {:error, reason}
   defp preload_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
   defp preload_user_for_store(store, _prefix) when is_nil(store.user_id), do: Map.put(store, :user, nil)
@@ -315,7 +335,7 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_site_and_location_for_store(store, prefix), do: Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
 
 
-  defp preload_uom_category({:ok, unit_of_measurement}), do: {:ok, unit_of_measurement |> Repo.preload(:uom_category)}
+  defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
   defp preload_uom_category(result), do: result
 
   defp has_unit_of_measurements?(uom_category, prefix) do
