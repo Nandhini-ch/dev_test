@@ -39,7 +39,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
 
   def update_changeset(store, attrs) do
     store
-    |> cast(attrs, [:name, :description, :store_image, :store_image_type, :store_image_name])
+    |> cast(attrs, [:name, :description, :store_image, :store_image_type, :store_image_name, :active])
     |> validate_inclusion(:store_image_type, ["image/apng", "image/avif", "image/gif", "image/jpeg", "image/png", "image/webp"])
   end
 
