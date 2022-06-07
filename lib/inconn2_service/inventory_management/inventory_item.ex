@@ -1,7 +1,7 @@
 defmodule Inconn2Service.InventoryManagement.InventoryItem do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.InventoryManagement.UnitOfMeasurement
+  alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement}
 
   schema "inventory_items" do
     field :approval_user_id, :integer
@@ -14,10 +14,10 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
     field :part_no, :string
     field :remarks, :string
     field :unit_price, :float
-    field :uom_category_id, :integer
-    belongs_to :consume_unit_of_measurement, UnitOfMeasurement
-    belongs_to :inventory_unit_of_measurement, UnitOfMeasurement
-    belongs_to :purchase_unit_of_measurement, UnitOfMeasurement
+    belongs_to  :uom_category, UomCategory
+    belongs_to :consume_unit_of_measurement, UnitOfMeasurement, foreign_key: :consume_unit_of_measurement_id
+    belongs_to :inventory_unit_of_measurement, UnitOfMeasurement, foreign_key: :inventory_unit_of_measurement_id
+    belongs_to :purchase_unit_of_measurement, UnitOfMeasurement, foreign_key: :purchase_unit_of_measurement_id
     field :active, :boolean, default: true
 
     timestamps()

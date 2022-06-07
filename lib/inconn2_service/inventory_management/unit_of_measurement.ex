@@ -1,13 +1,16 @@
 defmodule Inconn2Service.InventoryManagement.UnitOfMeasurement do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.InventoryManagement.UomCategory
+  alias Inconn2Service.InventoryManagement.{InventoryItem, UomCategory}
 
   schema "unit_of_measurements" do
     field :name, :string
     field :unit, :string
-    belongs_to :uom_category, UomCategory
     field :active, :boolean, default: true
+    belongs_to :uom_category, UomCategory
+    has_many  :inventory_items, InventoryItem, foreign_key: :inventory_unit_of_measurement_id
+    has_many :consume_items, InventoryItem, foreign_key: :consume_unit_of_measurement_id
+    has_many :purchase_items, InventoryItem, foreign_key: :purchase_unit_of_measurement_id
 
     timestamps()
   end
