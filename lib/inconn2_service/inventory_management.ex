@@ -292,11 +292,13 @@ defmodule Inconn2Service.InventoryManagement do
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "store_image")
     if attachment != nil and attachment != "" do
+      IO.inspect(attachment)
       {:ok, attachment_binary} = File.read(attachment.path)
-      attachment_type = attachment.content_type
+      # attachment_type = attachment.content_type
       attrs
       |> Map.put("store_image", attachment_binary)
-      |> Map.put("store_image_type", attachment_type)
+      |> Map.put("store_image_type", attachment.content_type)
+      |> Map.put("store_image_name", attachment.filename)
     else
       attrs
     end
