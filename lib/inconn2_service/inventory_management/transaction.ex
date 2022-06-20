@@ -1,7 +1,7 @@
 defmodule Inconn2Service.InventoryManagement.Transaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.InventoryManagement.{InventoryItem, Store, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{InventoryItem, Store, InventorySupplier, UnitOfMeasurement}
 
   schema "transactions" do
     field :aisle, :string
@@ -18,12 +18,14 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     field :work_order_id, :integer
     field :is_approval_required, :boolean, default: false
     field :is_approved, :string
+    field :is_acknowledged, :string
     # field :item_id, :id
     belongs_to :inventory_item, InventoryItem
     # field :unit_of_measurement_id, :id
     belongs_to :unit_of_measurement, UnitOfMeasurement
     # field :store_id, :id
     belongs_to :store, Store
+    belongs_to :inventory_supplier, InventorySupplier
 
     timestamps()
   end
@@ -31,9 +33,34 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   @doc false
   def changeset(transaction, attrs) do
     transaction
-    |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id, :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost, :remarks, :is_approval_required, :is_approved])
-    |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id, :store_id,:transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost, :remarks])
+    |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id,
+                              :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost,
+                              :remarks, :is_approval_required, :is_approved, :supplier_id])
+    |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
+                                            :store_id,:transaction_user_id, :approver_user_id, :quantity,  :aisle, :row, :bin, :remarks])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
+    |> set_is_acknowledged()
     |> validate_inclusion(:is_approved, ["YES", "NO"])
+    |> validate_fields_based_on_transaction_type()
+  end
+
+  def update_changeset(transaction, attrs) do
+    transaction
+    |> cast(attrs, [:is_acknowledged])
+    |> validate_inclusion(:is_acknowledged, ["YES", "NO", "RJ"])
+  end
+
+  defp set_is_acknowledged(cs) do
+    case get_field(cs, :transaction_type) do
+      "IS" -> change(cs, %{is_acknowledged: "NO"})
+      _ -> cs
+    end
+  end
+
+  defp validate_fields_based_on_transaction_type(cs) do
+    case get_field(cs, :transaction_type, nil) do
+      "IN" -> validate_required(cs, [:unit_price, :supplier_id])
+      "IS" -> validate_required(cs, [:work_order_id])
+    end
   end
 end

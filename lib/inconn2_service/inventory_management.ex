@@ -309,26 +309,40 @@ defmodule Inconn2Service.InventoryManagement do
 
   def get_transaction!(id, prefix), do: Repo.get!(Transaction, id, prefix: prefix)
 
-  def create_transaction(attrs \\ %{}, prefix) do
-    %Transaction{}
-    |> Transaction.changeset(attrs)
-    |> Repo.insert(prefix: prefix)
+  def create_transactions(transactions, prefix) do
+    Enum.map(transactions, fn t ->
+      create_transaction(t, prefix)
+    end)
   end
 
+  #Different create function based on transaction type
+  def create_transaction(attrs \\ %{}, prefix) do
+    case attrs["transaction_type"] do
+      "IN" -> create_inward_transaction(attrs, prefix)
+      "IS" -> create_issue_transaction(attrs, prefix)
+    end
+  end
+
+  #Create for inward transaction
   def create_inward_transaction(attrs, prefix) do
     multi_query_for_inward_transaction(attrs, prefix)
     |> Repo.transaction()
+    |> handle_error()
   end
 
+  #Create for Issue Transaction
   def create_issue_transaction(attrs, prefix) do
     multi_query_for_issue_transaction(attrs, prefix)
     |> Repo.transaction()
+    |> handle_error()
   end
 
+  #Only time a stock can be updated is when issue acknowledgement happens
   def update_transaction(%Transaction{} = transaction, attrs, prefix) do
     transaction
-    |> Transaction.changeset(attrs)
+    |> Transaction.update_changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> revive_stock(prefix)
   end
 
   def delete_transaction(%Transaction{} = transaction, prefix) do
@@ -405,6 +419,11 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
   defp preload_uom_category(result), do: result
+
+  defp handle_error({:error, :transaction, transaction_changeset, _}), do: {:error, transaction_changeset}
+  defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
+  defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
+
 
   defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
     stock_if_exists_query(store_id, aisle, bin, row, item_id) |> Repo.one(prefix: prefix)
@@ -491,6 +510,19 @@ defmodule Inconn2Service.InventoryManagement do
       update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
     end
   end
+
+  defp revive_stock({:ok, transaction}, prefix) do
+    case transaction.is_acknowledged do
+      "YES" ->
+        {:ok, transaction}
+      "RJ" ->
+        stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+        update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
+        {:ok, transaction}
+    end
+  end
+
+  defp revive_stock(result, _prefix), do: result
 
   defp has_unit_of_measurements?(uom_category, prefix) do
     query = from(uom in UnitOfMeasurement,
