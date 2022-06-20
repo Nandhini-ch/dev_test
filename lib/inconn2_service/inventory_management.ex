@@ -320,6 +320,11 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.transaction()
   end
 
+  def create_issue_transaction(attrs, prefix) do
+    multi_query_for_issue_transaction(attrs, prefix)
+    |> Repo.transaction()
+  end
+
   def update_transaction(%Transaction{} = transaction, attrs, prefix) do
     transaction
     |> Transaction.changeset(attrs)
@@ -401,8 +406,12 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
   defp preload_uom_category(result), do: result
 
-  defp stock_if_exists(store_id, aisle, bin, row, item_id, prefix) do
+  defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
     stock_if_exists_query(store_id, aisle, bin, row, item_id) |> Repo.one(prefix: prefix)
+  end
+
+  defp stock_upto_store(store_id, item_id, prefix) do
+    stock_if_exists_query(store_id, item_id) |> Repo.all(prefix: prefix)
   end
 
   defp stock_if_exists_query(store_id, aisle, bin, row, item_id) do
@@ -417,13 +426,23 @@ defmodule Inconn2Service.InventoryManagement do
     )
   end
 
+  defp stock_if_exists_query(store_id, item_id) do
+    from(s in Stock, where: s.item_id == ^item_id and s.store_id == ^store_id)
+  end
+
   defp multi_query_for_inward_transaction(attrs, prefix) do
     Multi.new()
-    |> Multi.run(:transaction, insert_transaction(attrs, prefix))
+    |> Multi.run(:transaction, insert_inward_transaction(attrs, prefix))
     |>  Multi.run(:stock, update_stock_for_inward(prefix))
   end
 
-  defp insert_transaction(attrs, prefix) do
+  defp multi_query_for_issue_transaction(attrs, prefix) do
+    Multi.new()
+    |> Multi.run(:transaction, insert_issue_transaction(attrs, prefix))
+    |> Multi.run(:stock, update_stock_for_issue(prefix))
+  end
+
+  defp insert_inward_transaction(attrs, prefix) do
     fn _, _ ->
       %Transaction{}
       |> Transaction.changeset(attrs)
@@ -432,11 +451,21 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
+  defp insert_issue_transaction(attrs, prefix) do
+    fn _, _ ->
+      %Transaction{}
+      |> Transaction.changeset(attrs)
+      |> check_stock_upto_store(prefix)
+      |> check_stock_upto_bin(prefix)
+      |> Repo.insert(prefix: prefix)
+    end
+  end
+
   defp calculate_cost(cs), do: change(cs, %{cost: get_field(cs, :unit_price) * get_field(cs, :quantity) })
 
   defp update_stock_for_inward(prefix) do
     fn _repo, %{transaction: transaction} ->
-      stock = stock_if_exists(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+      stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
       case stock do
         nil ->
           create_stock(
@@ -456,6 +485,13 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
+  defp update_stock_for_issue(prefix) do
+    fn _, %{transaction: transaction} ->
+      stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+      update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
+    end
+  end
+
   defp has_unit_of_measurements?(uom_category, prefix) do
     query = from(uom in UnitOfMeasurement,
         where: uom.uom_category_id == ^uom_category.id and
@@ -464,6 +500,34 @@ defmodule Inconn2Service.InventoryManagement do
     case length(Repo.all(query, prefix: prefix)) do
       0 -> false
       _ -> true
+    end
+  end
+
+  defp check_stock_upto_store(cs, prefix) do
+    stocks = stock_upto_store(get_field(cs, :store_id), get_field(cs, :item_id), prefix)
+    case length(stocks) do
+      0 -> add_error(cs, :item_id, "Item does not exist in store") |> add_error(:store_id, "Item does not exist in store")
+      _ -> cs
+    end
+  end
+
+  defp check_stock_upto_bin(cs, prefix) do
+    store_id = get_field(cs, :store_id)
+    aisle = get_field(cs, :aisle)
+    row = get_field(cs, :row)
+    bin = get_field(cs, :bin)
+    item_id = get_field(cs, :item_id)
+    quantity = get_field(cs, :quantity)
+    stock = stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix)
+    cond do
+      is_nil(stock) ->
+        add_error(cs, :item_id, "Item does not exist in this aisle row bin combination")
+
+      stock.quantity < quantity ->
+        add_error(cs, :quantity, "Expected quantity not available")
+
+       true ->
+        cs
     end
   end
 
