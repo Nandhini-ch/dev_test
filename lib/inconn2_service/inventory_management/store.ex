@@ -38,8 +38,9 @@ defmodule Inconn2Service.InventoryManagement.Store do
   end
 
   def update_changeset(store, attrs) do
+    attrs = Map.new(Enum.filter(attrs, fn {_key, value} -> value != "null" end))
     store
-    |> cast(attrs, [:name, :description, :store_image, :store_image_type, :store_image_name])
+    |> cast(attrs, [:name, :description, :store_image, :store_image_type, :store_image_name, :active])
     |> validate_inclusion(:store_image_type, ["image/apng", "image/avif", "image/gif", "image/jpeg", "image/png", "image/webp"])
   end
 
