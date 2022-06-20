@@ -359,4 +359,146 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_inventory_item(inventory_item)
     end
   end
+
+  describe "transactions" do
+    alias Inconn2Service.InventoryManagement.Transaction
+
+    @valid_attrs %{aisle: "some aisle", approver_user_id: 42, bin: "some bin", cost: 120.5, quantity: 120.5, remarks: "some remarks", row: "some row", transaction_reference: "some transaction_reference", transaction_type: "some transaction_type", transaction_user_id: 42, unit_price: 120.5}
+    @update_attrs %{aisle: "some updated aisle", approver_user_id: 43, bin: "some updated bin", cost: 456.7, quantity: 456.7, remarks: "some updated remarks", row: "some updated row", transaction_reference: "some updated transaction_reference", transaction_type: "some updated transaction_type", transaction_user_id: 43, unit_price: 456.7}
+    @invalid_attrs %{aisle: nil, approver_user_id: nil, bin: nil, cost: nil, quantity: nil, remarks: nil, row: nil, transaction_reference: nil, transaction_type: nil, transaction_user_id: nil, unit_price: nil}
+
+    def transaction_fixture(attrs \\ %{}) do
+      {:ok, transaction} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_transaction()
+
+      transaction
+    end
+
+    test "list_transactions/0 returns all transactions" do
+      transaction = transaction_fixture()
+      assert InventoryManagement.list_transactions() == [transaction]
+    end
+
+    test "get_transaction!/1 returns the transaction with given id" do
+      transaction = transaction_fixture()
+      assert InventoryManagement.get_transaction!(transaction.id) == transaction
+    end
+
+    test "create_transaction/1 with valid data creates a transaction" do
+      assert {:ok, %Transaction{} = transaction} = InventoryManagement.create_transaction(@valid_attrs)
+      assert transaction.aisle == "some aisle"
+      assert transaction.approver_user_id == 42
+      assert transaction.bin == "some bin"
+      assert transaction.cost == 120.5
+      assert transaction.quantity == 120.5
+      assert transaction.remarks == "some remarks"
+      assert transaction.row == "some row"
+      assert transaction.transaction_reference == "some transaction_reference"
+      assert transaction.transaction_type == "some transaction_type"
+      assert transaction.transaction_user_id == 42
+      assert transaction.unit_price == 120.5
+    end
+
+    test "create_transaction/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_transaction(@invalid_attrs)
+    end
+
+    test "update_transaction/2 with valid data updates the transaction" do
+      transaction = transaction_fixture()
+      assert {:ok, %Transaction{} = transaction} = InventoryManagement.update_transaction(transaction, @update_attrs)
+      assert transaction.aisle == "some updated aisle"
+      assert transaction.approver_user_id == 43
+      assert transaction.bin == "some updated bin"
+      assert transaction.cost == 456.7
+      assert transaction.quantity == 456.7
+      assert transaction.remarks == "some updated remarks"
+      assert transaction.row == "some updated row"
+      assert transaction.transaction_reference == "some updated transaction_reference"
+      assert transaction.transaction_type == "some updated transaction_type"
+      assert transaction.transaction_user_id == 43
+      assert transaction.unit_price == 456.7
+    end
+
+    test "update_transaction/2 with invalid data returns error changeset" do
+      transaction = transaction_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_transaction(transaction, @invalid_attrs)
+      assert transaction == InventoryManagement.get_transaction!(transaction.id)
+    end
+
+    test "delete_transaction/1 deletes the transaction" do
+      transaction = transaction_fixture()
+      assert {:ok, %Transaction{}} = InventoryManagement.delete_transaction(transaction)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_transaction!(transaction.id) end
+    end
+
+    test "change_transaction/1 returns a transaction changeset" do
+      transaction = transaction_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_transaction(transaction)
+    end
+  end
+
+  describe "stocks" do
+    alias Inconn2Service.InventoryManagement.Stock
+
+    @valid_attrs %{aisle: "some aisle", bin: "some bin", row: "some row"}
+    @update_attrs %{aisle: "some updated aisle", bin: "some updated bin", row: "some updated row"}
+    @invalid_attrs %{aisle: nil, bin: nil, row: nil}
+
+    def stock_fixture(attrs \\ %{}) do
+      {:ok, stock} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_stock()
+
+      stock
+    end
+
+    test "list_stocks/0 returns all stocks" do
+      stock = stock_fixture()
+      assert InventoryManagement.list_stocks() == [stock]
+    end
+
+    test "get_stock!/1 returns the stock with given id" do
+      stock = stock_fixture()
+      assert InventoryManagement.get_stock!(stock.id) == stock
+    end
+
+    test "create_stock/1 with valid data creates a stock" do
+      assert {:ok, %Stock{} = stock} = InventoryManagement.create_stock(@valid_attrs)
+      assert stock.aisle == "some aisle"
+      assert stock.bin == "some bin"
+      assert stock.row == "some row"
+    end
+
+    test "create_stock/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_stock(@invalid_attrs)
+    end
+
+    test "update_stock/2 with valid data updates the stock" do
+      stock = stock_fixture()
+      assert {:ok, %Stock{} = stock} = InventoryManagement.update_stock(stock, @update_attrs)
+      assert stock.aisle == "some updated aisle"
+      assert stock.bin == "some updated bin"
+      assert stock.row == "some updated row"
+    end
+
+    test "update_stock/2 with invalid data returns error changeset" do
+      stock = stock_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_stock(stock, @invalid_attrs)
+      assert stock == InventoryManagement.get_stock!(stock.id)
+    end
+
+    test "delete_stock/1 deletes the stock" do
+      stock = stock_fixture()
+      assert {:ok, %Stock{}} = InventoryManagement.delete_stock(stock)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_stock!(stock.id) end
+    end
+
+    test "change_stock/1 returns a stock changeset" do
+      stock = stock_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_stock(stock)
+    end
+  end
 end

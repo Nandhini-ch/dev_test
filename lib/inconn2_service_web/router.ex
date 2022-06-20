@@ -376,5 +376,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/inventory_suppliers", InventorySupplierController, except: [:new, :edit]
 
     resources "/inventory_items", InventoryItemController, except: [:new, :edit]
+
+    resources "/transactions", TransactionController, except: [:new, :edit]
+    resources "/stocks", StockController, except: [:new, :edit]
   end
 end

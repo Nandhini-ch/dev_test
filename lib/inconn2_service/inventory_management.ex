@@ -2,10 +2,12 @@ defmodule Inconn2Service.InventoryManagement do
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  import Ecto.Changeset
+  alias Ecto.Multi
 
   alias Inconn2Service.{AssetConfig, Staff}
-  alias Inconn2Service.InventoryManagement.{InventorySupplier, InventoryItem}
-  alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement, Store}
+  alias Inconn2Service.InventoryManagement.{InventorySupplier, InventoryItem, Store}
+  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement}
 
   def list_uom_categories(prefix) do
     from(uc in UomCategory, where: uc.active)
@@ -300,6 +302,67 @@ defmodule Inconn2Service.InventoryManagement do
     InventoryItem.changeset(inventory_item, attrs)
   end
 
+  #Context functions for Transactions
+  def list_transactions(prefix) do
+    Repo.all(Transaction, prefix: prefix)
+  end
+
+  def get_transaction!(id, prefix), do: Repo.get!(Transaction, id, prefix: prefix)
+
+  def create_transaction(attrs \\ %{}, prefix) do
+    %Transaction{}
+    |> Transaction.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def create_inward_transaction(attrs, prefix) do
+    multi_query_for_inward_transaction(attrs, prefix)
+    |> Repo.transaction()
+  end
+
+  def update_transaction(%Transaction{} = transaction, attrs, prefix) do
+    transaction
+    |> Transaction.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_transaction(%Transaction{} = transaction, prefix) do
+    Repo.delete(transaction, prefix: prefix)
+  end
+
+  def change_transaction(%Transaction{} = transaction, attrs \\ %{}) do
+    Transaction.changeset(transaction, attrs)
+  end
+
+  #Context functions for Stock
+  def list_stocks(prefix) do
+    Repo.all(Stock, prefix: prefix)
+  end
+
+  def get_stock!(id, prefix), do: Repo.get!(Stock, id, prefix: prefix)
+
+  def create_stock(attrs \\ %{}, prefix) do
+    %Stock{}
+    |> Stock.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_stock(%Stock{} = stock, attrs, prefix) do
+    stock
+    |> Stock.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  def delete_stock(%Stock{} = stock, prefix) do
+    Repo.delete(stock, prefix: prefix)
+  end
+
+
+  def change_stock(%Stock{} = stock, attrs \\ %{}) do
+    Stock.changeset(stock, attrs)
+  end
+
   #All private functions related to the context
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "store_image")
@@ -337,6 +400,61 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
   defp preload_uom_category(result), do: result
+
+  defp stock_if_exists(store_id, aisle, bin, row, item_id, prefix) do
+    stock_if_exists_query(store_id, aisle, bin, row, item_id) |> Repo.one(prefix: prefix)
+  end
+
+  defp stock_if_exists_query(store_id, aisle, bin, row, item_id) do
+    from(
+      s in Stock,
+      where:
+        s.inventory_item_id == ^item_id and
+        s.store_id ==  ^store_id and
+        s.aisle == ^aisle and
+        s.row == ^row and
+        s.bin == ^bin
+    )
+  end
+
+  defp multi_query_for_inward_transaction(attrs, prefix) do
+    Multi.new()
+    |> Multi.run(:transaction, insert_transaction(attrs, prefix))
+    |>  Multi.run(:stock, update_stock_for_inward(prefix))
+  end
+
+  defp insert_transaction(attrs, prefix) do
+    fn _, _ ->
+      %Transaction{}
+      |> Transaction.changeset(attrs)
+      |> calculate_cost()
+      |> Repo.insert(prefix: prefix)
+    end
+  end
+
+  defp calculate_cost(cs), do: change(cs, %{cost: get_field(cs, :unit_price) * get_field(cs, :quantity) })
+
+  defp update_stock_for_inward(prefix) do
+    fn _repo, %{transaction: transaction} ->
+      stock = stock_if_exists(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+      case stock do
+        nil ->
+          create_stock(
+            %{
+              "inventory_item_id" => transaction.inventory_item_id,
+              "store_id" => transaction.store_id,
+              "aisle" => transaction.aisle,
+              "bin" => transaction.bin,
+              "row" => transaction.row,
+              "quantity" => transaction.quantity
+            },
+            prefix
+          )
+        _ ->
+          update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
+      end
+    end
+  end
 
   defp has_unit_of_measurements?(uom_category, prefix) do
     query = from(uom in UnitOfMeasurement,
