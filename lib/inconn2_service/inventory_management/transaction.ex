@@ -46,7 +46,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
 
   def update_changeset(transaction, attrs) do
     transaction
-    |> cast(attrs, [:is_acknowledged])
+    |> cast(attrs, [:is_acknowledged, :is_approved])
     |> validate_inclusion(:is_acknowledged, ["YES", "NO", "RJ"])
   end
 
