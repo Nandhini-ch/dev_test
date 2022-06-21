@@ -305,9 +305,15 @@ defmodule Inconn2Service.InventoryManagement do
   #Context functions for Transactions
   def list_transactions(prefix) do
     Repo.all(Transaction, prefix: prefix)
+    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
+    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
   end
 
-  def get_transaction!(id, prefix), do: Repo.get!(Transaction, id, prefix: prefix)
+  def get_transaction!(id, prefix) do
+    Repo.get!(Transaction, id, prefix: prefix)
+    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
+    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
+  end
 
   def create_transactions(transactions, prefix) do
     Enum.map(transactions, fn t ->
@@ -328,6 +334,8 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_inward_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
+    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
+    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
   end
 
   #Create for Issue Transaction
@@ -335,6 +343,8 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_issue_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
+    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
+    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
   end
 
   #Only time a stock can be updated is when issue acknowledgement happens
@@ -344,6 +354,8 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
     |> reduce_stock_on_approval(prefix)
     |> revive_stock_on_acknowledgement_reject(prefix)
+    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
+    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
   end
 
   def delete_transaction(%Transaction{} = transaction, prefix) do
@@ -424,6 +436,9 @@ defmodule Inconn2Service.InventoryManagement do
   defp handle_error({:error, :transaction, transaction_changeset, _}), do: {:error, transaction_changeset}
   defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
   defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
+
+  defp load_user_for_given_key(transaction, id_key, new_key, prefix) when is_tuple(transaction), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
+  defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
 
 
   defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
