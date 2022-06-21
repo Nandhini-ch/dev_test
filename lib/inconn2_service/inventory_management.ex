@@ -342,7 +342,8 @@ defmodule Inconn2Service.InventoryManagement do
     transaction
     |> Transaction.update_changeset(attrs)
     |> Repo.update(prefix: prefix)
-    |> revive_stock(prefix)
+    |> reduce_stock_on_approval(prefix)
+    |> revive_stock_on_acknowledgement_reject(prefix)
   end
 
   def delete_transaction(%Transaction{} = transaction, prefix) do
@@ -506,23 +507,58 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp update_stock_for_issue(prefix) do
     fn _, %{transaction: transaction} ->
-      stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
-      update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
+      cond do
+        transaction.is_approval_required ->
+          {:ok, %{message: "Approval required for transaction"}}
+
+        true ->
+          # stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+          # update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
+          reduce_stock(transaction, prefix)
+      end
     end
   end
 
-  defp revive_stock({:ok, transaction}, prefix) do
+  defp reduce_stock_on_approval({:ok, transaction}, prefix) do
+    cond do
+      transaction.is_approval_required && transaction.is_approved ->
+        reduce_stock(transaction, prefix)
+        {:ok, transaction}
+
+      true ->
+        {:ok, transaction}
+    end
+  end
+
+  defp reduce_stock_on_approval(result, _prefix), do: result
+
+  defp revive_stock_on_acknowledgement_reject({:ok, transaction}, prefix) do
     case transaction.is_acknowledged do
       "YES" ->
         {:ok, transaction}
+
       "RJ" ->
-        stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
-        update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
+        # stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+        # update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
+        add_stock(transaction, prefix)
+        {:ok, transaction}
+
+      _ ->
         {:ok, transaction}
     end
   end
 
-  defp revive_stock(result, _prefix), do: result
+  defp revive_stock_on_acknowledgement_reject(result, _prefix), do: result
+
+  defp add_stock(transaction, prefix) do
+    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+    update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
+  end
+
+  defp reduce_stock(transaction, prefix) do
+    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+    update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
+  end
 
   defp has_unit_of_measurements?(uom_category, prefix) do
     query = from(uom in UnitOfMeasurement,
