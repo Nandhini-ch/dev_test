@@ -33,6 +33,11 @@ defmodule Inconn2ServiceWeb.InventoryItemController do
     end
   end
 
+  def update_multiple(conn, %{"inventory_item_changes" => inventory_item_changes}) do
+    inventory_items = InventoryManagement.update_inventory_items(inventory_item_changes, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", inventory_items: inventory_items)
+  end
+
   def delete(conn, %{"id" => id}) do
     inventory_item = InventoryManagement.get_inventory_item!(id, conn.assigns.sub_domain_prefix)
 

@@ -571,6 +571,7 @@ defmodule Inconn2Service.Staff do
   def get_user_without_org_unit!(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(:employee)
 
   def get_user_without_org_unit(nil,_prefix), do: nil
+
   def get_user_without_org_unit(id,prefix) do
     user = Repo.get(User, id, prefix: prefix)
     case user do

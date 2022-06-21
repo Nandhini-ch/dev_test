@@ -78,6 +78,12 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_uom_category()
   end
 
+  def update_unit_of_measurements(unit_of_measurements_changes, prefix) do
+    Stream.map(unit_of_measurements_changes["ids"], fn id ->
+      update_unit_of_measurement(get_unit_of_measurement!(id, prefix), Map.drop(unit_of_measurements_changes, ["ids"]), prefix)
+    end) |> Enum.map(fn tuple -> remove_tuple_from_multiple_update(tuple) end)
+  end
+
   def update_unit_of_measurement(%UnitOfMeasurement{} = unit_of_measurement, attrs, prefix) do
     unit_of_measurement
     |> UnitOfMeasurement.changeset(attrs)
@@ -215,6 +221,12 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.insert(prefix: prefix)
   end
 
+  def update_inventory_suppliers(inventory_supplier_changes, prefix) do
+    Enum.map(inventory_supplier_changes["ids"], fn id ->
+      update_inventory_supplier(get_inventory_supplier!(id, prefix), Map.drop(inventory_supplier_changes, ["ids"]), prefix)
+    end) |> Enum.map(fn tuple -> remove_tuple_from_multiple_update(tuple) end)
+  end
+
   def update_inventory_supplier(%InventorySupplier{} = inventory_supplier, attrs, prefix) do
     inventory_supplier
     |> InventorySupplier.changeset(attrs)
@@ -264,6 +276,12 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_uoms_for_items()
     |> preload_uom_category()
     |> preload_asset_categories(prefix)
+  end
+
+  def update_inventory_items(inventory_item_changes, prefix) do
+    Enum.map(inventory_item_changes["ids"], fn id ->
+      update_inventory_item(get_inventory_item!(id, prefix), Map.drop(inventory_item_changes, ["ids"]), prefix)
+    end) |> Enum.map(fn tuple -> remove_tuple_from_multiple_update(tuple) end)
   end
 
   def update_inventory_item(%InventoryItem{} = inventory_item, attrs, prefix) do
@@ -440,6 +458,7 @@ defmodule Inconn2Service.InventoryManagement do
   defp load_user_for_given_key(transaction, id_key, new_key, prefix) when is_tuple(transaction), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
   defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
 
+  defp remove_tuple_from_multiple_update({:ok, resource}), do: resource
 
   defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
     stock_if_exists_query(store_id, aisle, bin, row, item_id) |> Repo.one(prefix: prefix)

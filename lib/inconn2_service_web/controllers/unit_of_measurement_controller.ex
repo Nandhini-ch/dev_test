@@ -38,6 +38,11 @@ defmodule Inconn2ServiceWeb.UnitOfMeasurementController do
     end
   end
 
+  def update_multiple(conn, %{"unit_iof_measurement_changes" => unit_of_measurement_changes}) do
+    unit_of_measurements = InventoryManagement.update_unit_of_measurements(unit_of_measurement_changes, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", unit_of_measurements: unit_of_measurements)
+  end
+
   def delete(conn, %{"id" => id}) do
     unit_of_measurement = InventoryManagement.get_unit_of_measurement!(id, conn.assigns.sub_domain_prefix)
 
