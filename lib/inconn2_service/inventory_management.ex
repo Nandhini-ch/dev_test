@@ -7,7 +7,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   alias Inconn2Service.{AssetConfig, Staff}
   alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventoryItem, Store}
-  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement, InventorySupplierItem}
 
   def list_uom_categories(prefix) do
     from(uc in UomCategory, where: uc.active)
@@ -267,8 +267,9 @@ defmodule Inconn2Service.InventoryManagement do
     dynamic_query_for_inventory_items(from(i in InventoryItem, where: i.active), query_params)
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
-    |> Repo.preload([:consume_unit_of_measurement, :uom_category, :stocks])
+    |> Repo.preload([:consume_unit_of_measurement, :uom_category, :stocks, :inventory_supplier_items])
     |> preload_asset_categories(prefix)
+    |> filter_on_supplier(query_params["supplier_id"])
     |> Enum.map(fn i -> Map.put(i, :stocked_quantity, load_stock(i, query_params["location_id"])) end)
   end
 
@@ -465,6 +466,33 @@ defmodule Inconn2Service.InventoryManagement do
     Conversion.changeset(conversion, attrs)
   end
 
+  #Context functions for inventory supplier items
+  def list_inventory_supplier_items(prefix) do
+    Repo.all(InventorySupplierItem, prefix: prefix)
+  end
+
+  def get_inventory_supplier_item!(id, prefix), do: Repo.get!(InventorySupplierItem, id, prefix: prefix)
+
+  def create_inventory_supplier_item(attrs \\ %{}, prefix) do
+    %InventorySupplierItem{}
+    |> InventorySupplierItem.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_inventory_supplier_item(%InventorySupplierItem{} = inventory_supplier_item, attrs, prefix) do
+    inventory_supplier_item
+    |> InventorySupplierItem.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_inventory_supplier_item(%InventorySupplierItem{} = inventory_supplier_item, prefix) do
+    Repo.delete(inventory_supplier_item, prefix: prefix)
+  end
+
+  def change_inventory_supplier_item(%InventorySupplierItem{} = inventory_supplier_item, attrs \\ %{}) do
+    InventorySupplierItem.changeset(inventory_supplier_item, attrs)
+  end
+
   #All private functions related to the context
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "store_image")
@@ -519,6 +547,9 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
   defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
+
+  defp filter_on_supplier(items, nil), do: items
+  defp filter_on_supplier(items, supplier_id), do: Enum.filter(items, fn i -> i.supplier_items.inventory_supplier_id == supplier_id end)
 
   defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
 
@@ -599,6 +630,29 @@ defmodule Inconn2Service.InventoryManagement do
       |> calculate_cost()
       |> convert_quantity(prefix)
       |> Repo.insert(prefix: prefix)
+      |> create_supplier_item_record(prefix)
+    end
+  end
+
+  defp create_supplier_item_record({:ok, transaction}, prefix) do
+    query =
+      from si in InventorySupplierItem, where:
+        si.inventory_supplier_id == ^transaction.inventory_supplier_id and
+        si.inventory_item_id == ^transaction.inventory_item_id
+
+    case Repo.one(query, prefix: prefix) do
+      nil ->
+        create_inventory_supplier_item(
+            %{
+              "inventory_item_id" => transaction.inventory_item_id,
+              "inventory_supplier_id" => transaction.inventory_supplier_id
+            },
+            prefix
+        )
+        {:ok, transaction}
+
+      _ ->
+       {:ok, transaction}
     end
   end
 

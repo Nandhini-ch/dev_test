@@ -566,4 +566,61 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_conversion(conversion)
     end
   end
+
+  describe "inventory_supplier_items" do
+    alias Inconn2Service.InventoryManagement.InventorySupplierItem
+
+    @valid_attrs %{}
+    @update_attrs %{}
+    @invalid_attrs %{}
+
+    def inventory_supplier_item_fixture(attrs \\ %{}) do
+      {:ok, inventory_supplier_item} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_inventory_supplier_item()
+
+      inventory_supplier_item
+    end
+
+    test "list_inventory_supplier_items/0 returns all inventory_supplier_items" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert InventoryManagement.list_inventory_supplier_items() == [inventory_supplier_item]
+    end
+
+    test "get_inventory_supplier_item!/1 returns the inventory_supplier_item with given id" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert InventoryManagement.get_inventory_supplier_item!(inventory_supplier_item.id) == inventory_supplier_item
+    end
+
+    test "create_inventory_supplier_item/1 with valid data creates a inventory_supplier_item" do
+      assert {:ok, %InventorySupplierItem{} = inventory_supplier_item} = InventoryManagement.create_inventory_supplier_item(@valid_attrs)
+    end
+
+    test "create_inventory_supplier_item/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_inventory_supplier_item(@invalid_attrs)
+    end
+
+    test "update_inventory_supplier_item/2 with valid data updates the inventory_supplier_item" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert {:ok, %InventorySupplierItem{} = inventory_supplier_item} = InventoryManagement.update_inventory_supplier_item(inventory_supplier_item, @update_attrs)
+    end
+
+    test "update_inventory_supplier_item/2 with invalid data returns error changeset" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_inventory_supplier_item(inventory_supplier_item, @invalid_attrs)
+      assert inventory_supplier_item == InventoryManagement.get_inventory_supplier_item!(inventory_supplier_item.id)
+    end
+
+    test "delete_inventory_supplier_item/1 deletes the inventory_supplier_item" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert {:ok, %InventorySupplierItem{}} = InventoryManagement.delete_inventory_supplier_item(inventory_supplier_item)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_inventory_supplier_item!(inventory_supplier_item.id) end
+    end
+
+    test "change_inventory_supplier_item/1 returns a inventory_supplier_item changeset" do
+      inventory_supplier_item = inventory_supplier_item_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_inventory_supplier_item(inventory_supplier_item)
+    end
+  end
 end

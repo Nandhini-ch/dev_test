@@ -1,7 +1,7 @@
 defmodule Inconn2Service.InventoryManagement.InventoryItem do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.InventoryManagement.{Stock, UomCategory, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{Stock, UomCategory, UnitOfMeasurement, InventorySupplierItem}
 
   schema "inventory_items" do
     field :approval_user_id, :integer
@@ -22,6 +22,7 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
     belongs_to :purchase_unit_of_measurement, UnitOfMeasurement, foreign_key: :purchase_unit_of_measurement_id
 
     has_many :stocks, Stock
+    has_many :inventory_supplier_items, InventorySupplierItem
     timestamps()
   end
 
