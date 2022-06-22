@@ -382,5 +382,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/transactions", TransactionController, except: [:new, :edit]
     resources "/stocks", StockController, except: [:new, :edit]
+
+    resources "/conversions", ConversionController, except: [:new, :edit]
+
   end
 end

@@ -6,7 +6,7 @@ defmodule Inconn2Service.InventoryManagement do
   alias Ecto.Multi
 
   alias Inconn2Service.{AssetConfig, Staff}
-  alias Inconn2Service.InventoryManagement.{InventorySupplier, InventoryItem, Store}
+  alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventoryItem, Store}
   alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement}
 
   def list_uom_categories(prefix) do
@@ -403,14 +403,42 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
   end
 
-
   def delete_stock(%Stock{} = stock, prefix) do
     Repo.delete(stock, prefix: prefix)
   end
 
-
   def change_stock(%Stock{} = stock, attrs \\ %{}) do
     Stock.changeset(stock, attrs)
+  end
+
+  #Context functions for conversion
+  def list_conversions(prefix) do
+    Repo.all(Conversion, prefix: prefix) |> preload_unit_of_measurement_and_category_for_conversion()
+  end
+
+  def get_conversion!(id, prefix), do: Repo.get!(Conversion, id, prefix: prefix) |> preload_unit_of_measurement_and_category_for_conversion()
+
+  def create_conversion(attrs \\ %{}, prefix) do
+    %Conversion{}
+    |> Conversion.changeset(attrs)
+    |> check_uom_conversion_units_in_category(prefix)
+    |> Repo.insert(prefix: prefix)
+    |> preload_unit_of_measurement_and_category_for_conversion()
+  end
+
+  def update_conversion(%Conversion{} = conversion, attrs, prefix) do
+    conversion
+    |> Conversion.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+    |> preload_unit_of_measurement_and_category_for_conversion()
+  end
+
+  def delete_conversion(%Conversion{} = conversion, prefix) do
+    Repo.delete(conversion, prefix: prefix)
+  end
+
+  def change_conversion(%Conversion{} = conversion, attrs \\ %{}) do
+    Conversion.changeset(conversion, attrs)
   end
 
   #All private functions related to the context
@@ -458,6 +486,26 @@ defmodule Inconn2Service.InventoryManagement do
   defp load_user_for_given_key(transaction, id_key, new_key, prefix) when is_tuple(transaction), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
   defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
 
+  defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
+  defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
+  defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
+
+  defp get_uom_conversion_factor(from_uom_id, to_uom_id, _prefix, _inverse) when from_uom_id == to_uom_id, do: {:ok, 1}
+
+  defp get_uom_conversion_factor(from_uom_id, to_uom_id,  prefix, inverse) do
+    unit_of_measurement_conversion = uom_conversion_query(from_uom_id, to_uom_id) |> Repo.one(prefix: prefix)
+    cond do
+      is_nil(unit_of_measurement_conversion) and inverse -> {:error, "Conversion Not found"}
+      is_nil(unit_of_measurement_conversion) -> get_uom_conversion_factor(to_uom_id, from_uom_id,  prefix, true)
+      inverse -> {:ok, 1 / unit_of_measurement_conversion.multiplication_factor}
+      true -> {:ok, unit_of_measurement_conversion.multiplication_factor}
+    end
+  end
+
+  defp uom_conversion_query(from_uom_id, to_uom_id) do
+    from(c in Conversion, where: c.from_unit_of_measurement_id == ^from_uom_id and c.to_unit_of_measurement_id == ^to_uom_id)
+  end
+
   defp remove_tuple_from_multiple_update({:ok, resource}), do: resource
 
   defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
@@ -501,6 +549,7 @@ defmodule Inconn2Service.InventoryManagement do
       %Transaction{}
       |> Transaction.changeset(attrs)
       |> calculate_cost()
+      |> convert_quantity(prefix)
       |> Repo.insert(prefix: prefix)
     end
   end
@@ -509,6 +558,7 @@ defmodule Inconn2Service.InventoryManagement do
     fn _, _ ->
       %Transaction{}
       |> Transaction.changeset(attrs)
+      |> convert_quantity(prefix)
       |> check_stock_upto_store(prefix)
       |> check_stock_upto_bin(prefix)
       |> Repo.insert(prefix: prefix)
@@ -516,6 +566,26 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   defp calculate_cost(cs), do: change(cs, %{cost: get_field(cs, :unit_price) * get_field(cs, :quantity) })
+
+  defp convert_quantity(cs, prefix) do
+    inventory_item_id = get_field(cs, :inventory_item_id, nil)
+    transaction_unit_of_measurement_id = get_field(cs, :unit_of_measurement_id, nil)
+    item_unit_of_measurement_id = get_inventory_item!(inventory_item_id, prefix).inventory_unit_of_measurement_id
+    case get_uom_conversion_factor(transaction_unit_of_measurement_id, item_unit_of_measurement_id, prefix, false) do
+      {:ok, multiplication_factor} -> change(cs, %{quantity: get_field(cs, :quantity) * multiplication_factor})
+      {:error, _reason} -> add_error(cs, :unit_of_measurement_id, "Conversion for given UOM to selected item's inventory UOM is not availabe")
+    end
+  end
+
+  defp check_uom_conversion_units_in_category(cs, prefix) do
+    from_uom = get_unit_of_measurement!(get_field(cs, :from_unit_of_measurement_id), prefix)
+    to_uom = get_unit_of_measurement!(get_field(cs, :to_unit_of_measurement_id), prefix)
+    uom_category_id = get_change(cs, :uom_category_id)
+    cond do
+      from_uom.uom_category_id == uom_category_id && to_uom.uom_category_id == uom_category_id -> cs
+      true -> add_error(cs, :uom_category_ids, "One of the UOM does not belong to the given UOM Category")
+    end
+  end
 
   defp update_stock_for_inward(prefix) do
     fn _repo, %{transaction: transaction} ->

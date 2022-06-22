@@ -501,4 +501,69 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_stock(stock)
     end
   end
+
+  describe "conversions" do
+    alias Inconn2Service.InventoryManagement.Conversion
+
+    @valid_attrs %{from_unit_of_measurement_id: 42, multiplication_factor: 120.5, to_unit_of_measurement_id: 42, uom_category_id: 42}
+    @update_attrs %{from_unit_of_measurement_id: 43, multiplication_factor: 456.7, to_unit_of_measurement_id: 43, uom_category_id: 43}
+    @invalid_attrs %{from_unit_of_measurement_id: nil, multiplication_factor: nil, to_unit_of_measurement_id: nil, uom_category_id: nil}
+
+    def conversion_fixture(attrs \\ %{}) do
+      {:ok, conversion} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_conversion()
+
+      conversion
+    end
+
+    test "list_conversions/0 returns all conversions" do
+      conversion = conversion_fixture()
+      assert InventoryManagement.list_conversions() == [conversion]
+    end
+
+    test "get_conversion!/1 returns the conversion with given id" do
+      conversion = conversion_fixture()
+      assert InventoryManagement.get_conversion!(conversion.id) == conversion
+    end
+
+    test "create_conversion/1 with valid data creates a conversion" do
+      assert {:ok, %Conversion{} = conversion} = InventoryManagement.create_conversion(@valid_attrs)
+      assert conversion.from_unit_of_measurement_id == 42
+      assert conversion.multiplication_factor == 120.5
+      assert conversion.to_unit_of_measurement_id == 42
+      assert conversion.uom_category_id == 42
+    end
+
+    test "create_conversion/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_conversion(@invalid_attrs)
+    end
+
+    test "update_conversion/2 with valid data updates the conversion" do
+      conversion = conversion_fixture()
+      assert {:ok, %Conversion{} = conversion} = InventoryManagement.update_conversion(conversion, @update_attrs)
+      assert conversion.from_unit_of_measurement_id == 43
+      assert conversion.multiplication_factor == 456.7
+      assert conversion.to_unit_of_measurement_id == 43
+      assert conversion.uom_category_id == 43
+    end
+
+    test "update_conversion/2 with invalid data returns error changeset" do
+      conversion = conversion_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_conversion(conversion, @invalid_attrs)
+      assert conversion == InventoryManagement.get_conversion!(conversion.id)
+    end
+
+    test "delete_conversion/1 deletes the conversion" do
+      conversion = conversion_fixture()
+      assert {:ok, %Conversion{}} = InventoryManagement.delete_conversion(conversion)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_conversion!(conversion.id) end
+    end
+
+    test "change_conversion/1 returns a conversion changeset" do
+      conversion = conversion_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_conversion(conversion)
+    end
+  end
 end
