@@ -37,10 +37,12 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
                               :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost,
                               :remarks, :is_approval_required, :is_approved, :supplier_id])
     |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
-                                            :store_id,:transaction_user_id, :approver_user_id, :quantity,  :aisle, :row, :bin, :remarks])
+                                            :store_id,  :quantity,  :aisle, :row, :bin, :remarks, :is_approval_required])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
     |> set_is_acknowledged()
-    |> validate_inclusion(:is_approved, ["YES", "NO"])
+    |> set_is_approved()
+    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "RJ"])
+    |> validate_inclusion(:is_approved, ["AP", "NA", "RJ"])
     |> validate_fields_based_on_transaction_type()
   end
 
@@ -48,19 +50,29 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     transaction
     |> cast(attrs, [:is_acknowledged, :is_approved])
     |> validate_inclusion(:is_acknowledged, ["YES", "NO", "RJ"])
+    |> validate_inclusion(:is_approved, ["A", "NO", "RJ"])
   end
 
   defp set_is_acknowledged(cs) do
     case get_field(cs, :transaction_type) do
-      "IS" -> change(cs, %{is_acknowledged: "NO"})
+      "IS" -> change(cs, %{is_acknowledged: "NACK"})
       _ -> cs
+    end
+  end
+
+  defp set_is_approved(cs) do
+    cond do
+      get_field(cs, :transaction_type) == "IS" and get_field(cs, :is_approval_required) ->
+        validate_required(cs, [:approver_user_id]) |> change(%{is_approved: "NA"})
+      true ->
+        cs
     end
   end
 
   defp validate_fields_based_on_transaction_type(cs) do
     case get_field(cs, :transaction_type, nil) do
       "IN" -> validate_required(cs, [:unit_price, :supplier_id])
-      "IS" -> validate_required(cs, [:work_order_id])
+      "IS" -> validate_required(cs, [:transaction_user_id])
     end
   end
 end
