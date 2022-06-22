@@ -327,6 +327,20 @@ defmodule Inconn2Service.InventoryManagement do
     |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
   end
 
+  def list_transactions_to_be_acknowledged(user, prefix) do
+    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged == "NACK")
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
+    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
+  end
+
+  def list_transactions_to_be_approved(user, prefix) do
+    from(t in Transaction, where: t.approve_user_id == ^user.id and t.is_approve == "NA")
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
+    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
+  end
+
   def get_transaction!(id, prefix) do
     Repo.get!(Transaction, id, prefix: prefix)
     |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)

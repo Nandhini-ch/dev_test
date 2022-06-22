@@ -11,6 +11,16 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
+  def index_to_be_acknowledged(conn, _params) do
+    transactions = InventoryManagement.list_transactions_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
+  def index_to_be_approve(conn, _params) do
+    transactions = InventoryManagement.list_transactions_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
   def create(conn, %{"transaction" => transaction_params}) do
     with {:ok, %Transaction{} = transaction} <- InventoryManagement.create_transaction(transaction_params,conn.assigns.sub_domain_prefix) do
       conn
