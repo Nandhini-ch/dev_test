@@ -263,9 +263,19 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_asset_categories(prefix)
   end
 
+  def list_inventory_items(query_params, prefix) do
+    dynamic_query_for_inventory_items(from(i in InventoryItem, where: i.active), query_params)
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
+    |> Repo.preload([:consume_unit_of_measurement, :uom_category, :stocks])
+    |> preload_asset_categories(prefix)
+    |> Enum.map(fn i -> Map.put(i, :stocked_quantity, load_stock(i, query_params["location_id"])) end)
+  end
+
   def get_inventory_item!(id, prefix) do
     Repo.get!(InventoryItem, id, prefix: prefix)
-    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement, :uom_category])
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
+    |> Repo.preload([:consume_unit_of_measurement, :uom_category])
     |> preload_asset_categories(prefix)
   end
 
@@ -321,8 +331,8 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   #Context functions for Transactions
-  def list_transactions(prefix) do
-    Repo.all(Transaction, prefix: prefix)
+  def list_transactions(query_params, prefix) do
+    transactions_query(query_params, Transaction) |> Repo.all(prefix: prefix)
     |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
     |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
   end
@@ -507,6 +517,11 @@ defmodule Inconn2Service.InventoryManagement do
   defp stock_query(query, %{}), do: query
   defp stock_query(query, query_params), do: from(q in query, where: q.item_id == ^query_params["item_id"] and q.store_id == ^query_params["store_id"])
 
+  defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
+  defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
+
+  defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
+
   defp get_uom_conversion_factor(from_uom_id, to_uom_id, _prefix, _inverse) when from_uom_id == to_uom_id, do: {:ok, 1}
 
   defp get_uom_conversion_factor(from_uom_id, to_uom_id,  prefix, inverse) do
@@ -517,6 +532,14 @@ defmodule Inconn2Service.InventoryManagement do
       inverse -> {:ok, 1 / unit_of_measurement_conversion.multiplication_factor}
       true -> {:ok, unit_of_measurement_conversion.multiplication_factor}
     end
+  end
+
+  defp transactions_query(query_params, query) do
+    Enum.reduce(query_params, query, fn
+       {"item_id", item_id}, query -> from q in query, where: q.item_id == ^item_id
+       {"supplier_id", supplier_id}, query -> from q in query, where: q.supplier_id == ^supplier_id
+       _ , query -> query
+    end)
   end
 
   defp uom_conversion_query(from_uom_id, to_uom_id) do
@@ -547,6 +570,14 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp stock_if_exists_query(store_id, item_id) do
     from(s in Stock, where: s.item_id == ^item_id and s.store_id == ^store_id)
+  end
+
+  defp dynamic_query_for_inventory_items(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: ^asset_category_id in q.asset_category_ids
+      {"type", type}, query -> from q in query, where: q.type == ^type
+      _ , query -> query
+    end)
   end
 
   defp multi_query_for_inward_transaction(attrs, prefix) do
