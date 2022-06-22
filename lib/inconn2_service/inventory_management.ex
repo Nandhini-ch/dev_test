@@ -399,8 +399,8 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   #Context functions for Stock
-  def list_stocks(prefix) do
-    Repo.all(Stock, prefix: prefix)
+  def list_stocks(query_params, prefix) do
+    stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)
   end
 
   def get_stock!(id, prefix), do: Repo.get!(Stock, id, prefix: prefix)
@@ -503,6 +503,9 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
   defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
   defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
+
+  defp stock_query(query, %{}), do: query
+  defp stock_query(query, query_params), do: from(q in query, where: q.item_id == ^query_params["item_id"] and q.store_id == ^query_params["store_id"])
 
   defp get_uom_conversion_factor(from_uom_id, to_uom_id, _prefix, _inverse) when from_uom_id == to_uom_id, do: {:ok, 1}
 

@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.StockController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    stocks = InventoryManagement.list_stocks(conn.assigns.sub_domain_prefix)
+    stocks = InventoryManagement.list_stocks(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", stocks: stocks)
   end
 
