@@ -1,4 +1,4 @@
-defmodule Inconn2ServiceWeb.EquipmentManufacturerController do
+defmodule Inconn2ServiceWeb.ExternalTicketController do
   use Inconn2ServiceWeb, :controller
 
 #QR code
