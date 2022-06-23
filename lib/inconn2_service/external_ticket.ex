@@ -63,6 +63,53 @@ defmodule Inconn2Service.ExternalTicket do
 
   #Ticket Database Functions
 
+  alias Inconn2Service.Repo
+  alias Inconn2Service.Ticket
+  alias Inconn2Service.Ticket.WorkRequest
 
+  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
+
+  def create_external_work_request(attrs \\ %{}, prefix) do
+    attrs =
+      attrs
+      |> Map.put("request_type", "CO")
+      |> Map.put("is_external_ticket", true)
+
+    created_work_request = %WorkRequest{}
+    |> WorkRequest.changeset(attrs)
+    |> Ticket.auto_fill_wr_category(prefix)
+    |> Ticket.validate_asset_id(prefix)
+    |> Repo.insert(prefix: prefix)
+
+    case created_work_request do
+      {:ok, work_request} ->
+        Ticket.create_status_track(work_request, prefix)
+        Ticket.push_alert_notification_for_ticket(nil, work_request, prefix, nil)
+        {:ok, work_request}
+
+      _ ->
+        created_work_request
+
+    end
+  end
+
+  def update_external_work_request(%WorkRequest{} = work_request, attrs, prefix) do
+    result = work_request
+              |> WorkRequest.changeset(attrs)
+              |> Ticket.auto_fill_wr_category(prefix)
+              |> Ticket.validate_asset_id(prefix)
+              |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, updated_work_request} ->
+        Ticket.update_status_track(updated_work_request, prefix)
+        Ticket.push_alert_notification_for_ticket(work_request, updated_work_request, prefix, nil)
+        {:ok, updated_work_request}
+
+      _ ->
+        result
+
+    end
+  end
 
 end

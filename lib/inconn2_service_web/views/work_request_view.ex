@@ -87,4 +87,21 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       approvals_required: work_request.approvals_required,
       work_order_id: work_request.work_order_id}
   end
+
+  def render("external_work_request.json", %{work_request: work_request}) do
+    %{id: work_request.id,
+      site_id: work_request.site_id,
+      workrequest_category_id: work_request.workrequest_category_id,
+      workrequest_subcategory_id: work_request.workrequest_subcategory_id,
+      location_id: work_request.location_id,
+      asset_id: work_request.asset_id,
+      asset_type: work_request.asset_type,
+      description: work_request.description,
+      raised_date_time: work_request.raised_date_time,
+      status: work_request.status,
+      external_name: work_request.external_name,
+      external_email: work_request.external_email,
+      external_mobile_no: work_request.external_mobile_no,
+      remarks: work_request.remarks}
+  end
 end

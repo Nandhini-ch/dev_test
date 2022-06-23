@@ -35,6 +35,12 @@ defmodule Inconn2ServiceWeb.Router do
     get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
     get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
 
+    scope "/external_ticket" do
+
+      resources "/work_request", ExternalTicketController, only: [:create, :show, :update]
+
+    end
+
   end
 
   scope "/api", Inconn2ServiceWeb do

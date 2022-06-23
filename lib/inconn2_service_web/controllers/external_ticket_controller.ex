@@ -1,6 +1,7 @@
 defmodule Inconn2ServiceWeb.ExternalTicketController do
   use Inconn2ServiceWeb, :controller
-  alias Inconn2Service.{AssetConfig, ExternalTicket}
+  alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.{AssetConfig, ExternalTicket, Ticket}
 
 #QR code
 
@@ -37,7 +38,28 @@ def get_location_ticket_qr_code_as_pdf(conn, %{"id" => id}) do
   |> put_resp_header("content-disposition", "attachment; filename=\"#{name}.pdf\"")
   |> send_resp(200, pdf)
 end
-#Ticket
 
+#Ticket
+def create(conn, %{"work_request" => work_request_params}) do
+  with {:ok, %WorkRequest{} = work_request} <- ExternalTicket.create_external_work_request(work_request_params, conn.assigns.sub_domain_prefix) do
+    conn
+    |> put_status(:created)
+    |> put_resp_header("location", Routes.work_request_path(conn, :show, work_request))
+    |> render("show.json", work_request: work_request)
+  end
+end
+
+def show(conn, %{"id" => id}) do
+  work_request = ExternalTicket.get_work_request!(id, conn.assigns.sub_domain_prefix)
+  render(conn, "show.json", work_request: work_request)
+end
+
+def update(conn, %{"id" => id, "work_request" => work_request_params}) do
+  work_request = Ticket.get_work_request!(id, conn.assigns.sub_domain_prefix)
+
+  with {:ok, %WorkRequest{} = work_request} <- ExternalTicket.update_external_work_request(work_request, work_request_params, conn.assigns.sub_domain_prefix) do
+    render(conn, "show.json", work_request: work_request)
+  end
+end
 
 end
