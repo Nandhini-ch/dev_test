@@ -37,6 +37,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     scope "/external_ticket" do
 
+      get "/workrequest_categories", ExternalTicketController, :index_categories
+      get "/workrequest_categories/:workrequest_category_id/workrequest_subcategories", ExternalTicketController, :index_subcategories_for_category
       resources "/work_request", ExternalTicketController, only: [:create, :show, :update]
 
     end
