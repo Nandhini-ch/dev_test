@@ -35,9 +35,9 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     transaction
     |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id,
                               :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost,
-                              :remarks, :is_approval_required, :is_approved, :supplier_id])
+                              :remarks, :is_approval_required, :is_approved, :inventory_supplier_id])
     |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
-                                            :store_id,  :quantity,  :aisle, :row, :bin, :remarks, :is_approval_required])
+                                            :store_id,  :quantity,  :is_approval_required])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
     |> set_is_acknowledged()
     |> set_is_approved()
@@ -71,7 +71,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
 
   defp validate_fields_based_on_transaction_type(cs) do
     case get_field(cs, :transaction_type, nil) do
-      "IN" -> validate_required(cs, [:unit_price, :supplier_id])
+      "IN" -> validate_required(cs, [:unit_price, :inventory_supplier_id])
       "IS" -> validate_required(cs, [:transaction_user_id])
     end
   end

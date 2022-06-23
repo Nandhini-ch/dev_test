@@ -334,28 +334,28 @@ defmodule Inconn2Service.InventoryManagement do
   #Context functions for Transactions
   def list_transactions(query_params, prefix) do
     transactions_query(query_params, Transaction) |> Repo.all(prefix: prefix)
-    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
-    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
   def list_transactions_to_be_acknowledged(user, prefix) do
     from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged == "NACK")
     |> Repo.all(prefix: prefix)
-    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
-    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
   def list_transactions_to_be_approved(user, prefix) do
     from(t in Transaction, where: t.approve_user_id == ^user.id and t.is_approve == "NA")
     |> Repo.all(prefix: prefix)
-    |> Stream.map(fn t -> load_user_for_given_key(t, :approver_user_id, :approver_user, prefix) end)
-    |> Enum.map(fn t -> load_user_for_given_key(t, :transaction_user_id, :transaction_user, prefix) end)
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
   def get_transaction!(id, prefix) do
     Repo.get!(Transaction, id, prefix: prefix)
-    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
-    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
+    |> load_approver_user_for_transaction(prefix)
+    |> load_transaction_user_for_transaction(prefix)
   end
 
   def create_transactions(transactions, prefix) do
@@ -377,8 +377,8 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_inward_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
-    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
-    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
+    |> load_approver_user_for_transaction(prefix)
+    |> load_transaction_user_for_transaction(prefix)
   end
 
   #Create for Issue Transaction
@@ -386,8 +386,8 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_issue_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
-    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
-    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
+    |> load_approver_user_for_transaction(prefix)
+    |> load_transaction_user_for_transaction(prefix)
   end
 
   #Only time a stock can be updated is when issue acknowledgement happens
@@ -397,8 +397,8 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
     |> reduce_stock_on_approval(prefix)
     |> revive_stock_on_acknowledgement_reject(prefix)
-    |> load_user_for_given_key(:approver_user_id, :approver_user, prefix)
-    |> load_user_for_given_key(:transaction_user_id, :transaction_user, prefix)
+    |> load_approver_user_for_transaction(prefix)
+    |> load_transaction_user_for_transaction(prefix)
   end
 
   def delete_transaction(%Transaction{} = transaction, prefix) do
@@ -535,8 +535,17 @@ defmodule Inconn2Service.InventoryManagement do
   defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
   defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
 
-  defp load_user_for_given_key(transaction, id_key, new_key, prefix) when is_tuple(transaction), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
-  defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
+  # defp load_user_for_given_key({:ok, transaction}, id_key, new_key, prefix), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
+  # defp load_user_for_given_key({:error, changeset}, _id_key, _new_key, _prefix), do: {:error, changeset}
+  # defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
+
+  defp load_approver_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_approver_user_for_transaction(transaction, prefix)}
+  defp load_approver_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
+  defp load_approver_user_for_transaction(transaction, prefix), do: Map.put(transaction, :approver_user, Staff.get_user_without_org_unit(transaction.approver_user_id, prefix))
+
+  defp load_transaction_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_transaction_user_for_transaction(transaction, prefix)}
+  defp load_transaction_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
+  defp load_transaction_user_for_transaction(transaction, prefix), do: Map.put(transaction, :transaction_user, Staff.get_user_without_org_unit(transaction.transaction_user_id, prefix))
 
   defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
   defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
@@ -579,6 +588,10 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp remove_tuple_from_multiple_update({:ok, resource}), do: resource
 
+  defp stock_if_exists_upto_bin(store_id, nil, nil, nil, item_id, prefix) do
+    stock_if_exists_query(store_id, item_id) |> Repo.one(prefix: prefix)
+  end
+
   defp stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix) do
     stock_if_exists_query(store_id, aisle, bin, row, item_id) |> Repo.one(prefix: prefix)
   end
@@ -600,7 +613,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   defp stock_if_exists_query(store_id, item_id) do
-    from(s in Stock, where: s.item_id == ^item_id and s.store_id == ^store_id)
+    from(s in Stock, where: s.inventory_item_id == ^item_id and s.store_id == ^store_id)
   end
 
   defp dynamic_query_for_inventory_items(query, query_params) do
@@ -691,7 +704,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp update_stock_for_inward(prefix) do
     fn _repo, %{transaction: transaction} ->
-      stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+      stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.inventory_item_id, prefix)
       case stock do
         nil ->
           create_stock(

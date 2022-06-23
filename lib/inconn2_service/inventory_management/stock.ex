@@ -19,7 +19,7 @@ defmodule Inconn2Service.InventoryManagement.Stock do
   @doc false
   def changeset(stock, attrs) do
     stock
-    |> cast(attrs, [:aisle, :row, :bin])
-    |> validate_required([:aisle, :row, :bin])
+    |> cast(attrs, [:store_id, :inventory_item_id, :quantity])
+    |> validate_required([:store_id, :inventory_item_id, :quantity])
   end
 end

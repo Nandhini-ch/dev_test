@@ -41,3 +41,47 @@ prefix = "inc_bata"
     },
     prefix
   )
+
+{:ok, item1} =
+  InventoryManagement.create_inventory_item(
+    %{
+      "name" => "Cement",
+      "part_no" => "123",
+      "item_type" => "Tool",
+      "minimum_stock_level" => 10,
+      "remarks" => "Cements used to build buildings",
+      "uom_category_id" => uom_category.id,
+      "unit_price" => 440.0,
+      "is_approval_required" => false,
+      "asset_category_ids" => [1],
+      "consume_unit_of_measurement_id" => uom2.id,
+      "purchase_unit_of_measurement_id" => uom2.id,
+      "inventory_unit_of_measurement_id" => uom1.id,
+    },
+    prefix
+  )
+
+{:ok, store} =
+  InventoryManagement.create_store(
+    %{
+      "name" => "Inventory Store 1",
+      "person_or_location_based" => "L",
+      "is_layout_configuration_required" => false,
+      "site_id" => 1,
+      "location_id" => 1
+    },
+    prefix
+  )
+
+{:ok, inventory_supplier} =
+  InventoryManagement.create_inventory_supplier(
+    %{
+      "name" => "Sudhan Tools",
+      "business_type" => "Tools Manufacturer",
+      "contact_person" =>  "Mr. Harisudhan Ravi",
+      "contact_no" => "1234567890",
+      "escalation1_contact_name" => "Mr. Poochi",
+      "escalation1_contact_no" => "1234567890"
+    },
+    prefix
+  )
