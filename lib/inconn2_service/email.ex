@@ -22,7 +22,7 @@ defmodule Inconn2Service.Email do
       subject: "Inconn alert and notifications",
       html_body: external_ticket_complete_ack(id, email, prefix),
       text_body: "Hello, Please check your updates in Inconn"
-    )
+    )|> Inconn2Service.Mailer.deliver_now!()
   end
 
   def email_text(user, description) do
