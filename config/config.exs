@@ -35,6 +35,16 @@ config :triplex,
   repo: Inconn2Service.Repo,
   tenant_prefix: "inc_"
 
+config :inconn2_service, Inconn2Service.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  server: "smtp.office365.com",
+  host: "inconn.com",
+  port: 587,
+  username: "info@inconn.com",
+  password: "Welcome@123",
+  tls_verify: :verify_peer
+
+
 # Tzdata configuration
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
