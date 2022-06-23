@@ -40,6 +40,17 @@ def get_location_ticket_qr_code_as_pdf(conn, %{"id" => id}) do
 end
 
 #Ticket
+
+def index_categories(conn, _params) do
+    workrequest_categories = Ticket.list_workrequest_categories(conn.assigns.sub_domain_prefix)
+    render(conn, "index_categories.json", workrequest_categories: workrequest_categories)
+end
+
+def index_subcategories_for_category(conn, %{"workrequest_category_id" => workrequest_category_id}) do
+    workrequest_subcategories = Ticket.list_workrequest_subcategories_for_category(workrequest_category_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index_subcategories.json", workrequest_subcategories: workrequest_subcategories)
+end
+
 def create(conn, %{"work_request" => work_request_params}) do
   with {:ok, %WorkRequest{} = work_request} <- ExternalTicket.create_external_work_request(work_request_params, conn.assigns.sub_domain_prefix) do
     conn
