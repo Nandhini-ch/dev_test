@@ -7,6 +7,7 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Repo
   import Ecto.Changeset
 
+  alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
   alias Inconn2Service.Staff
   alias Inconn2Service.Staff.User
@@ -338,7 +339,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  defp auto_fill_wr_category(cs, prefix) do
+  def auto_fill_wr_category(cs, prefix) do
     wr_sbc_id = get_change(cs, :workrequest_subcategory_id)
     if wr_sbc_id != nil do
       wr_subcategory = get_workrequest_subcategory(wr_sbc_id, prefix)
@@ -351,7 +352,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  defp validate_asset_id(cs, prefix) do
+  def validate_asset_id(cs, prefix) do
     asset_type = get_change(cs, :asset_type)
     asset_id = get_change(cs, :asset_id)
     if asset_type in ["L", "E"] and asset_id != nil do
@@ -378,7 +379,7 @@ defmodule Inconn2Service.Ticket do
     {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
   end
 
-  defp create_status_track(work_request, prefix) do
+  def create_status_track(work_request, prefix) do
     {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
     workrequest_status_track = %{
       "work_request_id" => work_request.id,
@@ -458,6 +459,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
+        send_completed_email(work_request, updated_work_request, prefix)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -465,6 +467,16 @@ defmodule Inconn2Service.Ticket do
 
     end
 
+  end
+
+  defp send_completed_email(work_request, updated_work_request, prefix) do
+    cond do
+      work_request.status != "CP" and updated_work_request.status == "CP" ->
+          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+
+      true ->
+          updated_work_request
+    end
   end
 
   def update_user_for_workorder(existing_workrequest, updated_workrequest, prefix, user) do
@@ -535,7 +547,7 @@ defmodule Inconn2Service.Ticket do
     NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
-  defp update_status_track(work_request, prefix) do
+  def update_status_track(work_request, prefix) do
     case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
       nil ->
         {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
@@ -1154,6 +1166,17 @@ defmodule Inconn2Service.Ticket do
     create_ticket_alert_notification("WRCN", description, nil, "category/sub_category created", prefix)
   end
 
+  def push_alert_notification_for_ticket(nil, updated_work_request, prefix, nil) do
+    work_request_type =
+      case updated_work_request.request_type do
+        "CO" -> "Complaint"
+        "RE" -> "Request"
+      end
+
+    description = ~s(#{work_request_type} #{updated_work_request.id} created by external user at #{updated_work_request.raised_date_time})
+    create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
+  end
+
   def push_alert_notification_for_ticket(nil, updated_work_request, prefix, _user) do
     work_request_type =
       case updated_work_request.request_type do
@@ -1193,9 +1216,10 @@ defmodule Inconn2Service.Ticket do
       end
 
     user =
-      case user.employee do
-        nil -> user.username
-        _ -> user.employee.first_name
+      cond do
+        is_nil(user) -> "external user"
+        is_nil(user.employee) -> user.username
+        true -> user.employee.first_name
       end
 
     cond do
