@@ -19,6 +19,12 @@ defmodule Inconn2ServiceWeb.Router do
     get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/locations/:id/qr_code", LocationController, :display_qr_code
 
+    get "/equipments/:id/ticket_qr_code_png", ExternalTicketController, :get_equipment_ticket_qr
+    get "/locations/:id/ticket_qr_code_png", ExternalTicketController, :get_location_ticket_qr
+
+    get "/equipments/:id/ticket_qr_code", ExternalTicketController, :get_equipment_ticket_qr_code_as_pdf
+    get "/locations/:id/ticket_qr_code", ExternalTicketController, :get_location_ticket_qr_code_as_pdf
+
 
     post "/sessions/login", SessionController, :login
 
