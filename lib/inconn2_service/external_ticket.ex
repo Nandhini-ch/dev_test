@@ -1,6 +1,5 @@
 defmodule Inconn2Service.ExternalTicket do
 
-  @base_url "localhost:4000/externalticket"
   #QR code
 
   def generate_equipment_ticket_qr_as_pdf(equipment, prefix), do: render_string(equipment, split_prefix(prefix), "equipments") |> convert_string_to_pdf(equipment)
@@ -13,7 +12,7 @@ defmodule Inconn2Service.ExternalTicket do
   defp put_location_id(asset, "L"), do: "location_id=#{asset.id}"
 
   defp generate_asset_base_url(asset, asset_type, prefix) do
-    "#{split_prefix(prefix)}.#{@base_url}?asset_id=#{asset.id}&asset_type=#{asset_type}&site_id=#{asset.site_id}&sub_domain=#{split_prefix(prefix)}&#{put_location_id(asset, asset_type)}"
+    "#{split_prefix(prefix)}.inconn.com:3000/externalticket?asset_id=#{asset.id}&asset_type=#{asset_type}&site_id=#{asset.site_id}&#{put_location_id(asset, asset_type)}"
   end
 
   defp split_prefix(prefix) do
@@ -76,7 +75,7 @@ defmodule Inconn2Service.ExternalTicket do
       |> Map.put("is_external_ticket", true)
 
     created_work_request = %WorkRequest{}
-    |> WorkRequest.changeset(attrs)
+    |> WorkRequest.external_ticket_changeset(attrs)
     |> Ticket.auto_fill_wr_category(prefix)
     |> Ticket.validate_asset_id(prefix)
     |> Repo.insert(prefix: prefix)
@@ -95,7 +94,7 @@ defmodule Inconn2Service.ExternalTicket do
 
   def update_external_work_request(%WorkRequest{} = work_request, attrs, prefix) do
     result = work_request
-              |> WorkRequest.changeset(attrs)
+              |> WorkRequest.external_ticket_changeset(attrs)
               |> Ticket.auto_fill_wr_category(prefix)
               |> Ticket.validate_asset_id(prefix)
               |> Repo.update(prefix: prefix)
