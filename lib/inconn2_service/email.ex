@@ -15,6 +15,16 @@ defmodule Inconn2Service.Email do
     alert_notification_email(user, text) |> Inconn2Service.Mailer.deliver_later!()
   end
 
+  def send_ticket_complete_email(id, email, prefix) do
+    new_email(
+      to: email,
+      from: "info@inconn.com",
+      subject: "Inconn alert and notifications",
+      html_body: external_ticket_complete_ack(id, email, prefix),
+      text_body: "Hello, Please check your updates in Inconn"
+    )
+  end
+
   def email_text(user, description) do
     """
       Dear #{user.username},
