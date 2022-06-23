@@ -27,4 +27,21 @@ defmodule Inconn2Service.Email do
       Note: This is a system generated email, Please do not reply
     """
   end
+
+  def external_ticket_complete_ack(id, email, prefix) do
+    "inc_" <> sub_domain = prefix
+    """
+      Hi #{email},
+
+      Your Ticket with number #{id} has been resolved
+
+      click here to acknowledge - https://inconn.io/closedReponse?work_request_id=id&sub_domain=#{sub_domain}
+      click here to reopen - https://inconn.io/reopeningticket?work_request_id=id&sub_domain=#{sub_domain}
+
+      Thank You,
+      Regards
+
+      This is a no-reply email, Please do not repky to this mail
+    """
+  end
 end

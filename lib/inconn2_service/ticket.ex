@@ -7,6 +7,7 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Repo
   import Ecto.Changeset
 
+  alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
   alias Inconn2Service.Staff
   alias Inconn2Service.Staff.User
@@ -458,6 +459,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
+        send_completed_email(updated_work_request, prefix)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -465,6 +467,10 @@ defmodule Inconn2Service.Ticket do
 
     end
 
+  end
+
+  defp send_completed_email(work_request, prefix) do
+    Email.external_ticket_complete_ack(work_request.id, work_request.external_email, prefix)
   end
 
   def update_user_for_workorder(existing_workrequest, updated_workrequest, prefix, user) do
