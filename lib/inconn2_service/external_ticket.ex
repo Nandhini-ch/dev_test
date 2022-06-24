@@ -65,6 +65,7 @@ defmodule Inconn2Service.ExternalTicket do
   alias Inconn2Service.Repo
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.Email
 
   def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory])
 
@@ -82,6 +83,7 @@ defmodule Inconn2Service.ExternalTicket do
 
     case created_work_request do
       {:ok, work_request} ->
+        Email.send_ticket_reg_email(work_request.id, work_request.external_email, work_request.external_name)
         Ticket.create_status_track(work_request, prefix)
         Ticket.push_alert_notification_for_ticket(nil, work_request, prefix, nil)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory])}
