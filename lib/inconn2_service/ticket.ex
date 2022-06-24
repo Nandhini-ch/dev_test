@@ -472,8 +472,8 @@ defmodule Inconn2Service.Ticket do
   defp send_completed_email(work_request, updated_work_request, prefix) do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
-          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
-
+          #Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+          updated_work_request
       true ->
           updated_work_request
     end

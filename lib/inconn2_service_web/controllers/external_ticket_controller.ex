@@ -3,6 +3,8 @@ defmodule Inconn2ServiceWeb.ExternalTicketController do
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.{AssetConfig, ExternalTicket, Ticket}
 
+  action_fallback Inconn2ServiceWeb.FallbackController
+
 #QR code
 
 def get_equipment_ticket_qr(conn, %{"id" => id}) do

@@ -91,6 +91,8 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
   def render("external_work_request.json", %{work_request: work_request}) do
     %{id: work_request.id,
       site_id: work_request.site_id,
+      workrequest_category: render_one(work_request.workrequest_category, WorkrequestCategoryView, "workrequest_category_without_preload.json"),
+      workrequest_subcategory: render_one(work_request.workrequest_subcategory, WorkrequestSubcategoryView, "workrequest_subcategory.json"),
       workrequest_category_id: work_request.workrequest_category_id,
       workrequest_subcategory_id: work_request.workrequest_subcategory_id,
       location_id: work_request.location_id,
