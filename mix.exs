@@ -52,8 +52,9 @@ defmodule Inconn2Service.MixProject do
       {:csv, "~> 2.4"},
       {:pdf_generator, ">=0.6.0"},
       {:eqrcode, "~> 0.1.10"},
-      {:sneeze, "~> 1.2"}
-      #{:bamboo_smtp, "~> 4.1.0"}
+      {:sneeze, "~> 1.2"},
+      {:swoosh, "~> 1.6"},
+      {:gen_smtp, "~>  1.2"}
     ]
   end
 

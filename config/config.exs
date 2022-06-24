@@ -55,6 +55,15 @@ config :triplex,
 #   no_mx_lookups: false, # can be `true`
 #   auth: :if_available # can be `:always`. If your smtp relay requires authentication set it to `:always`.
 
+config :inconn2_service, Inconn2Service.Mailer,
+  adapter: Swoosh.Adapters.SMTP,
+  relay: "smtp.office365.com",
+  username: "info@inconn.com",
+  password: "Wynwy@!$",
+  tls: :always,
+  auth: :always,
+  port: 587
+
 
 # Tzdata configuration
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
