@@ -66,7 +66,7 @@ defmodule Inconn2Service.ExternalTicket do
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.WorkRequest
 
-  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
+  def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory])
 
   def create_external_work_request(attrs \\ %{}, prefix) do
     attrs =
@@ -84,7 +84,7 @@ defmodule Inconn2Service.ExternalTicket do
       {:ok, work_request} ->
         Ticket.create_status_track(work_request, prefix)
         Ticket.push_alert_notification_for_ticket(nil, work_request, prefix, nil)
-        {:ok, work_request}
+        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory])}
 
       _ ->
         created_work_request
@@ -103,7 +103,7 @@ defmodule Inconn2Service.ExternalTicket do
       {:ok, updated_work_request} ->
         Ticket.update_status_track(updated_work_request, prefix)
         Ticket.push_alert_notification_for_ticket(work_request, updated_work_request, prefix, nil)
-        {:ok, updated_work_request}
+        {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory], force: true)}
 
       _ ->
         result
