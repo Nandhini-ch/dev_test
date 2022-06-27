@@ -28,7 +28,7 @@ defmodule Inconn2ServiceWeb.UserView do
       mobile_no: user.mobile_no,
       party_id: user.party_id,
       role_id: user.role_id,
-      employee: render_one(user.employee, EmployeeView, "employee.json")
+      employee: render_one(user.employee, EmployeeView, "employee_with_org_unit_only.json")
     }
   end
 

@@ -56,6 +56,7 @@ defmodule Inconn2Service.AssetConfig do
 
   """
   def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
+  def get_site(id, prefix), do: Repo.get(Site, id, prefix: prefix)
 
   @doc """
   Creates a site.
@@ -1036,6 +1037,12 @@ defmodule Inconn2Service.AssetConfig do
   def get_equipment_qr_as_pdf(id, prefix) do
     "inc_" <> sub_domain = prefix
     equipment = get_equipment!(id, prefix)
+    parent_string = Enum.map(equipment.path, fn id ->  get_equipment(id, prefix).name end) |> Enum.join("/")
+    parent_string_with_slash =
+      case String.length(parent_string) do
+        0 -> ""
+        _ -> parent_string <> "/"
+      end
     string =
       Sneeze.render(
         [
@@ -1051,7 +1058,7 @@ defmodule Inconn2Service.AssetConfig do
               })
             }
           ],
-          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{equipment.name}"],
+          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{parent_string_with_slash}#{equipment.name}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
@@ -1067,6 +1074,12 @@ defmodule Inconn2Service.AssetConfig do
   def get_location_qr_as_pdf(id, prefix) do
     "inc_" <> sub_domain = prefix
     location = get_location!(id, prefix)
+    parent_string = Enum.map(location.path, fn id ->  get_location(id, prefix).name end) |> Enum.join("/")
+    parent_string_with_slash =
+      case String.length(parent_string) do
+        0 -> ""
+        _ -> parent_string <> "/"
+      end
     string =
       Sneeze.render(
         [
@@ -1082,7 +1095,7 @@ defmodule Inconn2Service.AssetConfig do
               })
             }
           ],
-          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{location.name}"],
+          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{parent_string_with_slash}#{location.name}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},

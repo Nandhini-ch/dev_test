@@ -18,6 +18,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/timezones", TimezoneController, :index
     get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/locations/:id/qr_code", LocationController, :display_qr_code
+    resources "/apk_versions", Apk_versionController, only: [:create, :show, :index]
 
     get "/equipments/:id/ticket_qr_code_png", ExternalTicketController, :get_equipment_ticket_qr
     get "/locations/:id/ticket_qr_code_png", ExternalTicketController, :get_location_ticket_qr
@@ -376,5 +377,19 @@ defmodule Inconn2ServiceWeb.Router do
     get "/equipments/:equipment_id/equipment_attachments", EquipmentAttachmentController, :list_for_equipment
     get "/equipment_attachment_download/:id", EquipmentAttachmentController, :get_attachment
 
+
+    resources "/uom_categories", UomCategoryController, except: [:new, :edit]
+
+    resources "/unit_of_measurements", UnitOfMeasurementController, except: [:new, :edit]
+    get "/uom_categories/:uom_category_id/unit_of_measurements", UnitOfMeasurementController, :index_by_uom_category
+
+    resources "/stores", StoreController, except: [:new, :edit]
+    get "/sites/:site_id/stores", StoreController, :index_by_site
+    get "/locations/:location_id/stores", StoreController, :index_by_location
+    get "/stores/:store_id/store_image", StoreController, :get_store_image
+
+    resources "/inventory_suppliers", InventorySupplierController, except: [:new, :edit]
+
+    resources "/inventory_items", InventoryItemController, except: [:new, :edit]
   end
 end

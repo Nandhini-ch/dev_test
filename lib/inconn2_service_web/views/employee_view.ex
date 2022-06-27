@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.EmployeeView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView}
+  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView, AssetCategoryView}
 
   def render("index.json", %{employees: employees}) do
     %{data: render_many(employees, EmployeeView, "employee.json")}
@@ -23,11 +23,11 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       landline_no: employee.landline_no,
       mobile_no: employee.mobile_no,
       salary: employee.salary,
-      reports_to: employee.reports_to,
       has_login_credentials: employee.has_login_credentials,
       org_unit: render_one(employee.org_unit, OrgUnitView, "org_unit.json"),
+      reports_to: render_one(employee.reports_to, EmployeeView, "employee_without_org_unit.json"),
       party_id: employee.party_id,
-      skills: employee.skills
+      skills: (if is_nil(employee.skills), do: [], else: render_many(employee.skills, AssetCategoryView, "asset_category.json"))
     }
   end
 
@@ -50,5 +50,26 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       party_id: employee.party_id,
       skills: employee.skills
     }
+  end
+
+  def render("employee_with_org_unit_only.json", %{employee: employee}) do
+    %{
+      id: employee.id,
+      first_name: employee.first_name,
+      last_name: employee.last_name,
+      employment_start_date: employee.employment_start_date,
+      employment_end_date: employee.employment_end_date,
+      designation: employee.designation,
+      email: employee.email,
+      employee_id: employee.employee_id,
+      landline_no: employee.landline_no,
+      mobile_no: employee.mobile_no,
+      salary: employee.salary,
+      reports_to: employee.reports_to,
+      has_login_credentials: employee.has_login_credentials,
+      org_unit: render_one(employee.org_unit, OrgUnitView, "org_unit.json"),
+      party_id: employee.party_id,
+      skills: employee.skills
+     }
   end
 end
