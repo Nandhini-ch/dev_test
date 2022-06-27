@@ -76,9 +76,9 @@ defmodule Inconn2Service.MixProject do
         "run priv/repo/seeds_holiday.exs",
         "run priv/repo/seed_create_employee_user.exs",
         "run priv/repo/seed_inventory.exs",
-        "run priv/repo/seed_inventory_management.exs",
         "run priv/repo/seeds_work_order.exs",
-        "run priv/repo/seed_induce_alerts_and_notifications.exs"
+        "run priv/repo/seed_induce_alerts_and_notifications.exs",
+        "run priv/repo/seed_inventory_management.exs",
       ],
       "ecto.setup_coco": [
         "ecto.create",
