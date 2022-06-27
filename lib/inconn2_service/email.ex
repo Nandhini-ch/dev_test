@@ -43,10 +43,10 @@ defmodule Inconn2Service.Email do
 
 
         click here to acknowledge -
-        https://#{sub_domain}.inconn.com:3000/closedresponse?work_request_id=#{id}
+        https://#{sub_domain}.inconn.io/closedresponse?work_request_id=#{id}
 
         click here to reopen -
-        https://#{sub_domain}.inconn.com:3000/reopeningticket?work_request_id=#{id}
+        https://#{sub_domain}.inconn.io/reopeningticket?work_request_id=#{id}
 
         Thank You,
         Regards
