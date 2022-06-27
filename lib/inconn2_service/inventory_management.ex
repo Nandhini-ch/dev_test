@@ -467,8 +467,8 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   #Context functions for inventory supplier items
-  def list_inventory_supplier_items(prefix) do
-    Repo.all(InventorySupplierItem, prefix: prefix)
+  def list_inventory_supplier_items(prefix, query_params) do
+    inventory_supplier_item_query(InventorySupplierItem, query_params) |> Repo.all(prefix: prefix)
   end
 
   def get_inventory_supplier_item!(id, prefix), do: Repo.get!(InventorySupplierItem, id, prefix: prefix)
@@ -527,7 +527,6 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_site_and_location_for_store(store, _prefix) when is_nil(store.site_id) or is_nil(store.location_id), do:  Map.put(store, :location, nil) |> Map.put(:site, nil)
   defp preload_site_and_location_for_store(store, prefix), do: Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
 
-
   defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
   defp preload_uom_category(result), do: result
 
@@ -551,9 +550,6 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
   defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
 
-  defp stock_query(query, %{}), do: query
-  defp stock_query(query, query_params), do: from(q in query, where: q.item_id == ^query_params["item_id"] and q.store_id == ^query_params["store_id"])
-
   defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
   defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
 
@@ -561,6 +557,24 @@ defmodule Inconn2Service.InventoryManagement do
   defp filter_on_supplier(items, supplier_id), do: Enum.filter(items, fn i -> i.supplier_items.inventory_supplier_id == supplier_id end)
 
   defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
+
+  defp stock_query(query, %{}), do: query
+
+  defp stock_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"item_id", item_id} -> from q in query, where: q.item_id == ^item_id
+      {"store_id", store_id} -> from q in query, where: q.store_id == ^store_id
+    end)
+  end
+
+  defp inventory_supplier_item_query(query, %{}), do: query
+
+  defp inventory_supplier_item_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"inventory_supplier_id", inventory_supplier_id}  -> from q in query, where: q.inventory_supplier_id == ^inventory_supplier_id
+      {"inventory_item_id", inventory_item_id} -> from q in query, where: q.inventory_item_id == ^inventory_item_id
+      end)
+  end
 
   defp get_uom_conversion_factor(from_uom_id, to_uom_id, _prefix, _inverse) when from_uom_id == to_uom_id, do: {:ok, 1}
 
@@ -640,6 +654,7 @@ defmodule Inconn2Service.InventoryManagement do
     fn _, _ ->
       %Transaction{}
       |> Transaction.changeset(attrs)
+      |> check_store_layout_config(prefix)
       |> calculate_cost()
       |> convert_quantity(prefix)
       |> Repo.insert(prefix: prefix)
@@ -669,10 +684,13 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
+  defp create_supplier_item_record(result, _prefix), do: result
+
   defp insert_issue_transaction(attrs, prefix) do
     fn _, _ ->
       %Transaction{}
       |> Transaction.changeset(attrs)
+      |> check_store_layout_config(prefix)
       |> convert_quantity(prefix)
       |> check_stock_upto_store(prefix)
       |> check_stock_upto_bin(prefix)
@@ -775,7 +793,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   defp reduce_stock(transaction, prefix) do
-    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.inventory_item_id, prefix)
     update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
   end
 
@@ -791,10 +809,57 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   defp check_stock_upto_store(cs, prefix) do
-    stocks = stock_upto_store(get_field(cs, :store_id), get_field(cs, :item_id), prefix)
+    stocks = stock_upto_store(get_field(cs, :store_id), get_field(cs, :inventory_item_id), prefix)
     case length(stocks) do
-      0 -> add_error(cs, :item_id, "Item does not exist in store") |> add_error(:store_id, "Item does not exist in store")
+      0 -> add_error(cs, :inventory_item_id, "Item does not exist in store") |> add_error(:store_id, "Item does not exist in store")
       _ -> cs
+    end
+  end
+
+  defp check_store_layout_config(cs, prefix) do
+    store = get_store!(get_field(cs, :store_id), prefix)
+    cond do
+      store.is_layout_configuration_required and is_nil(get_field(cs, :aisle)) and is_nil(get_field(cs, :bin)) and is_nil(get_field(cs, :row)) ->
+        add_error(cs, :aisle, "Aisle is required") |> add_error(:bin, "Bin is Required") |> add_error(:row, "Row is Required")
+
+      store.is_layout_configuration_required ->
+        validate_aisle(cs, prefix) |> validate_bin(prefix) |> validate_row(prefix)
+
+      true ->cs
+    end
+  end
+
+  defp validate_aisle(cs, prefix) do
+    store = get_store!(get_field(cs, :store_id), prefix)
+    notation = store.aisle_notation
+    validate_notation(cs, :aisle, notation, prefix)
+  end
+
+  defp validate_row(cs, prefix) do
+    store = get_store!(get_field(cs, :store_id), prefix)
+    notation = store.row_notation
+    validate_notation(cs, :row, notation, prefix)
+  end
+
+  defp validate_bin(cs, prefix) do
+    store = get_store!(get_field(cs, :store_id), prefix)
+    notation = store.bin_notation
+    validate_notation(cs, :bin, notation, prefix)
+  end
+
+  defp validate_notation(cs, key, notation, _prefix) do
+    case notation do
+      "U" -> match_case(cs, key, ~r/^[A-Z]/)
+      "L" -> match_case(cs, key, ~r/^[a-z]/ )
+      "N" -> match_case(cs, key, ~r/[^a-zA-Z]/)
+      _ -> cs
+    end
+  end
+
+  def match_case(cs, key, regex) do
+    case String.match?(get_field(cs, key), regex) do
+      true -> cs
+      _ -> add_error(cs, key, "Not in required notation")
     end
   end
 
@@ -803,14 +868,16 @@ defmodule Inconn2Service.InventoryManagement do
     aisle = get_field(cs, :aisle)
     row = get_field(cs, :row)
     bin = get_field(cs, :bin)
-    item_id = get_field(cs, :item_id)
+    item_id = get_field(cs, :inventory_item_id)
     quantity = get_field(cs, :quantity)
     stock = stock_if_exists_upto_bin(store_id, aisle, bin, row, item_id, prefix)
     cond do
       is_nil(stock) ->
-        add_error(cs, :item_id, "Item does not exist in this aisle row bin combination")
+        add_error(cs, :inventory_item_id, "Item does not exist in this aisle row bin combination")
 
       stock.quantity < quantity ->
+        IO.inspect(stock.quantity)
+        IO.inspect(quantity)
         add_error(cs, :quantity, "Expected quantity not available")
 
        true ->

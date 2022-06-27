@@ -34,8 +34,8 @@ prefix = "inc_bata"
 {:ok, conversion} =
   InventoryManagement.create_conversion(
     %{
-      "from_unit_of_measurement_id" => uom1.id,
-      "to_unit_of_measurement_id" => uom2.id,
+      "from_unit_of_measurement_id" => uom2.id,
+      "to_unit_of_measurement_id" => uom1.id,
       "uom_category_id" => uom_category.id,
       "multiplication_factor" => 1000
     },
@@ -61,7 +61,7 @@ prefix = "inc_bata"
     prefix
   )
 
-{:ok, store} =
+{:ok, store1} =
   InventoryManagement.create_store(
     %{
       "name" => "Inventory Store 1",
@@ -72,6 +72,24 @@ prefix = "inc_bata"
     },
     prefix
   )
+
+  {:ok, store2} =
+    InventoryManagement.create_store(
+      %{
+        "name" => "Inventory Store 1",
+        "person_or_location_based" => "L",
+        "is_layout_configuration_required" => true,
+        "site_id" => 1,
+        "location_id" => 1,
+        "aisle_count" => 10,
+        "aisle_notation" => "U",
+        "row_count" => 10,
+        "row_notation" => "L",
+        "bin_count" => 10,
+        "bin_notation" => "N"
+      },
+      prefix
+    )
 
 {:ok, inventory_supplier} =
   InventoryManagement.create_inventory_supplier(

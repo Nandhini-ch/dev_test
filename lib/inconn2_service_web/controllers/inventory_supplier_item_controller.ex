@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.InventorySupplierItemController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    inventory_supplier_items = InventoryManagement.list_inventory_supplier_items(conn.assigns.sub_domain_prefix)
+    inventory_supplier_items = InventoryManagement.list_inventory_supplier_items(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "index.json", inventory_supplier_items: inventory_supplier_items)
   end
 

@@ -384,7 +384,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approve
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
 
-    resources "/stocks", StockController, except: [:new, :edit]
+    resources "/stocks", StockController, except: [:new, :edit, :create, :update]
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
