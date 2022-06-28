@@ -1058,7 +1058,7 @@ defmodule Inconn2Service.AssetConfig do
               })
             }
           ],
-          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{parent_string_with_slash}#{equipment.name}"],
+          [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{parent_string_with_slash}#{equipment.name}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
@@ -1095,7 +1095,7 @@ defmodule Inconn2Service.AssetConfig do
               })
             }
           ],
-          [:h3, %{style: style(%{"width" => "600px", "font-size" => "50px"})}, "#{parent_string_with_slash}#{location.name}"],
+          [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{parent_string_with_slash}#{location.name}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
