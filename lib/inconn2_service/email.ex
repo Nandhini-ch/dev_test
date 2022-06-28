@@ -46,7 +46,7 @@ defmodule Inconn2Service.Email do
         https://#{sub_domain}.inconn.io/closedresponse?work_request_id=#{id}
 
         click here to reopen -
-        https://#{sub_domain}.inconn.io:3000/ticketreopening?ticketId=#{id}
+        https://#{sub_domain}.inconn.io/ticketreopening?ticketId=#{id}
 
         Thank You,
 
