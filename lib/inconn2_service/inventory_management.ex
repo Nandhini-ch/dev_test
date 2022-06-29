@@ -78,12 +78,6 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_uom_category()
   end
 
-  def update_unit_of_measurements(unit_of_measurements_changes, prefix) do
-    Stream.map(unit_of_measurements_changes["ids"], fn id ->
-      update_unit_of_measurement(get_unit_of_measurement!(id, prefix), Map.drop(unit_of_measurements_changes, ["ids"]), prefix)
-    end) |> Enum.map(fn tuple -> remove_tuple_from_multiple_update(tuple) end)
-  end
-
   def update_unit_of_measurement(%UnitOfMeasurement{} = unit_of_measurement, attrs, prefix) do
     unit_of_measurement
     |> UnitOfMeasurement.changeset(attrs)
@@ -221,12 +215,6 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.insert(prefix: prefix)
   end
 
-  def update_inventory_suppliers(inventory_supplier_changes, prefix) do
-    Enum.map(inventory_supplier_changes["ids"], fn id ->
-      update_inventory_supplier(get_inventory_supplier!(id, prefix), Map.drop(inventory_supplier_changes, ["ids"]), prefix)
-    end) |> Enum.map(fn tuple -> remove_tuple_from_multiple_update(tuple) end)
-  end
-
   def update_inventory_supplier(%InventorySupplier{} = inventory_supplier, attrs, prefix) do
     inventory_supplier
     |> InventorySupplier.changeset(attrs)
@@ -360,7 +348,8 @@ defmodule Inconn2Service.InventoryManagement do
 
   def create_transactions(transactions, prefix) do
     Enum.map(transactions, fn t ->
-      create_transaction(t, prefix)
+      {:ok, transaction} = create_transaction(t, prefix)
+      transaction
     end)
   end
 

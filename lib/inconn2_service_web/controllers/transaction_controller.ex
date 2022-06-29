@@ -30,6 +30,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     end
   end
 
+  def create_multiple(conn, %{"transactions" => transactions}) do
+    transactions = InventoryManagement.create_transactions(transactions, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
   def show(conn, %{"id" => id}) do
     transaction = InventoryManagement.get_transaction!(id,conn.assigns.sub_domain_prefix)
     render(conn, "show.json", transaction: transaction)

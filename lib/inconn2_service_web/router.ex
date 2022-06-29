@@ -365,7 +365,6 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/uom_categories", UomCategoryController, except: [:new, :edit]
 
-    put "/unit_of_measurements/update_multiple", UnitOfMeasurementController, :update_multiple
     resources "/unit_of_measurements", UnitOfMeasurementController, except: [:new, :edit]
     get "/uom_categories/:uom_category_id/unit_of_measurements", UnitOfMeasurementController, :index_by_uom_category
 
@@ -374,13 +373,13 @@ defmodule Inconn2ServiceWeb.Router do
     get "/locations/:location_id/stores", StoreController, :index_by_location
     get "/stores/:store_id/store_image", StoreController, :get_store_image
 
-    put "/inventory_suppliers/update_multiple", InventorySupplierController, :update_multiple
     resources "/inventory_suppliers", InventorySupplierController, except: [:new, :edit]
 
     put "/inventory_items/update_multiple", InventoryItemController, :update_multiple
     resources "/inventory_items", InventoryItemController, except: [:new, :edit]
 
     resources "/transactions", TransactionController, except: [:new, :edit]
+    post "/create_transactions", TransactionController, :create_multiple
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approve
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
 
