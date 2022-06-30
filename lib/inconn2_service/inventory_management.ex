@@ -262,10 +262,12 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def get_inventory_item!(id, prefix) do
-    Repo.get!(InventoryItem, id, prefix: prefix)
-    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
-    |> Repo.preload([:consume_unit_of_measurement, :uom_category])
-    |> preload_asset_categories(prefix)
+    inventory_item =
+      Repo.get!(InventoryItem, id, prefix: prefix)
+      |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
+      |> Repo.preload([:consume_unit_of_measurement, :uom_category, :stocks])
+      |> preload_asset_categories(prefix)
+    Map.put(inventory_item, :stocked_quantity, load_stock(inventory_item, nil))
   end
 
   def create_inventory_item(attrs \\ %{}, prefix) do
@@ -498,61 +500,13 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp preload_uoms_for_items({:ok, inventory_item}), do: {:ok, inventory_item |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement])}
-  defp preload_uoms_for_items(result), do: result
-
-  defp preload_asset_categories({:error, reason}, _prefix), do: {:error, reason}
-  defp preload_asset_categories({:ok, item}, prefix), do: {:ok, preload_asset_categories(item, prefix)}
-  defp preload_asset_categories(items, prefix) when is_list(items), do: Enum.map(items, fn i -> preload_asset_categories(i, prefix) end)
-  defp preload_asset_categories(item, prefix) when is_map(item), do: Map.put(item, :asset_categories, Enum.map(item.asset_category_ids, fn id -> AssetConfig.get_asset_category(id, prefix) end) |> Enum.filter(fn a -> not is_nil(a) end))
-
-  defp preload_user_for_store({:error, reason}, _prefix), do: {:error, reason}
-  defp preload_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
-  defp preload_user_for_store(store, _prefix) when is_nil(store.user_id), do: Map.put(store, :user, nil)
-  defp preload_user_for_store(store, prefix), do: Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
-
-  defp preload_site_and_location_for_store({:error, reason}, _prefix), do: {:error, reason}
-  defp preload_site_and_location_for_store({:ok, store}, prefix), do: {:ok, preload_site_and_location_for_store(store, prefix)}
-  defp preload_site_and_location_for_store(store, _prefix) when is_nil(store.site_id) or is_nil(store.location_id), do:  Map.put(store, :location, nil) |> Map.put(:site, nil)
-  defp preload_site_and_location_for_store(store, prefix), do: Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
-
-  defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
-  defp preload_uom_category(result), do: result
-
-  defp handle_error({:error, :transaction, transaction_changeset, _}), do: {:error, transaction_changeset}
-  defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
-  defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
-
-  # defp load_user_for_given_key({:ok, transaction}, id_key, new_key, prefix), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
-  # defp load_user_for_given_key({:error, changeset}, _id_key, _new_key, _prefix), do: {:error, changeset}
-  # defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
-
-  defp load_approver_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_approver_user_for_transaction(transaction, prefix)}
-  defp load_approver_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
-  defp load_approver_user_for_transaction(transaction, prefix), do: Map.put(transaction, :approver_user, Staff.get_user_without_org_unit(transaction.approver_user_id, prefix))
-
-  defp load_transaction_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_transaction_user_for_transaction(transaction, prefix)}
-  defp load_transaction_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
-  defp load_transaction_user_for_transaction(transaction, prefix), do: Map.put(transaction, :transaction_user, Staff.get_user_without_org_unit(transaction.transaction_user_id, prefix))
-
-  defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
-  defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
-  defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
-
-  defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
-  defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
-
-  defp filter_on_supplier(items, nil), do: items
-  defp filter_on_supplier(items, supplier_id), do: Enum.filter(items, fn i -> i.supplier_items.inventory_supplier_id == supplier_id end)
-
-  defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
-
   defp stock_query(query, %{}), do: query
 
   defp stock_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-      {"item_id", item_id} -> from q in query, where: q.item_id == ^item_id
-      {"store_id", store_id} -> from q in query, where: q.store_id == ^store_id
+      {"item_id", item_id}, query -> from q in query, where: q.item_id == ^item_id
+      {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+      _, query -> query
     end)
   end
 
@@ -560,8 +514,9 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp inventory_supplier_item_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-      {"inventory_supplier_id", inventory_supplier_id}  -> from q in query, where: q.inventory_supplier_id == ^inventory_supplier_id
-      {"inventory_item_id", inventory_item_id} -> from q in query, where: q.inventory_item_id == ^inventory_item_id
+      {"inventory_supplier_id", inventory_supplier_id}, query  -> from q in query, where: q.inventory_supplier_id == ^inventory_supplier_id
+      {"inventory_item_id", inventory_item_id}, query -> from q in query, where: q.inventory_item_id == ^inventory_item_id
+      _ , query -> query
       end)
   end
 
@@ -887,6 +842,56 @@ defmodule Inconn2Service.InventoryManagement do
       _ -> true
     end
   end
+
+  defp preload_uoms_for_items({:ok, inventory_item}), do: {:ok, inventory_item |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement])}
+  defp preload_uoms_for_items(result), do: result
+
+  defp preload_asset_categories({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_asset_categories({:ok, item}, prefix), do: {:ok, preload_asset_categories(item, prefix)}
+  defp preload_asset_categories(items, prefix) when is_list(items), do: Enum.map(items, fn i -> preload_asset_categories(i, prefix) end)
+  defp preload_asset_categories(item, prefix) when is_map(item), do: Map.put(item, :asset_categories, Enum.map(item.asset_category_ids, fn id -> AssetConfig.get_asset_category(id, prefix) end) |> Enum.filter(fn a -> not is_nil(a) end))
+
+  defp preload_user_for_store({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
+  defp preload_user_for_store(store, _prefix) when is_nil(store.user_id), do: Map.put(store, :user, nil)
+  defp preload_user_for_store(store, prefix), do: Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
+
+  defp preload_site_and_location_for_store({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_site_and_location_for_store({:ok, store}, prefix), do: {:ok, preload_site_and_location_for_store(store, prefix)}
+  defp preload_site_and_location_for_store(store, _prefix) when is_nil(store.site_id) or is_nil(store.location_id), do:  Map.put(store, :location, nil) |> Map.put(:site, nil)
+  defp preload_site_and_location_for_store(store, prefix), do: Map.put(store, :location, AssetConfig.get_location(store.location_id, prefix)) |> Map.put(:site, AssetConfig.get_site(store.site_id, prefix))
+
+  defp preload_uom_category({:ok, resource}), do: {:ok, resource |> Repo.preload(:uom_category)}
+  defp preload_uom_category(result), do: result
+
+  defp handle_error({:error, :transaction, transaction_changeset, _}), do: {:error, transaction_changeset}
+  defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
+  defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
+
+  # defp load_user_for_given_key({:ok, transaction}, id_key, new_key, prefix), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
+  # defp load_user_for_given_key({:error, changeset}, _id_key, _new_key, _prefix), do: {:error, changeset}
+  # defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
+
+  defp load_approver_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_approver_user_for_transaction(transaction, prefix)}
+  defp load_approver_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
+  defp load_approver_user_for_transaction(transaction, prefix), do: Map.put(transaction, :approver_user, Staff.get_user_without_org_unit(transaction.approver_user_id, prefix))
+
+  defp load_transaction_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_transaction_user_for_transaction(transaction, prefix)}
+  defp load_transaction_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
+  defp load_transaction_user_for_transaction(transaction, prefix), do: Map.put(transaction, :transaction_user, Staff.get_user_without_org_unit(transaction.transaction_user_id, prefix))
+
+  defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
+  defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
+  defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
+
+  defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
+  defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
+
+  defp filter_on_supplier(items, nil), do: items
+  defp filter_on_supplier(items, supplier_id), do: Enum.filter(items, fn i -> i.supplier_items.inventory_supplier_id == supplier_id end)
+
+  defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
+
 
   defp has_stock?(_unit_of_measurement, _prefix) do
     false
