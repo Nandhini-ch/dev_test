@@ -402,7 +402,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   #Context functions for Stock
   def list_stocks(query_params, prefix) do
-    stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)
+    stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:inventory_item, :store])
   end
 
   def get_stock!(id, prefix), do: Repo.get!(Stock, id, prefix: prefix)

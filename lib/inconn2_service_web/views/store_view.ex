@@ -10,6 +10,25 @@ defmodule Inconn2ServiceWeb.StoreView do
     %{data: render_one(store, StoreView, "store.json")}
   end
 
+  def render("store_without_content.json", %{store: store}) do
+    %{id: store.id,
+      name: store.name,
+      description: store.description,
+      person_or_location_based: store.person_or_location_based,
+      user_id: store.user_id,
+      site_id: store.site_id,
+      is_layout_configuration_required: store.is_layout_configuration_required,
+      location_id: store.location_id,
+      aisle_count: store.aisle_count,
+      aisle_notation: store.aisle_notation,
+      row_count: store.row_count,
+      row_notation: store.row_notation,
+      bin_count: store.bin_count,
+      bin_notation: store.bin_notation,
+      store_image_name: store.store_image_name,
+      store_image_type: store.store_image_type}
+  end
+
   def render("store.json", %{store: store}) do
     %{id: store.id,
       name: store.name,
