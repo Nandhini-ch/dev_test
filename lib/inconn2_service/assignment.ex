@@ -376,7 +376,7 @@ defmodule Inconn2Service.Assignment do
   end
 
   defp preload_employee(attendance, prefix) do
-    employee = Staff.get_employee!(attendance.employee_id, prefix)
+    employee = Repo.get!(Employee, attendance.employee_id, prefix: prefix)
     Map.put(attendance, :employee, employee)
   end
 
