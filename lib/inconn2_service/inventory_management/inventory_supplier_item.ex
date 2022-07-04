@@ -4,10 +4,9 @@ defmodule Inconn2Service.InventoryManagement.InventorySupplierItem do
   alias Inconn2Service.InventoryManagement.{InventoryItem, InventorySupplier}
 
   schema "inventory_supplier_items" do
-    # field :inventory_supplier_id, :id
     belongs_to :inventory_supplier, InventorySupplier
-    # field :inventory_item_id, :id
     belongs_to :inventory_item, InventoryItem
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -15,7 +14,7 @@ defmodule Inconn2Service.InventoryManagement.InventorySupplierItem do
   @doc false
   def changeset(inventory_supplier_item, attrs) do
     inventory_supplier_item
-    |> cast(attrs, [:inventory_supplier_id, :inventory_item_id])
+    |> cast(attrs, [:inventory_supplier_id, :inventory_item_id, :active])
     |> validate_required([:inventory_supplier_id, :inventory_item_id])
   end
 end

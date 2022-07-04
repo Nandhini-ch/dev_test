@@ -6,8 +6,8 @@ defmodule Inconn2Service.InventoryManagement do
   alias Ecto.Multi
 
   alias Inconn2Service.{AssetConfig, Staff}
-  alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventoryItem, Store}
-  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement, InventorySupplierItem}
+  alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventorySupplierItem, InventoryItem, Store}
+  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement}
 
   def list_uom_categories(prefix) do
     from(uc in UomCategory, where: uc.active)
@@ -97,6 +97,11 @@ defmodule Inconn2Service.InventoryManagement do
         "Cannot be deleted as the UOM has items associated with it"
         }
 
+      has_stock?(unit_of_measurement, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as the UOM has items that have associated with it"
+        }
+
       has_transaction?(unit_of_measurement, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as the UOM has transaction associated with it"
@@ -184,11 +189,6 @@ defmodule Inconn2Service.InventoryManagement do
       has_stock?(store, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as the store has stock associated with it"
-        }
-
-      has_transaction?(store, prefix) ->
-        {:could_not_delete,
-        "Cannot be deleted as the store has transaction associated with it"
         }
 
       true ->
@@ -323,7 +323,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   #Context functions for Transactions
   def list_transactions(query_params, prefix) do
-    transactions_query(query_params, Transaction) |> Repo.all(prefix: prefix)
+    transactions_query(Transaction, query_params) |> Repo.all(prefix: prefix)
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
@@ -392,9 +392,10 @@ defmodule Inconn2Service.InventoryManagement do
     |> load_transaction_user_for_transaction(prefix)
   end
 
-  def delete_transaction(%Transaction{} = transaction, prefix) do
-    Repo.delete(transaction, prefix: prefix)
-  end
+  #Transaction cannot be deleted
+  # def delete_transaction(%Transaction{} = transaction, prefix) do
+  #   Repo.delete(transaction, prefix: prefix)
+  # end
 
   def change_transaction(%Transaction{} = transaction, attrs \\ %{}) do
     Transaction.changeset(transaction, attrs)
@@ -419,9 +420,10 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
   end
 
-  def delete_stock(%Stock{} = stock, prefix) do
-    Repo.delete(stock, prefix: prefix)
-  end
+  #Stocks cannot be deleted
+  # def delete_stock(%Stock{} = stock, prefix) do
+  #   Repo.delete(stock, prefix: prefix)
+  # end
 
   def change_stock(%Stock{} = stock, attrs \\ %{}) do
     Stock.changeset(stock, attrs)
@@ -500,14 +502,14 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp stock_query(query, %{}), do: query
+  defp stock_query(query, %{}), do: add_active_condition(query)
 
   defp stock_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-      {"item_id", item_id}, query -> from q in query, where: q.item_id == ^item_id
+      {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
       _, query -> query
-    end)
+    end) |> add_active_condition()
   end
 
   defp inventory_supplier_item_query(query, %{}), do: query
@@ -517,7 +519,7 @@ defmodule Inconn2Service.InventoryManagement do
       {"inventory_supplier_id", inventory_supplier_id}, query  -> from q in query, where: q.inventory_supplier_id == ^inventory_supplier_id
       {"inventory_item_id", inventory_item_id}, query -> from q in query, where: q.inventory_item_id == ^inventory_item_id
       _ , query -> query
-      end)
+      end) |> add_active_condition()
   end
 
   defp get_uom_conversion_factor(from_uom_id, to_uom_id, _prefix, _inverse) when from_uom_id == to_uom_id, do: {:ok, 1}
@@ -532,12 +534,15 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp transactions_query(query_params, query) do
+  defp transactions_query(query, %{}), do: add_active_condition(query)
+
+  defp transactions_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-       {"item_id", item_id}, query -> from q in query, where: q.item_id == ^item_id
-       {"supplier_id", supplier_id}, query -> from q in query, where: q.supplier_id == ^supplier_id
+       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
+       {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
+       {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
        _ , query -> query
-    end)
+    end) |> add_active_condition()
   end
 
   defp uom_conversion_query(from_uom_id, to_uom_id) do
@@ -689,13 +694,8 @@ defmodule Inconn2Service.InventoryManagement do
   defp update_stock_for_issue(prefix) do
     fn _, %{transaction: transaction} ->
       cond do
-        transaction.is_approval_required ->
-          {:ok, %{message: "Approval required for transaction"}}
-
-        true ->
-          # stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
-          # update_stock(stock, %{"quantity" => stock.quantity - transaction.quantity}, prefix)
-          reduce_stock(transaction, prefix)
+        transaction.is_approval_required -> {:ok, %{message: "Approval required for transaction"}}
+        true -> reduce_stock(transaction, prefix)
       end
     end
   end
@@ -719,8 +719,6 @@ defmodule Inconn2Service.InventoryManagement do
         {:ok, transaction}
 
       "RJ" ->
-        # stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
-        # update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
         add_stock(transaction, prefix)
         {:ok, transaction}
 
@@ -732,7 +730,7 @@ defmodule Inconn2Service.InventoryManagement do
   defp revive_stock_on_acknowledgement_reject(result, _prefix), do: result
 
   defp add_stock(transaction, prefix) do
-    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.item_id, prefix)
+    stock = stock_if_exists_upto_bin(transaction.store_id, transaction.aisle, transaction.bin, transaction.row, transaction.inventory_item_id, prefix)
     update_stock(stock, %{"quantity" => stock.quantity + transaction.quantity}, prefix)
   end
 
@@ -829,14 +827,18 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp has_items?(unit_of_measurement, prefix) do
-    item_query = from(i in InventoryItem,
+  defp check_for_items_with_uom_query(unit_of_measurement) do
+    from(i in InventoryItem,
       where:
             (i.consume_unit_of_measurement_id == ^unit_of_measurement.id or
              i.inventory_unit_of_measurement_id == ^unit_of_measurement.id or
              i.purchase_unit_of_measurement_id == ^unit_of_measurement.id) and
              i.active == true
-             )
+            )
+  end
+
+  defp has_items?(unit_of_measurement, prefix) do
+    item_query = check_for_items_with_uom_query(unit_of_measurement)
     case length(Repo.all(item_query, prefix: prefix)) do
       0 -> false
       _ -> true
@@ -868,10 +870,6 @@ defmodule Inconn2Service.InventoryManagement do
   defp handle_error({:error, :stock, stock_changeset, _}), do: {:error, stock_changeset}
   defp handle_error({:ok, %{transaction: transaction, stock: _stock}}), do: {:ok, transaction}
 
-  # defp load_user_for_given_key({:ok, transaction}, id_key, new_key, prefix), do: {:ok, Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))}
-  # defp load_user_for_given_key({:error, changeset}, _id_key, _new_key, _prefix), do: {:error, changeset}
-  # defp load_user_for_given_key(transaction, id_key, new_key, prefix), do: Map.put(transaction, new_key, Staff.get_user_without_org_unit(transaction[id_key], prefix))
-
   defp load_approver_user_for_transaction({:ok, transaction}, prefix), do: {:ok, load_approver_user_for_transaction(transaction, prefix)}
   defp load_approver_user_for_transaction({:error, changeset}, _prefix), do: {:error, changeset}
   defp load_approver_user_for_transaction(transaction, prefix), do: Map.put(transaction, :approver_user, Staff.get_user_without_org_unit(transaction.approver_user_id, prefix))
@@ -892,12 +890,13 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp sum_stock_quantities(stocks), do: Stream.map(stocks, fn s -> s.quantity end) |> Enum.sum()
 
+  defp has_stock?(%Store{} = store, prefix), do: (stock_query(Stock, %{"store_id" => store.id}) |> Repo.all(prefix: prefix) |> length())  > 0
+  defp has_stock?(%InventoryItem{} = item, prefix), do: (stock_query(Stock, %{"item_id" => item.id}) |> Repo.all(prefix: prefix) |> length())  > 0
+  defp has_stock?(%UnitOfMeasurement{} = uom, prefix), do: (check_for_items_with_uom_query(uom) |> Repo.all(prefix: prefix) |> Repo.preload(:stocks)  |> Stream.map(fn i -> i.stock.quantity end) |> Enum.sum()) > 0
 
-  defp has_stock?(_unit_of_measurement, _prefix) do
-    false
-  end
+  defp has_transaction?(%UnitOfMeasurement{} = unit_of_measurement, prefix), do: (transactions_query(Transaction, %{"unit_of_measurement_id" => unit_of_measurement.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  defp has_transaction?(%InventoryItem{} = item, prefix), do: (transactions_query(Transaction, %{"item_id" => item.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  defp has_transaction?(%InventorySupplier{} = supplier, prefix), do: (transactions_query(Transaction, %{"supplier_id" => supplier.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  defp has_transaction?(_unit_of_measurement, _prefix) do
-    false
-  end
+  defp add_active_condition(query), do: from q in query, where: q.active == true
 end

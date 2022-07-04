@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
-  def index_to_be_approve(conn, _params) do
+  def index_to_be_approved(conn, _params) do
     transactions = InventoryManagement.list_transactions_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)
   end
@@ -38,21 +38,5 @@ defmodule Inconn2ServiceWeb.TransactionController do
   def show(conn, %{"id" => id}) do
     transaction = InventoryManagement.get_transaction!(id,conn.assigns.sub_domain_prefix)
     render(conn, "show.json", transaction: transaction)
-  end
-
-  def update(conn, %{"id" => id, "transaction" => transaction_params}) do
-    transaction = InventoryManagement.get_transaction!(id,conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Transaction{} = transaction} <- InventoryManagement.update_transaction(transaction, transaction_params,conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", transaction: transaction)
-    end
-  end
-
-  def delete(conn, %{"id" => id}) do
-    transaction = InventoryManagement.get_transaction!(id,conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Transaction{}} <- InventoryManagement.delete_transaction(transaction,conn.assigns.sub_domain_prefix) do
-      send_resp(conn, :no_content, "")
-    end
   end
 end

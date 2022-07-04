@@ -380,10 +380,10 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/transactions", TransactionController, except: [:new, :edit]
     post "/create_transactions", TransactionController, :create_multiple
-    get "/transaction_to_be_approved", TransactionController, :index_to_be_approve
+    get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
 
-    resources "/stocks", StockController, except: [:new, :edit, :create, :update]
+    resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
