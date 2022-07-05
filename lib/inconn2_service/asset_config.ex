@@ -979,6 +979,18 @@ defmodule Inconn2Service.AssetConfig do
     end)
   end
 
+  def list_equipments_ticket_qr(site_id, prefix) do
+    equipment = list_equipments(site_id, prefix)
+    Enum.map(equipment, fn e ->
+      %{
+        id: e.id,
+        asset_name: e.name,
+        asset_code: e.equipment_code,
+        asset_qr_url: "/api/equipments/#{e.id}/ticket_qr_code_png"
+      }
+    end)
+  end
+
   def list_locations_qr(site_id, prefix) do
     locations = list_locations(site_id, prefix)
     Enum.map(locations, fn l ->
@@ -991,7 +1003,17 @@ defmodule Inconn2Service.AssetConfig do
     end)
   end
 
-
+  def list_locations_ticket_qr(site_id, prefix) do
+    locations = list_locations(site_id, prefix)
+    Enum.map(locations, fn l ->
+      %{
+        id: l.id,
+        asset_name: l.name,
+        asset_code: l.location_code,
+        asset_qr_url: "/api/locations/#{l.id}/ticket_qr_code_png"
+      }
+    end)
+  end
 
   def location_path_of_equipments(equipment_id, prefix) do
     equipment = get_equipment!(equipment_id, prefix)
