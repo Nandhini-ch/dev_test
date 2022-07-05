@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.InventoryItemController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    inventory_items = InventoryManagement.list_inventory_items(conn.assigns.sub_domain_prefix)
+    inventory_items = InventoryManagement.list_inventory_items(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", inventory_items: inventory_items)
   end
 
@@ -31,6 +31,11 @@ defmodule Inconn2ServiceWeb.InventoryItemController do
     with {:ok, %InventoryItem{} = inventory_item} <- InventoryManagement.update_inventory_item(inventory_item, inventory_item_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", inventory_item: inventory_item)
     end
+  end
+
+  def update_multiple(conn, %{"inventory_item_changes" => inventory_item_changes}) do
+    inventory_items = InventoryManagement.update_inventory_items(inventory_item_changes, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", inventory_items: inventory_items)
   end
 
   def delete(conn, %{"id" => id}) do

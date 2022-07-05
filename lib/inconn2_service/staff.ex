@@ -606,6 +606,8 @@ defmodule Inconn2Service.Staff do
   def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
   def get_user_without_org_unit!(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(:employee)
 
+  def get_user_without_org_unit(nil,_prefix), do: nil
+
   def get_user_without_org_unit(id,prefix) do
     user = Repo.get(User, id, prefix: prefix)
     case user do
@@ -613,6 +615,7 @@ defmodule Inconn2Service.Staff do
       _ -> user |> Repo.preload(:employee)
     end
   end
+
   def get_user_by_username(username, prefix) do
     query =
       from(u in User,

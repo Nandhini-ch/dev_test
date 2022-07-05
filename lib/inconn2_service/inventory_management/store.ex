@@ -71,5 +71,4 @@ defmodule Inconn2Service.InventoryManagement.Store do
       cs
     end
   end
-
 end
