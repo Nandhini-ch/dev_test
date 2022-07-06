@@ -1616,7 +1616,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -1671,7 +1671,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
