@@ -134,6 +134,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
     post "/upload_task_lists", ReferenceUploadController, :upload_task_lists
 
+    resources "/check_types", CheckTypeController, except: [:new, :edit]
     resources "/checks", CheckController, except: [:new, :edit]
     put "/checks/:id/activate", CheckController, :activate_check
     put "/checks/:id/deactivate", CheckController, :deactivate_check
