@@ -8,10 +8,14 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     field :approver_user_id, :integer
     field :bin, :string
     field :cost, :float
+    field :dc_file, :binary
+    field :dc_no, :string
     field :quantity, :float
     field :remarks, :string
     field :row, :string
+    field :transaction_date, :date
     field :transaction_reference, :string
+    field :transaction_time, :time
     field :transaction_type, :string
     field :transaction_user_id, :integer
     field :unit_price, :float
@@ -34,10 +38,11 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   def changeset(transaction, attrs) do
     transaction
     |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id,
-                              :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost,
-                              :remarks, :is_approval_required, :is_approved, :inventory_supplier_id])
+                              :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost, :remarks,
+                              :is_approval_required, :is_approved, :inventory_supplier_id, :transaction_date, :transaction_time,
+                              :dc_no, :dc_file])
     |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
-                                            :store_id,  :quantity,  :is_approval_required])
+                                            :store_id,  :quantity,  :is_approval_required, :transaction_date, :transaction_time])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
     |> set_is_acknowledged()
     |> set_is_approved()
@@ -72,7 +77,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   defp validate_fields_based_on_transaction_type(cs) do
     case get_field(cs, :transaction_type, nil) do
       "IN" -> validate_required(cs, [:unit_price, :inventory_supplier_id])
-      "IS" -> validate_required(cs, [:transaction_user_id])
+      "IS" -> validate_required(cs, [:transaction_user_id, :dc_no])
     end
   end
 end

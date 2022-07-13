@@ -541,6 +541,10 @@ defmodule Inconn2Service.InventoryManagement do
        {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
        {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
        {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
+       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+       {"dc_no", dc_no}, query -> from q in query, where: q.dc_no == ^dc_no
+       {"reference_no", reference_no}, query -> from q in query, where: q.reference_no == ^reference_no
+       {"type", type}, query -> from q in query, where: q.type == ^type
        _ , query -> query
     end)
   end
@@ -603,11 +607,24 @@ defmodule Inconn2Service.InventoryManagement do
     fn _, _ ->
       %Transaction{}
       |> Transaction.changeset(attrs)
+      |> check_for_approval_flow(prefix)
       |> check_store_layout_config(prefix)
       |> calculate_cost()
       |> convert_quantity(prefix)
       |> Repo.insert(prefix: prefix)
       |> create_supplier_item_record(prefix)
+    end
+  end
+
+  defp check_for_approval_flow(cs, prefix) do
+    is_transaction_approval_required = get_field(cs, :is_approval_required, nil)
+    approver_user_id = get_field(cs, :approver_user_id, nil)
+    item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix: prefix)
+
+    cond do
+      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approver_user_id})
+      is_transaction_approval_required && is_nil(approver_user_id) -> validate_required(cs, [:approvaer_user_id])
+      true -> cs
     end
   end
 
