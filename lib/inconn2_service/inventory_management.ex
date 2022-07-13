@@ -502,17 +502,17 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp stock_query(query, %{}), do: add_active_condition(query)
+  defp stock_query(query, %{}), do: query
 
   defp stock_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
       _, query -> query
-    end) |> add_active_condition()
+    end)
   end
 
-  defp inventory_supplier_item_query(query, %{}), do: query
+  defp inventory_supplier_item_query(query, %{}), do: add_active_condition(query)
 
   defp inventory_supplier_item_query(query, query_params) do
     Enum.reduce(query_params, query, fn
@@ -534,7 +534,7 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp transactions_query(query, %{}), do: add_active_condition(query)
+  defp transactions_query(query, %{}), do: query
 
   defp transactions_query(query, query_params) do
     Enum.reduce(query_params, query, fn
@@ -542,7 +542,7 @@ defmodule Inconn2Service.InventoryManagement do
        {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
        {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
        _ , query -> query
-    end) |> add_active_condition()
+    end)
   end
 
   defp uom_conversion_query(from_uom_id, to_uom_id) do
