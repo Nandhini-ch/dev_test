@@ -405,5 +405,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
+    resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
   end
 end
