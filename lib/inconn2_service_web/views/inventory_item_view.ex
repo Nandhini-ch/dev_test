@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.InventoryItemView do
       item_type: inventory_item.item_type,
       minimum_stock_level: inventory_item.minimum_stock_level,
       stocked_quantity: inventory_item.stocked_quantity,
-      stores: render_many(inventory_item.stocks, StoreView, "store_without_content.json.json"),
+      stores: render_many(inventory_item.stocks, StoreView, "store_without_content.json"),
       remarks: inventory_item.remarks,
       attachment: inventory_item.attachment,
       uom_category_id: inventory_item.uom_category_id,
