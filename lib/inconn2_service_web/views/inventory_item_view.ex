@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.InventoryItemView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{AssetCategoryView, InventoryItemView, StoreView}
+  alias Inconn2ServiceWeb.{AssetCategoryView, InventoryItemView, StockView}
   alias Inconn2ServiceWeb.{UomCategoryView, UnitOfMeasurementView}
 
   def render("index.json", %{inventory_items: inventory_items}) do
@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.InventoryItemView do
       item_type: inventory_item.item_type,
       minimum_stock_level: inventory_item.minimum_stock_level,
       stocked_quantity: inventory_item.stocked_quantity,
-      stores: render_many(inventory_item.stocks, StoreView, "store_without_content.json.json"),
+      stocks: render_many(inventory_item.stocks, StockView, "stock_without_item.json"),
       remarks: inventory_item.remarks,
       attachment: inventory_item.attachment,
       uom_category_id: inventory_item.uom_category_id,
