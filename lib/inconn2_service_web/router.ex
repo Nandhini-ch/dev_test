@@ -202,7 +202,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
     resources "/users", UserController, except: [:new, :edit]
-    put "/users/change_password", UserController, :change_password
+    put "/users/:id/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
     put "/users/:id/deactivate", UserController, :deactivate_user
     get "/download_users", ReferenceDownloadController, :download_users

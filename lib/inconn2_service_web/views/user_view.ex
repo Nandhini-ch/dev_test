@@ -51,4 +51,8 @@ defmodule Inconn2ServiceWeb.UserView do
   def render("error.json", %{error: error_message}) do
     %{errors: %{old_password: [error_message]}}
   end
+
+  def render("not_current_user_error.json", %{error: error_message}) do
+    %{errors: %{message: error_message}}
+  end
 end

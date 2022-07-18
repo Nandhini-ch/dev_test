@@ -1,5 +1,6 @@
 defmodule Inconn2ServiceWeb.UserController do
   use Inconn2ServiceWeb, :controller
+  # plug :correct_user when action in [:change_password]
 
   alias Inconn2Service.Staff
   alias Inconn2Service.Staff.User
@@ -47,20 +48,26 @@ defmodule Inconn2ServiceWeb.UserController do
  end
 
   def change_password(conn, %{"credential" => credentials}) do
-    case Staff.change_user_password(conn.assigns.current_user, credentials, conn.assigns.sub_domain_prefix) do
-      {:ok, user} ->
-        render(conn, "success.json", user: user)
+    if conn.assigns.current_user.id == String.to_integer(conn.params["id"]) do
+      case Staff.change_user_password(conn.assigns.current_user, credentials, conn.assigns.sub_domain_prefix) do
+        {:ok, user} ->
+          render(conn, "success.json", user: user)
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(Inconn2ServiceWeb.ChangesetView)
-        |> render("error.json", changeset: changeset)
+        {:error, %Ecto.Changeset{} = changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> put_view(Inconn2ServiceWeb.ChangesetView)
+          |> render("error.json", changeset: changeset)
 
-      {:error, reason} ->
-        conn
-        |> put_status(401)
-        |> render("error.json", %{error: reason})
+        {:error, reason} ->
+          conn
+          |> put_status(401)
+          |> render("error.json", %{error: reason})
+      end
+    else
+      conn
+      |> put_status(404)
+      |> render("error.json", %{error: "Cannot change another users password"})
     end
   end
 
@@ -89,4 +96,15 @@ defmodule Inconn2ServiceWeb.UserController do
       render(conn, "show.json", user: user)
     end
   end
+
+#   defp correct_user(conn, _params) do
+#     IO.inspect(is_binary(conn.params["id"]))
+#     if conn.assigns.current_user.id == String.to_integer(conn.params["id"]) do
+#       conn
+#     else
+#       conn
+#       |> put_status(404)
+#       |> render("error.json", %{error: "Cannot change another users password"})
+#     end
+#   end
 end
