@@ -24,9 +24,9 @@ defmodule Inconn2Service.Account do
     Repo.all(BusinessType)
   end
 
-  def list_business_types(query_params) do
+  def list_business_types(_query_params) do
     BusinessType
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all()
   end
 
