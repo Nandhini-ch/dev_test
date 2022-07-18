@@ -256,19 +256,20 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
     |> Repo.preload([:consume_unit_of_measurement, :uom_category, :inventory_supplier_items])
-    |> Repo.preload([stock: :store])
+    |> Repo.preload([stocks: :store])
     |> preload_asset_categories(prefix)
     |> filter_on_supplier(query_params["supplier_id"])
-    |> Enum.map(fn i -> Map.put(i, :stocked_quantity, load_stock(i, query_params["location_id"])) end)
+    # |> preload_stocked_quantity_for_item(query_params["location_id"])
+    |> Enum.map(fn i -> preload_stocked_quantity_for_item(i, query_params["location_id"]) end)
   end
 
   def get_inventory_item!(id, prefix) do
-    inventory_item =
       Repo.get!(InventoryItem, id, prefix: prefix)
       |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
-      |> Repo.preload([:consume_unit_of_measurement, :uom_category, :stocks])
+      |> Repo.preload([:consume_unit_of_measurement, :uom_category])
+      |> Repo.preload(stocks: :store)
       |> preload_asset_categories(prefix)
-    Map.put(inventory_item, :stocked_quantity, load_stock(inventory_item, nil))
+      |> preload_stocked_quantity_for_item(nil)
   end
 
   def create_inventory_item(attrs \\ %{}, prefix) do
@@ -277,6 +278,8 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.insert(prefix: prefix)
     |> preload_uoms_for_items()
     |> preload_uom_category()
+    |> preload_stocks_for_items()
+    |> preload_stocked_quantity_for_item(nil)
     |> preload_asset_categories(prefix)
   end
 
@@ -292,6 +295,8 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
     |> preload_uoms_for_items()
     |> preload_uom_category()
+    |> preload_stocks_for_items()
+    |> preload_stocked_quantity_for_item(nil)
     |> preload_asset_categories(prefix)
   end
 
@@ -865,6 +870,15 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp preload_uoms_for_items({:ok, inventory_item}), do: {:ok, inventory_item |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement])}
   defp preload_uoms_for_items(result), do: result
+
+  defp preload_stocks_for_items({:error, reason}), do: {:error, reason}
+  defp preload_stocks_for_items({:ok, item}), do: {:ok, preload_stocks_for_items(item)}
+  defp preload_stocks_for_items(item), do: item |> Repo.preload([stocks: :store])
+
+  defp preload_stocked_quantity_for_item({:error, reason}, _location_id), do: {:error, reason}
+  defp preload_stocked_quantity_for_item({:ok, item}, _location_id), do: {:ok, preload_stocked_quantity_for_item(item, nil)}
+  defp preload_stocked_quantity_for_item(item, nil), do: Map.put(item, :stocked_quantity, load_stock(item, nil))
+  defp preload_stocked_quantity_for_item(item, location_id), do: Map.put(item, :stocked_quantity, load_stock(item, location_id))
 
   defp preload_asset_categories({:error, reason}, _prefix), do: {:error, reason}
   defp preload_asset_categories({:ok, item}, prefix), do: {:ok, preload_asset_categories(item, prefix)}
