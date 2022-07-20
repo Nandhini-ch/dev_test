@@ -457,9 +457,9 @@ defmodule Inconn2Service.Ticket do
 
     case result do
       {:ok, updated_work_request} ->
-        update_status_track(updated_work_request, prefix)
+        {:ok, status_track} = update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
-        send_completed_email(work_request, updated_work_request, prefix)
+        send_completed_email(work_request, updated_work_request, status_track, prefix)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -469,10 +469,10 @@ defmodule Inconn2Service.Ticket do
 
   end
 
-  defp send_completed_email(work_request, updated_work_request, prefix) do
+  defp send_completed_email(work_request, updated_work_request, status_track, prefix) do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
-          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, updated_work_request.remarks, "#{status_track.status_update_date} #{status_track.status_update_time}" ,prefix)
           updated_work_request
       true ->
           updated_work_request
@@ -548,8 +548,6 @@ defmodule Inconn2Service.Ticket do
   end
 
   def update_status_track(work_request, prefix) do
-    case Repo.get_by(WorkrequestStatusTrack, [work_request_id: work_request.id, status: work_request.status], prefix: prefix) do
-      nil ->
         {date, time} = get_date_time_in_required_time_zone(work_request, prefix)
         workrequest_status_track = %{
           "work_request_id" => work_request.id,
@@ -558,12 +556,6 @@ defmodule Inconn2Service.Ticket do
           "status" => work_request.status
         }
         create_workrequest_status_track(workrequest_status_track, prefix)
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
-
-      _ ->
-        {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee]) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
-
-    end
   end
 
   defp validate_approvals_required_ids(cs, prefix) do
