@@ -424,6 +424,16 @@ defmodule Inconn2Service.Staff do
     end
   end
 
+  def get_user_by_username_for_otp(username, prefix) do
+    user = get_user_by_username(username, prefix)
+    IO.inspect("1323424")
+    IO.inspect(user)
+    case user do
+      nil ->  {:error, "Username not found"}
+      _ -> {:ok, user}
+    end
+  end
+
   def get_user_by_username(username, prefix) do
     query =
       from(u in User,
