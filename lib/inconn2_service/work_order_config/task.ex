@@ -2,13 +2,16 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   use Ecto.Schema
 
   import Ecto.Changeset
+  alias Inconn2Service.WorkOrderConfig.TaskList
 
   schema "tasks" do
     field :label, :string
     field :task_type, :string
+    field :master_task_type_id, :integer
     field :config, :map
     field :estimated_time, :integer
     field :active, :boolean, default: true
+    many_to_many(:task_lists, TaskList, join_through: "task_tasklists", on_delete: :delete_all)
 
     timestamps()
   end
@@ -16,8 +19,8 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:label, :task_type, :config, :estimated_time])
-    |> validate_required([:label, :task_type, :config, :estimated_time])
+    |> cast(attrs, [:label, :task_type, :master_task_type_id, :config, :estimated_time])
+    |> validate_required([:label, :task_type, :config, :estimated_time, :master_task_type_id])
     |> validate_inclusion(:task_type, ["IO", "IM", "MT", "OB"])
     |> validate_config()
   end

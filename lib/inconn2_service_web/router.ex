@@ -124,11 +124,13 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
+    resources "/master_task_types", MasterTaskTypeController, except: [:new, :edit]
     put "/tasks/:id/activate", TaskController, :activate_task
     put "/tasks/:id/deactivate", TaskController, :deactivate_task
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     post "/upload_tasks", ReferenceUploadController, :upload_tasks
     resources "/task_lists", TaskListController, except: [:new, :edit]
+    get "/task_lists/:id/tasks", TaskListController, :index_tasks_for_task_list
     put "/task_lists/:id/activate", TaskListController, :activate_task_list
     put "/task_lists/:id/deactivate", TaskListController, :activate_task_list
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
