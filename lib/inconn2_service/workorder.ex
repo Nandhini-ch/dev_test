@@ -1,8 +1,4 @@
 defmodule Inconn2Service.Workorder do
-  @moduledoc """
-  The Workorder context.
-  """
-
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Ecto.Multi
@@ -28,49 +24,14 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.WorkRequest
-  # alias Inconn2Service.Ticket
-  @doc """
-  Returns the list of workorder_templates.
 
-  ## Examples
-
-      iex> list_workorder_templates()
-      [%WorkorderTemplate{}, ...]
-
-  """
   def list_workorder_templates(prefix)  do
     Repo.all(WorkorderTemplate, prefix: prefix)
   end
 
-  @doc """
-  Gets a single workorder_template.
-
-  Raises `Ecto.NoResultsError` if the Workorder template does not exist.
-
-  ## Examples
-
-      iex> get_workorder_template!(123)
-      %WorkorderTemplate{}
-
-      iex> get_workorder_template!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
   def get_workorder_template(id, prefix), do: Repo.get(WorkorderTemplate, id, prefix: prefix)
 
-  @doc """
-  Creates a workorder_template.
-
-  ## Examples
-
-      iex> create_workorder_template(%{field: value})
-      {:ok, %WorkorderTemplate{}}
-
-      iex> create_workorder_template(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_template(attrs \\ %{}, prefix) do
     result =
       %WorkorderTemplate{}
@@ -264,18 +225,7 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
-  @doc """
-  Updates a workorder_template.
 
-  ## Examples
-
-      iex> update_workorder_template(workorder_template, %{field: new_value})
-      {:ok, %WorkorderTemplate{}}
-
-      iex> update_workorder_template(workorder_template, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix) do
    result =
       workorder_template
@@ -338,33 +288,12 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  @doc """
-  Deletes a workorder_template.
-
-  ## Examples
-
-      iex> delete_workorder_template(workorder_template)
-      {:ok, %WorkorderTemplate{}}
-
-      iex> delete_workorder_template(workorder_template)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix) do
     Repo.delete(workorder_template, prefix: prefix)
     push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted")
     {:ok, nil}
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workorder_template changes.
-
-  ## Examples
-
-      iex> change_workorder_template(workorder_template)
-      %Ecto.Changeset{data: %WorkorderTemplate{}}
-
-  """
   def change_workorder_template(%WorkorderTemplate{} = workorder_template, attrs \\ %{}) do
     WorkorderTemplate.changeset(workorder_template, attrs)
   end
@@ -372,15 +301,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Workorder.WorkorderSchedule
   alias Inconn2Service.Common
   alias Inconn2Service.Settings
-  @doc """
-  Returns the list of workorder_schedules.
 
-  ## Examples
-
-      iex> list_workorder_schedules()
-      [%WorkorderSchedule{}, ...]
-
-  """
   def list_workorder_schedules(prefix) do
     WorkorderSchedule
     |> where([active: true])
@@ -395,35 +316,10 @@ defmodule Inconn2Service.Workorder do
     |> Repo.preload(:workorder_template)
   end
 
-  @doc """
-  Gets a single workorder_schedule.
 
-  Raises `Ecto.NoResultsError` if the Workorder schedule does not exist.
-
-  ## Examples
-
-      iex> get_workorder_schedule!(123)
-      %WorkorderSchedule{}
-
-      iex> get_workorder_schedule!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
 
-  @doc """
-  Creates a workorder_schedule.
-
-  ## Examples
-
-      iex> create_workorder_schedule(%{field: value})
-      {:ok, %WorkorderSchedule{}}
-
-      iex> create_workorder_schedule(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
@@ -557,18 +453,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  @doc """
-  Updates a workorder_schedule.
-
-  ## Examples
-
-      iex> update_workorder_schedule(workorder_schedule, %{field: new_value})
-      {:ok, %WorkorderSchedule{}}
-
-      iex> update_workorder_schedule(workorder_schedule, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, prefix) do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
@@ -793,18 +677,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  @doc """
-  Deletes a workorder_schedule.
-
-  ## Examples
-
-      iex> delete_workorder_schedule(workorder_schedule)
-      {:ok, %WorkorderSchedule{}}
-
-      iex> delete_workorder_schedule(workorder_schedule)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, prefix) do
     Repo.delete(workorder_schedule, prefix: prefix)
   end
@@ -828,30 +700,13 @@ defmodule Inconn2Service.Workorder do
 
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workorder_schedule changes.
-
-  ## Examples
-
-      iex> change_workorder_schedule(workorder_schedule)
-      %Ecto.Changeset{data: %WorkorderSchedule{}}
-
-  """
   def change_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs \\ %{}) do
     WorkorderSchedule.changeset(workorder_schedule, attrs)
   end
 
 
   alias Inconn2Service.Workorder.WorkOrder
-  @doc """
-  Returns the list of work_orders.
 
-  ## Examples
-
-      iex> list_work_orders()
-      [%WorkOrder{}, ...]
-
-  """
   def list_work_orders(prefix) do
     limit = Date.utc_today() |> Date.add(-7)
     from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
@@ -916,23 +771,8 @@ defmodule Inconn2Service.Workorder do
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
 
-    end
-
-  @doc """
-  Gets a single work_order.
-
-  Raises `Ecto.NoResultsError` if the Work order does not exist.
-
-  ## Examples
-
-      iex> get_work_order!(123)
-      %WorkOrder{}
-
-      iex> get_work_order!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_work_order!(id, prefix) do
     work_order = Repo.get!(WorkOrder, id, prefix: prefix)
     case is_struct(work_order) do
@@ -990,18 +830,7 @@ defmodule Inconn2Service.Workorder do
     |> where([loto_checker_user_id: ^user.id, status: ^status])
     |> Repo.all(prefix: prefix)
   end
-  @doc """
-  Creates a work_order.
 
-  ## Examples
-
-      iex> create_work_order(%{field: value})
-      {:ok, %WorkOrder{}}
-
-      iex> create_work_order(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
     result = %WorkOrder{}
               |> WorkOrder.changeset(attrs)
@@ -1161,9 +990,6 @@ defmodule Inconn2Service.Workorder do
       end
     end
 
-
-
-
     def get_next_step_for_work_order(work_order, "ltla")  do
       cond do
         work_order.pre_check_required ->
@@ -1177,11 +1003,6 @@ defmodule Inconn2Service.Workorder do
     def get_next_step_for_work_order(_work_order, "cr"), do: "assign_workorder"
     def get_next_step_for_work_order(_work_order, "wpp"), do: "work_permit_pre"
     def get_next_step_for_work_order(_work_order, "ltlp"), do: "loto_pending"
-
-
-
-
-
 
   defp auto_create_workorder_tasks_checks(work_order, prefix) do
     auto_create_workorder_task(work_order, prefix)
@@ -1354,18 +1175,7 @@ defmodule Inconn2Service.Workorder do
     end
     {:ok, updated_work_order}
   end
-  @doc """
-  Updates a work_order.
 
-  ## Examples
-
-      iex> update_work_order(work_order, %{field: new_value})
-      {:ok, %WorkOrder{}}
-
-      iex> update_work_order(work_order, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
     result = work_order
             |> WorkOrder.changeset(attrs)
@@ -1388,14 +1198,14 @@ defmodule Inconn2Service.Workorder do
           delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
-          push_alert_notification_for_work_order(work_order, updated_work_order, prefix)
+          push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix)
           result
       _ ->
         result
     end
   end
 
-  def push_alert_notification_for_work_order(existing_work_order, updated_work_order, prefix) do
+  def push_alert_notification_for_work_order(existing_work_order, updated_work_order, current_user, prefix) do
     workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
     cond do
@@ -1430,35 +1240,37 @@ defmodule Inconn2Service.Workorder do
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woaa" ->
         employee = get_employee_from_user_id(updated_work_order.workorder_approval_user_id, prefix)
-        description = ~s(Workorder #{updated_work_order.id}  for #{asset.name} approved by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} approved by #{employee})
         create_work_order_alert_notification("WOAP", existing_work_order, updated_work_order, description, "work_order_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
-        description = ~s(Workorder for #{asset.name} to be acknowledged)
+        employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
+        description = ~s(Workorder for #{asset.name} to be acknowledged by #{employee})
         create_work_order_alert_notification("WACR", existing_work_order, updated_work_order, description, "work_order_acknowledge_pending", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
-        description = ~s(Workorder for #{asset.name} has been acknowledged)
+        employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
+        description = ~s(Workorder for #{asset.name} has been acknowledged by #{employee})
         create_work_order_alert_notification("WACK", existing_work_order, updated_work_order, description, "work_order_acknowledged", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
-        description = ~s(Workorder for #{asset.name} has been put on hold)
+        employee = get_employee_name_from_current_user(current_user)
+        description = ~s(Workorder for #{asset.name} has been put on hold by #{employee})
         create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
-        description = ~s(Workorder for #{asset.name} has been cancelled)
-        create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
-
-      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
-        description = ~s(Workorder for #{asset.name} has been cancelled)
+        employee = get_employee_name_from_current_user(current_user)
+        description = ~s(Workorder for #{asset.name} has been cancelled by #{employee})
         create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
       (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
-        description = ~s(Workorder for #{asset.name} has been rescheduled)
+        employee = get_employee_name_from_current_user(current_user)
+        description = ~s(Workorder for #{asset.name} has been rescheduled by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
       existing_work_order.user_id != updated_work_order.user_id ->
-        description = ~s(Workorder for #{asset.name} has been re-assigned)
+        employee = get_employee_name_from_current_user(current_user)
+        description = ~s(Workorder for #{asset.name} has been re-assigned by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
 
       (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
@@ -1466,7 +1278,8 @@ defmodule Inconn2Service.Workorder do
                              |> NaiveDateTime.add(workorder_template.estimated_time * 60)
         completed_date_time = NaiveDateTime.new!(updated_work_order.completed_date, updated_work_order.completed_time)
         if completed_date_time >= expected_date_time do
-          description = ~s(Workorder for #{asset.name} is not completed by expected time)
+          employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+          description = ~s(Workorder for #{asset.name} is not completed by expected time #{employee})
           create_work_order_alert_notification("WONC", existing_work_order, updated_work_order, description, "work_order_not_completed_by_time", prefix)
         else
           {:ok, updated_work_order}
@@ -1777,18 +1590,6 @@ defmodule Inconn2Service.Workorder do
     results
   end
 
-  @doc """
-  Deletes a work_order.
-
-  ## Examples
-
-      iex> delete_work_order(work_order)
-      {:ok, %WorkOrder{}}
-
-      iex> delete_work_order(work_order)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_work_order(%WorkOrder{} = work_order, prefix) do
     Repo.delete(work_order, prefix: prefix)
   end
@@ -1848,20 +1649,6 @@ defmodule Inconn2Service.Workorder do
       cs
     end
   end
-
-  # defp status_auto_assigned(cs, work_order, prefix) do
-  #   if get_change(cs, :user_id, nil) != nil do
-  #     site_id = get_field(cs, :site_id)
-  #     site = Repo.get!(Site, site_id, prefix: prefix)
-  #     date_time = DateTime.now!(site.time_zone)
-  #     date = Date.new!(date_time.year, date_time.month, date_time.day)
-  #     time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-  #     update_status_track(work_order, %{id: nil}, prefix, "as")
-  #     change(cs, %{status: "as", assigned_date: date, assigned_time: time})
-  #   else
-  #     cs
-  #   end
-  # end
 
   defp status_assigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil and work_order.user_id == nil do
@@ -1956,30 +1743,12 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking work_order changes.
-
-  ## Examples
-
-      iex> change_work_order(work_order)
-      %Ecto.Changeset{data: %WorkOrder{}}
-
-  """
   def change_work_order(%WorkOrder{} = work_order, attrs \\ %{}) do
     WorkOrder.changeset(work_order, attrs)
   end
 
   alias Inconn2Service.Workorder.WorkorderTask
 
-  @doc """
-  Returns the list of workorder_tasks.
-
-  ## Examples
-
-      iex> list_workorder_tasks()
-      [%WorkorderTask{}, ...]
-
-  """
   def list_workorder_tasks(prefix) do
     Repo.all(WorkorderTask, prefix: prefix)
   end
@@ -2496,34 +2265,9 @@ defmodule Inconn2Service.Workorder do
     from(t in WorkorderTask, where: t.work_order_id == ^work_order_id)
     |> Repo.all(prefix: prefix)
   end
-  @doc """
-  Gets a single workorder_task.
 
-  Raises `Ecto.NoResultsError` if the Workorder task does not exist.
-
-  ## Examples
-
-      iex> get_workorder_task!(123)
-      %WorkorderTask{}
-
-      iex> get_workorder_task!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_task!(id, prefix), do: Repo.get!(WorkorderTask, id, prefix: prefix)
 
-  @doc """
-  Creates a workorder_task.
-
-  ## Examples
-
-      iex> create_workorder_task(%{field: value})
-      {:ok, %WorkorderTask{}}
-
-      iex> create_workorder_task(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}
         |> WorkorderTask.changeset(attrs)
@@ -2719,46 +2463,16 @@ defmodule Inconn2Service.Workorder do
     {:ok, %{success_count: success_count, error_count: error_count, failure_results: failure_results}}
   end
 
-  @doc """
-  Deletes a workorder_task.
-
-  ## Examples
-
-      iex> delete_workorder_task(workorder_task)
-      {:ok, %WorkorderTask{}}
-
-      iex> delete_workorder_task(workorder_task)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_task(%WorkorderTask{} = workorder_task, prefix) do
     Repo.delete(workorder_task, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workorder_task changes.
-
-  ## Examples
-
-      iex> change_workorder_task(workorder_task)
-      %Ecto.Changeset{data: %WorkorderTask{}}
-
-  """
   def change_workorder_task(%WorkorderTask{} = workorder_task, attrs \\ %{}) do
     WorkorderTask.changeset(workorder_task, attrs)
   end
 
   alias Inconn2Service.Workorder.WorkorderStatusTrack
 
-  @doc """
-  Returns the list of workorder_status_tracks.
-
-  ## Examples
-
-      iex> list_workorder_status_tracks()
-      [%WorkorderStatusTrack{}, ...]
-
-  """
   def list_workorder_status_tracks(prefix) do
     Repo.all(WorkorderStatusTrack, prefix: prefix)
   end
@@ -2767,84 +2481,25 @@ defmodule Inconn2Service.Workorder do
     from(s in WorkorderStatusTrack, where: s.work_order_id == ^work_order_id)
     |> Repo.all(prefix: prefix)
   end
-  @doc """
-  Gets a single workorder_status_track.
 
-  Raises `Ecto.NoResultsError` if the Workorder status track does not exist.
-
-  ## Examples
-
-      iex> get_workorder_status_track!(123)
-      %WorkorderStatusTrack{}
-
-      iex> get_workorder_status_track!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_status_track!(id, prefix), do: Repo.get!(WorkorderStatusTrack, id, prefix: prefix)
 
-
-  @doc """
-  Creates a workorder_status_track.
-
-  ## Examples
-
-      iex> create_workorder_status_track(%{field: value})
-      {:ok, %WorkorderStatusTrack{}}
-
-      iex> create_workorder_status_track(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_status_track(attrs \\ %{}, prefix) do
     %WorkorderStatusTrack{}
     |> WorkorderStatusTrack.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a workorder_status_track.
-
-  ## Examples
-
-      iex> update_workorder_status_track(workorder_status_track, %{field: new_value})
-      {:ok, %WorkorderStatusTrack{}}
-
-      iex> update_workorder_status_track(workorder_status_track, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs, prefix) do
     workorder_status_track
     |> WorkorderStatusTrack.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a workorder_status_track.
-
-  ## Examples
-
-      iex> delete_workorder_status_track(workorder_status_track)
-      {:ok, %WorkorderStatusTrack{}}
-
-      iex> delete_workorder_status_track(workorder_status_track)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, prefix) do
     Repo.delete(workorder_status_track, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workorder_status_track changes.
-
-  ## Examples
-
-      iex> change_workorder_status_track(workorder_status_track)
-      %Ecto.Changeset{data: %WorkorderStatusTrack{}}
-
-  """
   def change_workorder_status_track(%WorkorderStatusTrack{} = workorder_status_track, attrs \\ %{}) do
     WorkorderStatusTrack.changeset(workorder_status_track, attrs)
   end
@@ -3184,38 +2839,13 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn x -> preload_checks(x, prefix) end)
   end
 
-  @doc """
-  Gets a single workorder_check.
-
-  Raises `Ecto.NoResultsError` if the Workorder check does not exist.
-
-  ## Examples
-
-      iex> get_workorder_check!(123)
-      %WorkorderCheck{}
-
-      iex> get_workorder_check!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix) |> preload_checks(prefix)
 
   defp preload_checks(workorder_check, prefix) do
     check = CheckListConfig.get_check(workorder_check.check_id, prefix)
     Map.put(workorder_check, :check, check)
   end
-  @doc """
-  Creates a workorder_check.
 
-  ## Examples
-
-      iex> create_workorder_check(%{field: value})
-      {:ok, %WorkorderCheck{}}
-
-      iex> create_workorder_check(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_check(attrs \\ %{}, prefix) do
     result = %WorkorderCheck{}
               |> WorkorderCheck.changeset(attrs)
@@ -3244,18 +2874,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  @doc """
-  Updates a workorder_check.
-
-  ## Examples
-
-      iex> update_workorder_check(workorder_check, %{field: new_value})
-      {:ok, %WorkorderCheck{}}
-
-      iex> update_workorder_check(workorder_check, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workorder_check(%WorkorderCheck{} = workorder_check, attrs, prefix) do
    result = workorder_check
             |> WorkorderCheck.changeset(attrs)
@@ -3278,31 +2896,10 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
-  @doc """
-  Deletes a workorder_check.
-
-  ## Examples
-
-      iex> delete_workorder_check(workorder_check)
-      {:ok, %WorkorderCheck{}}
-
-      iex> delete_workorder_check(workorder_check)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_check(%WorkorderCheck{} = workorder_check, prefix) do
     Repo.delete(workorder_check, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workorder_check changes.
-
-  ## Examples
-
-      iex> change_workorder_check(workorder_check)
-      %Ecto.Changeset{data: %WorkorderCheck{}}
-
-  """
   def change_workorder_check(%WorkorderCheck{} = workorder_check, attrs \\ %{}) do
     WorkorderCheck.changeset(workorder_check, attrs)
   end
@@ -3310,33 +2907,10 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Workorder.WorkorderFileUpload
 
-  @doc """
-  Returns the list of workorder_file_uploads.
-
-  ## Examples
-
-      iex> list_workorder_file_uploads()
-      [%WorkorderFileUpload{}, ...]
-
-  """
   def list_workorder_file_uploads(prefix) do
     Repo.all(WorkorderFileUpload, prefix: prefix)
   end
 
-  @doc """
-  Gets a single workorder_file_upload.
-
-  Raises `Ecto.NoResultsError` if the Workorder file upload does not exist.
-
-  ## Examples
-
-      iex> get_workorder_file_upload!(123)
-      %WorkorderFileUpload{}
-
-      iex> get_workorder_file_upload!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
 
   def get_workorder_file_upload_by_workorder_task_id(task_id, prefix) do
@@ -3344,47 +2918,14 @@ defmodule Inconn2Service.Workorder do
     |> Repo.get(prefix: prefix)
   end
 
-  @doc """
-  Creates a workorder_file_upload.
-
-  ## Examples
-
-      iex> create_workorder_file_upload(%{field: value})
-      {:ok, %WorkorderFileUpload{}}
-
-      iex> create_workorder_file_upload(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_file_upload(attrs \\ %{}, prefix) do
     %WorkorderFileUpload{}
     |> WorkorderFileUpload.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a workorder_file_upload.
-
-  ## Examples
-
-      iex> update_workorder_file_upload(workorder_file_upload, %{field: new_value})
-      {:ok, %WorkorderFileUpload{}}
-
-      iex> update_workorder_file_upload(workorder_file_upload, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   alias Inconn2Service.Workorder.WorkorderApprovalTrack
 
-  @doc """
-  Returns the list of workorder_approval_tracks.
-
-  ## Examples
-
-      iex> list_workorder_approval_tracks()
-      [%WorkorderApprovalTrack{}, ...]
-
-  """
   def list_workorder_approval_tracks(prefix) do
     Repo.all(WorkorderApprovalTrack, prefix: prefix)
   end
@@ -3394,34 +2935,8 @@ defmodule Inconn2Service.Workorder do
     Repo.all(query, prefix: prefix)
   end
 
-  @doc """
-  Gets a single workorder_approval_track.
-
-  Raises `Ecto.NoResultsError` if the Workorder approval track does not exist.
-
-  ## Examples
-
-      iex> get_workorder_approval_track!(123)
-      %WorkorderApprovalTrack{}
-
-      iex> get_workorder_approval_track!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workorder_approval_track!(id, prefix), do: Repo.get!(WorkorderApprovalTrack, id, prefix: prefix)
 
-  @doc """
-  Creates a workorder_approval_track.
-
-  ## Examples
-
-      iex> create_workorder_approval_track(%{field: value})
-      {:ok, %WorkorderApprovalTrack{}}
-
-      iex> create_workorder_approval_track(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workorder_approval_track(attrs \\ %{}, prefix, user) do
     workorder_approval_track =
       %WorkorderApprovalTrack{}
@@ -3495,18 +3010,7 @@ defmodule Inconn2Service.Workorder do
       |> update_work_order_without_validations(%{"status" => "ackr"}, prefix, user)
     end
   end
-  @doc """
-  Updates a workorder_approval_track.
 
-  ## Examples
-
-      iex> update_workorder_approval_track(workorder_approval_track, %{field: new_value})
-      {:ok, %WorkorderApprovalTrack{}}
-
-      iex> update_workorder_approval_track(workorder_approval_track, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workorder_approval_track(%WorkorderApprovalTrack{} = workorder_approval_track, attrs, prefix, user) do
     workorder_approval_track
     |> WorkorderApprovalTrack.changeset(attrs)
@@ -3514,19 +3018,6 @@ defmodule Inconn2Service.Workorder do
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-
-  Deletes a workorder_file_upload.
-
-  ## Examples
-
-      iex> delete_workorder_file_upload(workorder_file_upload)
-      {:ok, %WorkorderFileUpload{}}
-
-      iex> delete_workorder_file_upload(workorder_file_upload)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workorder_file_upload(%WorkorderFileUpload{} = workorder_file_upload, prefix) do
     Repo.delete(workorder_file_upload, prefix)
   end
@@ -3574,8 +3065,15 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def get_employee_from_user_id(user_id, prefix) do
+  defp get_employee_from_user_id(user_id, prefix) do
     user = Staff.get_user!(user_id, prefix)
     if is_nil(user.employee_id), do: user.username, else: Staff.get_employee!(user.employee_id, prefix).first_name
+  end
+
+  defp get_employee_name_from_current_user(current_user) do
+    case current_user.employee do
+      nil-> current_user.username
+      employee -> employee.first_name
+    end
   end
 end
