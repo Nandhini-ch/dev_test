@@ -27,6 +27,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     field :maintenance_manager_id, :integer
     field :created_on, :naive_datetime
     field :asset_class, :string
+    field :custom, :map
     belongs_to :asset_category, AssetCategory
     belongs_to :site, Site
     belongs_to :location, Location
@@ -38,7 +39,8 @@ defmodule Inconn2Service.AssetConfig.Equipment do
   def changeset(equipment, attrs) do
     equipment
     |> cast(attrs, [:name, :equipment_code, :parent_id, :asset_category_id, :status, :criticality, :site_id, :location_id, :connections_in, :connections_out, :active,
-                              :tag_name, :description, :function, :asset_owned_by_id, :is_movable, :department, :asset_manager_id, :maintenance_manager_id, :created_on, :asset_class])
+                              :tag_name, :description, :function, :asset_owned_by_id, :is_movable, :department, :asset_manager_id, :maintenance_manager_id, :created_on,
+                              :asset_class, :custom])
     |> validate_required([:name, :equipment_code, :asset_category_id, :site_id, :location_id])
     |> validate_inclusion(:status, ["ON", "OFF", "BRK", "PRS", "TRN", "WRO"])
     |> validate_inclusion(:criticality, [1, 2, 3, 4, 5])

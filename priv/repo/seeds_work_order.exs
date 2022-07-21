@@ -1,11 +1,15 @@
 alias Inconn2Service.{CheckListConfig, Workorder, Ticket}
 
-chk1 = %{"label" => "check 1", "type" => "WP"}
-chk2 = %{"label" => "check 2", "type" => "WP"}
-chk3 = %{"label" => "check 3", "type" => "LOTO"}
-chk4 = %{"label" => "check 4", "type" => "LOTO"}
-chk5 = %{"label" => "check 5", "type" => "PRE"}
-chk6 = %{"label" => "check 6", "type" => "PRE"}
+chk_typ1 = %{"name" => "Housekeeping", "description" => "Housekeeping check type"}
+
+{:ok, chk_typ1} = CheckListConfig.create_check_type(chk_typ1, "inc_bata")
+
+chk1 = %{"label" => "check 1", "check_type_id" => chk_typ1.id}
+chk2 = %{"label" => "check 2", "check_type_id" => chk_typ1.id}
+chk3 = %{"label" => "check 3", "check_type_id" => chk_typ1.id}
+chk4 = %{"label" => "check 4", "check_type_id" => chk_typ1.id}
+chk5 = %{"label" => "check 5","check_type_id" => chk_typ1.id}
+chk6 = %{"label" => "check 6","check_type_id" => chk_typ1.id}
 
 {:ok, chk1c} = CheckListConfig.create_check(chk1, "inc_bata")
 {:ok, chk2c} = CheckListConfig.create_check(chk2, "inc_bata")

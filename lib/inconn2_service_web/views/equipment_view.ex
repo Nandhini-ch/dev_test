@@ -41,7 +41,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       criticality: equipment.criticality,
       connections_in: equipment.connections_in,
       connections_out: equipment.connections_out,
-      parent_id: List.last(equipment.path)
+      parent_id: List.last(equipment.path),
+      custom: equipment.custom
     }
   end
 
@@ -73,7 +74,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       asset_manager_id: equipment.asset_manager_id,
       maintenance_manager_id: equipment.maintenance_manager_id,
       created_on: equipment.created_on,
-      asset_class: equipment.asset_class
+      asset_class: equipment.asset_class,
+      custom: equipment.custom
     }
   end
 
@@ -101,7 +103,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
       asset_manager_id: equipment.asset_manager_id,
       maintenance_manager_id: equipment.maintenance_manager_id,
       created_on: equipment.created_on,
-      asset_class: equipment.asset_class
+      asset_class: equipment.asset_class,
+      custom: equipment.custom
     }
   end
 

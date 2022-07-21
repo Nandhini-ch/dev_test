@@ -15,6 +15,7 @@ defmodule Inconn2ServiceWeb.StockView do
       inventory_item_id: stock.inventory_item_id,
       quantity: stock.quantity,
       store_id: stock.store_id,
+      store: render_one(stock.store, StoreView, "store_without_content.json"),
       aisle: stock.aisle,
       row: stock.row,
       bin: stock.bin}

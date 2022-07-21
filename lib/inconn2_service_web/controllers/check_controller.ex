@@ -40,20 +40,4 @@ defmodule Inconn2ServiceWeb.CheckController do
       send_resp(conn, :no_content, "")
     end
   end
-
-  def activate_check(conn, %{"id" => id}) do
-    check = CheckListConfig.get_check!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Check{} = check} <- CheckListConfig.update_check_active_status(check, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", check: check)
-    end
-  end
-
-  def deactivate_check(conn, %{"id" => id}) do
-    check = CheckListConfig.get_check!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Check{} = check} <- CheckListConfig.update_check_active_status(check, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", check: check)
-    end
-  end
 end
