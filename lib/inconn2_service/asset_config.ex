@@ -116,15 +116,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking site changes.
-
-  ## Examples
-
-      iex> change_site(site)
-      %Ecto.Changeset{data: %Site{}}
-
-  """
   def change_site(%Site{} = site, attrs \\ %{}) do
     Site.changeset(site, attrs)
   end
@@ -704,9 +695,6 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def delete_location(%Location{} = location, prefix) do
-    # Deletes the location and children forcibly
-    # TBD: do not allow delete if this location is linked to some other record(s)
-    # Add that validation here....
     subtree = HierarchyManager.subtree(location)
     result = Repo.delete_all(subtree, prefix: prefix)
     case result do
@@ -719,30 +707,12 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking location changes.
-
-  ## Examples
-
-      iex> change_location(location)
-      %Ecto.Changeset{data: %Location{}}
-
-  """
   def change_location(%Location{} = location, attrs \\ %{}) do
     Location.changeset(location, attrs)
   end
 
   alias Inconn2Service.AssetConfig.Equipment
 
-  @doc """
-  Returns the list of equipments.
-
-  ## Examples
-
-      iex> list_equipments()
-      [%Equipment{}, ...]
-
-  """
   def list_equipments(site_id, prefix) do
     Equipment
     |> where(site_id: ^site_id)
@@ -1165,9 +1135,6 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def delete_equipment(%Equipment{} = equipment, prefix) do
-    # Deletes the equipment and children forcibly
-    # TBD: do not allow delete if this equipment is linked to some other record(s)
-    # Add that validation here....
     subtree = HierarchyManager.subtree(equipment)
     result = Repo.delete_all(subtree, prefix: prefix)
     case result do
@@ -1190,15 +1157,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking equipment changes.
-
-  ## Examples
-
-      iex> change_equipment(equipment)
-      %Ecto.Changeset{data: %Equipment{}}
-
-  """
   def change_equipment(%Equipment{} = equipment, attrs \\ %{}) do
     Equipment.changeset(equipment, attrs)
   end
