@@ -2,6 +2,7 @@ defmodule Inconn2Service.AssetConfig do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
@@ -107,6 +108,21 @@ defmodule Inconn2Service.AssetConfig do
          {:could_not_delete,
            "Cannot be deleted as there are Location associated with it"
          }
+
+      has_employee_rosters?(site, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Employee Roster associated with it"
+         }
+
+      has_shift?(site, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Shift associated with it"
+        }
+
+      has_store?(site, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Store associated with it"
+        }
 
       true ->
        update_site(site, %{"active" => false}, prefix)
@@ -1686,23 +1702,4 @@ defmodule Inconn2Service.AssetConfig do
       from(q in common_query, select: count(q.id))
     }
   end
-
-  defp equipment_query(query, %{}), do: query
-
-  defp equipment_query(query, query_params) do
-    Enum.reduce(query_params, query, fn
-    {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-    _, query -> query end)
-  end
-
- defp location_query(query, %{}), do: query
-
-  defp location_query(query, query_params) do
-    Enum.reduce(query_params, query, fn
-    {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-    _, query -> query end)
-  end
-
- defp has_equipment?(%Site{} = site, prefix), do: (equipment_query(Equipment,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length())
- defp has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length())
 end
