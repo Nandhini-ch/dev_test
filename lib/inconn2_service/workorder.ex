@@ -50,7 +50,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_alert_notification_for_workorder_template(updated_template, prefix, "new")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
 
       _ ->
         result
@@ -226,7 +226,7 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix) do
+  def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix, user) do
    result =
       workorder_template
       |> WorkorderTemplate.changeset(attrs)
@@ -244,7 +244,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_alert_notification_for_workorder_template(updated_template, prefix, "modified")
+        push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
 
       _ ->
         result
@@ -252,18 +252,18 @@ defmodule Inconn2Service.Workorder do
   end
 
 
-  def push_alert_notification_for_workorder_template(updated_template, prefix, "modified") do
-    description = ~s(Workorder Template #{updated_template.name} modified)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user) do
+    description = ~s(Workorder Template #{updated_template.name} modified by #{get_employee_name_from_current_user(user)})
     create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
   end
 
-  def push_alert_notification_for_workorder_template(updated_template, prefix, "new") do
-    description = ~s(New Workorder Template #{updated_template.name} created)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "new", _user) do
+    description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix)})
     create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
   end
 
-  def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted") do
-    description = ~s(Workorder Template #{updated_template.name} deleted)
+  def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted", user) do
+    description = ~s(Workorder Template #{updated_template.name} deleted  by #{get_employee_name_from_current_user(user)})
     create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
   end
 
@@ -288,9 +288,9 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix) do
+  def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
     Repo.delete(workorder_template, prefix: prefix)
-    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted")
+    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
     {:ok, nil}
   end
 
