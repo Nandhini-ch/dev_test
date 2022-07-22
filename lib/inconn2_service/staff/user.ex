@@ -45,6 +45,12 @@ defmodule Inconn2Service.Staff.User do
     |> assoc_constraint(:party)
   end
 
+  def change_password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> hash_password()
+  end
+
   def hash_password(changeset) do
     if password = get_change(changeset, :password) do
       pass_hash_map = Argon2.add_hash(password)
