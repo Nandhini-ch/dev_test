@@ -134,6 +134,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
     post "/upload_task_lists", ReferenceUploadController, :upload_task_lists
 
+    resources "/check_types", CheckTypeController, except: [:new, :edit]
     resources "/checks", CheckController, except: [:new, :edit]
     put "/checks/:id/activate", CheckController, :activate_check
     put "/checks/:id/deactivate", CheckController, :deactivate_check
@@ -200,8 +201,11 @@ defmodule Inconn2ServiceWeb.Router do
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
+    post "/users/forgot_password", UserController, :forgot_password
+    post "/users/confirm_otp", UserController, :confirm_otp
+    post "/users/reset_password", UserController, :reset_password
     resources "/users", UserController, except: [:new, :edit]
-    put "/users/change_password", UserController, :change_password
+    put "/users/:id/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
     put "/users/:id/deactivate", UserController, :deactivate_user
     get "/download_users", ReferenceDownloadController, :download_users
@@ -404,5 +408,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
+    resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
   end
 end

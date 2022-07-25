@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    roles = Staff.list_roles(conn.query_params, conn.assigns.sub_domain_prefix)
+    roles = Staff.list_roles(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", roles: roles)
   end
 

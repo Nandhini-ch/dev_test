@@ -3,28 +3,30 @@ defmodule Inconn2Service.AssetConfig do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.HelpersFunctions
+
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
-  alias Inconn2Service.AssetConfig.Site
-  alias Inconn2Service.AssetConfig.AssetStatusTrack
-  alias Inconn2Service.AssetConfig.{Equipment, Location}
+  alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site}
+  alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.Custom.CustomFields
+  alias Inconn2Service.{Common, Prompt}
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
+  alias Inconn2Service.AssetConfig.Party
 
   def list_sites(prefix) do
     Repo.all(Site, prefix: prefix)
     |> sort_sites()
   end
 
-  defp sort_sites(sites) do
-    Enum.sort_by(sites, &(&1.name))
-  end
+  defp sort_sites(sites), do: Enum.sort_by(sites, &(&1.name))
 
-  def list_sites(query_params, prefix) do
+  def list_sites(_query_params, prefix) do
    Site
-   |> Repo.add_active_filter(query_params)
+   |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
    |> sort_sites()
   end
@@ -154,9 +156,9 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_asset_categories(query_params, prefix) do
+  def list_asset_categories(_query_params, prefix) do
     AssetCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -166,9 +168,9 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_asset_categories_by_type(type, query_params, prefix) do
+  def list_asset_categories_by_type(type, _query_params, prefix) do
     AssetCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(asset_type: ^type)
     |> Repo.all(prefix: prefix)
   end
@@ -205,9 +207,6 @@ defmodule Inconn2Service.AssetConfig do
     ac = get_asset_category!(asset_category_id, prefix)
     HierarchyManager.parent(ac) |> Repo.one(prefix: prefix)
   end
-
-  alias Inconn2Service.AssetConfig.Location
-  alias Inconn2Service.AssetConfig.Equipment
 
   def get_assets(id, prefix) do
     asset_category = get_asset_category!(id, prefix)
@@ -395,6 +394,7 @@ defmodule Inconn2Service.AssetConfig do
     AssetCategory.changeset(asset_category, attrs)
   end
 
+
   alias Inconn2Service.AssetConfig.Location
 
   def list_locations(site_id, prefix) do
@@ -414,9 +414,9 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def list_locations(site_id, query_params, prefix) do
+  def list_locations(site_id, _query_params, prefix) do
     Location
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -746,9 +746,9 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def list_equipments(site_id, query_params, prefix) do
+  def list_equipments(site_id, _query_params, prefix) do
     Equipment
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -778,9 +778,9 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_equipments_of_location(location_id, query_params, prefix) do
+  def list_equipments_of_location(location_id, _query_params, prefix) do
     Equipment
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(location_id: ^location_id)
     |> Repo.all(prefix: prefix)
   end
@@ -962,6 +962,7 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
+      |>  validate_custom_field_type(prefix, "Equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
@@ -1037,6 +1038,7 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
+            |> validate_custom_field_type(prefix, "Equipment")
 
           update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
@@ -1045,6 +1047,8 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
+            |> validate_custom_field_type(prefix, "Equipment")
+
 
           Repo.update(eq_cs, prefix: prefix)
       end
@@ -1147,8 +1151,9 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, _prefix) do
     equipment
-    |> Equipment.changeset(attrs)
+    |> Equipment.changeset(update_custom_fields(equipment, attrs))
   end
+
 
   def delete_equipment(%Equipment{} = equipment, prefix) do
     subtree = HierarchyManager.subtree(equipment)
@@ -1286,13 +1291,14 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Party
 
+
   def list_parties(prefix) do
     Repo.all(Party, prefix: prefix)
   end
 
-  def list_parties(query_params, prefix) do
+  def list_parties(_query_params, prefix) do
     Party
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -1535,6 +1541,7 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_children({:error, cs}, _prefix), do: {:error, cs}
 
+
   alias Inconn2Service.AssetConfig.AssetStatusTrack
 
   def list_asset_status_tracks(prefix) do
@@ -1542,7 +1549,6 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def get_asset_status_track!(id, prefix), do: Repo.get!(AssetStatusTrack, id, prefix: prefix)
-
 
   def create_asset_status_track(attrs \\ %{}, prefix) do
     %AssetStatusTrack{}
@@ -1702,4 +1708,39 @@ defmodule Inconn2Service.AssetConfig do
       from(q in common_query, select: count(q.id))
     }
   end
+
+  defp validate_custom_field_type(cs, prefix, entity) do
+    custom_field_values = get_field(cs, :custom, nil)
+    cond do
+      !is_nil(custom_field_values) ->
+        boolean_array =
+          Stream.map(get_and_filter_required_type(custom_field_values, entity, prefix), fn e ->
+            if check_type(custom_field_values[e.field_name], e.field_type) do true else {e.field_name, e.field_type} end
+          end) |> Enum.filter(fn e -> e  != true end)
+
+        case length(boolean_array) do
+          0 -> cs
+          _ ->
+            errors =
+              Enum.map(boolean_array, fn {field_name, field_type} -> "Expected #{field_type} value for #{field_name}"  end)
+              |> Enum.join(",")
+            add_error(cs, :custom, errors)
+        end
+      true -> cs
+    end
+  end
+
+  defp get_and_filter_required_type(custom_field_values, entity, prefix) do
+    entity_record = custom_field_for_entity_query(entity) |> Repo.one(prefix: prefix)
+    Stream.filter(entity_record.fields, fn field ->  field.field_name in Map.keys(custom_field_values) end)
+  end
+
+  defp custom_field_for_entity_query(entity), do: from cf in CustomFields, where: cf.entity == ^entity
+
+  defp check_type(value, "integer"), do: is_integer(value)
+  defp check_type(value, "float"), do: is_float(value)
+  defp check_type(value, "string"), do: is_binary(value)
+  defp check_type(value, "text"), do: is_binary(value)
+  defp check_type(value, "date"), do: is_date?(value)
+  defp check_type(value, "list_of_values"), do: is_list(value)
 end

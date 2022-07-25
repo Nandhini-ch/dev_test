@@ -126,4 +126,65 @@ defmodule Inconn2Service.CheckListConfigTest do
       assert %Ecto.Changeset{} = CheckListConfig.change_check_list(check_list)
     end
   end
+
+  describe "check_types" do
+    alias Inconn2Service.CheckListConfig.CheckType
+
+    @valid_attrs %{description: "some description", name: "some name"}
+    @update_attrs %{description: "some updated description", name: "some updated name"}
+    @invalid_attrs %{description: nil, name: nil}
+
+    def check_type_fixture(attrs \\ %{}) do
+      {:ok, check_type} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> CheckListConfig.create_check_type()
+
+      check_type
+    end
+
+    test "list_check_types/0 returns all check_types" do
+      check_type = check_type_fixture()
+      assert CheckListConfig.list_check_types() == [check_type]
+    end
+
+    test "get_check_type!/1 returns the check_type with given id" do
+      check_type = check_type_fixture()
+      assert CheckListConfig.get_check_type!(check_type.id) == check_type
+    end
+
+    test "create_check_type/1 with valid data creates a check_type" do
+      assert {:ok, %CheckType{} = check_type} = CheckListConfig.create_check_type(@valid_attrs)
+      assert check_type.description == "some description"
+      assert check_type.name == "some name"
+    end
+
+    test "create_check_type/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = CheckListConfig.create_check_type(@invalid_attrs)
+    end
+
+    test "update_check_type/2 with valid data updates the check_type" do
+      check_type = check_type_fixture()
+      assert {:ok, %CheckType{} = check_type} = CheckListConfig.update_check_type(check_type, @update_attrs)
+      assert check_type.description == "some updated description"
+      assert check_type.name == "some updated name"
+    end
+
+    test "update_check_type/2 with invalid data returns error changeset" do
+      check_type = check_type_fixture()
+      assert {:error, %Ecto.Changeset{}} = CheckListConfig.update_check_type(check_type, @invalid_attrs)
+      assert check_type == CheckListConfig.get_check_type!(check_type.id)
+    end
+
+    test "delete_check_type/1 deletes the check_type" do
+      check_type = check_type_fixture()
+      assert {:ok, %CheckType{}} = CheckListConfig.delete_check_type(check_type)
+      assert_raise Ecto.NoResultsError, fn -> CheckListConfig.get_check_type!(check_type.id) end
+    end
+
+    test "change_check_type/1 returns a check_type changeset" do
+      check_type = check_type_fixture()
+      assert %Ecto.Changeset{} = CheckListConfig.change_check_type(check_type)
+    end
+  end
 end

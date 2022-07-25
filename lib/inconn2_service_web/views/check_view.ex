@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.CheckView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.CheckView
+  alias Inconn2ServiceWeb.{CheckView, CheckTypeView}
 
   def render("index.json", %{checks: checks}) do
     %{data: render_many(checks, CheckView, "check.json")}
@@ -13,6 +13,6 @@ defmodule Inconn2ServiceWeb.CheckView do
   def render("check.json", %{check: check}) do
     %{id: check.id,
       label: check.label,
-      type: check.type}
+      check_type: render_one(check.check_type, CheckTypeView, "check_type.json")}
   end
 end

@@ -1,261 +1,144 @@
 defmodule Inconn2Service.CheckListConfig do
-  @moduledoc """
-  The CheckListConfig context.
-  """
-
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Inconn2Service.Repo
+  alias Inconn2Service.CheckListConfig.{Check, CheckList, CheckType}
 
-  alias Inconn2Service.CheckListConfig.Check
-
-  @doc """
-  Returns the list of checks.
-
-  ## Examples
-
-      iex> list_checks()
-      [%Check{}, ...]
-
-  """
-  def list_checks(prefix) do
-    Repo.all(Check, prefix: prefix)
+  #Context functions for CheckType
+  def list_check_types(prefix) do
+    Repo.all(Repo.add_active_filter(CheckType), prefix: prefix)
   end
 
-  def list_checks(query_params, prefix) do
-    Check
-    |> Repo.add_active_filter(query_params)
-    |> Repo.all(prefix: prefix)
+  def get_check_type!(id, prefix), do: Repo.get!(CheckType, id, prefix: prefix)
+  def get_check_type(id, prefix), do: Repo.get(CheckType, id, prefix: prefix)
+
+  def create_check_type(attrs \\ %{}, prefix) do
+    %CheckType{}
+    |> CheckType.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Gets a single check.
+  def update_check_type(%CheckType{} = check_type, attrs, prefix) do
+    check_type
+    |> CheckType.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
 
-  Raises `Ecto.NoResultsError` if the Check does not exist.
+  def delete_check_type(%CheckType{} = check_type, prefix) do
+    Repo.delete(check_type, prefix: prefix)
+  end
 
-  ## Examples
+  def change_check_type(%CheckType{} = check_type, attrs \\ %{}) do
+    CheckType.changeset(check_type, attrs)
+  end
 
-      iex> get_check!(123)
-      %Check{}
+  #Context function for Check
+  def list_checks(%{}, prefix), do: Repo.all(Repo.add_active_filter(Check), prefix: prefix) |> Repo.preload(:check_type)
 
-      iex> get_check!(456)
-      ** (Ecto.NoResultsError)
+  def list_checks(%{"check_type_id" => check_type_id}, prefix) do
+    from(c in Check, where: c.check_type_id == ^ check_type_id and c.active) |> Repo.all(prefix: prefix) |> Repo.preload(:check_type)
+  end
 
-  """
-  def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix)
-  def get_check(id, prefix), do: Repo.get(Check, id, prefix: prefix)
+  def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix) |> Repo.preload(:check_type)
+  def get_check(id, prefix), do: Repo.get(Check, id, prefix: prefix) |> Repo.preload(:check_type)
 
-  @doc """
-  Creates a check.
-
-  ## Examples
-
-      iex> create_check(%{field: value})
-      {:ok, %Check{}}
-
-      iex> create_check(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_check(attrs \\ %{}, prefix) do
     %Check{}
     |> Check.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> preload_check_type()
   end
 
-  @doc """
-  Updates a check.
-
-  ## Examples
-
-      iex> update_check(check, %{field: new_value})
-      {:ok, %Check{}}
-
-      iex> update_check(check, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_check(%Check{} = check, attrs, prefix) do
     check
     |> Check.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_check_type()
   end
 
-  def update_check_active_status(%Check{} = check, attrs, prefix) do
-    check
-    |> Check.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
+  def delete_check(%Check{} = check, prefix), do: update_check(check, %{"active" => false}, prefix)
 
-  @doc """
-  Deletes a check.
+  # function commented because soft delet was implemented with same function name
+  # def delete_check(%Check{} = check, prefix) do
+  #   Repo.delete(check, prefix: prefix)
+  # end
 
-  ## Examples
-
-      iex> delete_check(check)
-      {:ok, %Check{}}
-
-      iex> delete_check(check)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_check(%Check{} = check, prefix) do
-    Repo.delete(check, prefix: prefix)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking check changes.
-
-  ## Examples
-
-      iex> change_check(check)
-      %Ecto.Changeset{data: %Check{}}
-
-  """
   def change_check(%Check{} = check, attrs \\ %{}) do
     Check.changeset(check, attrs)
   end
 
-  alias Inconn2Service.CheckListConfig.CheckList
-
-  @doc """
-  Returns the list of check_lists.
-
-  ## Examples
-
-      iex> list_check_lists()
-      [%CheckList{}, ...]
-
-  """
+  #Context functions for CheckList
   def list_check_lists(prefix) do
-    Repo.all(CheckList, prefix: prefix)
+    Repo.all(Repo.add_active_filter(CheckList), prefix: prefix)
   end
 
-  def list_check_lists(query_params, prefix) do
-    CheckList
-    |> Repo.add_active_filter(query_params)
-    |> Repo.all(prefix: prefix)
-  end
+  def get_check_list!(id, prefix), do: Repo.get!(CheckList, id, prefix: prefix) |> preload_checks(prefix)
+  def get_check_list(id, prefix), do: Repo.get(CheckList, id, prefix: prefix) |> preload_checks(prefix)
 
-  @doc """
-  Gets a single check_list.
-
-  Raises `Ecto.NoResultsError` if the Check list does not exist.
-
-  ## Examples
-
-      iex> get_check_list!(123)
-      %CheckList{}
-
-      iex> get_check_list!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_check_list!(id, prefix), do: Repo.get!(CheckList, id, prefix: prefix)
-
-  def get_check_list(id, prefix), do: Repo.get(CheckList, id, prefix: prefix)
-
-  @doc """
-  Creates a check_list.
-
-  ## Examples
-
-      iex> create_check_list(%{field: value})
-      {:ok, %CheckList{}}
-
-      iex> create_check_list(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_check_list(attrs \\ %{}, prefix) do
     %CheckList{}
-    |> CheckList.changeset(attrs)
+    |> CheckList.changeset(create_attrs_with_new_check_ids(attrs, prefix))
     |> validate_check_ids(prefix)
     |> validate_existing_for_pre(prefix)
     |> Repo.insert(prefix: prefix)
-  end
-
-  defp validate_existing_for_pre(cs, prefix) do
-    site_id = get_field(cs, :site_id, nil)
-    if site_id != nil do
-      if get_pre_check_list(site_id, prefix) do
-        add_error(cs, :site_id, "A PRE Check list is already existing")
-      else
-        cs
-      end
-    else
-      cs
-    end
+    |> preload_checks(prefix)
   end
 
   def get_pre_check_list(site_id, prefix) do
     from(cl in CheckList, where: cl.type == "PRE" and cl.site_id == ^site_id) |> Repo.one(prefix: prefix)
   end
 
-  defp validate_check_ids(cs, prefix) do
-    ids = get_change(cs, :check_ids, nil)
-    if ids != nil do
-      checks = from(c in Check, where: c.id in ^ids )
-              |> Repo.all(prefix: prefix)
-      case length(ids) == length(checks) do
-        true -> cs
-        false -> add_error(cs, :check_ids, "Check IDs are invalid")
-      end
-    else
-      cs
-    end
-  end
-  @doc """
-  Updates a check_list.
-
-  ## Examples
-
-      iex> update_check_list(check_list, %{field: new_value})
-      {:ok, %CheckList{}}
-
-      iex> update_check_list(check_list, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_check_list(%CheckList{} = check_list, attrs, prefix) do
     check_list
     |> CheckList.changeset(attrs)
     |> validate_check_ids(prefix)
     |> Repo.update(prefix: prefix)
+    |> preload_checks(prefix)
   end
 
-  def update_check_list_active_status(%CheckList{} = check_list, attrs, prefix) do
-    check_list
-    |> CheckList.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
+  def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
 
-  @doc """
-  Deletes a check_list.
+  # function commented because soft delet was implemented with same function name
+  # def delete_check_list(%CheckList{} = check_list, prefix) do
+  #   Repo.delete(check_list, prefix: prefix)
+  # end
 
-  ## Examples
-
-      iex> delete_check_list(check_list)
-      {:ok, %CheckList{}}
-
-      iex> delete_check_list(check_list)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_check_list(%CheckList{} = check_list, prefix) do
-    Repo.delete(check_list, prefix: prefix)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking check_list changes.
-
-  ## Examples
-
-      iex> change_check_list(check_list)
-      %Ecto.Changeset{data: %CheckList{}}
-
-  """
   def change_check_list(%CheckList{} = check_list, attrs \\ %{}) do
     CheckList.changeset(check_list, attrs)
   end
+
+  defp validate_existing_for_pre(cs, prefix) do
+    site_id = get_field(cs, :site_id, nil)
+    cond do
+      !is_nil(site_id) and !is_nil(get_pre_check_list(site_id, prefix)) -> add_error(cs, :site_id, "A PRE Check list is already existing")
+      true -> cs
+    end
+  end
+
+  defp validate_check_ids(cs, prefix) do
+    ids = get_change(cs, :check_ids, nil)
+    checks = from(c in Check, where: c.id in ^ids) |> Repo.all(prefix: prefix)
+    cond do
+      !is_nil(ids) and length(ids) != length(checks) -> add_error(cs, :check_ids, "Check IDs are invalid")
+      true -> cs
+    end
+  end
+
+  defp create_attrs_with_new_check_ids(attrs, prefix) do
+    new_check_ids = get_new_check_ids(attrs["new_checks"], prefix)
+    Map.put(attrs, "check_ids", attrs["check_ids"] ++ new_check_ids)
+  end
+
+  defp preload_checks({:ok, check_list}, prefix), do: {:ok, preload_checks(check_list, prefix)}
+  defp preload_checks({:error, reason}, _prefix), do: {:error, reason}
+
+  defp preload_checks(check_list, prefix) do
+    Map.put(check_list, :checks, Enum.map(check_list.check_ids, fn id -> get_check(id, prefix) end) |> Enum.filter(fn c -> c != nil && c.active end))
+  end
+
+  defp preload_check_type({:ok, check}), do: {:ok, check |> Repo.preload(:check_type)}
+  defp preload_check_type(result), do: result
+
+  defp get_new_check_ids(nil, _prefix), do: []
+  defp get_new_check_ids(checks, prefix), do: Stream.map(checks, fn c -> create_check(c, prefix) end) |> Enum.map(fn {:ok, check} -> check.id end)
 end
