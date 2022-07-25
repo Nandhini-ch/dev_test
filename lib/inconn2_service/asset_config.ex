@@ -35,32 +35,13 @@ defmodule Inconn2Service.AssetConfig do
     create_zone_in_tree(parent_id, zone_cs, prefix)
   end
 
-  defp create_zone_in_tree(nil, zone_cs, prefix) do
-    Repo.insert(zone_cs, prefix: prefix)
-  end
-
-  defp create_zone_in_tree(parent_id, zone_cs, prefix) do
-    case Repo.get(Zone, parent_id, prefix: prefix) do
-      nil ->
-        add_error(zone_cs, :parent_id, "Parent object does not exist")
-        |> Repo.insert(prefix: prefix)
-
-      parent ->
-        zone_cs
-        |> HierarchyManager.make_child_of(parent)
-        |> Repo.insert(prefix: prefix)
-    end
-  end
-
   def list_zone_tree(prefix) do
     list_zones(prefix)
     |> HierarchyManager.build_tree()
   end
 
-
   def update_zone(%Zone{} = zone, attrs, prefix) do
     existing_parent_id = HierarchyManager.parent_id(zone)
-
       cond do
         Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
           new_parent_id = attrs["parent_id"]
@@ -86,10 +67,9 @@ defmodule Inconn2Service.AssetConfig do
     Zone.changeset(zone, attrs)
   end
 
-
-  def list_sites(prefix, query_params \\ %{}) do
+  def list_sites(query_params \\ %{}, prefix) do
    Site
-   |> site_query(query_params)
+   |> site_query(query_params, prefix)
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
    |> sort_sites()
@@ -255,6 +235,10 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
   def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
+  def get_asset_category_by_ids(ids, prefix) do
+    from(ac in AssetCategory, where: ac.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
 
   def get_root_asset_categories(prefix) do
     root_path = []
@@ -1791,6 +1775,23 @@ defmodule Inconn2Service.AssetConfig do
             add_error(cs, :custom, errors)
         end
       true -> cs
+    end
+  end
+
+  defp create_zone_in_tree(nil, zone_cs, prefix) do
+    Repo.insert(zone_cs, prefix: prefix)
+  end
+
+  defp create_zone_in_tree(parent_id, zone_cs, prefix) do
+    case Repo.get(Zone, parent_id, prefix: prefix) do
+      nil ->
+        add_error(zone_cs, :parent_id, "Parent object does not exist")
+        |> Repo.insert(prefix: prefix)
+
+      parent ->
+        zone_cs
+        |> HierarchyManager.make_child_of(parent)
+        |> Repo.insert(prefix: prefix)
     end
   end
 

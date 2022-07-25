@@ -55,11 +55,21 @@ pc =
     nil -> IO.puts("null value returned")
   end
 
+zone_1 = %{"name" => "zone 1"}
+{:ok, zn1_c} = AssetConfig.create_zone(zone_1, "inc_bata")
+
+zone_2 = %{"name" => "zone 2", "parent_id" => zn1_c.id}
+{:ok, zn2_c} = AssetConfig.create_zone(zone_2, "inc_bata")
+
+zone_3 = %{"name" => "zone 3", "parent_id" => zn2_c.id}
+{:ok, zn3_c} = AssetConfig.create_zone(zone_3, "inc_bata")
+
 site = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
   "site_code" => "BRCHN_MNTRD",
   "party_id" => 1,
+  "zone_id" => zn2_c.id,
   "time_zone" => "Europe/Berlin",
   "address" => %{
     "address_line1" => "18, First Street",

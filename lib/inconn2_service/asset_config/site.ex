@@ -2,7 +2,7 @@ defmodule Inconn2Service.AssetConfig.Site do
   use Ecto.Schema
   import Ecto.Changeset
   alias Inconn2Service.Common.{AddressEmbed, ContactEmbed}
-  alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.AssetConfig.{Party, Zone}
 
   schema "sites" do
     field :area, :float
@@ -15,6 +15,7 @@ defmodule Inconn2Service.AssetConfig.Site do
     field :site_code, :string
     field :time_zone, :string
     field :active, :boolean, default: true
+    belongs_to :zone, Zone
     belongs_to :party, Party
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
@@ -35,6 +36,7 @@ defmodule Inconn2Service.AssetConfig.Site do
       :fencing_radius,
       :site_code,
       :party_id,
+      :zone_id,
       :time_zone,
       :active
     ])

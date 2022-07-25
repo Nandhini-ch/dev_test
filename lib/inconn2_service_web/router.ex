@@ -222,6 +222,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
 
     get "/sessions/current_user", SessionController, :current_user
+    get "/sessions/my_profile", SessionController, :my_profile
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     get "/workrequest_categories_with_helpdesk_user", WorkrequestCategoryController, :index_with_helpdesk_user

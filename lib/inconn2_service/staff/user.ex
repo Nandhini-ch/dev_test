@@ -7,6 +7,8 @@ defmodule Inconn2Service.Staff.User do
 
   schema "users" do
     field :username, :string
+    field :first_name, :string
+    field :last_name, :string
     field :password, :string, virtual: true
     field :role_id, :integer
     field :email, :string
@@ -22,7 +24,7 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
+    |> cast(attrs, [:username, :first_name, :last_name, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :password, :email, :mobile_no, :role_id, :party_id])
     |> validate_format(:email, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")

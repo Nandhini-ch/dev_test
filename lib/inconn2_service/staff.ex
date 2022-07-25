@@ -259,6 +259,10 @@ defmodule Inconn2Service.Staff do
     Map.put(employee, :skills, [])
   end
 
+  def get_employee_of_user(user, prefix) do
+    Repo.get(Employee, user.id, prefix: prefix)
+  end
+
   def get_reportees_for_logged_in_user(user, prefix) do
     employee = user.employee
     if employee != nil do
@@ -468,6 +472,8 @@ defmodule Inconn2Service.Staff do
   def create_employee_user(employee, attrs \\ %{}, prefix) do
       user_map = %{
         "username" => employee.email,
+        "first_name" => employee.first_name,
+        "last_name" => employee.last_name,
         "email" => employee.email,
         "mobile_no" => employee.mobile_no,
         "password" => employee.mobile_no,
@@ -544,6 +550,7 @@ defmodule Inconn2Service.Staff do
 
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
   def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role_without_preload(id, prefix), do: Repo.get(Role, id, prefix: prefix)
   def get_role_by_role_profile(role_profile_id, prefix) do
     Role
     |> where(role_profile_id: ^role_profile_id)
