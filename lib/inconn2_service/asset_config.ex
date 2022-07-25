@@ -3,6 +3,7 @@ defmodule Inconn2Service.AssetConfig do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
 
   alias Ecto.Multi
@@ -17,15 +18,9 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.Prompt
   alias Inconn2Service.AssetConfig.Party
 
-  def list_sites(prefix) do
-    Repo.all(Site, prefix: prefix)
-    |> sort_sites()
-  end
-
-  defp sort_sites(sites), do: Enum.sort_by(sites, &(&1.name))
-
-  def list_sites(_query_params, prefix) do
+  def list_sites(prefix, query_params \\ %{}) do
    Site
+   |> site_query(query_params)
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
    |> sort_sites()
@@ -1743,4 +1738,6 @@ defmodule Inconn2Service.AssetConfig do
   defp check_type(value, "text"), do: is_binary(value)
   defp check_type(value, "date"), do: is_date?(value)
   defp check_type(value, "list_of_values"), do: is_list(value)
+
+  defp sort_sites(sites), do: Enum.sort_by(sites, &(&1.name))
 end

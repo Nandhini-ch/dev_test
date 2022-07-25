@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.SiteController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    sites = AssetConfig.list_sites(conn.query_params, conn.assigns.sub_domain_prefix)
+    sites = AssetConfig.list_sites(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "index.json", sites: sites)
   end
 
