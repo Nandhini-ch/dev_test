@@ -36,6 +36,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
     get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
 
+    post "/users/forgot_password", UserController, :forgot_password
+    post "/users/confirm_otp", UserController, :confirm_otp
+    post "/users/reset_password", UserController, :reset_password
+
     scope "/external_ticket" do
 
       get "/workrequest_categories", ExternalTicketController, :index_categories
@@ -201,9 +205,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
-    post "/users/forgot_password", UserController, :forgot_password
-    post "/users/confirm_otp", UserController, :confirm_otp
-    post "/users/reset_password", UserController, :reset_password
     resources "/users", UserController, except: [:new, :edit]
     put "/users/:id/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
