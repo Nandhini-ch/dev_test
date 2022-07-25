@@ -409,5 +409,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
     resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
+    resources "/zones", ZoneController, except: [:new, :edit]
+    get "/zones_tree", ZoneController, :tree
   end
 end

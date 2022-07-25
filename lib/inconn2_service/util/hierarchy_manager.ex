@@ -55,7 +55,6 @@ defmodule Inconn2Service.Util.HierarchyManager do
   end
 
   def subtree(node = %{__struct__: schema, id: id}) do
-    IO.inspect("I am here which means here is where the error occurs")
     pids = path_ids(node)
     from(n in schema, where: fragment("? @> ?", field(n, :path), ^pids) or n.id == ^id)
   end
