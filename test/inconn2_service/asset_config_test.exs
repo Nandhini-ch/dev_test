@@ -369,4 +369,67 @@ defmodule Inconn2Service.AssetConfigTest do
       assert %Ecto.Changeset{} = AssetConfig.change_site_config(site_config)
     end
   end
+
+  describe "zones" do
+    alias Inconn2Service.AssetConfig.Zone
+
+    @valid_attrs %{description: "some description", name: "some name", path: []}
+    @update_attrs %{description: "some updated description", name: "some updated name", path: []}
+    @invalid_attrs %{description: nil, name: nil, path: nil}
+
+    def zone_fixture(attrs \\ %{}) do
+      {:ok, zone} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> AssetConfig.create_zone()
+
+      zone
+    end
+
+    test "list_zones/0 returns all zones" do
+      zone = zone_fixture()
+      assert AssetConfig.list_zones() == [zone]
+    end
+
+    test "get_zone!/1 returns the zone with given id" do
+      zone = zone_fixture()
+      assert AssetConfig.get_zone!(zone.id) == zone
+    end
+
+    test "create_zone/1 with valid data creates a zone" do
+      assert {:ok, %Zone{} = zone} = AssetConfig.create_zone(@valid_attrs)
+      assert zone.description == "some description"
+      assert zone.name == "some name"
+      assert zone.path == []
+    end
+
+    test "create_zone/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.create_zone(@invalid_attrs)
+    end
+
+    test "update_zone/2 with valid data updates the zone" do
+      zone = zone_fixture()
+      assert {:ok, %Zone{} = zone} = AssetConfig.update_zone(zone, @update_attrs)
+      assert zone.description == "some updated description"
+      assert zone.name == "some updated name"
+      assert zone.path == []
+    end
+
+    test "update_zone/2 with invalid data returns error changeset" do
+      zone = zone_fixture()
+      assert {:error, %Ecto.Changeset{}} = AssetConfig.update_zone(zone, @invalid_attrs)
+      assert zone == AssetConfig.get_zone!(zone.id)
+    end
+
+    test "delete_zone/1 deletes the zone" do
+      zone = zone_fixture()
+      assert {:ok, %Zone{}} = AssetConfig.delete_zone(zone)
+      assert_raise Ecto.NoResultsError, fn -> AssetConfig.get_zone!(zone.id) end
+    end
+
+    test "change_zone/1 returns a zone changeset" do
+      zone = zone_fixture()
+      assert %Ecto.Changeset{} = AssetConfig.change_zone(zone)
+    end
+  end
 end

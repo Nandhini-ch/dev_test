@@ -8,7 +8,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
-  alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site}
+  alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site, Zone}
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Custom.CustomFields
   alias Inconn2Service.{Common, Prompt}
@@ -1743,4 +1743,120 @@ defmodule Inconn2Service.AssetConfig do
   defp check_type(value, "text"), do: is_binary(value)
   defp check_type(value, "date"), do: is_date?(value)
   defp check_type(value, "list_of_values"), do: is_list(value)
+
+  alias Inconn2Service.AssetConfig.Zone
+
+
+  def list_zones(prefix) do
+    Repo.all(Zone, prefix: prefix)
+  end
+
+
+  def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
+
+
+  def create_zone(attrs \\ %{}, prefix) do
+    parent_id = Map.get(attrs, "parent_id", nil)
+
+    zone_cs =
+    %Zone{}
+    |> Zone.changeset(attrs)
+    create_zone_in_tree(parent_id, zone_cs, prefix)
+  end
+
+  defp create_zone_in_tree(nil, zone_cs, prefix) do
+    Repo.insert(zone_cs, prefix: prefix)
+  end
+
+  defp create_zone_in_tree(parent_id, zone_cs, prefix) do
+    case Repo.get(Zone, parent_id, prefix: prefix) do
+      nil ->
+        add_error(zone_cs, :parent_id, "Parent object does not exist")
+        |> Repo.insert(prefix: prefix)
+
+      parent ->
+        zone_cs
+        |> HierarchyManager.make_child_of(parent)
+        |> Repo.insert(prefix: prefix)
+    end
+  end
+
+  def list_zone_tree(prefix) do
+    list_zones(prefix)
+    |> HierarchyManager.build_tree()
+  end
+
+
+  def update_zone(%Zone{} = zone, attrs, prefix) do
+    existing_parent_id = HierarchyManager.parent_id(zone)
+
+      cond do
+        Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+          new_parent_id = attrs["parent_id"]
+
+          zone_cs = change_zone(zone, attrs)
+          update_zone_in_tree(new_parent_id, zone_cs, zone, prefix)
+        true ->
+          change_zone(zone, attrs)
+          |> Repo.update(prefix: prefix)
+
+      end
+  end
+
+  defp update_zone_in_tree(nil, zone_cs, zone, prefix) do
+    descendents = HierarchyManager.descendants(zone) |> Repo.all(prefix: prefix)
+    # adjust the path (from old path to ne path )for all descendents
+    zone_cs = change(zone_cs, %{path: []})
+    make_zone_changeset_and_update(zone_cs, zone, descendents, [], prefix)
+  end
+
+  defp update_zone_in_tree(new_parent_id, zone_cs, zone, prefix) do
+    # Get the new parent and check
+    case Repo.get(Zone, new_parent_id, prefix: prefix) do
+      nil ->
+        add_error(zone_cs, :parent_id, "New parent object does not exist")
+        |> Repo.insert(prefix: prefix)
+
+      parent ->
+        # Get the descendents
+        descendents = HierarchyManager.descendants(zone) |> Repo.all(prefix: prefix)
+        new_path = parent.path ++ [parent.id]
+        # make this node child of new parent
+        head_cs = HierarchyManager.make_child_of(zone_cs, parent)
+        make_zone_changeset_and_update(head_cs, zone, descendents, new_path, prefix)
+    end
+  end
+
+  defp make_zone_changeset_and_update(head_cs, zone, descendents, new_path, prefix) do
+    # adjust the path (from old path to ne path )for all descendents
+    multi =
+      [
+        {zone.id, head_cs}
+        | Enum.map(descendents, fn d ->
+            {_, rest} = Enum.split_while(d.path, fn e -> e != zone.id end)
+            {d.id, Zone.changeset(d, %{}) |> change(%{path: new_path ++ rest})}
+          end)
+      ]
+      |> Enum.reduce(Multi.new(), fn {indx, cs}, multi ->
+        Multi.update(multi, :"zone#{indx}", cs, prefix: prefix)
+      end)
+
+    case Repo.transaction(multi, prefix: prefix) do
+      {:ok, zn} -> {:ok, Map.get(zn, :"zone#{zone.id}")}
+      _ -> {:error, head_cs}
+    end
+  end
+
+
+    def delete_zone(%Zone{} = zone, prefix) do
+    # Deletes the zone and children forcibly
+    # TBD: do not allow delete if this zone is linked to some other record(s)
+    # Add that validation here....
+    HierarchyManager.subtree(zone)
+    |> Repo.delete_all(prefix: prefix)
+  end
+
+  def change_zone(%Zone{} = zone, attrs \\ %{}) do
+    Zone.changeset(zone, attrs)
+  end
 end
