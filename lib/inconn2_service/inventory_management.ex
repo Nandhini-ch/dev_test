@@ -264,12 +264,13 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def get_inventory_item!(id, prefix) do
-      Repo.get!(InventoryItem, id, prefix: prefix)
-      |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
-      |> Repo.preload([:consume_unit_of_measurement, :uom_category])
-      |> Repo.preload(stocks: :store)
-      |> preload_asset_categories(prefix)
-      |> preload_stocked_quantity_for_item(nil)
+    IO.inspect(prefix)
+    Repo.get!(InventoryItem, id, prefix: prefix)
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
+    |> Repo.preload([:consume_unit_of_measurement, :uom_category])
+    |> Repo.preload(stocks: :store)
+    |> preload_asset_categories(prefix)
+    |> preload_stocked_quantity_for_item(nil)
   end
 
   def create_inventory_item(attrs \\ %{}, prefix) do
@@ -625,7 +626,7 @@ defmodule Inconn2Service.InventoryManagement do
   defp check_for_approval_flow(cs, prefix) do
     is_transaction_approval_required = get_field(cs, :is_approval_required, nil)
     approver_user_id = get_field(cs, :approver_user_id, nil)
-    item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix: prefix)
+    item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix)
 
     cond do
       is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approver_user_id})
