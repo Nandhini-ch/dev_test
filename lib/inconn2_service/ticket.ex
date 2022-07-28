@@ -29,9 +29,9 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkrequestCategory, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
   end
 
-  def list_workrequest_categories(query_params, prefix) do
+  def list_workrequest_categories(_query_params, prefix) do
     WorkrequestCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -84,7 +84,7 @@ defmodule Inconn2Service.Ticket do
 
     case result do
       {:ok, workrequest_category} ->
-        push_alert_notification_for_ticket_category(workrequest_category, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_category, prefix)
         {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
       _ -> result
     end
@@ -1104,7 +1104,7 @@ defmodule Inconn2Service.Ticket do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workrequest_subcategory} ->
-        push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
         {:ok, workrequest_subcategory }
       _ -> result
     end
@@ -1261,11 +1261,12 @@ defmodule Inconn2Service.Ticket do
 
   defp create_ticket_alert_notification(alert_code, description, updated_work_request, action_for, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_work_request.site_id, prefix)
     attrs = %{
       "alert_notification_id" => alert.id,
       "type" => alert.type,
-      "description" => description
+      "description" => description,
+      "site_id" => alert_config.site_id
     }
 
     config_user_ids =

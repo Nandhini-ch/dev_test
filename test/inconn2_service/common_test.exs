@@ -331,4 +331,69 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_alert_notification_generator(alert_notification_generator)
     end
   end
+
+  describe "alert_notification_schedulers" do
+    alias Inconn2Service.Common.AlertNotificationScheduler
+
+    @valid_attrs %{alert_code: "some alert_code", alert_identifier_date_time: ~N[2010-04-17 14:00:00], escalation_at_date_time: ~N[2010-04-17 14:00:00], site_id: 42}
+    @update_attrs %{alert_code: "some updated alert_code", alert_identifier_date_time: ~N[2011-05-18 15:01:01], escalation_at_date_time: ~N[2011-05-18 15:01:01], site_id: 43}
+    @invalid_attrs %{alert_code: nil, alert_identifier_date_time: nil, escalation_at_date_time: nil, site_id: nil}
+
+    def alert_notification_scheduler_fixture(attrs \\ %{}) do
+      {:ok, alert_notification_scheduler} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_alert_notification_scheduler()
+
+      alert_notification_scheduler
+    end
+
+    test "list_alert_notification_schedulers/0 returns all alert_notification_schedulers" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert Common.list_alert_notification_schedulers() == [alert_notification_scheduler]
+    end
+
+    test "get_alert_notification_scheduler!/1 returns the alert_notification_scheduler with given id" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert Common.get_alert_notification_scheduler!(alert_notification_scheduler.id) == alert_notification_scheduler
+    end
+
+    test "create_alert_notification_scheduler/1 with valid data creates a alert_notification_scheduler" do
+      assert {:ok, %AlertNotificationScheduler{} = alert_notification_scheduler} = Common.create_alert_notification_scheduler(@valid_attrs)
+      assert alert_notification_scheduler.alert_code == "some alert_code"
+      assert alert_notification_scheduler.alert_identifier_date_time == ~N[2010-04-17 14:00:00]
+      assert alert_notification_scheduler.escalation_at_date_time == ~N[2010-04-17 14:00:00]
+      assert alert_notification_scheduler.site_id == 42
+    end
+
+    test "create_alert_notification_scheduler/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_alert_notification_scheduler(@invalid_attrs)
+    end
+
+    test "update_alert_notification_scheduler/2 with valid data updates the alert_notification_scheduler" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:ok, %AlertNotificationScheduler{} = alert_notification_scheduler} = Common.update_alert_notification_scheduler(alert_notification_scheduler, @update_attrs)
+      assert alert_notification_scheduler.alert_code == "some updated alert_code"
+      assert alert_notification_scheduler.alert_identifier_date_time == ~N[2011-05-18 15:01:01]
+      assert alert_notification_scheduler.escalation_at_date_time == ~N[2011-05-18 15:01:01]
+      assert alert_notification_scheduler.site_id == 43
+    end
+
+    test "update_alert_notification_scheduler/2 with invalid data returns error changeset" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_alert_notification_scheduler(alert_notification_scheduler, @invalid_attrs)
+      assert alert_notification_scheduler == Common.get_alert_notification_scheduler!(alert_notification_scheduler.id)
+    end
+
+    test "delete_alert_notification_scheduler/1 deletes the alert_notification_scheduler" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:ok, %AlertNotificationScheduler{}} = Common.delete_alert_notification_scheduler(alert_notification_scheduler)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_alert_notification_scheduler!(alert_notification_scheduler.id) end
+    end
+
+    test "change_alert_notification_scheduler/1 returns a alert_notification_scheduler changeset" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert %Ecto.Changeset{} = Common.change_alert_notification_scheduler(alert_notification_scheduler)
+    end
+  end
 end

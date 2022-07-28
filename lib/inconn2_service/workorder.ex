@@ -53,7 +53,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_template} ->
         push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
-
+        {:ok, updated_template}
       _ ->
         result
     end
@@ -247,7 +247,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_template} ->
         push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
-
+        {:ok, updated_template}
       _ ->
         result
     end
@@ -260,7 +260,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def push_alert_notification_for_workorder_template(updated_template, prefix, "new", _user) do
-    description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix)})
+    description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix).name})
     create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
   end
 
@@ -272,7 +272,8 @@ defmodule Inconn2Service.Workorder do
   def create_notification_for_workorder_template(alert_code, description, updated_template, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-
+    user_ids = Enum.map(alert_config, fn ac -> ac.addressed_to_user_ids end) |> List.flatten() |> Enum.uniq()
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
         {:ok, updated_template}
@@ -280,10 +281,11 @@ defmodule Inconn2Service.Workorder do
       _ ->
         attrs = %{
           "alert_notification_id" => alert.id,
+          "alert_identifier_date_time" => alert_identifier_date_time,
           "type" => alert.type,
-          "description" => description
+          "description" => description,
         }
-        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+        Enum.map(user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
         {:ok, updated_template}
@@ -311,9 +313,9 @@ defmodule Inconn2Service.Workorder do
     |> Repo.preload(:workorder_template)
   end
 
-  def list_workorder_schedules(query_params, prefix) do
+  def list_workorder_schedules(_query_params, prefix) do
     WorkorderSchedule
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:workorder_template)
   end
@@ -495,7 +497,8 @@ defmodule Inconn2Service.Workorder do
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-
+    user_ids = Stream.map(alert_config, fn ac -> ac.addressed_to_user_ids end) |> List.flatten() |> Enum.uniq()
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
         {:ok, updated_schedule}
@@ -504,11 +507,20 @@ defmodule Inconn2Service.Workorder do
         attrs = %{
           "alert_notification_id" => alert.id,
           "type" => alert.type,
-          "description" => description
+          "description" => description,
+          "alert_identifier_date_time" => alert_identifier_date_time,
         }
-        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+        Enum.map(user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        if alert_config.is_escalation_required do
+          Common.create_alert_notification_scheduler(%{
+            "alert_code" => alert.code,
+            "alert_identifier_date_time" => alert_identifier_date_time,
+            "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+            "prefix" => prefix
+          })
+        end
         {:ok, updated_schedule}
     end
   end
@@ -1297,14 +1309,15 @@ defmodule Inconn2Service.Workorder do
 
   def create_work_order_alert_notification(alert_code, _existing_work_order, updated_work_order, description, action_for, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_work_order.site_id, prefix)
     {asset, workorder_template}  = get_asset_from_work_order(updated_work_order, prefix)
     attrs = %{
       "alert_notification_id" => alert.id,
       "asset_id" => asset.id,
       "asset_type" => workorder_template.asset_type,
       "type" => alert.type,
-      "description" => description
+      "description" => description,
+      "site_id" => updated_work_order.site_id
     }
 
     config_user_ids =

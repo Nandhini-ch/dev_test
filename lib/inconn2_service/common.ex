@@ -486,6 +486,9 @@ defmodule Inconn2Service.Common do
 
   def get_alert_by_code(code), do: Repo.get_by(AlertNotificationReserve, [code: code])
 
+  def get_alert_by_code_and_site_id(code, site_id), do: Repo.get_by(AlertNotificationReserve, [code: code])
+
+
   @doc """
   Creates a alert_notification_reserve.
 
@@ -649,5 +652,101 @@ defmodule Inconn2Service.Common do
   """
   def change_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs \\ %{}) do
     AlertNotificationGenerator.changeset(alert_notification_generator, attrs)
+  end
+
+  alias Inconn2Service.Common.AlertNotificationScheduler
+
+  @doc """
+  Returns the list of alert_notification_schedulers.
+
+  ## Examples
+
+      iex> list_alert_notification_schedulers()
+      [%AlertNotificationScheduler{}, ...]
+
+  """
+  def list_alert_notification_schedulers do
+    Repo.all(AlertNotificationScheduler)
+  end
+
+  @doc """
+  Gets a single alert_notification_scheduler.
+
+  Raises `Ecto.NoResultsError` if the Alert notification scheduler does not exist.
+
+  ## Examples
+
+      iex> get_alert_notification_scheduler!(123)
+      %AlertNotificationScheduler{}
+
+      iex> get_alert_notification_scheduler!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_alert_notification_scheduler!(id), do: Repo.get!(AlertNotificationScheduler, id)
+
+  @doc """
+  Creates a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> create_alert_notification_scheduler(%{field: value})
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> create_alert_notification_scheduler(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_alert_notification_scheduler(attrs \\ %{}) do
+    %AlertNotificationScheduler{}
+    |> AlertNotificationScheduler.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: new_value})
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs) do
+    alert_notification_scheduler
+    |> AlertNotificationScheduler.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler) do
+    Repo.delete(alert_notification_scheduler)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking alert_notification_scheduler changes.
+
+  ## Examples
+
+      iex> change_alert_notification_scheduler(alert_notification_scheduler)
+      %Ecto.Changeset{data: %AlertNotificationScheduler{}}
+
+  """
+  def change_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs \\ %{}) do
+    AlertNotificationScheduler.changeset(alert_notification_scheduler, attrs)
   end
 end
