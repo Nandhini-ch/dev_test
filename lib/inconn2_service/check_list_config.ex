@@ -1,6 +1,10 @@
 defmodule Inconn2Service.CheckListConfig do
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  # import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
+
   alias Inconn2Service.Repo
   alias Inconn2Service.CheckListConfig.{Check, CheckList, CheckType}
 
@@ -33,10 +37,8 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   #Context function for Check
-  def list_checks(%{}, prefix), do: Repo.all(Repo.add_active_filter(Check), prefix: prefix) |> Repo.preload(:check_type)
-
-  def list_checks(%{"check_type_id" => check_type_id}, prefix) do
-    from(c in Check, where: c.check_type_id == ^ check_type_id and c.active) |> Repo.all(prefix: prefix) |> Repo.preload(:check_type)
+  def list_checks(query_params, prefix) do
+    check_query(Check, query_params) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
   end
 
   def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix) |> Repo.preload(:check_type)
