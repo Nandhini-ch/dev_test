@@ -271,11 +271,12 @@ defmodule Inconn2Service.Workorder do
 
   def create_notification_for_workorder_template(alert_code, description, updated_template, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-    user_ids = Enum.map(alert_config, fn ac -> ac.addressed_to_user_ids end) |> List.flatten() |> Enum.uniq()
+    alert_configs = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    # site_ids = Enum.map(alert_configs, fn ac -> ac.site_id end)
+    user_ids = Enum.map(alert_configs, fn ac -> ac.addressed_to_user_ids end) |> List.flatten() |> Enum.uniq()
     alert_identifier_date_time = NaiveDateTime.utc_now()
-    case alert_config do
-      nil ->
+    case length(alert_configs) do
+      0 ->
         {:ok, updated_template}
 
       _ ->
@@ -496,8 +497,8 @@ defmodule Inconn2Service.Workorder do
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-    user_ids = Stream.map(alert_config, fn ac -> ac.addressed_to_user_ids end) |> List.flatten() |> Enum.uniq()
+    asset = get_asset_from_workorder_schedule(updated_schedule, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, asset.site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
@@ -510,17 +511,9 @@ defmodule Inconn2Service.Workorder do
           "description" => description,
           "alert_identifier_date_time" => alert_identifier_date_time,
         }
-        Enum.map(user_ids, fn id ->
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
-        if alert_config.is_escalation_required do
-          Common.create_alert_notification_scheduler(%{
-            "alert_code" => alert.code,
-            "alert_identifier_date_time" => alert_identifier_date_time,
-            "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-            "prefix" => prefix
-          })
-        end
         {:ok, updated_schedule}
     end
   end
@@ -1311,13 +1304,15 @@ defmodule Inconn2Service.Workorder do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_work_order.site_id, prefix)
     {asset, workorder_template}  = get_asset_from_work_order(updated_work_order, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     attrs = %{
       "alert_notification_id" => alert.id,
       "asset_id" => asset.id,
       "asset_type" => workorder_template.asset_type,
       "type" => alert.type,
       "description" => description,
-      "site_id" => updated_work_order.site_id
+      "site_id" => updated_work_order.site_id,
+      "alert_identifier_date_time" => alert_identifier_date_time
     }
 
     config_user_ids =
@@ -1398,6 +1393,15 @@ defmodule Inconn2Service.Workorder do
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
+    if alert.type == "al" and alert_config.is_escalation_required do
+      Common.create_alert_notification_scheduler(%{
+        "alert_code" => alert.code,
+        "alert_identifier_date_time" => alert_identifier_date_time,
+        "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+        "site_id" => updated_work_order.site_id,
+        "prefix" => prefix
+      })
+      end
   end
 
   def get_asset_from_work_order(work_order, prefix) do
