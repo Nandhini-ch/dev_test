@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.EmployeeRosterView do
 
   def render("employee_roster.json", %{employee_roster: employee_roster}) do
     %{id: employee_roster.id,
-      employee: render_one(employee_roster.employee, EmployeeView, "employee.json"),
+      employee: render_one(employee_roster.employee, EmployeeView, "employee_with_org_unit_only.json"),
       site: render_one(employee_roster.site, SiteView, "site.json"),
       shift: render_one(employee_roster.shift, ShiftView, "shift.json"),
       start_date: employee_roster.start_date,
