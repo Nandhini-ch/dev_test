@@ -4,8 +4,9 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.Repo
   alias Inconn2Service.InventoryManagement.Store
+  alias  Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.AssetConfig.{Equipment, Location}
-
+  alias Inconn2Service.Util.HierarchyManager
 
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(EmployeeRoster,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
@@ -14,6 +15,15 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_store?(%Site{} = site, prefix), do: (store_query(Store,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_equipment?(%Site{} = site, prefix), do: (equipment_query(Equipment,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_equipment?(%AssetCategory{} = asset_category, prefix) do
+    descendant_asset_category_ids = HierarchyManager.descendants(asset_category) |> Enum.map(fn a -> a.id end)
+    (equipment_query(Equipment,%{"asset_category_ids" => descendant_asset_category_ids}) |> Repo.all(prefix: prefix) |> length()) > 0
+  end
+
+  def has_descendants?(resource, prefix), do: (HierarchyManager.descendants(resource) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_location?(%AssetCategory{} = asset_category, prefix), do: (location_query(Location,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_workorder_template(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(WorkorderTemplate,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 end

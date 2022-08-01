@@ -39,12 +39,21 @@ defmodule Inconn2Service.Util.IndexQueries do
   def equipment_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+    {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+    {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
     _, query -> query end)
   end
 
   def location_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+    {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+    _, query -> query end)
+  end
+
+  def workorder_template_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+    {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
     _, query -> query end)
   end
 

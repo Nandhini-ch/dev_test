@@ -66,8 +66,6 @@ defmodule Inconn2ServiceWeb.Router do
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
-    put "/asset_categories/:id/deactivate", AssetCategoryController, :deactivate_asset_category
-    put "/asset_categories/:id/activate", AssetCategoryController, :activate_asset_category
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
