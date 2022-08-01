@@ -15,6 +15,8 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_store?(%Site{} = site, prefix), do: (store_query(Store,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_equipment?(%Site{} = site, prefix), do: (equipment_query(Equipment,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_equipment?(%Location{} = location, prefix), do: (equipment_query(Equipment,%{"location_id" => location.id}) |>Repo.all(prefix: prefix) |> length()) > 0
+
   def has_equipment?(%AssetCategory{} = asset_category, prefix) do
     descendant_asset_category_ids = HierarchyManager.descendants(asset_category) |> Enum.map(fn a -> a.id end)
     (equipment_query(Equipment,%{"asset_category_ids" => descendant_asset_category_ids}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -24,6 +26,10 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_location?(%AssetCategory{} = asset_category, prefix), do: (location_query(Location,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workorder_template(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(WorkorderTemplate,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_workorder_schedule(%Location{} = location, prefix), do: (workorder_schedule_query(WorkorderSchedule,%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_schedule(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(WorkorderSchedule,%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
 end
