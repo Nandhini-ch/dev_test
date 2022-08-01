@@ -7,6 +7,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   # alias Inconn2Service.Assignment.EmployeeRoster
   # alias Inconn2Service.Settings.Shift
   #alias Inconn2Service.InventoryManagement.Store
+  #alias Inconn2Service.AssetConfig.{Site, Zone}
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
