@@ -66,6 +66,13 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> query end)
   end
 
+  def check_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"check_type_id", check_type_id}, query -> from q in query, where: q.check_type_id == ^check_type_id
+     _, query -> query
+   end)
+  end
+
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
                     |> HierarchyManager.subtree()
@@ -73,10 +80,4 @@ defmodule Inconn2Service.Util.IndexQueries do
     from(q in subtree_query, select: q.id)
     |> Repo.all(prefix: prefix)
   end
-
-  #nandini
-
-  #esthar
-
-
 end

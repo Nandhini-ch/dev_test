@@ -439,7 +439,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
     cond do
-      has_workorder_template(asset_category, prefix) ->
+      has_workorder_template?(asset_category, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as there are Workorder template associated with it"}
 
