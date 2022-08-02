@@ -354,7 +354,13 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp add_or_change_asset_type(attrs, asset_category, prefix) do
-    parent = HierarchyManager.parent(asset_category) |> Repo.one(prefix: prefix)
+    parent_query = HierarchyManager.parent(asset_category)
+
+    parent =
+      case parent_query do
+       nil -> nil
+       query -> query |> Repo.one(prefix: prefix)
+      end
 
     if parent != nil do
       Map.put(attrs, "asset_type", parent.asset_type)
