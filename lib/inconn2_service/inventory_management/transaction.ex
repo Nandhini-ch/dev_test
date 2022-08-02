@@ -76,8 +76,8 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
 
   defp validate_fields_based_on_transaction_type(cs) do
     case get_field(cs, :transaction_type, nil) do
-      "IN" -> validate_required(cs, [:unit_price, :inventory_supplier_id])
-      "IS" -> validate_required(cs, [:transaction_user_id, :dc_no])
+      "IN" -> validate_required(cs, [:unit_price, :inventory_supplier_id, :dc_no])
+      "IS" -> validate_required(cs, [:transaction_user_id])
     end
   end
 end

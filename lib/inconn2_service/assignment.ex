@@ -138,6 +138,17 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
+  def list_sites_for_employee(nil, _prefix), do: []
+  def list_sites_for_employee(employee, prefix) do
+    from(er in EmployeeRoster,
+        where: er.employee_id == ^employee.id,
+        join: s in Site, on: er.site_id == s.id,
+        select: s
+    )
+    |> Repo.all(prefix: prefix)
+    |> Enum.uniq()
+  end
+
   defp convert_shift_times_to_datetimes(shift_id, prefix) do
     shift = Settings.get_shift!(shift_id, prefix)
     date = get_site_date(shift.site_id, prefix)

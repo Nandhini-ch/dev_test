@@ -115,7 +115,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   end
 
   def download_checks(prefix) do
-    check = CheckListConfig.list_checks(prefix)
+    check = CheckListConfig.list_checks(%{}, prefix)
 
     header = [["id", "reference", "Label", "Type"]]
 

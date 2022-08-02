@@ -36,6 +36,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
     get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
 
+    post "/users/forgot_password", UserController, :forgot_password
+    post "/users/confirm_otp", UserController, :confirm_otp
+    post "/users/reset_password", UserController, :reset_password
+
     scope "/external_ticket" do
 
       get "/workrequest_categories", ExternalTicketController, :index_categories
@@ -203,9 +207,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
-    post "/users/forgot_password", UserController, :forgot_password
-    post "/users/confirm_otp", UserController, :confirm_otp
-    post "/users/reset_password", UserController, :reset_password
     resources "/users", UserController, except: [:new, :edit]
     put "/users/:id/change_password", UserController, :change_password
     put "/users/:id/activate", UserController, :activate_user
@@ -224,6 +225,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
 
     get "/sessions/current_user", SessionController, :current_user
+    get "/sessions/my_profile", SessionController, :my_profile
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     get "/workrequest_categories_with_helpdesk_user", WorkrequestCategoryController, :index_with_helpdesk_user
@@ -411,5 +413,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
     resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
+    resources "/zones", ZoneController, except: [:new, :edit]
+    get "/zones_tree", ZoneController, :tree
   end
 end

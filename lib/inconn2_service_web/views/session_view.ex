@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.SessionView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{LicenseeView, RoleView}
+  alias Inconn2ServiceWeb.{LicenseeView, RoleView, AssetCategoryView, SiteView}
 
   def render("success.json", %{token: token}) do
     %{
@@ -29,6 +29,19 @@ defmodule Inconn2ServiceWeb.SessionView do
         is_licensee: party.licensee,
         licensee: render_one(licensee, LicenseeView, "licensee.json"),
         role: render_one(role, RoleView, "role.json")
+      }
+    }
+  end
+
+  def render("my_profile.json", %{my_profile: my_profile}) do
+    %{
+      data: %{
+        id: my_profile.id,
+        name: my_profile.name,
+        mobile_no: my_profile.mobile_no,
+        role: my_profile.role.name,
+        skills: render_many(my_profile.skills, AssetCategoryView, "asset_category.json"),
+        sites: render_many(my_profile.sites, SiteView, "site.json")
       }
     }
   end
