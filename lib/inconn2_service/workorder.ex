@@ -1336,6 +1336,7 @@ defmodule Inconn2Service.Workorder do
       "workpermit_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "loto_required" ->
@@ -1346,6 +1347,7 @@ defmodule Inconn2Service.Workorder do
       "loto_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "work_order_approval_required" ->
@@ -1356,6 +1358,7 @@ defmodule Inconn2Service.Workorder do
       "work_order_approved" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "work_order_acknowledge_pending" ->
@@ -1366,16 +1369,19 @@ defmodule Inconn2Service.Workorder do
       "work_order_acknowledged" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "work_order_hold" ->
         Enum.map(config_user_ids ++ config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "work_order_cancelled" ->
         Enum.map(config_user_ids ++ [updated_work_order.user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          send_email_alert_for_work_order(id, description, prefix)
         end)
 
       "work_order_rescheduled" ->
@@ -1402,6 +1408,17 @@ defmodule Inconn2Service.Workorder do
         "prefix" => prefix
       })
       end
+  end
+
+  def send_email_alert_for_work_order(id, description, prefix) do
+    user = Inconn2Service.Staff.get_user!(id, prefix)
+    cond do
+      !is_nil(user) ->
+        Inconn2Service.Email.send_alert_email(user, description)
+
+      true ->
+        IO.inspect("No User Found")
+    end
   end
 
   def get_asset_from_work_order(work_order, prefix) do
