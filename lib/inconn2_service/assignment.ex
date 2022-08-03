@@ -135,6 +135,7 @@ defmodule Inconn2Service.Assignment do
                 select: s
             )
             |> Repo.all(prefix: prefix)
+            |> Enum.uniq()
     end
   end
 
