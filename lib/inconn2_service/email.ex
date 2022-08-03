@@ -1,12 +1,12 @@
 defmodule Inconn2Service.Email do
   import Swoosh.Email
 
-  def send_ticket_complete_email(id, email, name, prefix) do
+  def send_ticket_complete_email(id, email, name, remarks, date_time, prefix) do
     new()
     |> to({name, email})
     |> from({"Inconn Support", "info@inconn.com"})
     |> subject("Update on Ticket #{id}")
-    |> text_body(external_ticket_complete_ack(id, name, prefix))
+    |> text_body(external_ticket_complete_ack(id, name, remarks, date_time, prefix))
     |> Inconn2Service.Mailer.deliver!()
   end
 
@@ -19,42 +19,43 @@ defmodule Inconn2Service.Email do
     |> Inconn2Service.Mailer.deliver!()
   end
 
-  def external_ticket_reg_ack(id, name) do
+  def external_ticket_reg_ack(id, _name) do
     """
-       Hi #{name},
+       Dear Customer,
 
-       Your Ticket with number #{id} has been registered
+       Thank you for using InConn
+       Your concern is registered with ticket number #{id}
+       Kindly check your email for updates.
 
         Thank You,
-        Regards
-
-
-      NOTE: This is a system generated email, Please do not reply to this mail
-
-    """
-  end
-
-  def external_ticket_complete_ack(id, name, prefix) do
-    "inc_" <> sub_domain = prefix
-    """
-       Hi #{name},
-
-       Your Ticket with number #{id} has been resolved
-
-
-        click here to acknowledge -
-        https://#{sub_domain}.inconn.io/closedresponse?work_request_id=#{id}
-
-        click here to reopen -
-        https://#{sub_domain}.inconn.io/ticketreopening?ticketId=#{id}
-
-        Thank You,
-
         Regards
         Inconn Team
 
-      NOTE: This is a system generated email, Please do not reply to this mail
 
+        Kindly note that this is a system generated E-mail and this ID is not monitored, Please do not reply
+    """
+  end
+
+  def external_ticket_complete_ack(id, _name, remarks, date_time, prefix) do
+    "inc_" <> sub_domain = prefix
+    """
+       Dear Customer,
+
+       Your Ticket with number #{id} has been resolved at #{date_time} and with below remarks
+
+       #{remarks}
+
+        Please click here to acknowledge your issue resolution -
+        https://#{sub_domain}.inconn.io/closedresponse?work_request_id=#{id}
+
+        If you are not happy with the solution offered, please click here to reopen -
+        https://#{sub_domain}.inconn.io/ticketreopening?ticketId=#{id}
+
+        Thank You,
+        Regards
+        Inconn Team
+
+        Kindly note that this is a system generated E-mail and this ID is not monitored, Please do not reply
     """
   end
 end

@@ -359,6 +359,9 @@ defmodule Inconn2Service.Report do
 
         raised_by =
           cond do
+            wr.is_external_ticket && !is_nil(wr.external_name) ->
+              wr.external_name
+
             wr.requested_user != nil && wr.requested_user.employee != nil ->
               wr.requested_user.employee.first_name <> " " <> wr.requested_user.employee.last_name
 
@@ -434,6 +437,7 @@ defmodule Inconn2Service.Report do
         %{
           asset_name: asset_name,
           asset_category: asset_category,
+          ticket_type: (if wr.is_external_ticket do "External" else "Internal" end),
           ticket_category: workrequest_category,
           raised_by: raised_by,
           assigned_to: assigned_to,
@@ -446,7 +450,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Date", "Time", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
+    report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1167,6 +1171,16 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.ticket_type
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.ticket_category
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.asset_category
         ],
         [
@@ -1379,8 +1393,8 @@ defmodule Inconn2Service.Report do
       "AP" -> "Approved"
       "AS" -> "Assigned"
       "RJ" -> "Rejected"
-      "CL" -> "Closed"
-      "CS" -> "Cancelled"
+      "CL" -> "Cancelled"
+      "CS" -> "Closed"
       "CP" -> "Completed"
       "ROP" -> "Reopened"
     end
