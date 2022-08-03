@@ -1350,7 +1350,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workrequest_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.date, d.time, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
+        [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
 
     [report_headers] ++ body
