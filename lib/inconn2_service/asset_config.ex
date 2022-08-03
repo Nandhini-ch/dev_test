@@ -1274,78 +1274,78 @@ defmodule Inconn2Service.AssetConfig do
     {:ok, updated_asset}
   end
 
-  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
-    alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-    alert_identifier_date_time = NaiveDateTime.utc_now()
-    case alert_config do
-      nil ->
-        {:not_found, "Alert Not Configured"}
-
-      _ ->
-        attrs = %{
-          "alert_notification_id" => alert.id,
-          "asset_id" => nil,
-          "asset_type" => asset_type,
-          "type" => alert.type,
-          "site_id" => site_id,
-          "alert_identifier_date_time" => alert_identifier_date_time,
-          "description" => description
-        }
-
-        Enum.map(alert_config.user_ids, fn id ->
-          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
-          if email_required do
-            user = Inconn2Service.Staff.get_user!(id, prefix)
-            Inconn2Service.Email.send_alert_email(user, description)
-          end
-        end)
-
-       if alert.type == "al" and alert_config.is_escalation_required do
-        Common.create_alert_notification_scheduler(%{
-          "alert_code" => alert.code,
-          "alert_identifier_date_time" => alert_identifier_date_time,
-          "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-          "site_id" => site_id,
-          "prefix" => prefix
-        })
-       end
-    end
-  end
-
-  # defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, prefix) do
-  #   alert = Common.get_alert_by_code(alert_code)
-  #   alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
+  # defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
+  #   alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
+  #   alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
   #   alert_identifier_date_time = NaiveDateTime.utc_now()
   #   case alert_config do
   #     nil ->
-  #       {:ok, updated_asset}
+  #       {:not_found, "Alert Not Configured"}
 
   #     _ ->
   #       attrs = %{
   #         "alert_notification_id" => alert.id,
-  #         "asset_id" => updated_asset.id,
+  #         "asset_id" => nil,
   #         "asset_type" => asset_type,
   #         "type" => alert.type,
+  #         "site_id" => site_id,
   #         "alert_identifier_date_time" => alert_identifier_date_time,
-  #         "description" => description,
-  #         "site_id" => alert_config.site_id
+  #         "description" => description
   #       }
 
-  #       Enum.map(alert_config.addressed_to_user_ids, fn id ->
+  #       Enum.map(alert_config.user_ids, fn id ->
   #         Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+  #         if email_required do
+  #           user = Inconn2Service.Staff.get_user!(id, prefix)
+  #           Inconn2Service.Email.send_alert_email(user, description)
+  #         end
   #       end)
 
-  #       if alert.type == "al" and alert_config.is_escalation_required do
-  #         Common.create_alert_notification_scheduler(%{
-  #           "alert_code" => alert.code,
-  #           "alert_identifier_date_time" => alert_identifier_date_time,
-  #           "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-  #           "prefix" => prefix
-  #         })
-  #       end
+  #      if alert.type == "al" and alert_config.is_escalation_required do
+  #       Common.create_alert_notification_scheduler(%{
+  #         "alert_code" => alert.code,
+  #         "alert_identifier_date_time" => alert_identifier_date_time,
+  #         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+  #         "site_id" => site_id,
+  #         "prefix" => prefix
+  #       })
+  #      end
   #   end
   # end
+
+  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, email_required, prefix) do
+    alert = Common.get_alert_by_code(alert_code)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
+    case alert_config do
+      nil ->
+        {:ok, updated_asset}
+
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "asset_id" => updated_asset.id,
+          "asset_type" => asset_type,
+          "type" => alert.type,
+          "alert_identifier_date_time" => alert_identifier_date_time,
+          "description" => description,
+          "site_id" => alert_config.site_id
+        }
+
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+        end)
+
+        if alert.type == "al" and alert_config.is_escalation_required do
+          Common.create_alert_notification_scheduler(%{
+            "alert_code" => alert.code,
+            "alert_identifier_date_time" => alert_identifier_date_time,
+            "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+            "prefix" => prefix
+          })
+        end
+    end
+  end
 
 
   def get_asset_from_qr_code(qr_code, prefix) do

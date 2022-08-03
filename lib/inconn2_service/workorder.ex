@@ -465,6 +465,7 @@ defmodule Inconn2Service.Workorder do
               |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
+              |> validate_date_and_for_schedule_resume()
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
@@ -486,6 +487,20 @@ defmodule Inconn2Service.Workorder do
           end
       _ ->
         result
+    end
+  end
+
+  defp validate_date_and_for_schedule_resume(cs) do
+    is_paused = get_change(cs, :is_paused)
+    next_occurrence_date = get_change(cs, :next_occurrence_date)
+    next_occurrence_time = get_change(cs, :next_occurrence_time)
+    cond do
+      !is_nil(is_paused) && is_paused == true && is_nil(next_occurrence_date) && is_nil(next_occurrence_time) ->
+        add_error(cs, :next_occurrence_date, "Please enter the next occurrence date")
+        |> add_error(:next_occurrence_time, "Please enter next occurrnece time")
+
+      true ->
+        cs
     end
   end
 
