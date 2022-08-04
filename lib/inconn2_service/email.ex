@@ -19,14 +19,38 @@ defmodule Inconn2Service.Email do
     |> Inconn2Service.Mailer.deliver!()
   end
 
+  def send_alert_email(user, description) do
+    new()
+    |> to({user.employee.first_name, user.email})
+    |> from({"Inconn Support", "info@inconn.com"})
+    |> subject("Inconn Alerts and Notifications")
+    |> text_body(alert_text(user, description))
+    |> Inconn2Service.Mailer.deliver!()
+  end
+
+  def alert_text(user, description) do
+    """
+      Hi #{user.employee.first_name} #{user.employee.last_name}
+
+      #{description}
+
+      Thank You.
+
+      Regards,
+      Inconn Team
+
+      NOTE: This is a system generated email, Please do not reply to this mail
+    """
+  end
+
   def external_ticket_reg_ack(id, name) do
     """
        Hi #{name},
 
        Your Ticket with number #{id} has been registered
 
-        Thank You,
-        Regards
+      Thank You,
+      Regards
 
 
       NOTE: This is a system generated email, Please do not reply to this mail
@@ -48,12 +72,12 @@ defmodule Inconn2Service.Email do
         click here to reopen -
         https://#{sub_domain}.inconn.io/ticketreopening?ticketId=#{id}
 
-        Thank You,
+        Thank You.
 
-        Regards
+        Regards,
         Inconn Team
 
-      NOTE: This is a system generated email, Please do not reply to this mail
+        NOTE: This is a system generated email, Please do not reply to this mail
 
     """
   end

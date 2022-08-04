@@ -304,7 +304,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-
   def update_asset_category(%AssetCategory{} = asset_category, attrs, prefix) do
     existing_parent_id = HierarchyManager.parent_id(asset_category)
 
@@ -323,25 +322,25 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
-    case asset_params do
-      %{"active" => false} ->
-        children = HierarchyManager.children(asset_category)
-        IO.inspect(children)
-        Repo.update_all(children, [set: [active: false]], prefix: prefix)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> Repo.update(prefix: prefix)
+  # def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
+  #   case asset_params do
+  #     %{"active" => false} ->
+  #       children = HierarchyManager.children(asset_category)
+  #       IO.inspect(children)
+  #       Repo.update_all(children, [set: [active: false]], prefix: prefix)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> Repo.update(prefix: prefix)
 
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(asset_category)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
-        |> Repo.update(prefix: prefix)
-        |> update_children(prefix)
-    end
-  end
+  #     %{"active" => true} ->
+  #       parent_id = HierarchyManager.parent_id(asset_category)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
+  #       |> Repo.update(prefix: prefix)
+  #       |> update_children(prefix)
+  #   end
+  # end
 
   defp add_or_change_asset_type_new_parent(attrs, new_parent_id, prefix) do
     parent = Repo.get(AssetCategory, new_parent_id, prefix: prefix)
@@ -357,10 +356,9 @@ defmodule Inconn2Service.AssetConfig do
     parent_query = HierarchyManager.parent(asset_category)
 
     parent =
-      if parent_query != nil do
-        Repo.one(parent_query, prefix: prefix)
-      else
-        nil
+      case parent_query do
+       nil -> nil
+       query -> query |> Repo.one(prefix: prefix)
       end
 
     if parent != nil do
@@ -436,14 +434,40 @@ defmodule Inconn2Service.AssetConfig do
     |> AssetCategory.changeset(attrs)
   end
 
-  def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
-    # Deletes the asset_category and children forcibly
-    # TBD: do not allow delete if this asset_category is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(asset_category)
-    Repo.delete_all(subtree, prefix: prefix)
-  end
+  #FUnction commented because soft delete is implemented
+  # def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+  #   # Deletes the asset_category and children forcibly
+  #   # TBD: do not allow delete if this asset_category is linked to some other record(s)
+  #   # Add that validation here....
+  #   subtree = HierarchyManager.subtree(asset_category)
+  #   Repo.delete_all(subtree, prefix: prefix)
+  # end
 
+  def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+    cond do
+      has_workorder_template?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Workorder template associated with it"}
+
+      has_equipment?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Equipment associated with it"}
+
+      has_location?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Location associated with it"}
+
+      has_descendants?(asset_category, prefix) ->
+        {:could_not_delete,
+        "could not delete has descendants"}
+
+      true ->
+        # update_asset_category(asset_category, %{"active" => false}, prefix)
+        deactivate_children(asset_category, AssetCategory, prefix)
+        {:deleted,
+        "The site was disabled"}
+    end
+  end
 
   def change_asset_category(%AssetCategory{} = asset_category, attrs \\ %{}) do
     AssetCategory.changeset(asset_category, attrs)
@@ -454,6 +478,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_locations(site_id, prefix) do
     Location
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -465,6 +490,7 @@ defmodule Inconn2Service.AssetConfig do
       search_text = "%" <> name_text <> "%"
 
       from(l in Location, where: l.site_id == ^site_id and ilike(l.name, ^search_text), order_by: l.name)
+      |> Repo.add_active_filter()
       |> Repo.all(prefix: prefix)
     end
   end
@@ -741,7 +767,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
     case location_params do
       %{"active" => false} ->
-        deactivate_children(location, location_params, Location, prefix)
+        deactivate_children(location, Location, prefix)
 
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(location)
@@ -766,17 +792,41 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def delete_location(%Location{} = location, prefix) do
-    subtree = HierarchyManager.subtree(location)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(location, nil, "L", location.site_id,prefix)
-        result
-
-      _ ->
-        result
+    cond do
+      has_descendants?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this location"
+        }
+      has_equipment?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are equipments associated with this location"
+        }
+      has_workorder_schedule?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are workorder schedules associated with this location"
+        }
+      true ->
+        {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
+        push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix)
+        {:deleted, "Location was deleted"}
     end
   end
+
+  # def delete_location(%Location{} = location, prefix) do
+  #   subtree = HierarchyManager.subtree(location)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       # push_alert_notification_for_asset(location, nil, "L", location.site_id,prefix)
+  #       result
+
+  #     _ ->
+  #       result
+  #   end
+  # end
 
   def change_location(%Location{} = location, attrs \\ %{}) do
     Location.changeset(location, attrs)
@@ -786,6 +836,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments(site_id, prefix) do
     Equipment
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -1123,7 +1174,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_equipment(%Equipment{} = equipment, equipment_params, prefix) do
     case equipment_params do
       %{"active" => false} ->
-        deactivate_children(equipment, equipment_params, Equipment, prefix)
+        deactivate_children(equipment, Equipment, prefix)
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(equipment)
         handle_hierarchical_activation(equipment, equipment_params, Equipment, prefix, parent_id)
@@ -1209,19 +1260,39 @@ defmodule Inconn2Service.AssetConfig do
     |> Equipment.changeset(update_custom_fields(equipment, attrs))
   end
 
-
   def delete_equipment(%Equipment{} = equipment, prefix) do
-    subtree = HierarchyManager.subtree(equipment)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(equipment, nil, "E", prefix)
-        result
+    cond do
+      has_descendants?(equipment, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants associated with this equipment"
+        }
 
-      _ ->
-        result
+      has_workorder_schedule?(equipment, prefix) ->
+        {
+         :could_not_delete,
+         "Cannot be deleted as there are workorder schedule associated with this equipment"
+        }
+      true ->
+        {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
+        push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix)
+        {:deleted, "Equipment was deleted"}
     end
   end
+
+
+  # def delete_equipment(%Equipment{} = equipment, prefix) do
+  #   subtree = HierarchyManager.subtree(equipment)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       push_alert_notification_for_asset(equipment, nil, "E", prefix)
+  #       result
+
+  #     _ ->
+  #       result
+  #   end
+  # end
 
   def get_asset_by_type(asset_id, asset_type, prefix) do
     case asset_type do
@@ -1239,13 +1310,13 @@ defmodule Inconn2Service.AssetConfig do
 
   def push_alert_notification_for_asset(existing_asset, nil, asset_type, site_id, prefix) do
     description = ~s(#{existing_asset.name} has been deleted)
-    create_asset_alert_notification("ASRA", description, nil, asset_type, site_id, prefix)
+    create_asset_alert_notification("ASRA", description, nil, asset_type, site_id, false, prefix)
     {:ok, nil}
   end
 
   def push_alert_notification_for_asset(nil, updated_asset, asset_type, prefix) do
     description = ~s(New Asset, #{updated_asset.name} has been added)
-    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, prefix)
+    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
     {:ok, updated_asset}
   end
 
@@ -1253,20 +1324,20 @@ defmodule Inconn2Service.AssetConfig do
     cond do
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
         description = ~s(#{updated_asset.name}'s status has been changed to Breakdown)
-        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
 
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
         description = ~s(#{updated_asset.name}'s status has been changed to #{updated_asset.status})
-        create_asset_alert_notification("ASST", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASST", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
 
       existing_asset.parent_id != updated_asset.parent_id ->
         description = ~s(#{updated_asset.name}'s hierarchy has been changed)
-        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
       existing_asset != updated_asset ->
         description = ~s(#{updated_asset.name} has been modified)
-        create_asset_alert_notification("ASED", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASED", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
       true ->
         {:ok, updated_asset}
@@ -1275,9 +1346,9 @@ defmodule Inconn2Service.AssetConfig do
     {:ok, updated_asset}
   end
 
-  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, prefix) do
+  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
     alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
@@ -1294,8 +1365,12 @@ defmodule Inconn2Service.AssetConfig do
           "description" => description
         }
 
-        Enum.map(alert_config.user_ids, fn id ->
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          if email_required do
+            user = Inconn2Service.Staff.get_user!(id, prefix)
+            Inconn2Service.Email.send_alert_email(user, description)
+          end
         end)
 
        if alert.type == "al" and alert_config.is_escalation_required do
@@ -1310,7 +1385,7 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, prefix) do
+  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
@@ -1585,12 +1660,6 @@ defmodule Inconn2Service.AssetConfig do
     |> update_children(prefix)
   end
 
-  defp deactivate_children(resource, resource_params, module, prefix) do
-    descendants = HierarchyManager.descendants(resource)
-    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
-    resource |> module.changeset(resource_params) |> Repo.update(prefix: prefix)
-  end
-
   defp validate_parent_for_true_condition(cs, module, prefix, parent_id) do
     # parent_id = get_field(cs, :parent_id, nil)
     IO.inspect("Parent Id is #{parent_id}")
@@ -1787,8 +1856,9 @@ defmodule Inconn2Service.AssetConfig do
 
   defp validate_custom_field_type(cs, prefix, entity) do
     custom_field_values = get_field(cs, :custom, nil)
+    custom_fields_entry = Inconn2Service.Custom.get_custom_fields!(entity, prefix)
     cond do
-      !is_nil(custom_field_values) ->
+      !is_nil(custom_field_values) && !is_nil(custom_fields_entry) ->
         boolean_array =
           Stream.map(get_and_filter_required_type(custom_field_values, entity, prefix), fn e ->
             if check_type(custom_field_values[e.field_name], e.field_type) do true else {e.field_name, e.field_type} end
@@ -1802,6 +1872,8 @@ defmodule Inconn2Service.AssetConfig do
               |> Enum.join(",")
             add_error(cs, :custom, errors)
         end
+      !is_nil(custom_field_values) ->
+        add_error(cs, :custom, "Custom fields not configured")
       true -> cs
     end
   end
@@ -1870,6 +1942,13 @@ defmodule Inconn2Service.AssetConfig do
   defp get_and_filter_required_type(custom_field_values, entity, prefix) do
     entity_record = custom_field_for_entity_query(entity) |> Repo.one(prefix: prefix)
     Stream.filter(entity_record.fields, fn field ->  field.field_name in Map.keys(custom_field_values) end)
+  end
+
+
+  defp deactivate_children(resource, module, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
+    resource |> module.changeset(%{"active" => false}) |> Repo.update(prefix: prefix)
   end
 
   defp custom_field_for_entity_query(entity), do: from cf in CustomFields, where: cf.entity == ^entity

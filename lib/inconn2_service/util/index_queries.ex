@@ -7,6 +7,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   # alias Inconn2Service.Assignment.EmployeeRoster
   # alias Inconn2Service.Settings.Shift
   #alias Inconn2Service.InventoryManagement.Store
+  #alias Inconn2Service.AssetConfig.{Site, Zone}
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
@@ -41,14 +42,18 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   def equipment_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-      {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-      _, query -> query
+    {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+    {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+    {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
+    {"location_id", location_id}, query -> from q in query, where: q.location_id == ^location_id
+    _, query -> query
     end)
   end
 
   def location_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
       _, query -> query
     end)
   end
@@ -59,6 +64,20 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> query
     end)
   end
+
+  def workorder_template_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+    {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+    _, query -> query end)
+  end
+
+  def workorder_schedule_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"asset_id", asset_id}, query -> from q in query, where: q.asset_id == ^asset_id
+      {"asset_type", asset_type}, query -> from q in query, where: q.asset_type == ^asset_type
+      _, query -> query end)
+  end
+
 
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)

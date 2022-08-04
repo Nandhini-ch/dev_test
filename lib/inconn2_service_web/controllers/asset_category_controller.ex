@@ -58,27 +58,9 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
 
   def delete(conn, %{"id" => id}) do
     asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-    with {_, nil} <-
-           AssetConfig.delete_asset_category(asset_category, conn.assigns.sub_domain_prefix) do
+    with {:ok, _asset_category} <-
+      AssetConfig.delete_asset_category(asset_category, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
-    end
-  end
-
-  def deactivate_asset_category(conn, %{"id" => id}) do
-    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %AssetCategory{} = asset_category} <-
-           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", asset_category: asset_category)
-    end
-  end
-
-  def activate_asset_category(conn, %{"id" => id}) do
-    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %AssetCategory{} = asset_category} <-
-           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", asset_category: asset_category)
     end
   end
 end

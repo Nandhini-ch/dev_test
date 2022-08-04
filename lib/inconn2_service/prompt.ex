@@ -254,7 +254,7 @@ defmodule Inconn2Service.Prompt do
     description = ~s(Workorder for #{asset.name} is overdue by 10 mins)
 
     alert = Common.get_alert_by_code("WOOD")
-    alert_config = get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = get_alert_notification_config_by_alert_id_and_site_id(alert.id, asset.site_id, prefix)
 
     config_user_ids =
       case alert_config do
@@ -262,14 +262,31 @@ defmodule Inconn2Service.Prompt do
         _ -> alert_config.addressed_to_user_ids
       end
 
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     attrs = %{
       "alert_notification_id" => alert.id,
       "type" => alert.type,
-      "description" => description
+      "description" => description,
+      "site_id" => asset.site_id,
+      "alert_identifier_date_time" => alert_identifier_date_time
     }
     Enum.map(config_user_ids ++ [work_order.user_id], fn id ->
       create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
     end)
+    create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
+  end
+
+  defp create_escalation_entry(_alert, nil, _alert_identifier_date_time, _prefix), do: nil
+
+  defp create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix) do
+    if alert.type == "al" and alert_config.is_escalation_required do
+      Common.create_alert_notification_scheduler(%{
+        "alert_code" => alert.code,
+        "alert_identifier_date_time" => alert_identifier_date_time,
+        "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+        "prefix" => prefix
+      })
+    end
   end
 
 end
