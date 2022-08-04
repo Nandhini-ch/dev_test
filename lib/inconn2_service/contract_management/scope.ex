@@ -22,7 +22,7 @@ defmodule Inconn2Service.ContractManagement.Scope do
   def changeset(scope, attrs) do
     scope
     |> cast(attrs, [:is_applicable_to_all_location, :location_ids, :is_applicable_to_all_asset_category, :asset_category_ids, :start_date, :end_date, :site_id, :contract_id])
-    |> validate_required([:is_applicable_to_all_location, :location_ids, :is_applicable_to_all_asset_category, :asset_category_ids, :start_date, :end_date, :site_id, :contract_id])
+    |> validate_required([:is_applicable_to_all_location, :is_applicable_to_all_asset_category, :start_date, :end_date, :site_id, :contract_id])
   end
 
 
