@@ -445,6 +445,9 @@ defmodule Inconn2Service.AssetConfig do
 
   def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
     cond do
+      has_descendants?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as the location has descendants"}
       has_workorder_template?(asset_category, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as there are Workorder template associated with it"}
@@ -452,6 +455,10 @@ defmodule Inconn2Service.AssetConfig do
       has_equipment?(asset_category, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as there are Equipment associated with it"}
+
+      has_task_list?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Task list associated with it"}
 
       has_location?(asset_category, prefix) ->
         {:could_not_delete,
@@ -462,8 +469,8 @@ defmodule Inconn2Service.AssetConfig do
         "could not delete has descendants"}
 
       true ->
-        # update_asset_category(asset_category, %{"active" => false}, prefix)
-        deactivate_children(asset_category, AssetCategory, prefix)
+        update_asset_category(asset_category, %{"active" => false}, prefix)
+        # deactivate_children(asset_category, AssetCategory, prefix)
         {:deleted,
         "The site was disabled"}
     end

@@ -78,6 +78,11 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> query end)
   end
 
+  def task_list_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+      _, query -> query end)
+  end
 
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
