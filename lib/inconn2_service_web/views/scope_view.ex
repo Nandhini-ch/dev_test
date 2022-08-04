@@ -12,11 +12,13 @@ defmodule Inconn2ServiceWeb.ScopeView do
 
   def render("scope.json", %{scope: scope}) do
     %{id: scope.id,
-      applicable_to_all_location: scope.applicable_to_all_location,
+      is_applicable_to_all_location: scope.is_applicable_to_all_location,
       location_ids: scope.location_ids,
-      applicable_to_all_asset_category: scope.applicable_to_all_asset_category,
+      is_applicable_to_all_asset_category: scope.is_applicable_to_all_asset_category,
       asset_category_ids: scope.asset_category_ids,
       start_date: scope.start_date,
-      end_date: scope.end_date}
+      end_date: scope.end_date,
+      site_id: scope.site_id,
+      contract_id: scope.contract_id}
   end
 end

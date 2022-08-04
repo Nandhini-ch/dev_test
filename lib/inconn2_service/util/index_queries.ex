@@ -48,6 +48,12 @@ defmodule Inconn2Service.Util.IndexQueries do
     _, query -> query end)
   end
 
+  def contract_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query ->from q in query, where: q.party_id == ^party_id
+      _, query -> query end)
+  end
+
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
                     |> HierarchyManager.subtree()

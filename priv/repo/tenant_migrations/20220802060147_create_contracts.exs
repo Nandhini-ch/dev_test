@@ -7,6 +7,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateContracts do
       add :description, :text
       add :start_date, :date
       add :end_date, :date
+      add :is_effective_status, :boolean
       add :party_id, references(:parties, on_delete: :nothing)
 
       timestamps()

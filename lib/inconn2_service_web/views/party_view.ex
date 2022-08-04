@@ -20,6 +20,7 @@ defmodule Inconn2ServiceWeb.PartyView do
       contract_end_date: party.contract_end_date,
       licensee: party.licensee,
       license_no: party.license_no,
+      pan_number: party.pan_number,
       address: render_one(party.address, AddressContactView, "address.json"),
       contact: render_one(party.contact, AddressContactView, "contact.json")
     }

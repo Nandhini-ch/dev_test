@@ -3,9 +3,9 @@ defmodule Inconn2Service.Repo.Migrations.CreateScopes do
 
   def change do
     create table(:scopes) do
-      add :applicable_to_all_location, :boolean, default: false, null: false
+      add :is_applicable_to_all_location, :boolean, default: false, null: false
       add :location_ids, {:array, :integer}
-      add :applicable_to_all_asset_category, :boolean, default: false, null: false
+      add :is_applicable_to_all_asset_category, :boolean, default: false, null: false
       add :asset_category_ids, {:array, :integer}
       add :contract_id, references(:contracts, on_delete: :nothing)
       add :site_id, references(:sites, on_delete: :nothing)

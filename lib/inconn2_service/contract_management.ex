@@ -1,11 +1,10 @@
 defmodule Inconn2Service.ContractManagement do
-  @moduledoc """
-  The ContractManagement context.
-  """
+  import Ecto.Changeset
+  import Inconn2Service.Util.IndexQueries
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
-
+  alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
 
 
@@ -38,8 +37,6 @@ defmodule Inconn2Service.ContractManagement do
     Contract.changeset(contract, attrs)
   end
 
-  alias Inconn2Service.ContractManagement.Scope
-
 
   def list_scopes(_params, prefix) do
     Repo.all(Scope, prefix: prefix)
@@ -68,5 +65,34 @@ defmodule Inconn2Service.ContractManagement do
 
   def change_scope(%Scope{} = scope, attrs \\ %{}) do
     Scope.changeset(scope, attrs)
+  end
+
+
+  def validate_start_date(cs, prefix) do
+    contract_id = get_field(cs, :contract_id, nil)
+    start_date = get_field(cs, :start_date, nil)
+    contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
+    cond do
+      !is_nil(contract_id) && !is_nil(contract) && !is_nil(start_date) && contract.start_date >= start_date ->
+        cs
+      !is_nil(contract_id) && !is_nil(contract) && !is_nil(start_date) ->
+        add_error(cs, :start_date, "Start date should be greater than contract start date(#{contract.start_date})")
+      true ->
+        cs
+    end
+  end
+
+  def validate_end_date(cs, prefix) do
+    contract_id = get_field(cs, :contract_id, nil)
+    end_date = get_field(cs, :end_date, nil)
+    contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
+    cond do
+      !is_nil(contract_id) && !is_nil(contract) && !is_nil(end_date) && end_date <= contract.end_date ->
+        cs
+      !is_nil(contract_id) && !is_nil(contract) && !is_nil(end_date) ->
+        add_error(cs, :end_date, "End date should be lesser than contract end date(#{contract.end_date})")
+      true ->
+        cs
+    end
   end
 end

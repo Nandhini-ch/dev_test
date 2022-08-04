@@ -15,6 +15,8 @@ defmodule Inconn2ServiceWeb.ContractView do
       name: contract.name,
       description: contract.description,
       start_date: contract.start_date,
-      end_date: contract.end_date}
+      end_date: contract.end_date,
+      is_effective_status: contract.is_effective_status,
+      party_id: contract.party_id}
   end
 end
