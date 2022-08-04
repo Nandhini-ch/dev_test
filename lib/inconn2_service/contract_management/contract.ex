@@ -1,7 +1,8 @@
 defmodule Inconn2Service.ContractManagement.Contract do
-  alias Inconn2Service.AssetConfig.Party
   use Ecto.Schema
   import Ecto.Changeset
+  alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.ContractManagement.Scope
 
   schema "contracts" do
     field :description, :string
@@ -10,7 +11,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
     field :start_date, :date
     field :is_effective_status, :boolean
     belongs_to :party, Party
-
+    has_many :scope, Scope
     timestamps()
   end
 

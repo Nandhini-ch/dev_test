@@ -62,6 +62,12 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_sites", ReferenceDownloadController, :download_sites
     post "/upload_sites", ReferenceUploadController, :upload_sites
 
+    resources "/parties", PartyController, except: [:new, :edit, :index]
+    resources "/contracts", ContractController, except: [:new, :edit, :index]
+    resources "/scopes", ScopeController, except: [:new, :edit]
+    get "/parties/:party_id/contracts", ContractController, :index
+
+
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
@@ -125,7 +131,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/bankholidays/:id/deactivate", HolidayController, :deactivate_holiday
     get "/download_bankholidays", ReferenceDownloadController, :download_bankholidays
     post "/upload_bankholidays", ReferenceUploadController, :upload_bankholidays
-    resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
     put "/tasks/:id/activate", TaskController, :activate_task

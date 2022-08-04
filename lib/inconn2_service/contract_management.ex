@@ -1,6 +1,6 @@
 defmodule Inconn2Service.ContractManagement do
   import Ecto.Changeset
-  import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.IndexQueries
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
@@ -10,21 +10,24 @@ defmodule Inconn2Service.ContractManagement do
 
   def list_contracts(_params, prefix) do
     Repo.all(Contract, prefix: prefix)
+    |> Repo.preload(:scopes)
   end
 
-  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix)
+  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix) |> Repo.preload(:scopes)
 
 
   def create_contract(attrs \\ %{}, prefix) do
     %Contract{}
     |> Contract.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> preload_scopes()
   end
 
   def update_contract(%Contract{} = contract, attrs, prefix) do
     contract
     |> Contract.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_scopes()
   end
 
 
@@ -49,6 +52,8 @@ defmodule Inconn2Service.ContractManagement do
   def create_scope(attrs \\ %{}, prefix) do
     %Scope{}
     |> Scope.changeset(attrs)
+    |> validate_start_date(prefix)
+    |> validate_end_date(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -56,6 +61,8 @@ defmodule Inconn2Service.ContractManagement do
   def update_scope(%Scope{} = scope, attrs, prefix) do
     scope
     |> Scope.changeset(attrs)
+    |> validate_start_date(prefix)
+    |> validate_end_date(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -68,7 +75,7 @@ defmodule Inconn2Service.ContractManagement do
   end
 
 
-  def validate_start_date(cs, prefix) do
+  defp validate_start_date(cs, prefix) do
     contract_id = get_field(cs, :contract_id, nil)
     start_date = get_field(cs, :start_date, nil)
     contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
@@ -82,7 +89,7 @@ defmodule Inconn2Service.ContractManagement do
     end
   end
 
-  def validate_end_date(cs, prefix) do
+  defp validate_end_date(cs, prefix) do
     contract_id = get_field(cs, :contract_id, nil)
     end_date = get_field(cs, :end_date, nil)
     contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
@@ -95,4 +102,7 @@ defmodule Inconn2Service.ContractManagement do
         cs
     end
   end
+
+  defp preload_scopes({:error, changeset}), do: {:error, changeset}
+  defp preload_scopes({:ok, contract}), do: {:ok, contract |> Repo.preload(:scopes)}
 end

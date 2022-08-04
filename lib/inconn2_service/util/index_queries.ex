@@ -54,6 +54,13 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> query end)
   end
 
+  def scope_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+    {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+    {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
+    _, query -> query end)
+  end
+
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
                     |> HierarchyManager.subtree()
