@@ -8,6 +8,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.CheckListConfig.{Check, CheckType}
+  alias Inconn2Service.Workorder.WorkorderSchedule
 
 
 

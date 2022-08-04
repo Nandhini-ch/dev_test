@@ -478,6 +478,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_locations(site_id, prefix) do
     Location
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -489,6 +490,7 @@ defmodule Inconn2Service.AssetConfig do
       search_text = "%" <> name_text <> "%"
 
       from(l in Location, where: l.site_id == ^site_id and ilike(l.name, ^search_text), order_by: l.name)
+      |> Repo.add_active_filter()
       |> Repo.all(prefix: prefix)
     end
   end
@@ -790,17 +792,41 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def delete_location(%Location{} = location, prefix) do
-    subtree = HierarchyManager.subtree(location)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(location, nil, "L", location.site_id,prefix)
-        result
-
-      _ ->
-        result
+    cond do
+      has_descendants?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this location"
+        }
+      has_equipment?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are equipments associated with this location"
+        }
+      has_workorder_schedule?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are workorder schedules associated with this location"
+        }
+      true ->
+        {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
+        push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix)
+        {:deleted, "Location was deleted"}
     end
   end
+
+  # def delete_location(%Location{} = location, prefix) do
+  #   subtree = HierarchyManager.subtree(location)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       # push_alert_notification_for_asset(location, nil, "L", location.site_id,prefix)
+  #       result
+
+  #     _ ->
+  #       result
+  #   end
+  # end
 
   def change_location(%Location{} = location, attrs \\ %{}) do
     Location.changeset(location, attrs)
@@ -810,6 +836,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments(site_id, prefix) do
     Equipment
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -1233,19 +1260,39 @@ defmodule Inconn2Service.AssetConfig do
     |> Equipment.changeset(update_custom_fields(equipment, attrs))
   end
 
-
   def delete_equipment(%Equipment{} = equipment, prefix) do
-    subtree = HierarchyManager.subtree(equipment)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(equipment, nil, "E", prefix)
-        result
+    cond do
+      has_descendants?(equipment, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants associated with this equipment"
+        }
 
-      _ ->
-        result
+      has_workorder_schedule?(equipment, prefix) ->
+        {
+         :could_not_delete,
+         "Cannot be deleted as there are workorder schedule associated with this equipment"
+        }
+      true ->
+        {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
+        push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix)
+        {:deleted, "Equipment was deleted"}
     end
   end
+
+
+  # def delete_equipment(%Equipment{} = equipment, prefix) do
+  #   subtree = HierarchyManager.subtree(equipment)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       push_alert_notification_for_asset(equipment, nil, "E", prefix)
+  #       result
+
+  #     _ ->
+  #       result
+  #   end
+  # end
 
   def get_asset_by_type(asset_id, asset_type, prefix) do
     case asset_type do
@@ -1299,44 +1346,44 @@ defmodule Inconn2Service.AssetConfig do
     {:ok, updated_asset}
   end
 
-  # defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
-  #   alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
-  #   alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-  #   alert_identifier_date_time = NaiveDateTime.utc_now()
-  #   case alert_config do
-  #     nil ->
-  #       {:not_found, "Alert Not Configured"}
+  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
+    alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
+    case alert_config do
+      nil ->
+        {:not_found, "Alert Not Configured"}
 
-  #     _ ->
-  #       attrs = %{
-  #         "alert_notification_id" => alert.id,
-  #         "asset_id" => nil,
-  #         "asset_type" => asset_type,
-  #         "type" => alert.type,
-  #         "site_id" => site_id,
-  #         "alert_identifier_date_time" => alert_identifier_date_time,
-  #         "description" => description
-  #       }
+      _ ->
+        attrs = %{
+          "alert_notification_id" => alert.id,
+          "asset_id" => nil,
+          "asset_type" => asset_type,
+          "type" => alert.type,
+          "site_id" => site_id,
+          "alert_identifier_date_time" => alert_identifier_date_time,
+          "description" => description
+        }
 
-  #       Enum.map(alert_config.user_ids, fn id ->
-  #         Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
-  #         if email_required do
-  #           user = Inconn2Service.Staff.get_user!(id, prefix)
-  #           Inconn2Service.Email.send_alert_email(user, description)
-  #         end
-  #       end)
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
+          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          if email_required do
+            user = Inconn2Service.Staff.get_user!(id, prefix)
+            Inconn2Service.Email.send_alert_email(user, description)
+          end
+        end)
 
-  #      if alert.type == "al" and alert_config.is_escalation_required do
-  #       Common.create_alert_notification_scheduler(%{
-  #         "alert_code" => alert.code,
-  #         "alert_identifier_date_time" => alert_identifier_date_time,
-  #         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-  #         "site_id" => site_id,
-  #         "prefix" => prefix
-  #       })
-  #      end
-  #   end
-  # end
+       if alert.type == "al" and alert_config.is_escalation_required do
+        Common.create_alert_notification_scheduler(%{
+          "alert_code" => alert.code,
+          "alert_identifier_date_time" => alert_identifier_date_time,
+          "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+          "site_id" => site_id,
+          "prefix" => prefix
+        })
+       end
+    end
+  end
 
   defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
@@ -1809,8 +1856,9 @@ defmodule Inconn2Service.AssetConfig do
 
   defp validate_custom_field_type(cs, prefix, entity) do
     custom_field_values = get_field(cs, :custom, nil)
+    custom_fields_entry = Inconn2Service.Custom.get_custom_fields!(entity, prefix)
     cond do
-      !is_nil(custom_field_values) ->
+      !is_nil(custom_field_values) && !is_nil(custom_fields_entry) ->
         boolean_array =
           Stream.map(get_and_filter_required_type(custom_field_values, entity, prefix), fn e ->
             if check_type(custom_field_values[e.field_name], e.field_type) do true else {e.field_name, e.field_type} end
@@ -1824,6 +1872,8 @@ defmodule Inconn2Service.AssetConfig do
               |> Enum.join(",")
             add_error(cs, :custom, errors)
         end
+      !is_nil(custom_field_values) ->
+        add_error(cs, :custom, "Custom fields not configured")
       true -> cs
     end
   end
