@@ -448,6 +448,7 @@ defmodule Inconn2Service.AssetConfig do
       has_descendants?(asset_category, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as the location has descendants"}
+
       has_workorder_template?(asset_category, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as there are Workorder template associated with it"}
