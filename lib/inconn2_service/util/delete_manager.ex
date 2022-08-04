@@ -24,8 +24,8 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_equipment?(%Location{} = location, prefix), do: (equipment_query(Equipment,%{"location_id" => location.id}) |>Repo.all(prefix: prefix) |> length()) > 0
 
   def has_equipment?(%AssetCategory{} = asset_category, prefix) do
-    descendant_asset_category_ids = HierarchyManager.descendants(asset_category) |> Enum.map(fn a -> a.id end)
-    (equipment_query(Equipment,%{"asset_category_ids" => descendant_asset_category_ids}) |> Repo.all(prefix: prefix) |> length()) > 0
+    # descendant_asset_category_ids = HierarchyManager.descendants(asset_category) |> Enum.map(fn a -> a.id end)
+    (equipment_query(Equipment,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   end
 
   def has_descendants?(resource, prefix), do: (HierarchyManager.descendants(resource) |> Repo.all(prefix: prefix) |> length()) > 0
