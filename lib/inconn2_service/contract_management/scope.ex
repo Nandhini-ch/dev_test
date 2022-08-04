@@ -11,6 +11,7 @@ defmodule Inconn2Service.ContractManagement.Scope do
     field :location_ids, {:array, :integer}
     field :start_date, :date
     field :end_date, :date
+    field :name, :string
     belongs_to :site, Site
     belongs_to :contract, Contract
 

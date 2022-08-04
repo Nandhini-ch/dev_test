@@ -19,6 +19,7 @@ defmodule Inconn2ServiceWeb.ScopeView do
       start_date: scope.start_date,
       end_date: scope.end_date,
       site_id: scope.site_id,
+      name: scope.name,
       contract_id: scope.contract_id}
   end
 end
