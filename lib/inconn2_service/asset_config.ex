@@ -304,7 +304,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-
   def update_asset_category(%AssetCategory{} = asset_category, attrs, prefix) do
     existing_parent_id = HierarchyManager.parent_id(asset_category)
 
@@ -323,25 +322,25 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
-    case asset_params do
-      %{"active" => false} ->
-        children = HierarchyManager.children(asset_category)
-        IO.inspect(children)
-        Repo.update_all(children, [set: [active: false]], prefix: prefix)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> Repo.update(prefix: prefix)
+  # def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
+  #   case asset_params do
+  #     %{"active" => false} ->
+  #       children = HierarchyManager.children(asset_category)
+  #       IO.inspect(children)
+  #       Repo.update_all(children, [set: [active: false]], prefix: prefix)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> Repo.update(prefix: prefix)
 
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(asset_category)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
-        |> Repo.update(prefix: prefix)
-        |> update_children(prefix)
-    end
-  end
+  #     %{"active" => true} ->
+  #       parent_id = HierarchyManager.parent_id(asset_category)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
+  #       |> Repo.update(prefix: prefix)
+  #       |> update_children(prefix)
+  #   end
+  # end
 
   defp add_or_change_asset_type_new_parent(attrs, new_parent_id, prefix) do
     parent = Repo.get(AssetCategory, new_parent_id, prefix: prefix)
@@ -435,14 +434,40 @@ defmodule Inconn2Service.AssetConfig do
     |> AssetCategory.changeset(attrs)
   end
 
-  def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
-    # Deletes the asset_category and children forcibly
-    # TBD: do not allow delete if this asset_category is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(asset_category)
-    Repo.delete_all(subtree, prefix: prefix)
-  end
+  #FUnction commented because soft delete is implemented
+  # def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+  #   # Deletes the asset_category and children forcibly
+  #   # TBD: do not allow delete if this asset_category is linked to some other record(s)
+  #   # Add that validation here....
+  #   subtree = HierarchyManager.subtree(asset_category)
+  #   Repo.delete_all(subtree, prefix: prefix)
+  # end
 
+  def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+    cond do
+      has_workorder_template?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Workorder template associated with it"}
+
+      has_equipment?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Equipment associated with it"}
+
+      has_location?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Location associated with it"}
+
+      has_descendants?(asset_category, prefix) ->
+        {:could_not_delete,
+        "could not delete has descendants"}
+
+      true ->
+        # update_asset_category(asset_category, %{"active" => false}, prefix)
+        deactivate_children(asset_category, AssetCategory, prefix)
+        {:deleted,
+        "The site was disabled"}
+    end
+  end
 
   def change_asset_category(%AssetCategory{} = asset_category, attrs \\ %{}) do
     AssetCategory.changeset(asset_category, attrs)
@@ -740,7 +765,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
     case location_params do
       %{"active" => false} ->
-        deactivate_children(location, location_params, Location, prefix)
+        deactivate_children(location, Location, prefix)
 
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(location)
@@ -1122,7 +1147,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_equipment(%Equipment{} = equipment, equipment_params, prefix) do
     case equipment_params do
       %{"active" => false} ->
-        deactivate_children(equipment, equipment_params, Equipment, prefix)
+        deactivate_children(equipment, Equipment, prefix)
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(equipment)
         handle_hierarchical_activation(equipment, equipment_params, Equipment, prefix, parent_id)
@@ -1588,12 +1613,6 @@ defmodule Inconn2Service.AssetConfig do
     |> update_children(prefix)
   end
 
-  defp deactivate_children(resource, resource_params, module, prefix) do
-    descendants = HierarchyManager.descendants(resource)
-    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
-    resource |> module.changeset(resource_params) |> Repo.update(prefix: prefix)
-  end
-
   defp validate_parent_for_true_condition(cs, module, prefix, parent_id) do
     # parent_id = get_field(cs, :parent_id, nil)
     IO.inspect("Parent Id is #{parent_id}")
@@ -1873,6 +1892,13 @@ defmodule Inconn2Service.AssetConfig do
   defp get_and_filter_required_type(custom_field_values, entity, prefix) do
     entity_record = custom_field_for_entity_query(entity) |> Repo.one(prefix: prefix)
     Stream.filter(entity_record.fields, fn field ->  field.field_name in Map.keys(custom_field_values) end)
+  end
+
+
+  defp deactivate_children(resource, module, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
+    resource |> module.changeset(%{"active" => false}) |> Repo.update(prefix: prefix)
   end
 
   defp custom_field_for_entity_query(entity), do: from cf in CustomFields, where: cf.entity == ^entity
