@@ -1,9 +1,9 @@
 defmodule Inconn2Service.ContractManagement do
   import Ecto.Changeset
   # import Inconn2Service.Util.IndexQueries
-
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  alias Inconn2Service.AssetConfig
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
 
@@ -54,6 +54,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Scope.changeset(attrs)
     |> validate_start_date(prefix)
     |> validate_end_date(prefix)
+    |> validate_applicable_loc_ids()
+    |> validate_applicable_asset_category_ids()
+    |> validate_party_type(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -63,6 +66,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Scope.changeset(attrs)
     |> validate_start_date(prefix)
     |> validate_end_date(prefix)
+    |> validate_applicable_loc_ids()
+    |> validate_applicable_asset_category_ids()
+    |> validate_party_type(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -103,6 +109,31 @@ defmodule Inconn2Service.ContractManagement do
     end
   end
 
+  def validate_applicable_loc_ids(cs) do
+    case get_field(cs, :is_applicable_to_all_location) do
+      false -> validate_required(cs, [:location_ids])
+      _ -> cs
+    end
+  end
+
+  def validate_applicable_asset_category_ids(cs) do
+    case get_field(cs, :is_applicable_to_all_asset_category) do
+      false -> validate_required(cs, [:asset_category_ids])
+      _ -> cs
+    end
+  end
+
+  def validate_party_type(cs, prefix) do
+   party_id = get_field(cs, :party_id)
+   party = AssetConfig.get_party!(party_id, prefix)
+   if party.type == "SP" do
+     cs
+    else
+      add_error(cs, :party_id, "Party should be SP")
+    end
+  end
+
   defp preload_scopes({:error, changeset}), do: {:error, changeset}
   defp preload_scopes({:ok, contract}), do: {:ok, contract |> Repo.preload(:scopes)}
+
 end
