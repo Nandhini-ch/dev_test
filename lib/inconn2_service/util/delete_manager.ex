@@ -7,7 +7,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
-  alias Inconn2Service.CheckListConfig.{Check, CheckType}
+  alias Inconn2Service.CheckListConfig.{Check, CheckType, CheckList}
   alias Inconn2Service.Workorder.{WorkorderSchedule, WorkorderTemplate}
   alias Inconn2Service.WorkOrderConfig.TaskList
 
@@ -36,6 +36,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   #def has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workorder_template?(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(WorkorderTemplate,%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template?(%CheckList{} = check_list, prefix), do: (workorder_template_query(WorkorderTemplate,%{"workpermit_check_list_id" => check_list.id, "loto_lock_check_list_id" => check_list.id, "loto_release_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workorder_schedule?(%Location{} = location, prefix), do: (workorder_schedule_query(WorkorderSchedule,%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(WorkorderSchedule,%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
