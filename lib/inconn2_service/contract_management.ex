@@ -1,15 +1,15 @@
 defmodule Inconn2Service.ContractManagement do
-  import Ecto.Changeset
+  # import Ecto.Changeset
   # import Inconn2Service.Util.IndexQueries
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
-  alias Inconn2Service.AssetConfig
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
 
 
   def list_contracts(_params, prefix) do
-    Repo.all(Contract, prefix: prefix)
+    Contract
+    |> Repo.all(prefix: prefix)
     |> Repo.preload(:scopes)
   end
 
@@ -48,27 +48,21 @@ defmodule Inconn2Service.ContractManagement do
 
   def get_scope!(id, prefix), do: Repo.get!(Scope, id, prefix: prefix)
 
-
-  def create_scope(attrs \\ %{}, prefix) do
-    %Scope{}
-    |> Scope.changeset(attrs)
-    |> validate_start_date(prefix)
-    |> validate_end_date(prefix)
-    |> validate_applicable_loc_ids()
-    |> validate_applicable_asset_category_ids()
-    |> validate_party_type(prefix)
-    |> Repo.insert(prefix: prefix)
+  def create_scope(attrs, query_params, prefix) do
+    insert_scope(attrs, query_params["type"], prefix)
   end
 
+  def create_scope(attrs, prefix) do
+    %Scope{}
+    |> Scope.changeset(attrs)
+    # |> validate_party_type(prefix)
+    |> Repo.insert(prefix: prefix)
+  end
 
   def update_scope(%Scope{} = scope, attrs, prefix) do
     scope
     |> Scope.changeset(attrs)
-    |> validate_start_date(prefix)
-    |> validate_end_date(prefix)
-    |> validate_applicable_loc_ids()
-    |> validate_applicable_asset_category_ids()
-    |> validate_party_type(prefix)
+    # |> validate_party_type(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -80,58 +74,31 @@ defmodule Inconn2Service.ContractManagement do
     Scope.changeset(scope, attrs)
   end
 
+  defp insert_scope(attrs, "by_site", prefix) do
+    attrs_for_sites = seperate_attrs_for_site(attrs["site_ids"], attrs)
+    result =
+      Ecto.Multi.new()
+      |> Ecto.Multi.run(:scopes, fn _, _ -> insert_scopes_for_site(attrs_for_sites, prefix) end)
+      |> Repo.transaction()
 
-  defp validate_start_date(cs, prefix) do
-    contract_id = get_field(cs, :contract_id, nil)
-    start_date = get_field(cs, :start_date, nil)
-    contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
-    cond do
-      !is_nil(contract_id) && !is_nil(contract) && !is_nil(start_date) && contract.start_date >= start_date ->
-        cs
-      !is_nil(contract_id) && !is_nil(contract) && !is_nil(start_date) ->
-        add_error(cs, :start_date, "Start date should be greater than contract start date(#{contract.start_date})")
-      true ->
-        cs
+    case result do
+      {:ok, %{scopes: scopes}} -> {:ok, scopes}
+      _ -> {:could_not_create, "Failure"}
     end
   end
 
-  defp validate_end_date(cs, prefix) do
-    contract_id = get_field(cs, :contract_id, nil)
-    end_date = get_field(cs, :end_date, nil)
-    contract = if is_nil(contract_id) do nil else get_contract!(contract_id, prefix) end
-    cond do
-      !is_nil(contract_id) && !is_nil(contract) && !is_nil(end_date) && end_date <= contract.end_date ->
-        cs
-      !is_nil(contract_id) && !is_nil(contract) && !is_nil(end_date) ->
-        add_error(cs, :end_date, "End date should be lesser than contract end date(#{contract.end_date})")
-      true ->
-        cs
+  defp insert_scopes_for_site(attrs, prefix) do
+    result =
+      Enum.map(attrs, fn a -> create_scope(a, prefix) end)
+      |> Enum.filter(fn {a,_b} -> a == :ok end)
+
+    case length(result) do
+      0 -> {:error, "Failure"}
+      _ -> {:ok, result |> Enum.map(fn {:ok, entry} -> entry end)}
     end
   end
 
-  def validate_applicable_loc_ids(cs) do
-    case get_field(cs, :is_applicable_to_all_location) do
-      false -> validate_required(cs, [:location_ids])
-      _ -> cs
-    end
-  end
-
-  def validate_applicable_asset_category_ids(cs) do
-    case get_field(cs, :is_applicable_to_all_asset_category) do
-      false -> validate_required(cs, [:asset_category_ids])
-      _ -> cs
-    end
-  end
-
-  def validate_party_type(cs, prefix) do
-   party_id = get_field(cs, :party_id)
-   party = AssetConfig.get_party!(party_id, prefix)
-   if party.type == "SP" do
-     cs
-    else
-      add_error(cs, :party_id, "Party should be SP")
-    end
-  end
+  defp seperate_attrs_for_site(site_ids, attrs), do: Enum.map(site_ids, fn site_id -> Map.put(attrs, "site_id", site_id) |> Map.put("is_applicable_to_all_location", true) end)
 
   defp preload_scopes({:error, changeset}), do: {:error, changeset}
   defp preload_scopes({:ok, contract}), do: {:ok, contract |> Repo.preload(:scopes)}

@@ -10,8 +10,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateScopes do
       add :name, :string
       add :contract_id, references(:contracts, on_delete: :nothing)
       add :site_id, references(:sites, on_delete: :nothing)
-      add :start_date, :date
-      add :end_date, :date
 
       timestamps()
     end

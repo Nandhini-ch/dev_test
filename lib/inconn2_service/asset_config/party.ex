@@ -35,7 +35,6 @@ defmodule Inconn2Service.AssetConfig.Party do
     |> validate_required([
       :company_name,
       :party_type,
-      :pan_number
     ])
     |> check_party_type()
     |> cast_embed(:address)
