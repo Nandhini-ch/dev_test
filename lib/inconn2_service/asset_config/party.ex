@@ -25,8 +25,6 @@ defmodule Inconn2Service.AssetConfig.Party do
     |> cast(attrs, [
       :company_name,
       :party_type,
-      :contract_start_date,
-      :contract_end_date,
       :licensee,
       :license_no,
       :active,
@@ -35,7 +33,6 @@ defmodule Inconn2Service.AssetConfig.Party do
     |> validate_required([
       :company_name,
       :party_type,
-      :pan_number
     ])
     |> check_party_type()
     |> cast_embed(:address)

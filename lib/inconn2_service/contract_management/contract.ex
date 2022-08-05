@@ -12,7 +12,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
     field :is_effective_status, :boolean
     field :active, :boolean, default: true
     belongs_to :party, Party
-    has_many :scope, Scope
+    has_many :scopes, Scope
     timestamps()
   end
 
@@ -32,7 +32,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
         add_error(cs, :start_date, "Start date should be lesser than end date")
         |> add_error(:end_date, "Start date should be lesser than end date")
 
-      is_nil(start_date) or !is_nil(end_date) ->
+      is_nil(start_date) or is_nil(end_date) ->
         add_error(cs, :start_date, "Start date or End date missing")
         |> add_error(:end_date, "Start date or End date missing")
 

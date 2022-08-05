@@ -11,6 +11,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.Workorder.{WorkorderSchedule, WorkorderTemplate}
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.Staff.{OrgUnit, Employee, User}
   alias Inconn2Service.ContractManagement.{Contract, Scope}
 
 
@@ -45,20 +46,19 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_task_list?(%AssetCategory{} = asset_category, prefix), do: (task_list_query(TaskList, %{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_site?(%Zone{} = zone, prefix), do: (site_query(Site, %{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_site?(%Party{} = party, prefix), do: (site_query(Site, %{"party_id" => party.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site), %{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_site?(%Party{} = party, prefix), do: (site_query(Repo.add_active_filter(Site), %{"party_id" => party.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_check?(%CheckType{} = check_type, prefix), do: (check_query(Check, %{"check_type_id" => check_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_check?(%CheckType{} = check_type, prefix), do: (check_query(Repo.add_active_filter(Check), %{"check_type_id" => check_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_contract?(%Party{} = party, prefix), do: (contract_query(Contract, %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_contract?(%Party{} = party, prefix), do: (contract_query(Repo.add_active_filter(Contract), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_org_unit?(%Party{} = party, prefix), do: (org_unit_query(Org_unit, %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_org_unit?(%Party{} = party, prefix), do: (org_unit_query(Repo.add_active_filter(OrgUnit), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_employee?(%Party{} = party, prefix), do: (employee_query(Employee, %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_employee?(%Party{} = party, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_user?(%Party{} = party, prefix), do: (user_query(User, %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_user?(%Party{} = party, prefix), do: (user_query(Repo.add_active_filter(User), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Scope, %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-
+  def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
 end

@@ -16,28 +16,28 @@ defmodule Inconn2Service.Util.IndexQueries do
           zone_ids = get_subtree_zone_ids(zone_id, prefix)
           from q in query, where: q.zone_id in ^zone_ids
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def employee_rosters_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def shift_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def store_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
@@ -47,7 +47,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
     {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
     {"location_id", location_id}, query -> from q in query, where: q.location_id == ^location_id
-    _, query -> query
+    _, query -> from q in query, where: q.active
     end)
   end
 
@@ -55,14 +55,14 @@ defmodule Inconn2Service.Util.IndexQueries do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
       {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def check_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"check_type_id", check_type_id}, query -> from q in query, where: q.check_type_id == ^check_type_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
@@ -72,33 +72,33 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"workpermit_check_list_id", workpermit_check_list_id}, query -> from q in query, where: q.workpermit_check_list_id == ^workpermit_check_list_id
     {"loto_lock_check_list_id", loto_lock_check_list_id}, query -> from q in query, where: q.loto_lock_check_list_id == ^loto_lock_check_list_id
     {"loto_release_check_list_id", loto_release_check_list_id}, query -> from q in query, where: q.loto_release_check_list_id == ^loto_release_check_list_id
-    _, query -> query end)
+    _, query -> from q in query, where: q.active end)
   end
 
   def workorder_schedule_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"asset_id", asset_id}, query -> from q in query, where: q.asset_id == ^asset_id
       {"asset_type", asset_type}, query -> from q in query, where: q.asset_type == ^asset_type
-      _, query -> query end)
+      _, query -> from q in query, where: q.active end)
   end
 
   def task_list_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
-      _, query -> query end)
+      _, query -> from q in query, where: q.active end)
   end
 
   def contract_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query ->from q in query, where: q.party_id == ^party_id
-      _, query -> query end)
+      _, query -> from q in query, where: q.active end)
   end
 
   def scope_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
     {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
-    _, query -> query end)
+    _, query -> from q in query, where: q.active end)
   end
 
   defp get_subtree_zone_ids(zone_id, prefix) do
@@ -112,21 +112,21 @@ defmodule Inconn2Service.Util.IndexQueries do
   def org_unit_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def employee_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 
   def user_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
-      _, query -> query
+      _, query -> from q in query, where: q.active
     end)
   end
 end

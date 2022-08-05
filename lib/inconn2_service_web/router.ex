@@ -62,9 +62,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_sites", ReferenceDownloadController, :download_sites
     post "/upload_sites", ReferenceUploadController, :upload_sites
 
-    resources "/parties", PartyController, except: [:new, :edit, :index]
+    resources "/parties", PartyController, except: [:new, :edit]
     resources "/contracts", ContractController, except: [:new, :edit, :index]
-    resources "/scopes", ScopeController, except: [:new, :edit]
+    get "/contracts/:contract_id/scopes", ScopeController, :index
+    resources "/scopes", ScopeController, except: [:index, :new, :edit]
     get "/parties/:party_id/contracts", ContractController, :index
 
 

@@ -16,8 +16,6 @@ defmodule Inconn2ServiceWeb.ScopeView do
       location_ids: scope.location_ids,
       is_applicable_to_all_asset_category: scope.is_applicable_to_all_asset_category,
       asset_category_ids: scope.asset_category_ids,
-      start_date: scope.start_date,
-      end_date: scope.end_date,
       site_id: scope.site_id,
       name: scope.name,
       contract_id: scope.contract_id}

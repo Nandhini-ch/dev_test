@@ -16,8 +16,6 @@ defmodule Inconn2ServiceWeb.PartyView do
       id: party.id,
       company_name: party.company_name,
       party_type: party.party_type,
-      contract_start_date: party.contract_start_date,
-      contract_end_date: party.contract_end_date,
       licensee: party.licensee,
       license_no: party.license_no,
       pan_number: party.pan_number,
