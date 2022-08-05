@@ -1450,12 +1450,7 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Party
 
-
   def list_parties(prefix) do
-    Repo.all(Party, prefix: prefix)
-  end
-
-  def list_parties(_query_params, prefix) do
     Party
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
@@ -1630,9 +1625,43 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  # def delete_party(%Party{} = party, prefix) do
+  #   Repo.delete(party, prefix: prefix)
+  # end
 
   def delete_party(%Party{} = party, prefix) do
-    Repo.delete(party, prefix: prefix)
+    cond do
+      has_contract?(party, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Contracts associated with it"
+        }
+
+      has_site?(party, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Sites associated with it"
+         }
+
+      has_org_unit?(party, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Org unit associated with it"
+        }
+
+      has_employee?(party, prefix) ->
+       {:could_not_delete,
+          "Cannot be deleted as there are Employee associated with it"
+       }
+
+      has_user?(party, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are User associated with it"
+        }
+
+     true ->
+       update_party(party, %{"active" => false}, prefix)
+        {:deleted,
+          "The party was disabled"
+        }
+    end
   end
 
   def change_party(%Party{} = party, attrs \\ %{}) do

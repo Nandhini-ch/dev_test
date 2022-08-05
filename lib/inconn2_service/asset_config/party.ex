@@ -12,6 +12,7 @@ defmodule Inconn2Service.AssetConfig.Party do
     field :license_no, :string
     field :licensee, :boolean, default: false
     field :active, :boolean, default: true
+    field :pan_number, :string
     embeds_one :address, AddressEmbed, on_replace: :delete
     embeds_one :contact, ContactEmbed, on_replace: :delete
 
@@ -24,15 +25,14 @@ defmodule Inconn2Service.AssetConfig.Party do
     |> cast(attrs, [
       :company_name,
       :party_type,
-      :contract_start_date,
-      :contract_end_date,
       :licensee,
       :license_no,
-      :active
+      :active,
+      :pan_number
     ])
     |> validate_required([
       :company_name,
-      :party_type
+      :party_type,
     ])
     |> check_party_type()
     |> cast_embed(:address)

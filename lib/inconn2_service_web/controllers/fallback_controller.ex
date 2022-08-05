@@ -30,6 +30,13 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render(:"404")
   end
 
+  def call(conn, {:could_not_create, msg}) do
+    conn
+    |> put_status(422)
+    |> put_view(Inconn2ServiceWeb.ErrorView)
+    |> render("error_create.json", msg: msg)
+  end
+
   def call(conn, {:could_not_delete, msg}) do
     conn
     |> put_status(:unprocessable_entity)

@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.PartyController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    parties = AssetConfig.list_parties(conn.query_params, conn.assigns.sub_domain_prefix)
+    parties = AssetConfig.list_parties(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", parties: parties)
   end
 

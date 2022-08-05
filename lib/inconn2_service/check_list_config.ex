@@ -1,7 +1,7 @@
 defmodule Inconn2Service.CheckListConfig do
   import Ecto.Query, warn: false
   import Ecto.Changeset
-  # import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.DeleteManager
   import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
 
@@ -29,7 +29,15 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   def delete_check_type(%CheckType{} = check_type, prefix) do
-    Repo.delete(check_type, prefix: prefix)
+    cond do
+      has_check?(check_type, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Check assocaited"}
+
+      true ->
+        update_check_type(check_type, %{"active" => false}, prefix)
+        {:deleted, "Check type was deleted"}
+    end
   end
 
   def change_check_type(%CheckType{} = check_type, attrs \\ %{}) do
@@ -98,7 +106,19 @@ defmodule Inconn2Service.CheckListConfig do
     |> preload_checks(prefix)
   end
 
-  def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
+  # def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
+
+  def delete_check_list(%CheckList{} = check_list, prefix) do
+    cond do
+      has_workorder_template?(check_list, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are workorder templates assocaited"}
+
+      true ->
+        update_check_list(check_list, %{"active" => false}, prefix)
+        {:deleted, "Check list was deleted"}
+    end
+  end
 
   # function commented because soft delet was implemented with same function name
   # def delete_check_list(%CheckList{} = check_list, prefix) do
