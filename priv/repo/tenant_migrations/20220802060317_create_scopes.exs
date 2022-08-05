@@ -12,7 +12,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateScopes do
       add :site_id, references(:sites, on_delete: :nothing)
       add :start_date, :date
       add :end_date, :date
-
+      add :active, :boolean, default: true
       timestamps()
     end
 

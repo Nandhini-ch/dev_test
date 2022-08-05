@@ -1,12 +1,13 @@
 defmodule Inconn2Service.ContractManagement do
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
-
 
   def list_contracts(_params, prefix) do
     Repo.all(Contract, prefix: prefix)
@@ -30,11 +31,24 @@ defmodule Inconn2Service.ContractManagement do
     |> preload_scopes()
   end
 
+  # def delete_contract(%Contract{} = contract, prefix) do
+  #   Repo.delete(contract, prefix: prefix)
+  # end
 
   def delete_contract(%Contract{} = contract, prefix) do
-    Repo.delete(contract, prefix: prefix)
-  end
+    cond do
+      has_scope?(contract, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Scopes associated with it"
+        }
 
+      true ->
+       update_contract(contract, %{"active" => false}, prefix)
+         {:deleted,
+            "The contract was disabled"
+         }
+    end
+  end
 
   def change_contract(%Contract{} = contract, attrs \\ %{}) do
     Contract.changeset(contract, attrs)
@@ -73,7 +87,10 @@ defmodule Inconn2Service.ContractManagement do
   end
 
   def delete_scope(%Scope{} = scope, prefix) do
-    Repo.delete(scope, prefix: prefix)
+    update_scope(scope, %{"active" => false}, prefix)
+    {:deleted,
+       "The Scope was disabled"
+    }
   end
 
   def change_scope(%Scope{} = scope, attrs \\ %{}) do

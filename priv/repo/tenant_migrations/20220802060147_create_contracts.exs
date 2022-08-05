@@ -8,8 +8,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateContracts do
       add :start_date, :date
       add :end_date, :date
       add :is_effective_status, :boolean
+      add :active, :boolean, default: true
       add :party_id, references(:parties, on_delete: :nothing)
-
       timestamps()
     end
 

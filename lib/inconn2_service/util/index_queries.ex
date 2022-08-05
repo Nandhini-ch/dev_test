@@ -8,13 +8,14 @@ defmodule Inconn2Service.Util.IndexQueries do
   # alias Inconn2Service.Settings.Shift
   #alias Inconn2Service.InventoryManagement.Store
   #alias Inconn2Service.AssetConfig.{Site, Zone}
+  #alias Inconn2Service.AssetConfig.Party
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
       {"zone_id", zone_id}, query ->
           zone_ids = get_subtree_zone_ids(zone_id, prefix)
           from q in query, where: q.zone_id in ^zone_ids
-
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
       _, query -> query
     end)
   end
@@ -106,5 +107,26 @@ defmodule Inconn2Service.Util.IndexQueries do
 
     from(q in subtree_query, select: q.id)
     |> Repo.all(prefix: prefix)
+  end
+
+  def org_unit_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      _, query -> query
+    end)
+  end
+
+  def employee_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      _, query -> query
+    end)
+  end
+
+  def user_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      _, query -> query
+    end)
   end
 end

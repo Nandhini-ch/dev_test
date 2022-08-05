@@ -10,6 +10,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
     field :name, :string
     field :start_date, :date
     field :is_effective_status, :boolean
+    field :active, :boolean, default: true
     belongs_to :party, Party
     has_many :scope, Scope
     timestamps()
@@ -18,8 +19,8 @@ defmodule Inconn2Service.ContractManagement.Contract do
   @doc false
   def changeset(contract, attrs) do
     contract
-    |> cast(attrs, [:name, :description, :start_date, :end_date, :party_id, :is_effective_status])
-    |> validate_required([:name, :start_date, :end_date, :party_id, :is_effective_status])
+    |> cast(attrs, [:name, :description, :start_date, :end_date, :party_id, :is_effective_status, :active])
+    |> validate_required([:name, :start_date, :end_date, :party_id, :is_effective_status, :active])
     |> validate_contract_date()
   end
 

@@ -12,6 +12,7 @@ defmodule Inconn2Service.ContractManagement.Scope do
     field :start_date, :date
     field :end_date, :date
     field :name, :string
+    field :active, :boolean, default: true
     belongs_to :site, Site
     belongs_to :contract, Contract
 
@@ -21,8 +22,8 @@ defmodule Inconn2Service.ContractManagement.Scope do
   @doc false
   def changeset(scope, attrs) do
     scope
-    |> cast(attrs, [:is_applicable_to_all_location, :location_ids, :is_applicable_to_all_asset_category, :asset_category_ids, :start_date, :end_date, :site_id, :contract_id])
-    |> validate_required([:is_applicable_to_all_location, :is_applicable_to_all_asset_category, :start_date, :end_date, :site_id, :contract_id])
+    |> cast(attrs, [:is_applicable_to_all_location, :location_ids, :is_applicable_to_all_asset_category, :asset_category_ids, :start_date, :end_date, :site_id, :contract_id, :active])
+    |> validate_required([:is_applicable_to_all_location, :is_applicable_to_all_asset_category, :start_date, :end_date, :site_id, :contract_id, :active])
   end
 
 
