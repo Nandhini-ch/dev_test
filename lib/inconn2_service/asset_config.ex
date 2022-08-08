@@ -1076,7 +1076,7 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
-      |>  validate_custom_field_type(prefix, "Equipment")
+      |>  validate_custom_field_type(prefix, "equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
@@ -1152,7 +1152,7 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
-            |> validate_custom_field_type(prefix, "Equipment")
+            |> validate_custom_field_type(prefix, "equipment")
 
           update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
@@ -1161,7 +1161,7 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
-            |> validate_custom_field_type(prefix, "Equipment")
+            |> validate_custom_field_type(prefix, "equipment")
 
 
           Repo.update(eq_cs, prefix: prefix)
@@ -1893,7 +1893,7 @@ defmodule Inconn2Service.AssetConfig do
 
   defp validate_custom_field_type(cs, prefix, entity) do
     custom_field_values = get_field(cs, :custom, nil)
-    custom_fields_entry = Inconn2Service.Custom.get_custom_fields!(entity, prefix)
+    custom_fields_entry = Inconn2Service.Custom.get_custom_fields_by_entity(entity, prefix)
     cond do
       !is_nil(custom_field_values) && !is_nil(custom_fields_entry) ->
         boolean_array =

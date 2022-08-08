@@ -7,6 +7,8 @@ defmodule Inconn2Service.Common do
   import Ecto.Changeset
   alias Inconn2Service.Repo
   alias Inconn2Service.Common.Timezone
+  alias Inconn2Service.Prompt
+  alias Inconn2Service.Prompt.UserAlertNotification
 
   @doc """
   Returns the list of timezones.
@@ -486,7 +488,7 @@ defmodule Inconn2Service.Common do
 
   def get_alert_by_code(code), do: Repo.get_by(AlertNotificationReserve, [code: code])
 
-  def get_alert_by_code_and_site_id(code, site_id), do: Repo.get_by(AlertNotificationReserve, [code: code])
+  def get_alert_by_code_and_site_id(code, site_id), do: Repo.get_by(AlertNotificationReserve, [code: code, site_id: site_id])
 
 
   @doc """
@@ -748,5 +750,64 @@ defmodule Inconn2Service.Common do
   """
   def change_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs \\ %{}) do
     AlertNotificationScheduler.changeset(alert_notification_scheduler, attrs)
+  end
+
+  def generate_alert_escalations() do
+    dt = DateTime.add(DateTime.utc_now, 60, :second)
+    from(ans in AlertNotificationScheduler, where: ans.escalation_at_date_time <= ^dt)
+    |> Repo.all()
+    |> Enum.map(&Task.async(fn -> check_and_create_alert_escalations(&1) end))
+    |> Enum.map(&Task.await/1)
+  end
+
+  defp check_and_create_alert_escalations(escalation_scheduler) do
+    conditions = conditions_for_escalating_alerts(escalation_scheduler)
+    alerts = UserAlertNotification
+              |> where(^conditions)
+              |> Repo.all(prefix: escalation_scheduler.prefix)
+    case alerts do
+      [] ->
+        delete_escalation_scheduler(escalation_scheduler)
+
+      [alert | _] ->
+        create_alert_escalation(alert, escalation_scheduler)
+        delete_escalation_scheduler(escalation_scheduler)
+
+    end
+  end
+
+  defp conditions_for_escalating_alerts(escalation_scheduler) do
+    [
+      site_id: escalation_scheduler.site_id,
+      alert_identifier_date_time: escalation_scheduler.alert_identifier_date_time,
+      type: "al",
+      escalation: false,
+      action_taken: false
+    ]
+  end
+
+  defp delete_escalation_scheduler(escalation_scheduler) do
+    delete_alert_notification_scheduler(escalation_scheduler)
+  end
+
+  defp create_alert_escalation(alert, escalation_scheduler) do
+    Enum.map(escalation_scheduler.escalated_to_user_ids, fn user_id ->
+      create_individual_escalation(alert, user_id, escalation_scheduler.prefix)
+    end)
+  end
+
+  defp create_individual_escalation(alert, user_id, prefix) do
+    Prompt.create_user_alert_notification(
+      %{
+        "alert_notification_id" => alert.alert_notification_id,
+        "type" => "al",
+        "asset_id" => alert.asset_id,
+        "asset_type" => alert.asset_type,
+        "site_id" => alert.site_id,
+        "user_id" => user_id,
+        "description" => alert.description,
+        "escalation" => true
+      }, prefix
+    )
   end
 end

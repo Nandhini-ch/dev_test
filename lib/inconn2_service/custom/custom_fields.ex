@@ -3,6 +3,7 @@ defmodule Inconn2Service.Custom.CustomFields do
   import Ecto.Changeset
   alias Inconn2Service.Common.CustomFieldEmbed
 
+
   schema "custom_fields" do
     field :entity, :string
     # field :fields, {:array, :map}
@@ -15,6 +16,7 @@ defmodule Inconn2Service.Custom.CustomFields do
   def changeset(custom_fields, attrs) do
     custom_fields
     |> cast(attrs, [:entity])
+    |> validate_inclusion(:entity, ["equipment"])
     |> validate_required([:entity])
     |> unique_constraint(:entity)
     |> cast_embed(:fields)
