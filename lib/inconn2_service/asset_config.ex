@@ -1076,7 +1076,7 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
-      |>  validate_custom_field_type(prefix, "Equipment")
+      |>  validate_custom_field_type(prefix, "equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
