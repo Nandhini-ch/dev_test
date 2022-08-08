@@ -21,12 +21,17 @@ defmodule Inconn2ServiceWeb.CustomFieldsController do
   end
 
   def show(conn, %{"id" => id}) do
-    custom_fields = Custom.get_custom_fields!(id, conn.assigns.sub_domain_prefix)
+    custom_fields = Custom.get_custom_fields(id, conn.assigns.sub_domain_prefix)
+    render(conn, "show.json", custom_fields: custom_fields)
+  end
+
+  def get_by_entity(conn, %{"entity_name" => entity}) do
+    custom_fields = Custom.get_custom_fields_by_entity(entity, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", custom_fields: custom_fields)
   end
 
   def update(conn, %{"id" => id, "custom_fields" => custom_fields_params}) do
-    custom_fields = Custom.get_custom_fields!(id, conn.assigns.sub_domain_prefix)
+    custom_fields = Custom.get_custom_fields(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %CustomFields{} = custom_fields} <- Custom.update_custom_fields(custom_fields, custom_fields_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", custom_fields: custom_fields)
@@ -34,7 +39,7 @@ defmodule Inconn2ServiceWeb.CustomFieldsController do
   end
 
   def delete(conn, %{"id" => id}) do
-    custom_fields = Custom.get_custom_fields!(id, conn.assigns.sub_domain_prefix)
+    custom_fields = Custom.get_custom_fields(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %CustomFields{}} <- Custom.delete_custom_fields(custom_fields, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")

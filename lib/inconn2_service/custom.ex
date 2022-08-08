@@ -1,15 +1,20 @@
 defmodule Inconn2Service.Custom do
   import Ecto.Query, warn: false
+  import Ecto.Changeset
   alias Inconn2Service.Repo
-
   alias Inconn2Service.Custom.CustomFields
 
   def list_custom_fields(prefix) do
     Repo.all(CustomFields, prefix: prefix)
   end
 
-  def get_custom_fields!(entity, prefix) do
+
+  def get_custom_fields_by_entity(entity, prefix) do
     Repo.one(from(c in CustomFields, where: c.entity == ^entity), prefix: prefix)
+  end
+
+  def get_custom_fields(id, prefix) do
+    Repo.get(CustomFields, id, prefix: prefix)
   end
 
   def create_custom_fields(attrs \\ %{}, prefix) do
