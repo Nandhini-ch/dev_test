@@ -416,6 +416,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
 
+    get "/custom_fields/entity/:entity_name", CustomFieldsController, :get_by_entity
     resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
     resources "/zones", ZoneController, except: [:new, :edit]
     get "/zones_tree", ZoneController, :tree
