@@ -62,12 +62,17 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_sites", ReferenceDownloadController, :download_sites
     post "/upload_sites", ReferenceUploadController, :upload_sites
 
+    resources "/parties", PartyController, except: [:new, :edit]
+    resources "/contracts", ContractController, except: [:new, :edit, :index]
+    get "/contracts/:contract_id/scopes", ScopeController, :index
+    resources "/scopes", ScopeController, except: [:index, :new, :edit]
+    get "/parties/:party_id/contracts", ContractController, :index
+
+
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
-    put "/asset_categories/:id/deactivate", AssetCategoryController, :deactivate_asset_category
-    put "/asset_categories/:id/activate", AssetCategoryController, :activate_asset_category
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
@@ -125,7 +130,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/bankholidays/:id/deactivate", HolidayController, :deactivate_holiday
     get "/download_bankholidays", ReferenceDownloadController, :download_bankholidays
     post "/upload_bankholidays", ReferenceUploadController, :upload_bankholidays
-    resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
     resources "/master_task_types", MasterTaskTypeController, except: [:new, :edit]

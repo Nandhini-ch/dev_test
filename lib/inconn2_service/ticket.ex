@@ -29,9 +29,9 @@ defmodule Inconn2Service.Ticket do
     Repo.all(WorkrequestCategory, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
   end
 
-  def list_workrequest_categories(query_params, prefix) do
+  def list_workrequest_categories(_query_params, prefix) do
     WorkrequestCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -84,7 +84,7 @@ defmodule Inconn2Service.Ticket do
 
     case result do
       {:ok, workrequest_category} ->
-        push_alert_notification_for_ticket_category(workrequest_category, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_category, prefix)
         {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
       _ -> result
     end
@@ -1104,7 +1104,7 @@ defmodule Inconn2Service.Ticket do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workrequest_subcategory} ->
-        push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
         {:ok, workrequest_subcategory }
       _ -> result
     end
@@ -1261,11 +1261,14 @@ defmodule Inconn2Service.Ticket do
 
   defp create_ticket_alert_notification(alert_code, description, updated_work_request, action_for, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_work_request.site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     attrs = %{
       "alert_notification_id" => alert.id,
       "type" => alert.type,
-      "description" => description
+      "description" => description,
+      "site_id" => alert_config.site_id,
+      "alert_identifier_date_time" => alert_identifier_date_time
     }
 
     config_user_ids =
@@ -1279,6 +1282,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "new ticket raised" ->
         helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
@@ -1286,11 +1290,13 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "new ticket assigned" ->
         Enum.map(config_user_ids ++ [updated_work_request.assigned_user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket approved/rejected" ->
         helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
@@ -1298,6 +1304,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket completed" ->
         assigned_user_id =
@@ -1308,6 +1315,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket reassigned" ->
         assigned_user_id =
@@ -1318,6 +1326,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket cancelled" ->
         assigned_user_id =
@@ -1328,6 +1337,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket reopened" ->
         assigned_user_id =
@@ -1340,7 +1350,21 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
     end
 
+  end
+
+  defp create_escalation_entry(_alert, nil, _alert_identifier_date_time, _prefix), do: nil
+
+  defp create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix) do
+    if alert.type == "al" and alert_config.is_escalation_required do
+      Common.create_alert_notification_scheduler(%{
+        "alert_code" => alert.code,
+        "alert_identifier_date_time" => alert_identifier_date_time,
+        "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+        "prefix" => prefix
+      })
+    end
   end
 end

@@ -1,6 +1,10 @@
 defmodule Inconn2Service.CheckListConfig do
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
+
   alias Inconn2Service.Repo
   alias Inconn2Service.CheckListConfig.{Check, CheckList, CheckType}
 
@@ -25,7 +29,15 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   def delete_check_type(%CheckType{} = check_type, prefix) do
-    Repo.delete(check_type, prefix: prefix)
+    cond do
+      has_check?(check_type, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Check assocaited"}
+
+      true ->
+        update_check_type(check_type, %{"active" => false}, prefix)
+        {:deleted, "Check type was deleted"}
+    end
   end
 
   def change_check_type(%CheckType{} = check_type, attrs \\ %{}) do
@@ -33,10 +45,8 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   #Context function for Check
-  def list_checks(%{}, prefix), do: Repo.all(Repo.add_active_filter(Check), prefix: prefix) |> Repo.preload(:check_type)
-
-  def list_checks(%{"check_type_id" => check_type_id}, prefix) do
-    from(c in Check, where: c.check_type_id == ^ check_type_id and c.active) |> Repo.all(prefix: prefix) |> Repo.preload(:check_type)
+  def list_checks(query_params, prefix) do
+    check_query(Check, query_params) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
   end
 
   def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix) |> Repo.preload(:check_type)
@@ -96,7 +106,19 @@ defmodule Inconn2Service.CheckListConfig do
     |> preload_checks(prefix)
   end
 
-  def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
+  # def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
+
+  def delete_check_list(%CheckList{} = check_list, prefix) do
+    cond do
+      has_workorder_template?(check_list, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are workorder templates assocaited"}
+
+      true ->
+        update_check_list(check_list, %{"active" => false}, prefix)
+        {:deleted, "Check list was deleted"}
+    end
+  end
 
   # function commented because soft delet was implemented with same function name
   # def delete_check_list(%CheckList{} = check_list, prefix) do
