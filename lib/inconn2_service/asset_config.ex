@@ -1386,6 +1386,7 @@ defmodule Inconn2Service.AssetConfig do
           "alert_code" => alert.code,
           "alert_identifier_date_time" => alert_identifier_date_time,
           "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+          "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
           "site_id" => site_id,
           "prefix" => prefix
         })
@@ -1393,7 +1394,7 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, email_required, prefix) do
+  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
@@ -1409,7 +1410,7 @@ defmodule Inconn2Service.AssetConfig do
           "type" => alert.type,
           "alert_identifier_date_time" => alert_identifier_date_time,
           "description" => description,
-          "site_id" => alert_config.site_id
+          "site_id" => site_id
         }
 
         Enum.map(alert_config.addressed_to_user_ids, fn id ->
@@ -1420,6 +1421,8 @@ defmodule Inconn2Service.AssetConfig do
           Common.create_alert_notification_scheduler(%{
             "alert_code" => alert.code,
             "alert_identifier_date_time" => alert_identifier_date_time,
+            "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+            "site_id" => site_id,
             "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
             "prefix" => prefix
           })

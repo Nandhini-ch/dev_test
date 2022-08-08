@@ -18,7 +18,8 @@ defmodule Inconn2ServiceWeb.UserAlertNotificationView do
       user_id: user_alert_notification.user_id,
       description: user_alert_notification.description,
       acknowledged_date_time: user_alert_notification.acknowledged_date_time,
-      action_taken: user_alert_notification.action_taken}
+      action_taken: user_alert_notification.action_taken,
+      escalation: user_alert_notification.escalation}
   end
 
   def render("success.json", %{success: success}) do
