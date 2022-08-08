@@ -782,7 +782,7 @@ defmodule Inconn2Service.Common do
       alert_identifier_date_time: escalation_scheduler.alert_identifier_date_time,
       type: "al",
       escalation: false,
-      action_taken: false
+      acknowledged_date_time: nil
     ]
   end
 
