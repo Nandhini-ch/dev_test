@@ -1419,6 +1419,7 @@ defmodule Inconn2Service.Workorder do
         "alert_code" => alert.code,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
         "site_id" => updated_work_order.site_id,
         "prefix" => prefix
       })
