@@ -112,8 +112,8 @@ defmodule Inconn2ServiceWeb.UserController do
     user = Staff.get_user!(user_params["user_id"], conn.assigns.sub_domain_prefix)
     otp_entry = Confirmation.get_forgot_password_otp_by_user_id(user_params["user_id"], conn.assigns.sub_domain_prefix)
     cond do
-      otp_entry && otp_entry.validate ->
-        with {:ok, %User{} = user} <- Staff.update_user(user, user_params, conn.assigns.sub_domain_prefix) do
+      otp_entry && otp_entry.validated ->
+        with {:ok, %User{} = user} <- Staff.reset_user_password(user, user_params, conn.assigns.sub_domain_prefix) do
           Confirmation.delete_forgot_password_otp(otp_entry, conn.assigns.sub_domain_prefix)
           render(conn, "show.json", user: user)
         end
