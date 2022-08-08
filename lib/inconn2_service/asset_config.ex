@@ -1893,7 +1893,7 @@ defmodule Inconn2Service.AssetConfig do
 
   defp validate_custom_field_type(cs, prefix, entity) do
     custom_field_values = get_field(cs, :custom, nil)
-    custom_fields_entry = Inconn2Service.Custom.get_custom_fields!(entity, prefix)
+    custom_fields_entry = Inconn2Service.Custom.get_custom_fields(entity, prefix)
     cond do
       !is_nil(custom_field_values) && !is_nil(custom_fields_entry) ->
         boolean_array =
