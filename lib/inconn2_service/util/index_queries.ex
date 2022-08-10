@@ -101,6 +101,14 @@ defmodule Inconn2Service.Util.IndexQueries do
     _, query -> from q in query, where: q.active end)
   end
 
+  def party_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"type", "sp"}, query -> from q in query, where: q.party_type == ^"SP"
+      {"type", "ao"}, query -> from q in query, where: q.party_type == ^"AO"
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
                     |> HierarchyManager.subtree()
