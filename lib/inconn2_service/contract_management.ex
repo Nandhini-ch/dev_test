@@ -16,7 +16,7 @@ defmodule Inconn2Service.ContractManagement do
     |> Repo.add_active_filter()
     |> contract_query(params)
     |> Repo.all(prefix: prefix)
-    |> Stream.map(fn c -> preload_scopes(c, prefix) end)
+    # |> Stream.map(fn c -> preload_scopes(c, prefix) end)
     |> Enum.map(fn c -> preload_service_provider(c, prefix) end)
   end
 
@@ -25,18 +25,18 @@ defmodule Inconn2Service.ContractManagement do
     |> Repo.add_active_filter()
     |> contract_query(params)
     |> Repo.all(prefix: prefix)
-    |> Enum.map(fn c -> preload_scopes(c, prefix) end)
+    # |> Enum.map(fn c -> preload_scopes(c, prefix) end)
     |> Enum.map(fn c -> preload_service_provider(c, prefix) end)
   end
 
-  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix) |> preload_scopes(prefix) |> preload_service_provider(prefix)
+  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix)  |> preload_service_provider(prefix)
 
 
   def create_contract(attrs \\ %{}, prefix) do
     %Contract{}
     |> Contract.changeset(attrs)
     |> Repo.insert(prefix: prefix)
-    |> preload_scopes(prefix)
+    # |> preload_scopes(prefix)
     |> preload_service_provider(prefix)
   end
 
@@ -44,7 +44,7 @@ defmodule Inconn2Service.ContractManagement do
     contract
     |> Contract.changeset(attrs)
     |> Repo.update(prefix: prefix)
-    |> preload_scopes(prefix)
+    # |> preload_scopes(prefix)
     |> preload_service_provider(prefix)
   end
 
@@ -156,35 +156,35 @@ defmodule Inconn2Service.ContractManagement do
 
   defp seperate_attrs_for_site(site_ids, attrs), do: Enum.map(site_ids, fn site_id -> Map.put(attrs, "site_id", site_id) |> Map.put("is_applicable_to_all_location", true) end)
 
-  defp preload_scopes({:error, changeset}, _prefix), do: {:error, changeset}
-  defp preload_scopes({:ok, contract}, prefix), do: {:ok, contract |> preload_scopes(prefix)}
-  defp preload_scopes(contract, prefix) do
-    scopes = from(s in Scope, where: s.contract_id == ^contract.id and s.active) |> Repo.all(prefix: prefix)
-    Map.put(contract, :scopes, scopes)
-  end
+  # defp preload_scopes({:error, changeset}, _prefix), do: {:error, changeset}
+  # defp preload_scopes({:ok, contract}, prefix), do: {:ok, contract |> preload_scopes(prefix)}
+  # defp preload_scopes(contract, prefix) do
+  #   scopes = from(s in Scope, where: s.contract_id == ^contract.id and s.active) |> Repo.all(prefix: prefix)
+  #   Map.put(contract, :scopes, scopes)
+  # end
 
   defp preload_service_provider({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_service_provider({:ok, contract}, prefix), do: {:ok, preload_service_provider(contract, prefix)}
   defp preload_service_provider(contract, prefix), do: Map.put(contract, :service_provider, AssetConfig.get_party!(contract.party_id, prefix))
 
-  def preload_site({:error, changeset}, _prefix), do: {:error, changeset}
-  def preload_site({:ok, scope}, prefix), do: {:ok, preload_site(scope, prefix)}
-  def preload_site(scope, prefix), do: Map.put(scope, :site, AssetConfig.get_site!(scope.site_id, prefix))
+  defp preload_site({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_site({:ok, scope}, prefix), do: {:ok, preload_site(scope, prefix)}
+  defp preload_site(scope, prefix), do: Map.put(scope, :site, AssetConfig.get_site!(scope.site_id, prefix))
 
-  def preload_locations({:error, changeset}, _prefix), do: {:error, changeset}
-  def preload_locations({:ok, scopes}, prefix), do: {:ok, preload_locations(scopes, prefix)}
-  def preload_locations(scopes, prefix), do: Map.put(scopes, :locations, get_resources_from_list(scopes.location_ids, Location, prefix))
+  defp preload_locations({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_locations({:ok, scopes}, prefix), do: {:ok, preload_locations(scopes, prefix)}
+  defp preload_locations(scopes, prefix), do: Map.put(scopes, :locations, get_resources_from_list(scopes.location_ids, Location, prefix))
 
-  def preload_asset_categories({:error, changeset}, _prefix), do: {:error, changeset}
-  def preload_asset_categories({:ok, scopes}, prefix), do: {:ok, preload_asset_categories(scopes, prefix)}
-  def preload_asset_categories(scopes, prefix), do: Map.put(scopes, :asset_categories, get_resources_from_list(scopes.location_ids, Location, prefix))
+  defp preload_asset_categories({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_asset_categories({:ok, scopes}, prefix), do: {:ok, preload_asset_categories(scopes, prefix)}
+  defp preload_asset_categories(scopes, prefix), do: Map.put(scopes, :asset_categories, get_resources_from_list(scopes.location_ids, Location, prefix))
 
-  def get_resources_from_list(nil, query, prefix) do
+  defp get_resources_from_list(nil, query, prefix) do
     from(q in query, select: %{id: q.id, name: q.name})
     |> Repo.all(prefix: prefix)
   end
 
-  def get_resources_from_list(list, query, prefix) do
+  defp get_resources_from_list(list, query, prefix) do
     from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
     |> Repo.all(prefix: prefix)
   end
