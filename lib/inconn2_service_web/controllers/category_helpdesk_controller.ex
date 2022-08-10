@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    category_helpdesks = Ticket.list_category_helpdesks(conn.assigns.sub_domain_prefix)
+    category_helpdesks = Ticket.list_category_helpdesks(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", category_helpdesks: category_helpdesks)
   end
 

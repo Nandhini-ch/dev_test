@@ -19,7 +19,9 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.AssetConfig.Party
 
   def list_zones(prefix) do
-    Repo.all(Zone, prefix: prefix)
+    Zone
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
 
@@ -55,12 +57,30 @@ defmodule Inconn2Service.AssetConfig do
       end
   end
 
+  # def delete_zone(%Zone{} = zone, prefix) do
+  #   # Deletes the zone and children forcibly
+  #   # TBD: do not allow delete if this zone is linked to some other record(s)
+  #   # Add that validation here....
+  #   HierarchyManager.subtree(zone)
+  #   |> Repo.delete_all(prefix: prefix)
+  # end
+
   def delete_zone(%Zone{} = zone, prefix) do
-    # Deletes the zone and children forcibly
-    # TBD: do not allow delete if this zone is linked to some other record(s)
-    # Add that validation here....
-    HierarchyManager.subtree(zone)
-    |> Repo.delete_all(prefix: prefix)
+    cond do
+      has_descendants?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this zone"
+        }
+      has_site?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are site associated with thix zone or its descendants"
+        }
+      true ->
+        update_zone(zone, %{"active" => false}, prefix)
+        {:delete, "Zone was deleted"}
+    end
   end
 
   def change_zone(%Zone{} = zone, attrs \\ %{}) do
