@@ -13,6 +13,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.Party
   alias Inconn2Service.Staff.{OrgUnit, Employee, User}
   alias Inconn2Service.ContractManagement.{Contract, Scope}
+  alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory}
 
 
 
@@ -61,4 +62,5 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
+  def has_workrequest_subcategory?(%WorkrequestCategory{} = workrequest_category, prefix), do: (workrequest_subcategory_query(Repo.add_active_filter(WorkrequestSubcategory), %{"workrequest_category_id" => workrequest_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 end

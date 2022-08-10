@@ -129,4 +129,14 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> from q in query, where: q.active
     end)
   end
+
+  def workrequest_subcategory_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"workrequest_category_id", workrequest_category_id}, query -> from q in query, where: q.workrequest_category_id == ^workrequest_category_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
+
 end

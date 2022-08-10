@@ -6,6 +6,9 @@ defmodule Inconn2Service.Ticket do
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
@@ -132,7 +135,17 @@ defmodule Inconn2Service.Ticket do
 
   """
   def delete_workrequest_category(%WorkrequestCategory{} = workrequest_category, prefix) do
-    Repo.delete(workrequest_category, prefix: prefix)
+    cond do
+      has_workrequest_subcategory?(workrequest_category, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Workrequest Subcategory associated with it"
+         }
+       true ->
+          update_workrequest_category(workrequest_category, %{"active" => false}, prefix)
+            {:deleted,
+               "The Workrequest Category was disabled"
+             }
+    end
   end
 
   @doc """
@@ -761,6 +774,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
+
   @doc """
   Deletes a category_helpdesk.
 
@@ -774,7 +788,10 @@ defmodule Inconn2Service.Ticket do
 
   """
   def delete_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, prefix) do
-    Repo.delete(category_helpdesk, prefix: prefix)
+        update_category_helpdesk(category_helpdesk, %{"active" => false}, prefix)
+          {:deleted,
+             "The Category Helpdesk was disabled"
+           }
   end
 
   @doc """
@@ -1066,6 +1083,7 @@ defmodule Inconn2Service.Ticket do
   def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
     WorkrequestSubcategory
     |> where(workrequest_category_id: ^workrequest_category_id)
+    #|> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
 
   end
@@ -1145,7 +1163,10 @@ defmodule Inconn2Service.Ticket do
 
   """
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
-    Repo.delete(workrequest_subcategory, prefix: prefix)
+        update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
+          {:deleted,
+             "The Workrequest Subcategory was disabled"
+           }
   end
 
   @doc """
