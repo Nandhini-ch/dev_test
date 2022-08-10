@@ -1,11 +1,10 @@
 defmodule Inconn2Service.Ticket do
-  @moduledoc """
-  The Ticket context.
-  """
-
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
 
   alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
@@ -16,15 +15,9 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
 
-  @doc """
-  Returns the list of workrequest_categories.
+  alias Inconn2Service.Ticket.CategoryHelpdesk
+  alias Inconn2Service.Ticket.WorkRequest
 
-  ## Examples
-
-      iex> list_workrequest_categories()
-      [%WorkrequestCategory{}, ...]
-
-  """
   def list_workrequest_categories(prefix) do
     Repo.all(WorkrequestCategory, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
   end
@@ -33,6 +26,7 @@ defmodule Inconn2Service.Ticket do
     WorkrequestCategory
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn wc -> preload_workrequest_subcategories(wc, prefix) end)
   end
 
   def list_workrequest_categories_with_helpdesk_user(prefix) do
@@ -49,118 +43,42 @@ defmodule Inconn2Service.Ticket do
     end)
   end
 
-  @doc """
-  Gets a single workrequest_category.
-
-  Raises `Ecto.NoResultsError` if the Workrequest category does not exist.
-
-  ## Examples
-
-      iex> get_workrequest_category!(123)
-      %WorkrequestCategory{}
-
-      iex> get_workrequest_category!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workrequest_category!(id, prefix), do: Repo.get!(WorkrequestCategory, id, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
 
-  @doc """
-  Creates a workrequest_category.
-
-  ## Examples
-
-      iex> create_workrequest_category(%{field: value})
-      {:ok, %WorkrequestCategory{}}
-
-      iex> create_workrequest_category(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workrequest_category(attrs \\ %{}, prefix) do
-    result = %WorkrequestCategory{}
-              |> WorkrequestCategory.changeset(attrs)
-              |> Repo.insert(prefix: prefix)
-
-    case result do
-      {:ok, workrequest_category} ->
-        # push_alert_notification_for_ticket_category(workrequest_category, prefix)
-        {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
-      _ -> result
-    end
+    %WorkrequestCategory{}
+    |> WorkrequestCategory.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+    |> preload_workrequest_subcategories(prefix)
 
   end
 
-  @doc """
-  Updates a workrequest_category.
-
-  ## Examples
-
-      iex> update_workrequest_category(workrequest_category, %{field: new_value})
-      {:ok, %WorkrequestCategory{}}
-
-      iex> update_workrequest_category(workrequest_category, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
-    result = workrequest_category
-             |> WorkrequestCategory.changeset(attrs)
-             |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, workrequest_category} -> {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories, force: true)}
-      _ -> result
-    end
-  end
-
-  def update_active_status_for_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
     workrequest_category
     |> WorkrequestCategory.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_workrequest_subcategories(prefix)
+
   end
 
-  @doc """
-  Deletes a workrequest_category.
-
-  ## Examples
-
-      iex> delete_workrequest_category(workrequest_category)
-      {:ok, %WorkrequestCategory{}}
-
-      iex> delete_workrequest_category(workrequest_category)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workrequest_category(%WorkrequestCategory{} = workrequest_category, prefix) do
-    Repo.delete(workrequest_category, prefix: prefix)
+    cond do
+      has_workrequest_subcategory?(workrequest_category, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Workrequest Subcategory associated with it"
+         }
+       true ->
+          update_workrequest_category(workrequest_category, %{"active" => false}, prefix)
+            {:deleted,
+               "The Workrequest Category was disabled"
+             }
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workrequest_category changes.
-
-  ## Examples
-
-      iex> change_workrequest_category(workrequest_category)
-      %Ecto.Changeset{data: %WorkrequestCategory{}}
-
-  """
   def change_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs \\ %{}) do
     WorkrequestCategory.changeset(workrequest_category, attrs)
   end
 
-  alias Inconn2Service.Ticket.CategoryHelpdesk
-  alias Inconn2Service.Ticket.WorkRequest
-
-
-  @doc """
-  Returns the list of work_requests.
-
-  ## Examples
-
-      iex> list_work_requests()
-      [%WorkRequest{}, ...]
-
-  """
   def list_work_requests(prefix) do
     Repo.all(WorkRequest, prefix: prefix)
     |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
@@ -663,55 +581,26 @@ defmodule Inconn2Service.Ticket do
   end
 
 
-  @doc """
-  Returns the list of category_helpdesks.
-
-  ## Examples
-
-      iex> list_category_helpdesks()
-      [%CategoryHelpdesk{}, ...]
-
-  """
-  def list_category_helpdesks(prefix) do
-    Repo.all(CategoryHelpdesk, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+  def list_category_helpdesks(_query_params, prefix) do
+    CategoryHelpdesk
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
   end
 
-  @doc """
-  Gets a single category_helpdesk.
-
-  Raises `Ecto.NoResultsError` if the Category helpdesk does not exist.
-
-  ## Examples
-
-      iex> get_category_helpdesk!(123)
-      %CategoryHelpdesk{}
-
-      iex> get_category_helpdesk!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+
   def get_category_helpdesk_by_user(user_id, prefix) do
     CategoryHelpdesk
     |> where(user_id: ^user_id)
     |> Repo.all(prefix: prefix)
   end
+
   def get_category_helpdesk_by_workrequest_category(workrequest_catgoery_id, site_id, prefix) do
     from(ch in CategoryHelpdesk, where: ch.workrequest_category_id == ^workrequest_catgoery_id and ch.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
   end
-  @doc """
-  Creates a category_helpdesk.
 
-  ## Examples
-
-      iex> create_category_helpdesk(%{field: value})
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> create_category_helpdesk(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_category_helpdesk(attrs \\ %{}, prefix) do
     result = %CategoryHelpdesk{}
               |> CategoryHelpdesk.changeset(attrs)
@@ -738,18 +627,6 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Updates a category_helpdesk.
-
-  ## Examples
-
-      iex> update_category_helpdesk(category_helpdesk, %{field: new_value})
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> update_category_helpdesk(category_helpdesk, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs, prefix) do
     result = category_helpdesk
               |> CategoryHelpdesk.changeset(attrs)
@@ -761,31 +638,14 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Deletes a category_helpdesk.
 
-  ## Examples
-
-      iex> delete_category_helpdesk(category_helpdesk)
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> delete_category_helpdesk(category_helpdesk)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, prefix) do
-    Repo.delete(category_helpdesk, prefix: prefix)
+        update_category_helpdesk(category_helpdesk, %{"active" => false}, prefix)
+          {:deleted,
+             "The Category Helpdesk was disabled"
+           }
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking category_helpdesk changes.
-
-  ## Examples
-
-      iex> change_category_helpdesk(category_helpdesk)
-      %Ecto.Changeset{data: %CategoryHelpdesk{}}
-
-  """
   def change_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs \\ %{}) do
     CategoryHelpdesk.changeset(category_helpdesk, attrs)
   end
@@ -1066,6 +926,7 @@ defmodule Inconn2Service.Ticket do
   def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
     WorkrequestSubcategory
     |> where(workrequest_category_id: ^workrequest_category_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
 
   end
@@ -1145,7 +1006,10 @@ defmodule Inconn2Service.Ticket do
 
   """
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
-    Repo.delete(workrequest_subcategory, prefix: prefix)
+        update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
+          {:deleted,
+             "The Workrequest Subcategory was disabled"
+           }
   end
 
   @doc """
@@ -1369,4 +1233,9 @@ defmodule Inconn2Service.Ticket do
       })
     end
   end
+
+
+  defp preload_workrequest_subcategories({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_workrequest_subcategories({:ok, category}, prefix), do: {:ok, preload_workrequest_subcategories(category, prefix)}
+  defp preload_workrequest_subcategories(category, prefix), do: Map.put(category, :workrequest_subcategories, list_workrequest_subcategories_for_category(category.id, prefix))
 end

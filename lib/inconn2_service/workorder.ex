@@ -52,7 +52,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
+        # push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
         {:ok, updated_template}
       _ ->
         result
@@ -246,7 +246,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
+        # push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
         {:ok, updated_template}
       _ ->
         result
@@ -286,6 +286,9 @@ defmodule Inconn2Service.Workorder do
           "type" => alert.type,
           "description" => description,
         }
+        # Enum.each(site_ids, fn site_id ->
+
+        # end)
         Enum.map(user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)

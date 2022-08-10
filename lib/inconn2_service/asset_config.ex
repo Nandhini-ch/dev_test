@@ -19,7 +19,9 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.AssetConfig.Party
 
   def list_zones(prefix) do
-    Repo.all(Zone, prefix: prefix)
+    Zone
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
 
@@ -55,12 +57,30 @@ defmodule Inconn2Service.AssetConfig do
       end
   end
 
+  # def delete_zone(%Zone{} = zone, prefix) do
+  #   # Deletes the zone and children forcibly
+  #   # TBD: do not allow delete if this zone is linked to some other record(s)
+  #   # Add that validation here....
+  #   HierarchyManager.subtree(zone)
+  #   |> Repo.delete_all(prefix: prefix)
+  # end
+
   def delete_zone(%Zone{} = zone, prefix) do
-    # Deletes the zone and children forcibly
-    # TBD: do not allow delete if this zone is linked to some other record(s)
-    # Add that validation here....
-    HierarchyManager.subtree(zone)
-    |> Repo.delete_all(prefix: prefix)
+    cond do
+      has_descendants?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this zone"
+        }
+      has_site?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are site associated with thix zone or its descendants"
+        }
+      true ->
+        update_zone(zone, %{"active" => false}, prefix)
+        {:delete, "Zone was deleted"}
+    end
   end
 
   def change_zone(%Zone{} = zone, attrs \\ %{}) do
@@ -1355,7 +1375,7 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
-    alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
+    alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
@@ -1396,6 +1416,7 @@ defmodule Inconn2Service.AssetConfig do
 
   defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
+    IO.inspect(alert)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do

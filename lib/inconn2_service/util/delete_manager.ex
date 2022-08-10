@@ -4,6 +4,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.{Site, Zone}
   alias Inconn2Service.Repo
   alias Inconn2Service.InventoryManagement.Store
+  alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.AssetConfig.{Equipment, Location}
   alias Inconn2Service.Util.HierarchyManager
@@ -13,6 +14,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.AssetConfig.Party
   alias Inconn2Service.Staff.{OrgUnit, Employee, User}
   alias Inconn2Service.ContractManagement.{Contract, Scope}
+  alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory}
 
 
 
@@ -21,7 +23,9 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_shift?(%Site{} = site, prefix), do: (shift_query(Repo.add_active_filter(Shift),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_store?(%Site{} = site, prefix), do: (store_query(Repo.add_active_filter(Store),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  #def has_site?(%Zone{} = zone, prefix), do: (site_query(Site,%{"zone_id" => zone.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site),%{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_site?(%Party{} = party, prefix), do: (site_query(Repo.add_active_filter(Site), %{"party_id" => party.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_equipment?(%Site{} = site, prefix), do: (equipment_query(Repo.add_active_filter(Equipment),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_equipment?(%Location{} = location, prefix), do: (equipment_query(Repo.add_active_filter(Equipment),%{"location_id" => location.id}) |>Repo.all(prefix: prefix) |> length()) > 0
@@ -31,7 +35,7 @@ defmodule Inconn2Service.Util.DeleteManager do
     (equipment_query(Repo.add_active_filter(Equipment),%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   end
 
-  def has_descendants?(resource, prefix), do: (HierarchyManager.descendants(resource) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_descendants?(resource, prefix), do: (HierarchyManager.descendants(resource) |> Repo.add_active_filter() |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_location?(%Site{} = site, prefix), do: (location_query(Repo.add_active_filter(Location),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_location?(%AssetCategory{} = asset_category, prefix), do: (location_query(Repo.add_active_filter(Location),%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -46,8 +50,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_task_list?(%AssetCategory{} = asset_category, prefix), do: (task_list_query(Repo.add_active_filter(TaskList), %{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site), %{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_site?(%Party{} = party, prefix), do: (site_query(Repo.add_active_filter(Site), %{"party_id" => party.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
+  # def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site), %{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_check?(%CheckType{} = check_type, prefix), do: (check_query(Repo.add_active_filter(Check), %{"check_type_id" => check_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
@@ -61,4 +64,5 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
+  def has_workrequest_subcategory?(%WorkrequestCategory{} = workrequest_category, prefix), do: (workrequest_subcategory_query(Repo.add_active_filter(WorkrequestSubcategory), %{"workrequest_category_id" => workrequest_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 end
