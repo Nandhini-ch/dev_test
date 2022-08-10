@@ -6,6 +6,11 @@ defmodule Inconn2ServiceWeb.ContractController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
+  def index(conn, %{"party_id" => party_id}) do
+    contracts = ContractManagement.list_contracts(party_id, conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", contracts: contracts)
+  end
+
   def index(conn, _params) do
     contracts = ContractManagement.list_contracts(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", contracts: contracts)

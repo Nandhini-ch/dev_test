@@ -23,6 +23,13 @@ defmodule Inconn2ServiceWeb.AssetCategoryView do
     }
   end
 
+  def render("asset_category_only_name.json", %{asset_category: asset_category}) do
+    %{
+      id: asset_category.id,
+      name: asset_category.name
+    }
+  end
+
   def render("asset_category_node.json", %{asset_category: asset_category}) do
     %{
       id: asset_category.id,

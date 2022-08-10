@@ -8,16 +8,28 @@ defmodule Inconn2Service.ContractManagement do
   alias Inconn2Service.Repo
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
+  alias Inconn2Service.AssetConfig.Location
+  alias Inconn2Service.AssetConfig
 
   def list_contracts(params, prefix) do
     Contract
     |> Repo.add_active_filter()
     |> contract_query(params)
     |> Repo.all(prefix: prefix)
-    |> Enum.map(fn c -> preload_scopes(c, prefix) end)
+    |> Stream.map(fn c -> preload_scopes(c, prefix) end)
+    |> Enum.map(fn c -> preload_service_provider(c, prefix) end)
   end
 
-  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix) |> preload_scopes(prefix)
+  def list_contracts(party_id, params, prefix) do
+    from(c in Contract, where: c.party_id == ^party_id)
+    |> Repo.add_active_filter()
+    |> contract_query(params)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn c -> preload_scopes(c, prefix) end)
+    |> Enum.map(fn c -> preload_service_provider(c, prefix) end)
+  end
+
+  def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix) |> preload_scopes(prefix) |> preload_service_provider(prefix)
 
 
   def create_contract(attrs \\ %{}, prefix) do
@@ -25,6 +37,7 @@ defmodule Inconn2Service.ContractManagement do
     |> Contract.changeset(attrs)
     |> Repo.insert(prefix: prefix)
     |> preload_scopes(prefix)
+    |> preload_service_provider(prefix)
   end
 
   def update_contract(%Contract{} = contract, attrs, prefix) do
@@ -32,6 +45,7 @@ defmodule Inconn2Service.ContractManagement do
     |> Contract.changeset(attrs)
     |> Repo.update(prefix: prefix)
     |> preload_scopes(prefix)
+    |> preload_service_provider(prefix)
   end
 
   # def delete_contract(%Contract{} = contract, prefix) do
@@ -63,13 +77,26 @@ defmodule Inconn2Service.ContractManagement do
     |> Repo.add_active_filter()
     |> scope_query(params)
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn s -> preload_site(s, prefix) end)
+    |> Stream.map(fn s -> preload_locations(s, prefix) end)
+    |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
   end
 
+  def list_scopes(contract_id, params, prefix) do
+    from(s in Scope, where: s.contract_id == ^contract_id)
+    |> Repo.add_active_filter()
+    |> scope_query(params)
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn s -> preload_site(s, prefix) end)
+    |> Stream.map(fn s -> preload_locations(s, prefix) end)
+    |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
+  end
 
-  def get_scope!(id, prefix), do: Repo.get!(Scope, id, prefix: prefix)
+  def get_scope!(id, prefix), do: Repo.get!(Scope, id, prefix: prefix) |> preload_site(prefix) |> preload_asset_categories(prefix) |> preload_locations(prefix)
 
   def create_scope(attrs, query_params, prefix) do
-    insert_scope(attrs, query_params["type"], prefix)
+    {:ok, scopes} = insert_scope(attrs, query_params["type"], prefix)
+    {:ok, Enum.map(scopes, fn s -> preload_site(s, prefix) |> preload_asset_categories(prefix) |> preload_locations(prefix) end)}
   end
 
   def create_scope(attrs, prefix) do
@@ -77,6 +104,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Scope.changeset(attrs)
     # |> validate_party_type(prefix)
     |> Repo.insert(prefix: prefix)
+    |> preload_site(prefix)
+    |> preload_asset_categories(prefix)
+    |> preload_locations(prefix)
   end
 
   def update_scope(%Scope{} = scope, attrs, prefix) do
@@ -84,6 +114,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Scope.changeset(attrs)
     # |> validate_party_type(prefix)
     |> Repo.update(prefix: prefix)
+    |> preload_site(prefix)
+    |> preload_asset_categories(prefix)
+    |> preload_locations(prefix)
   end
 
   def delete_scope(%Scope{} = scope, prefix) do
@@ -130,4 +163,29 @@ defmodule Inconn2Service.ContractManagement do
     Map.put(contract, :scopes, scopes)
   end
 
+  defp preload_service_provider({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_service_provider({:ok, contract}, prefix), do: {:ok, preload_service_provider(contract, prefix)}
+  defp preload_service_provider(contract, prefix), do: Map.put(contract, :service_provider, AssetConfig.get_party!(contract.party_id, prefix))
+
+  def preload_site({:error, changeset}, _prefix), do: {:error, changeset}
+  def preload_site({:ok, scope}, prefix), do: {:ok, preload_site(scope, prefix)}
+  def preload_site(scope, prefix), do: Map.put(scope, :site, AssetConfig.get_site!(scope.site_id, prefix))
+
+  def preload_locations({:error, changeset}, _prefix), do: {:error, changeset}
+  def preload_locations({:ok, scopes}, prefix), do: {:ok, preload_locations(scopes, prefix)}
+  def preload_locations(scopes, prefix), do: Map.put(scopes, :locations, get_resources_from_list(scopes.location_ids, Location, prefix))
+
+  def preload_asset_categories({:error, changeset}, _prefix), do: {:error, changeset}
+  def preload_asset_categories({:ok, scopes}, prefix), do: {:ok, preload_asset_categories(scopes, prefix)}
+  def preload_asset_categories(scopes, prefix), do: Map.put(scopes, :asset_categories, get_resources_from_list(scopes.location_ids, Location, prefix))
+
+  def get_resources_from_list(nil, query, prefix) do
+    from(q in query, select: %{id: q.id, name: q.name})
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_resources_from_list(list, query, prefix) do
+    from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
+    |> Repo.all(prefix: prefix)
+  end
 end

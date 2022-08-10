@@ -33,6 +33,13 @@ defmodule Inconn2ServiceWeb.LocationView do
     }
   end
 
+  def render("location_only_name.json", %{location: location}) do
+    %{
+      id: location.id,
+      name: location.name
+    }
+  end
+
   def render("group_update.json", %{update_info: update_info}) do
     update_info
   end
@@ -46,6 +53,8 @@ defmodule Inconn2ServiceWeb.LocationView do
       asset_qr_ul: location.asset_qr_url
     }
   end
+
+  #arunvr@ardhika.com
 
   def render("location.json", %{location: location}) do
     %{
