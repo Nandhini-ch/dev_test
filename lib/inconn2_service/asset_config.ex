@@ -1355,7 +1355,7 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
-    alert = Common.get_alert_by_code_and_site_id(alert_code, site_id)
+    alert = Common.get_alert_by_code(alert_code)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
@@ -1396,6 +1396,7 @@ defmodule Inconn2Service.AssetConfig do
 
   defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
+    IO.inspect(alert)
     alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
     alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do

@@ -72,7 +72,7 @@ defmodule Inconn2Service.MixProject do
         "ecto.migrate",
         "ecto.create_alert_notification_reserves",
         "run priv/repo/seeds.exs",
-        "run priv/repo/seed_alerts_tenant.exs",
+        # "run priv/repo/seed_alerts_tenant.exs",
         "run priv/repo/seeds_party_site.exs",
         "run priv/repo/seeds_shifts.exs",
         "run priv/repo/seeds_holiday.exs",

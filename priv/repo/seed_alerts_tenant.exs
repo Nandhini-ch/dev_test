@@ -3,7 +3,8 @@ alias Inconn2Service.Prompt
 
 alerts = Common.list_alert_notification_reserves()
 
-Enum.each(alerts, fn alert ->
+result =
+Enum.map(alerts, fn alert ->
   Prompt.create_alert_notification_config(
     %{
       "addressed_to_user_ids" => [1,2],
@@ -16,3 +17,5 @@ Enum.each(alerts, fn alert ->
     "inc_bata"
   )
 end)
+
+IO.inspect(result)

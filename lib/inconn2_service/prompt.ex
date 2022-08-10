@@ -49,16 +49,16 @@ defmodule Inconn2Service.Prompt do
 
   def list_user_alert_notifications(prefix) do
     Repo.all(UserAlertNotification, prefix: prefix)
-    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve(user_alert_notification) end)
+    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve_for_user_alert(user_alert_notification) end)
   end
 
   def get_user_alert_notifications_for_logged_in_user(type, user, prefix) do
     from(uan in UserAlertNotification, where: uan.type == ^type and uan.user_id == ^user.id and uan.action_taken == false)
     |> Repo.all(prefix: prefix)
-    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve(user_alert_notification) end)
+    |> Enum.map(fn user_alert_notification -> preload_alert_notification_reserve_for_user_alert(user_alert_notification) end)
   end
 
-  def get_user_alert_notification!(id, prefix), do: Repo.get!(UserAlertNotification, id, prefix: prefix) |> preload_alert_notification_reserve()
+  def get_user_alert_notification!(id, prefix), do: Repo.get!(UserAlertNotification, id, prefix: prefix) |> preload_alert_notification_reserve_for_user_alert()
 
   def create_user_alert_notification(attrs \\ %{}, prefix) do
     result = %UserAlertNotification{}
@@ -66,7 +66,7 @@ defmodule Inconn2Service.Prompt do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, user_alert_notification} ->
-          {:ok, user_alert_notification |> preload_alert_notification_reserve()}
+          {:ok, user_alert_notification |> preload_alert_notification_reserve_for_user_alert()}
       _ ->
         result
     end
@@ -90,7 +90,7 @@ defmodule Inconn2Service.Prompt do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, user_alert_notification} ->
-          {:ok, user_alert_notification |> preload_alert_notification_reserve()}
+          {:ok, user_alert_notification |> preload_alert_notification_reserve_for_user_alert()}
       _ ->
         result
     end
@@ -152,6 +152,10 @@ defmodule Inconn2Service.Prompt do
     end
   end
 
+  defp preload_alert_notification_reserve_for_user_alert({:error, changeset}), do: {:error, changeset}
+  defp preload_alert_notification_reserve_for_user_alert({:ok, config}), do: {:ok, preload_alert_notification_reserve(config)}
+  defp preload_alert_notification_reserve_for_user_alert(config), do: Map.put(config, :alert_notification_reserve, Common.get_alert_notification_reserve!(config.alert_notification_id))
+
   defp preload_alert_notification_reserve({:error, changeset}), do: {:error, changeset}
   defp preload_alert_notification_reserve({:ok, config}), do: {:ok, preload_alert_notification_reserve(config)}
   defp preload_alert_notification_reserve(config), do: Map.put(config, :alert_notification_reserve, Common.get_alert_notification_reserve!(config.alert_notification_reserve_id))
@@ -159,5 +163,4 @@ defmodule Inconn2Service.Prompt do
   defp preload_site({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_site({:ok, config}, prefix), do: {:ok, preload_site(config, prefix)}
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
-
 end
