@@ -6,7 +6,7 @@ defmodule Inconn2ServiceWeb.HolidayController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params, %{"year" => year, "site_id" => site_id}) do
+  def index(conn, %{"year" => year, "site_id" => site_id}) do
     {:ok, year_begin} = year_end_date_convert(year)
     {:ok, year_end} = year_start_date_convert(year)
 
@@ -75,10 +75,10 @@ defmodule Inconn2ServiceWeb.HolidayController do
   end
 
   defp year_end_date_convert(year) do
-    Date.new(year, 12, 31)
+    Date.new(String.to_integer(year), 12, 31)
   end
 
   defp year_start_date_convert(year) do
-    Date.new(year, 01, 01)
+    Date.new(String.to_integer(year), 01, 01)
   end
 end
