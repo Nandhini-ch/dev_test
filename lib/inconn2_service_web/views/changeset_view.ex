@@ -17,6 +17,10 @@ defmodule Inconn2ServiceWeb.ChangesetView do
     %{errors: translate_errors(changeset)}
   end
 
+  def render("errors.json", %{changesets: changesets}) do
+    %{errors: Enum.map(changesets, fn c -> translate_errors(c) end)}
+  end
+
   def render("error.json", %{triplex: error_message}) do
     %{errors: %{tenant: [error_message]}}
   end

@@ -68,7 +68,8 @@ prefix = "inc_bata"
       "person_or_location_based" => "L",
       "is_layout_configuration_required" => false,
       "site_id" => 1,
-      "location_id" => 1
+      "location_id" => 1,
+      "storekeeper_user_id" => 1
     },
     prefix
   )
@@ -86,7 +87,8 @@ prefix = "inc_bata"
         "row_count" => 10,
         "row_notation" => "L",
         "bin_count" => 10,
-        "bin_notation" => "N"
+        "bin_notation" => "N",
+        "storekeeper_user_id" => 1
       },
       prefix
     )

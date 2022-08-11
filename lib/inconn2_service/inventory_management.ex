@@ -1,9 +1,10 @@
 defmodule Inconn2Service.InventoryManagement do
-
   import Ecto.Query, warn: false
-  alias Inconn2Service.Repo
   import Ecto.Changeset
+  import Inconn2Service.Util.IndexQueries
+
   alias Ecto.Multi
+  alias Inconn2Service.Repo
 
   alias Inconn2Service.{AssetConfig, Staff}
   alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventorySupplierItem, InventoryItem, Store}
@@ -135,7 +136,10 @@ defmodule Inconn2Service.InventoryManagement do
       {"user_id", user_id}, query ->
         from q in query, where: q.user_id == ^user_id
 
-      _ , query ->
+      {"storekeeper_user_id", storekeeper_user_id}, query ->
+        from q in query, where: q.storekeeper_user_id == ^storekeeper_user_id
+
+     _ , query ->
         query
     end) |> add_active_condition()
     Repo.all(query, prefix: prefix)
@@ -356,10 +360,16 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def create_transactions(transactions, prefix) do
-    Enum.map(transactions, fn t ->
-      {:ok, transaction} = create_transaction(t, prefix)
-      transaction
-    end)
+    result =
+      Enum.map(transactions, fn t ->
+        create_transaction(t, prefix)
+      end)
+    error_case = Enum.map(result, fn {a, b} -> if a == :error do b end end) |> Enum.filter(fn e -> !is_nil(e) end)
+    IO.inspect(error_case)
+    case length(error_case) do
+      0 -> {:ok, result |> Enum.map(fn {:ok, r} -> r end)}
+      _ ->  {:multiple_error, error_case}
+    end
   end
 
   #Different create function based on transaction type
@@ -539,21 +549,6 @@ defmodule Inconn2Service.InventoryManagement do
       inverse -> {:ok, 1 / unit_of_measurement_conversion.multiplication_factor}
       true -> {:ok, unit_of_measurement_conversion.multiplication_factor}
     end
-  end
-
-  defp transactions_query(query, %{}), do: query
-
-  defp transactions_query(query, query_params) do
-    Enum.reduce(query_params, query, fn
-       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
-       {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
-       {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
-       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
-       {"dc_no", dc_no}, query -> from q in query, where: q.dc_no == ^dc_no
-       {"reference_no", reference_no}, query -> from q in query, where: q.reference_no == ^reference_no
-       {"type", type}, query -> from q in query, where: q.type == ^type
-       _ , query -> query
-    end)
   end
 
   defp uom_conversion_query(from_uom_id, to_uom_id) do
