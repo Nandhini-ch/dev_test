@@ -3,6 +3,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   alias Inconn2Service.AssetConfig.{Site, Zone}
   alias Inconn2Service.Repo
+  alias Inconn2Service.Settings.Shift
   alias Inconn2Service.InventoryManagement.Store
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.AssetConfig.AssetCategory

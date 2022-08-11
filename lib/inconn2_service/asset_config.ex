@@ -1474,8 +1474,8 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Party
 
-  def list_parties(prefix) do
-    Party
+  def list_parties(query_params, prefix) do
+    party_query(Party, query_params)
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end

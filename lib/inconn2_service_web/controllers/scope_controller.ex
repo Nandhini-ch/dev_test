@@ -6,6 +6,11 @@ defmodule Inconn2ServiceWeb.ScopeController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
+  def index(conn, %{"contract_id" => contract_id}) do
+    scopes = ContractManagement.list_scopes(contract_id, conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", scopes: scopes)
+  end
+
   def index(conn, _params) do
     scopes = ContractManagement.list_scopes(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", scopes: scopes)
