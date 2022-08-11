@@ -9,6 +9,10 @@ defmodule Inconn2Service.Util.IndexQueries do
   #alias Inconn2Service.InventoryManagement.Store
   #alias Inconn2Service.AssetConfig.{Site, Zone}
   #alias Inconn2Service.AssetConfig.Party
+  # alias Inconn2Service.AssetConfig.Party
+  # alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role}
+  # alias Inconn2Service.ContractManagement.{Contract, Scope}
+  # alias Inconn2Service.Settings.Shift
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
@@ -23,6 +27,8 @@ defmodule Inconn2Service.Util.IndexQueries do
   def employee_rosters_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      {"shift_id", shift_id}, query -> from q in query, where: q.shift_id == ^shift_id
+      {"employee_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
       _, query -> from q in query, where: q.active
     end)
   end
@@ -37,6 +43,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   def store_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       _, query -> from q in query, where: q.active
     end)
   end
@@ -116,9 +123,18 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def roster_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"shift_id", shift_id}, query -> from q in query, where: q.shift_id == ^shift_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
   def employee_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      {"org_unit_id", org_unit_id }, query -> from q in query, where: q.org_unit_id == ^org_unit_id
+      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       _, query -> from q in query, where: q.active
     end)
   end
@@ -126,6 +142,29 @@ defmodule Inconn2Service.Util.IndexQueries do
   def user_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      {"employee_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
+      {"role_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def reports_to_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"reports_to", reports_to}, query -> from q in query, where: q.reports_to == ^reports_to
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def alert_notification_configuration_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"user_id", user_id}, query -> from q in query, where: ^user_id in q.addressed_to_user_ids or ^user_id in q.escalated_to_user_ids
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def category_helpdesk_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       _, query -> from q in query, where: q.active
     end)
   end

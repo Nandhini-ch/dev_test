@@ -27,11 +27,13 @@ defmodule Inconn2Service.Assignment do
   """
   def list_employee_rosters(prefix) do
     EmployeeRoster
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
   end
 
   def list_employee_rosters(user, prefix) do
     EmployeeRoster
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
@@ -44,7 +46,8 @@ defmodule Inconn2Service.Assignment do
           e.shift_id == ^shift_id and
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
     )
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
@@ -57,7 +60,8 @@ defmodule Inconn2Service.Assignment do
           e.site_id == ^site_id and
           fragment("? BETWEEN ? AND ?", ^date, e.start_date, e.end_date)
     )
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
     |> Repo.preload([:site, :shift, employee: :org_unit])
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
   end
@@ -72,7 +76,8 @@ defmodule Inconn2Service.Assignment do
           fragment("? BETWEEN ? AND ?", ^from_date, e.start_date, e.end_date) or
           fragment("? BETWEEN ? AND ?", ^to_date, e.start_date, e.end_date)
     )
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
     |> Repo.preload([employee: :org_unit])
     |> Enum.filter(fn x -> filter_by_user_is_licensee(x, user, prefix) end)
     |> Enum.map(fn employee_roster -> employee_roster.employee end)
@@ -325,7 +330,10 @@ defmodule Inconn2Service.Assignment do
 
   """
   def delete_employee_roster(%EmployeeRoster{} = employee_roster, prefix) do
-    Repo.delete(employee_roster, prefix: prefix)
+    update_employee_roster(employee_roster, %{"active" => false}, prefix)
+       {:deleted,
+         "The employee roster was disabled"
+       }
   end
 
   @doc """

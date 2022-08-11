@@ -2,7 +2,7 @@ defmodule Inconn2Service.Prompt do
   @moduledoc """
   The Prompt context.
   """
-
+  # import Inconn2Service.Util.DeleteManager
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
@@ -20,7 +20,9 @@ defmodule Inconn2Service.Prompt do
 
   """
   def list_alert_notification_configs(prefix) do
-    Repo.all(AlertNotificationConfig, prefix: prefix)
+    AlertNotificationConfig
+     |> Repo.add_active_filter()
+      Repo.all(AlertNotificationConfig, prefix: prefix)
   end
 
   @doc """

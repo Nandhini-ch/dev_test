@@ -284,7 +284,6 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_items", ReferenceDownloadController, :download_items
     post "/upload_items", ReferenceUploadController, :upload_items
 
-
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
     get "/download_inventory_locations/", ReferenceDownloadController, :download_inventory_locations
     get "/sites/:site_id/inventory_locations/", InventoryLocationController, :index
