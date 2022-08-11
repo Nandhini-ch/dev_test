@@ -189,17 +189,6 @@ defmodule Inconn2Service.Staff do
     |> OrgUnit.changeset(attrs)
   end
 
-  def update_active_status_for_org_unit(%OrgUnit{} = org_unit, org_unit_params, prefix) do
-    case org_unit_params do
-      %{"active" => false} ->
-        deactivate_children(org_unit, org_unit_params, OrgUnit, prefix)
-
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(org_unit)
-        handle_hierarchical_activation(org_unit, org_unit_params, OrgUnit, prefix, parent_id)
-    end
-  end
-
   def delete_org_unit(%OrgUnit{} = org_unit, prefix) do
     # Deletes the org_unit and children forcibly
     # TBD: do not allow delete if this org_unit is linked to some other record(s)
@@ -386,12 +375,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_employee(%Employee{} = employee, attrs, prefix) do
-    employee
-    |> Employee.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
   def delete_employee(%Employee{} = employee, prefix) do
     Repo.delete(employee, prefix: prefix)
   end
@@ -517,12 +500,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_user(%User{} = user, attrs, prefix) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
   def delete_user(%User{} = user, prefix) do
     Repo.delete(user, prefix: prefix)
   end
@@ -575,12 +552,6 @@ defmodule Inconn2Service.Staff do
   end
 
   def update_role(%Role{} = role, attrs, prefix) do
-    role
-    |> Role.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
-  def update_active_status_for_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
     |> Repo.update(prefix: prefix)

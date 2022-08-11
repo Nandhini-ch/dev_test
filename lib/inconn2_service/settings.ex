@@ -132,12 +132,6 @@ defmodule Inconn2Service.Settings do
     |> Repo.update(prefix: prefix)
   end
 
-  def update_active_status_for_shift(%Shift{} = shift, attrs, prefix) do
-    shift
-    |> Shift.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
   @doc """
   Deletes a shift.
 
@@ -254,13 +248,6 @@ defmodule Inconn2Service.Settings do
 
   """
   def update_holiday(%Holiday{} = holiday, attrs, prefix) do
-    holiday
-    |> Holiday.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
-
-  def update_active_status_for_holiday(%Holiday{} = holiday, attrs, prefix) do
     holiday
     |> Holiday.changeset(attrs)
     |> Repo.update(prefix: prefix)
