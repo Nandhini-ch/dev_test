@@ -646,7 +646,7 @@ defmodule Inconn2Service.Staff do
   end
 
   def reset_user_password(user, credentials, prefix) do
-    User.change_password_changeset(user, %{"password" => credentials["new_password"]}) |> Repo.update(prefix: prefix)
+    User.change_password_changeset(user, %{"password" => credentials["password"]}) |> Repo.update(prefix: prefix)
   end
 
 

@@ -108,6 +108,14 @@ defmodule Inconn2Service.Util.IndexQueries do
     _, query -> from q in query, where: q.active end)
   end
 
+  def party_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"type", "sp"}, query -> from q in query, where: q.party_type == ^"SP"
+      {"type", "ao"}, query -> from q in query, where: q.party_type == ^"AO"
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
   defp get_subtree_zone_ids(zone_id, prefix) do
     subtree_query = AssetConfig.get_zone!(zone_id, prefix)
                     |> HierarchyManager.subtree()
@@ -166,6 +174,27 @@ defmodule Inconn2Service.Util.IndexQueries do
     Enum.reduce(query_params, query, fn
       {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def workrequest_subcategory_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"workrequest_category_id", workrequest_category_id}, query -> from q in query, where: q.workrequest_category_id == ^workrequest_category_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
+  def transactions_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
+       {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
+       {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
+       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+       {"dc_no", dc_no}, query -> from q in query, where: q.dc_no == ^dc_no
+       {"reference_no", reference_no}, query -> from q in query, where: q.reference_no == ^reference_no
+       {"type", type}, query -> from q in query, where: q.type == ^type
+       _ , query -> query
     end)
   end
 end

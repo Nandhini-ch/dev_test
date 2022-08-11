@@ -7,6 +7,7 @@ defmodule Inconn2Service.AssetConfig.Zone do
     field :name, :string
     field :parent_id, :integer, virtual: true
     field :path, {:array, :integer}, default: []
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -14,7 +15,7 @@ defmodule Inconn2Service.AssetConfig.Zone do
   @doc false
   def changeset(zone, attrs) do
     zone
-    |> cast(attrs, [:name, :description, :path, :parent_id])
+    |> cast(attrs, [:name, :description, :path, :parent_id, :active])
     |> validate_required([:name, :path])
   end
 end

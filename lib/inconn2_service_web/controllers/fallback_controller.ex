@@ -22,6 +22,14 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render("error.json", triplex: err_msg)
   end
 
+  def call(conn, {:multiple_error, changeset_array}) do
+    IO.inspect(changeset_array)
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(Inconn2ServiceWeb.ChangesetView)
+    |> render("errors.json", changesets: changeset_array)
+  end
+
   # This clause is an example of how to handle resources that cannot be found.
   def call(conn, {:error, :not_found}) do
     conn

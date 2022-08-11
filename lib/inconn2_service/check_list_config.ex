@@ -46,7 +46,7 @@ defmodule Inconn2Service.CheckListConfig do
 
   #Context function for Check
   def list_checks(query_params, prefix) do
-    check_query(Check, query_params) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
+    check_query(Check, query_params) |> Repo.add_active_filter()  |> Repo.all(prefix: prefix) |> Repo.preload(:check_type)
   end
 
   def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix) |> Repo.preload(:check_type)
