@@ -8,7 +8,7 @@ defmodule Inconn2Service.ContractManagement do
   alias Inconn2Service.Repo
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
-  alias Inconn2Service.AssetConfig.Location
+  alias Inconn2Service.AssetConfig.{Location, AssetCategory}
   alias Inconn2Service.AssetConfig
 
   def list_contracts(params, prefix) do
@@ -177,12 +177,9 @@ defmodule Inconn2Service.ContractManagement do
 
   defp preload_asset_categories({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_asset_categories({:ok, scopes}, prefix), do: {:ok, preload_asset_categories(scopes, prefix)}
-  defp preload_asset_categories(scopes, prefix), do: Map.put(scopes, :asset_categories, get_resources_from_list(scopes.location_ids, Location, prefix))
+  defp preload_asset_categories(scopes, prefix), do: Map.put(scopes, :asset_categories, get_resources_from_list(scopes.asset_category_ids, AssetCategory, prefix))
 
-  defp get_resources_from_list(nil, query, prefix) do
-    from(q in query, select: %{id: q.id, name: q.name})
-    |> Repo.all(prefix: prefix)
-  end
+  defp get_resources_from_list(nil, _query, _prefix), do: []
 
   defp get_resources_from_list(list, query, prefix) do
     from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
