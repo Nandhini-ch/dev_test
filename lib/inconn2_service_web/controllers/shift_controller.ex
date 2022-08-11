@@ -83,24 +83,6 @@ defmodule Inconn2ServiceWeb.ShiftController do
     end
   end
 
-  def activate_shift(conn, %{"id" => id}) do
-    shift = Settings.get_shift!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Shift{} = shift} <-
-           Settings.update_active_status_for_shift(shift, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", shift: shift)
-    end
-  end
-
-  def deactivate_shift(conn, %{"id" => id}) do
-    shift = Settings.get_shift!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Shift{} = shift} <-
-           Settings.update_active_status_for_shift(shift, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", shift: shift)
-    end
-  end
-
   defp date_convert(date_to_convert) do
     date_to_convert
     |> String.split("-")

@@ -42,21 +42,4 @@ defmodule Inconn2ServiceWeb.RoleController do
     end
   end
 
-  def activate_role(conn, %{"id" => id}) do
-    role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Role{} = role} <-
-           Staff.update_active_status_for_role(role, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", role: role)
-    end
-  end
-
-  def deactivate_role(conn, %{"id" => id}) do
-    role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Role{} = role} <-
-           Staff.update_active_status_for_role(role, %{"active" => false} , conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", role: role)
-    end
-  end
 end

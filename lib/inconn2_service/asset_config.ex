@@ -23,10 +23,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
-
-
-  def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
-
+    def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
 
   def create_zone(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
@@ -1663,7 +1660,7 @@ defmodule Inconn2Service.AssetConfig do
       has_site?(party, prefix) ->
         {:could_not_delete,
           "Cannot be deleted as there are Sites associated with it"
-         }
+        }
 
       has_org_unit?(party, prefix) ->
         {:could_not_delete,

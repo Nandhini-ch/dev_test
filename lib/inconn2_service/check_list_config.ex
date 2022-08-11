@@ -112,7 +112,7 @@ defmodule Inconn2Service.CheckListConfig do
     cond do
       has_workorder_template?(check_list, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are workorder templates assocaited"}
+        "Cannot Delete because there are workorder templates associated"}
 
       true ->
         update_check_list(check_list, %{"active" => false}, prefix)

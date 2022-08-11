@@ -121,13 +121,9 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]
 
     resources "/shifts", ShiftController, except: [:new, :edit]
-    put "/shifts/:id/activate", ShiftController, :activate_shift
-    put "/shifts/:id/deactivate", ShiftController, :deactivate_shift
     get "/download_shifts", ReferenceDownloadController, :download_shifts
     post "/upload_shifts", ReferenceUploadController, :upload_shifts
     resources "/bankholidays", HolidayController, except: [:new, :edit]
-    put "/bankholidays/:id/activate", HolidayController, :activate_holiday
-    put "/bankholidays/:id/deactivate", HolidayController, :deactivate_holiday
     get "/download_bankholidays", ReferenceDownloadController, :download_bankholidays
     post "/upload_bankholidays", ReferenceUploadController, :upload_bankholidays
 
@@ -198,29 +194,21 @@ defmodule Inconn2ServiceWeb.Router do
     get "/parties/:party_id/org_units", OrgUnitController, :index
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
-    put "/org_units/:id/activate", OrgUnitController, :activate_org_unit
-    put "/org_units/:id/deactivate", OrgUnitController, :deactivate_org_unit
 
 
     resources "/employees", EmployeeController, except: [:new, :edit]
     get "/reportees", EmployeeController, :reportees_for_logged_in_user
     get "/employees/:employee_id/reportees", EmployeeController, :reportees_for_employee
-    put "/employees/:id/activate", EmployeeController, :activate_employee
-    put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
     resources "/users", UserController, except: [:new, :edit]
     put "/users/:id/change_password", UserController, :change_password
-    put "/users/:id/activate", UserController, :activate_user
-    put "/users/:id/deactivate", UserController, :deactivate_user
     get "/download_users", ReferenceDownloadController, :download_users
     resources "/modules", ModuleController, only: [:index, :show]
     get "/modules/:module_id/features", FeatureController, :index
     resources "/role_profiles", RoleProfileController, only: [:index, :show]
     resources "/roles", RoleController, except: [:new, :edit]
     get "/download_roles", ReferenceDownloadController, :download_roles
-    put "/roles/:id/activate", RoleController, :active_role
-    put "/roles/:id/deactivate", RoleController, :deactivate_role
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
@@ -281,7 +269,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/items", ItemController, except: [:new, :edit]
     get "/download_items", ReferenceDownloadController, :download_items
     post "/upload_items", ReferenceUploadController, :upload_items
-
 
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
     get "/download_inventory_locations/", ReferenceDownloadController, :download_inventory_locations
