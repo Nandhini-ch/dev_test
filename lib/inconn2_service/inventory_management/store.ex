@@ -19,6 +19,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
     field :store_image_type, :string
     field :store_image_name, :string
     field :site_id, :integer
+    field :storekeeper_user_id, :integer
     field :active, :boolean, default: true
 
     timestamps()
@@ -28,7 +29,8 @@ defmodule Inconn2Service.InventoryManagement.Store do
   def changeset(store, attrs) do
     store
     |> cast(attrs, [:name, :description, :location_id, :site_id, :person_or_location_based, :user_id, :is_layout_configuration_required, :store_image,
-                              :store_image_type, :store_image_name, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation, :site_id, :active])
+                              :store_image_type, :store_image_name, :aisle_count, :aisle_notation, :row_count, :row_notation, :bin_count, :bin_notation,
+                              :site_id, :storekeeper_user_id, :active])
     |> validate_required([:name, :person_or_location_based])
     |> validate_inclusion(:person_or_location_based, ["P", "L"])
     |> validate_inclusion(:store_image_type, ["image/apng", "image/avif", "image/gif", "image/jpeg", "image/png", "image/webp"])
@@ -54,7 +56,7 @@ defmodule Inconn2Service.InventoryManagement.Store do
 
   def validate_location_and_site_if_location_based_store(cs) do
     if get_field(cs, :person_or_location_based, nil) == "L" do
-      validate_required(cs, [:site_id, :location_id, :is_layout_configuration_required])
+      validate_required(cs, [:site_id, :location_id, :is_layout_configuration_required, :storekeeper_user_id])
     else
       cs
     end

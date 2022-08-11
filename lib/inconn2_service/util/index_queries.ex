@@ -146,5 +146,16 @@ defmodule Inconn2Service.Util.IndexQueries do
   end
 
 
-
+  def transactions_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
+       {"unit_of_measurement_id", uom_id}, query -> from q in query, where: q.unit_of_measurement_id == ^uom_id
+       {"supplier_id", supplier_id}, query -> from q in query, where: q.inventory_supplier_id == ^supplier_id
+       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+       {"dc_no", dc_no}, query -> from q in query, where: q.dc_no == ^dc_no
+       {"reference_no", reference_no}, query -> from q in query, where: q.reference_no == ^reference_no
+       {"type", type}, query -> from q in query, where: q.type == ^type
+       _ , query -> query
+    end)
+  end
 end
