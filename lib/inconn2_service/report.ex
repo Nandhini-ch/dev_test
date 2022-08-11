@@ -439,6 +439,8 @@ defmodule Inconn2Service.Report do
           asset_category: asset_category,
           ticket_type: (if wr.is_external_ticket do "External" else "Internal" end),
           ticket_category: workrequest_category,
+          ticket_subcategory: workrequest_sub_category,
+          description: wr.description,
           raised_by: raised_by,
           assigned_to: assigned_to,
           response_tat: response_tat_met,
@@ -450,7 +452,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Asset Category", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
+    report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Ticket Subcategory", "Description", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1181,7 +1183,12 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.asset_category
+          rbj.ticket_subcategory
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.description
         ],
         [
           :td,
@@ -1350,7 +1357,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workrequest_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.asset_category, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
+        [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.ticket_subcategory, d.description, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
 
     [report_headers] ++ body
