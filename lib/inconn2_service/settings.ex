@@ -4,6 +4,9 @@ defmodule Inconn2Service.Settings do
   """
 
   import Ecto.Query, warn: false
+  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Settings.Shift
@@ -19,18 +22,20 @@ defmodule Inconn2Service.Settings do
   """
   def list_shifts(prefix) do
     Shift
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
   def list_shifts(site_id, prefix) do
     Shift
     |> where(site_id: ^site_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
-  def list_shifts(site_id, query_params, prefix) do
+  def list_shifts(site_id, _query_params, prefix) do
     Shift
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
   end
@@ -46,7 +51,8 @@ defmodule Inconn2Service.Settings do
       )
 
     IO.inspect(query)
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
   end
   def list_shifts_between_dates(site_id, start_shiftdate, end_shiftdate, prefix) do
     # constructing a query like below
@@ -76,7 +82,8 @@ defmodule Inconn2Service.Settings do
       )
 
     IO.inspect(query)
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -144,8 +151,24 @@ defmodule Inconn2Service.Settings do
       {:error, %Ecto.Changeset{}}
 
   """
+  # def delete_shift(%Shift{} = shift, prefix) do
+  #   Repo.delete(shift, prefix: prefix)
+  # end
+
+
   def delete_shift(%Shift{} = shift, prefix) do
-    Repo.delete(shift, prefix: prefix)
+    cond do
+      has_employee_rosters?(shift, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Roster associated with it"
+        }
+
+      true ->
+        update_shift(shift, %{"active" => false}, prefix)
+           {:deleted,
+              "The Shift was disabled"
+           }
+    end
   end
 
   @doc """
@@ -174,12 +197,13 @@ defmodule Inconn2Service.Settings do
   """
   def list_bankholidays(prefix) do
     Holiday
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
-  def list_bankholidays(query_params, prefix) do
+  def list_bankholidays(_query_params, prefix) do
     Holiday
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -198,7 +222,8 @@ defmodule Inconn2Service.Settings do
       )
 
     IO.inspect(query)
-    Repo.all(query, prefix: prefix)
+    Repo.add_active_filter(query)
+    |> Repo.all(prefix: prefix)
   end
 
   @doc """
@@ -266,7 +291,10 @@ defmodule Inconn2Service.Settings do
 
   """
   def delete_holiday(%Holiday{} = holiday, prefix) do
-    Repo.delete(holiday, prefix: prefix)
+    update_holiday(holiday, %{"active" => false}, prefix)
+       {:deleted,
+         "The holiday was disabled"
+       }
   end
 
   @doc """

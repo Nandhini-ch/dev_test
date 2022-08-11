@@ -23,6 +23,10 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     field :is_approval_required, :boolean, default: false
     field :is_approved, :string
     field :is_acknowledged, :string
+    field :requester_name, :string
+    field :emp_id, :string
+    field :authorized_by, :string
+    field :department, :string
     # field :item_id, :id
     belongs_to :inventory_item, InventoryItem
     # field :unit_of_measurement_id, :id
@@ -40,9 +44,9 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id,
                               :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost, :remarks,
                               :is_approval_required, :is_approved, :inventory_supplier_id, :transaction_date, :transaction_time,
-                              :dc_no, :dc_file])
+                              :dc_no, :dc_file, :requester_name, :emp_id, :authorized_by, :department])
     |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
-                                            :store_id,  :quantity,  :is_approval_required, :transaction_date, :transaction_time])
+                          :store_id,  :quantity,  :is_approval_required, :transaction_date, :transaction_time])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
     |> set_is_acknowledged()
     |> set_is_approved()

@@ -1,4 +1,8 @@
 defmodule Inconn2Service.Prompt do
+  @moduledoc """
+  The Prompt context.
+  """
+  # import Inconn2Service.Util.DeleteManager
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
@@ -7,7 +11,9 @@ defmodule Inconn2Service.Prompt do
   alias Inconn2Service.Workorder
 
   def list_alert_notification_configs(prefix) do
-    Repo.all(AlertNotificationConfig, prefix: prefix)
+    AlertNotificationConfig
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
     |> Stream.map(fn c -> preload_alert_notification_reserve(c) end)
     |> Enum.map(fn c -> preload_site(c, prefix) end)
   end
