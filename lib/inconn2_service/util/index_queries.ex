@@ -147,7 +147,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
-  def employee_query_for_user(query, nil), do: query
+  def employee_query_for_user(query, nil), do: from q in query, where: q.id == 0
   def employee_query_for_user(query, id), do: from q in query, where: q.id == ^id
 
   def user_query(query, query_params) do
