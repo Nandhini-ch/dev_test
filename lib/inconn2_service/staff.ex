@@ -227,6 +227,7 @@ defmodule Inconn2Service.Staff do
     filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
