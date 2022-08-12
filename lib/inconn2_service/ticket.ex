@@ -248,7 +248,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        push_alert_notification_for_ticket(nil, work_request, prefix, user)
+        # push_alert_notification_for_ticket(nil, work_request, prefix, user)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -376,7 +376,7 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         update_status_track(updated_work_request, prefix)
-        push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
+        # push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
         send_completed_email(work_request, updated_work_request, prefix)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
