@@ -147,6 +147,9 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def employee_query_for_user(query, nil), do: query
+  def employee_query_for_user(query, id), do: from q in query, where: q.id == ^id
+
   def user_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
