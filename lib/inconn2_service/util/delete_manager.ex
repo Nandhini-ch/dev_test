@@ -79,7 +79,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(ReportsTo), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(Employee), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_alert_configuration?(%User{} = user, prefix), do: (alert_notification_configuration_query(Repo.add_active_filter(AlertNotificationConfig), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
