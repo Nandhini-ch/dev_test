@@ -143,7 +143,6 @@ defmodule Inconn2Service.Util.IndexQueries do
       {"id", id}, query -> from q in query, where: q.id == ^id
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
       {"org_unit_id", org_unit_id }, query -> from q in query, where: q.org_unit_id == ^org_unit_id
-      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       _, query -> from q in query, where: q.active
     end)
   end
