@@ -433,6 +433,7 @@ defmodule Inconn2Service.Staff do
     filters = filter_by_user_is_licensee(user, prefix)
     User
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
   end
