@@ -27,7 +27,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       org_unit: render_one(employee.org_unit, OrgUnitView, "org_unit.json"),
       reports_to: render_one(employee.reports_to_employee, EmployeeView, "employee_without_org_unit.json"),
       party_id: employee.party_id,
-      skills: (if is_nil(employee.skills), do: [], else: render_many(employee.skills, AssetCategoryView, "asset_category.json"))
+      skills: (if is_nil(employee.preloaded_skills), do: [], else: render_many(employee.preloaded_skills, AssetCategoryView, "asset_category.json"))
     }
   end
 

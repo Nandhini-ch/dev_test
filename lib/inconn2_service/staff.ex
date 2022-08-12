@@ -257,11 +257,11 @@ defmodule Inconn2Service.Staff do
 
   defp preload_skills(employee, prefix) when not is_nil(employee.skills) do
     asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end) |> Enum.filter(fn x -> not is_nil(x) end)
-    Map.put(employee, :skills, asset_categories)
+    Map.put(employee, :preloaded_skills, asset_categories)
   end
 
   defp preload_skills(employee, _prefix) when is_nil(employee.skills) do
-    Map.put(employee, :skills, [])
+    Map.put(employee, :preloaded_skills, [])
   end
 
   def get_employee_of_user(user, prefix) do
