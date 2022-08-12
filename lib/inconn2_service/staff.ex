@@ -2,6 +2,9 @@ defmodule Inconn2Service.Staff do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Comeonin
+  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -189,23 +192,24 @@ defmodule Inconn2Service.Staff do
     |> OrgUnit.changeset(attrs)
   end
 
-  def update_active_status_for_org_unit(%OrgUnit{} = org_unit, org_unit_params, prefix) do
-    case org_unit_params do
-      %{"active" => false} ->
-        deactivate_children(org_unit, org_unit_params, OrgUnit, prefix)
-
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(org_unit)
-        handle_hierarchical_activation(org_unit, org_unit_params, OrgUnit, prefix, parent_id)
-    end
-  end
-
   def delete_org_unit(%OrgUnit{} = org_unit, prefix) do
-    # Deletes the org_unit and children forcibly
-    # TBD: do not allow delete if this org_unit is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(org_unit)
-    Repo.delete_all(subtree, prefix: prefix)
+    cond do
+      has_descendants?(org_unit, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Descendants associated with it"
+        }
+
+      has_employee?(org_unit, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Employee associated with it"
+        }
+
+      true ->
+        update_org_unit(org_unit, %{"active" => false}, prefix)
+          {:deleted,
+             "The org unit was disabled"
+         }
+    end
   end
 
   def change_org_unit(%OrgUnit{} = org_unit, attrs \\ %{}) do
@@ -215,6 +219,7 @@ defmodule Inconn2Service.Staff do
   #Context functions for Employees
   def list_employees(prefix) do
     Employee
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -291,6 +296,7 @@ defmodule Inconn2Service.Staff do
     |> preload_employee(prefix)
     |> preload_skills(prefix)
     |> Repo.preload(:org_unit)
+    |> Repo.preload(:user)
   end
 
   def get_employee_email!(email, prefix) do
@@ -386,14 +392,29 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_employee(%Employee{} = employee, attrs, prefix) do
-    employee
-    |> Employee.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
   def delete_employee(%Employee{} = employee, prefix) do
-    Repo.delete(employee, prefix: prefix)
+    cond  do
+      has_employee_rosters?(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Employee Roster associated with it"
+        }
+
+      has_reports_to?(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Reports To associated with it"
+        }
+
+      true ->
+        case delete_user_for_employee(employee.user, prefix) do
+          {:deleted, _} ->
+              update_employee(employee, %{"active" => false}, prefix)
+              {:deleted, "The employee was disabled"}
+
+          user_delete_result ->
+            user_delete_result
+
+        end
+    end
   end
 
   def change_employee(%Employee{} = employee, attrs \\ %{}) do
@@ -403,6 +424,7 @@ defmodule Inconn2Service.Staff do
 #Context functions for User
   def list_users(prefix) do
     Repo.all(User, prefix: prefix)
+    |> Repo.add_active_filter()
     |> Repo.preload(employee: :org_unit)
   end
 
@@ -416,6 +438,7 @@ defmodule Inconn2Service.Staff do
 
 
   def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
+  def get_user(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
   def get_user_without_org_unit!(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(:employee)
 
   def get_user_without_org_unit(nil,_prefix), do: nil
@@ -517,15 +540,62 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_user(%User{} = user, attrs, prefix) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+  def delete_user(%User{} = user, prefix) do
+    cond do
+      has_alert_configuration?(user, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Alert Configuration associated with it"
+        }
+
+      has_employee?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Employee associated with it"
+        }
+
+      has_category_helpdesk?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Category Helpdesk associated with it"
+        }
+
+      has_store?(user, prefix) ->
+       {:could_not_delete,
+         "Cannot be deleted as there are Store associated with it"
+       }
+
+      true ->
+       update_user(user, %{"active" => false}, prefix)
+       {:deleted,
+         "The user was disabled"
+       }
+    end
   end
 
-  def delete_user(%User{} = user, prefix) do
-    Repo.delete(user, prefix: prefix)
+  def delete_user_for_employee(nil , _prefix), do: {:deleted, nil}
+  def delete_user_for_employee(%User{} = user, prefix) do
+    cond do
+      has_alert_configuration?(user, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Alert Configuration associated with it"
+        }
+
+      has_category_helpdesk?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Category Helpdesk associated with it"
+        }
+
+      has_store?(user, prefix) ->
+       {:could_not_delete,
+         "Cannot be deleted as there are Store associated with it"
+       }
+
+      true ->
+       update_user(user, %{"active" => false}, prefix)
+       {:deleted,
+         "The user was disabled"
+       }
+    end
   end
+
 
   def change_user_password(user, credentials, prefix) do
     case Auth.check_password(credentials["old_password"], user) do
@@ -580,15 +650,22 @@ defmodule Inconn2Service.Staff do
     |> Repo.update(prefix: prefix)
   end
 
-  def update_active_status_for_role(%Role{} = role, attrs, prefix) do
-    role
-    |> Role.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+  def delete_role(%Role{} = role, prefix) do
+    cond do
+      has_user?(role, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are User associated with it"
+        }
+
+      true ->
+         update_role(role, %{"active" => false}, prefix)
+          {:deleted,
+             "The Role was disabled"
+          }
+    end
   end
 
-  def delete_role(%Role{} = role, prefix) do
-    Repo.delete(role, prefix: prefix)
-  end
+
 
   def change_role(%Role{} = role, attrs \\ %{}) do
     Role.changeset(role, attrs)

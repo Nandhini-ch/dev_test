@@ -133,24 +133,6 @@ defmodule Inconn2ServiceWeb.UserController do
     end
   end
 
-  def activate_user(conn, %{"id" => id}) do
-    user = Staff.get_user!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %User{} = user} <-
-           Staff.update_active_status_for_user(user, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", user: user)
-    end
-  end
-
-  def deactivate_user(conn, %{"id" => id}) do
-    user = Staff.get_user!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %User{} = user} <-
-           Staff.update_active_status_for_user(user, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", user: user)
-    end
-  end
-
 #   defp correct_user(conn, _params) do
 #     IO.inspect(is_binary(conn.params["id"]))
 #     if conn.assigns.current_user.id == String.to_integer(conn.params["id"]) do

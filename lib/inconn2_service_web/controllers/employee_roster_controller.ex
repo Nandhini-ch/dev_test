@@ -77,19 +77,4 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
     end
   end
 
-  def activate_employee_rosters(conn, %{"id" => id}) do
-    employee_roster = Assignment.get_employee_roster!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %EmployeeRoster{} = employee_roster} <- Assignment.update_employee_roster(employee_roster, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", employee_roster: employee_roster)
-    end
-  end
-
-  def deactivate_employee_rosters(conn, %{"id" => id}) do
-    employee_roster = Assignment.get_employee_roster!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %EmployeeRoster{} = employee_roster} <- Assignment.update_employee_roster(employee_roster, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", employee_roster: employee_roster)
-    end
-  end
 end

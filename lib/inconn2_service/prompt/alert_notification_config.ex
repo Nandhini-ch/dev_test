@@ -8,6 +8,7 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
     field :alert_notification_reserve_id, :integer
     field :is_escalation_required, :boolean, default: false
     field :escalation_time_in_minutes, :integer
+    field :active, :boolean, default: true
     belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()

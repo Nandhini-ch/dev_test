@@ -55,25 +55,6 @@ defmodule Inconn2ServiceWeb.EmployeeController do
     end
   end
 
-  def activate_employee(conn, %{"id" => id}) do
-    employee = Staff.get_employee!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Employee{} = employee} <-
-           Staff.update_active_status_for_employee(employee, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", employee: employee)
-    end
-  end
-
-  def deactivate_employee(conn, %{"id" => id}) do
-    employee = Staff.get_employee!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Employee{} = employee} <-
-           Staff.update_active_status_for_employee(employee, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", employee: employee)
-    end
-  end
-
-
   defp temporary_patch_for_skills(employee_params) do
     skills = employee_params["skills"]
     if skills != [] or skills != nil do
