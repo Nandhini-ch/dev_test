@@ -70,7 +70,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_employee?(%Party{} = party, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee?(%OrgUnit{} = org_unit, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"org_unit_id" => org_unit.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_employee?(%User{} = user, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_employee?(%User{} = user, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"id" => user.employee_id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_user?(%Party{} = party, prefix), do: (user_query(Repo.add_active_filter(User), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_user?(%Employee{} = employee, prefix), do: (user_query(Repo.add_active_filter(User), %{"employee_id" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
