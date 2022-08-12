@@ -247,8 +247,8 @@ defmodule Inconn2Service.Staff do
   defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: employee
 
   defp preload_employee(employee, prefix) when not is_nil(employee.reports_to) do
-    reports_to = Repo.get!(Employee, employee.reports_to, prefix: prefix)
-    Map.put(employee, :reports_to, reports_to)
+    reports_to_employee = Repo.get!(Employee, employee.reports_to, prefix: prefix)
+    Map.put(employee, :reports_to_employee, reports_to_employee)
   end
 
   defp preload_skills({:ok, employee}, prefix) do
