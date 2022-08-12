@@ -28,7 +28,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
     start_date = get_field(cs, :start_date)
     end_date = get_field(cs, :end_date)
     cond do
-      !is_nil(start_date) and !is_nil(end_date) and Date.compare(end_date, start_date) == :gt ->
+      !is_nil(start_date) and !is_nil(end_date) and Date.compare(end_date, start_date) != :gt ->
         add_error(cs, :start_date, "Start date should be lesser than end date")
         |> add_error(:end_date, "Start date should be lesser than end date")
 
