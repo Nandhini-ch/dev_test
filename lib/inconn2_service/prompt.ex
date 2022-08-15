@@ -158,14 +158,17 @@ defmodule Inconn2Service.Prompt do
     end
   end
 
+  defp preload_alert_notification_reserve_for_user_alert(nil), do: nil
   defp preload_alert_notification_reserve_for_user_alert({:error, changeset}), do: {:error, changeset}
   defp preload_alert_notification_reserve_for_user_alert({:ok, config}), do: {:ok, preload_alert_notification_reserve(config)}
   defp preload_alert_notification_reserve_for_user_alert(config), do: Map.put(config, :alert_notification_reserve, Common.get_alert_notification_reserve!(config.alert_notification_id))
 
+  defp preload_alert_notification_reserve(nil), do: nil
   defp preload_alert_notification_reserve({:error, changeset}), do: {:error, changeset}
   defp preload_alert_notification_reserve({:ok, config}), do: {:ok, preload_alert_notification_reserve(config)}
   defp preload_alert_notification_reserve(config), do: Map.put(config, :alert_notification_reserve, Common.get_alert_notification_reserve!(config.alert_notification_reserve_id))
 
+  defp preload_site(nil, _prefix), do: nil
   defp preload_site({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_site({:ok, config}, prefix), do: {:ok, preload_site(config, prefix)}
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
