@@ -76,7 +76,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         update_zone(zone, %{"active" => false}, prefix)
-        {:delete, "Zone was deleted"}
+        {:deleted, "Zone was deleted"}
     end
   end
 
