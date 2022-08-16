@@ -48,6 +48,24 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     end
   end
 
+  def pause_schedule(conn, %{"id" => id}) do
+    workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.pause_or_resume_workorder_schedule(workorder_schedule, %{"is_paused" => true}, conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", workorder_schedule: workorder_schedule)
+    end
+  end
+
+  def resume_schedule(conn, %{"id" => id, "workorder_schedule" => workorder_schedule_params}) do
+    workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.pause_or_resume_workorder_schedule(workorder_schedule, Map.put(workorder_schedule_params, "is_paused", false), conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", workorder_schedule: workorder_schedule)
+    end
+  end
+
   defp get_asset_and_site(workorder_schedule, prefix) do
     asset_id = workorder_schedule.asset_id
     case workorder_schedule.asset_type do
