@@ -468,7 +468,6 @@ defmodule Inconn2Service.Workorder do
               |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
-              |> validate_date_and_for_schedule_resume()
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
@@ -493,12 +492,38 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp validate_date_and_for_schedule_resume(cs) do
-    is_paused = get_change(cs, :is_paused)
-    next_occurrence_date = get_change(cs, :next_occurrence_date)
-    next_occurrence_time = get_change(cs, :next_occurrence_time)
+  def pause_or_resume_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, prefix) do
+    result = workorder_schedule
+              |> WorkorderSchedule.changeset(attrs)
+              |> validate_date_and_time_for_schedule_resume()
+              |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, workorder_schedule} ->
+        pause_or_resume_schedule(workorder_schedule, prefix)
+        {:ok, workorder_schedule |> Repo.preload(:workorder_template)}
+
+      _ ->
+        result
+    end
+  end
+
+  defp pause_or_resume_schedule(workorder_schedule, prefix) do
+    if workorder_schedule.is_paused do
+      query = from wosr in WorkScheduler, where: wosr.workorder_schedule_id == ^workorder_schedule.id and wosr.prefix == ^prefix
+      Repo.delete_all(query)
+    else
+      zone = get_time_zone(workorder_schedule, prefix)
+      Common.create_work_scheduler(%{"prefix" => prefix, "workorder_schedule_id" => workorder_schedule.id, "zone" => zone})
+    end
+  end
+
+  defp validate_date_and_time_for_schedule_resume(cs) do
+    is_paused = get_change(cs, :is_paused) |> IO.inspect
+    next_occurrence_date = get_change(cs, :next_occurrence_date) |> IO.inspect
+    next_occurrence_time = get_change(cs, :next_occurrence_time) |> IO.inspect
     cond do
-      !is_nil(is_paused) && is_paused == true && is_nil(next_occurrence_date) && is_nil(next_occurrence_time) ->
+      !is_nil(is_paused) && !is_paused && is_nil(next_occurrence_date) && is_nil(next_occurrence_time) ->
         add_error(cs, :next_occurrence_date, "Please enter the next occurrence date")
         |> add_error(:next_occurrence_time, "Please enter next occurrnece time")
 
