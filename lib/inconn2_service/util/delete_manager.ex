@@ -21,7 +21,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   # alias Inconn2Service.InventoryManagement
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Prompt.AlertNotificationConfig
-  alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory}
+  alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory, CategoryHelpdesk}
 
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Shift{} = shift, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -79,7 +79,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(ReportsTo), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(Employee), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_alert_configuration?(%User{} = user, prefix), do: (alert_notification_configuration_query(Repo.add_active_filter(AlertNotificationConfig), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
