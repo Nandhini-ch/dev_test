@@ -624,7 +624,7 @@ defmodule Inconn2Service.InventoryManagement do
     item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix)
 
     cond do
-      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approver_user_id})
+      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id})
       is_transaction_approval_required && is_nil(approver_user_id) -> validate_required(cs, [:approvaer_user_id])
       true -> cs
     end
