@@ -133,6 +133,22 @@ defmodule Inconn2ServiceWeb.ReportController do
 
   def get_inventory_report(conn, _params) do
     inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix, conn.query_params)
-    render(conn, "inventory_report.json", inventory_info: inventory_report_data)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"asset_status_report.pdf\"")
+        |> send_resp(200, inventory_report_data)
+
+      "csv" ->
+        csv = inventory_report_data |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"asset_status_report.csv\"")
+        |> send_resp(200, csv)
+
+      _ ->
+        render(conn, "inventory_report.json", inventory_info: inventory_report_data)
+    end
   end
 end
