@@ -406,5 +406,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
     resources "/zones", ZoneController, except: [:new, :edit]
     get "/zones_tree", ZoneController, :tree
+    resources "/my_reports", MyReportController, except: [:edit]
+
+
   end
 end
