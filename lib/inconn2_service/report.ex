@@ -12,7 +12,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
-  alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
+  # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement}
 
   def work_status_report(prefix, query_params) do
@@ -175,6 +175,7 @@ defmodule Inconn2Service.Report do
   def inventory_report(prefix, query_params) do
     rectified_query_params = rectify_query_params(query_params)
     query = inventory_report_query()
+    headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "UOM", "Aisle", "Row", "Bin", "Cost"]
     query_with_params =
       Enum.reduce(rectified_query_params, query, fn
         {"transaction_type", transaction_type}, query -> from q in query, where: q.transaction_type == ^transaction_type
@@ -186,8 +187,24 @@ defmodule Inconn2Service.Report do
     {from_date, to_date} = get_dates_for_query(rectified_query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_applied_query = from q in query_with_params, where: q.transaction_date >= ^from_date and q.transaction_date <= ^to_date
 
-    Repo.all(date_applied_query, prefix: prefix)
-    |> filter_by_site(query_params["site_id"])
+    result =
+      Repo.all(date_applied_query, prefix: prefix)
+      |> filter_by_site(query_params["site_id"])
+
+
+
+    filters = filter_data(query_params, prefix)
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Inventory Report", filters, result, headers, "IN")
+
+      "csv" ->
+        csv_for_inventory_report(headers, result)
+
+      _ ->
+        result
+    end
   end
 
   def filter_by_site(list, nil), do: list
@@ -1254,6 +1271,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.date
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.item_name
         ],
         [
@@ -1264,17 +1286,7 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.asset_category
-        ],
-        [
-          :td,
-          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.quantity_held
-        ],
-        [
-          :td,
-          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.reorder_level
+          rbj.store_name
         ],
         [
           :td,
@@ -1284,17 +1296,22 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.store_name
+          rbj.aisle
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.aisle_bin_row
+          rbj.bin
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.supplier
+          rbj.row
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.cost
         ],
       ]
     end)
@@ -1372,6 +1389,15 @@ defmodule Inconn2Service.Report do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_time, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
+      end)
+
+    [report_headers] ++ body
+  end
+
+  defp csv_for_inventory_report(report_headers, data) do
+    body =
+      Enum.map(data, fn d ->
+        [d.date, d.name, d.type, d.store_name, d.transaction_type, d.transaction_quantity, d.uom, d.aisle, d.bin, d.row, d.cost]
       end)
 
     [report_headers] ++ body
