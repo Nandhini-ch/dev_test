@@ -9,7 +9,10 @@ defmodule Inconn2Service.WorkOrderConfig do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.WorkOrderConfig
-  alias Inconn2Service.WorkOrderConfig.{Task,TaskTasklist}
+  alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
+  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
 
   @doc """
   Returns the list of tasks.
@@ -117,11 +120,25 @@ defmodule Inconn2Service.WorkOrderConfig do
       {:error, %Ecto.Changeset{}}
 
   """
+  # def delete_task(%Task{} = task, prefix) do
+  #   task
+  #   |> Task.changeset(%{"active" => false})
+  #   |> Repo.update(prefix: prefix)
+  # end
+
+
   def delete_task(%Task{} = task, prefix) do
-    task
-    |> Task.changeset(%{"active" => false})
-    |> Repo.update(prefix: prefix)
+    cond do
+      has_task_tasklistt?(task, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Task Tasklist assocaited"}
+
+      true ->
+        update_task(task, %{"active" => false}, prefix)
+        {:deleted, "Task was deleted"}
+    end
   end
+
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking task changes.
@@ -363,11 +380,27 @@ defmodule Inconn2Service.WorkOrderConfig do
       {:error, %Ecto.Changeset{}}
 
   """
+  # def delete_task_list(%TaskList{} = task_list, prefix) do
+  #   task_list
+  #     |> TaskList.changeset(%{"active" => false})
+  #     |> Repo.update(prefix: prefix)
+  # end
+
   def delete_task_list(%TaskList{} = task_list, prefix) do
-    task_list
-      |> TaskList.changeset(%{"active" => false})
-      |> Repo.update(prefix: prefix)
+    cond do
+      has_workorder_template?(task_list, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Equipments associated with it"
+      }
+
+      true ->
+        update_task_list(task_list, %{"active" => false}, prefix)
+          {:deleted,
+             "The Task List was disabled"
+           }
+    end
   end
+
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking task_list changes.
@@ -461,9 +494,22 @@ defmodule Inconn2Service.WorkOrderConfig do
       {:error, %Ecto.Changeset{}}
 
   """
+  # def delete_master_task_type(%MasterTaskType{} = master_task_type, prefix) do
+  #   Repo.delete(master_task_type, prefix: prefix)
+  # end
+
   def delete_master_task_type(%MasterTaskType{} = master_task_type, prefix) do
-    Repo.delete(master_task_type, prefix: prefix)
+    cond do
+      has_task?(master_task_type, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Task assocaited"}
+
+      true ->
+        update_master_task_type(master_task_type, %{"active" => false}, prefix)
+        {:deleted, "Master Task Type was deleted"}
+    end
   end
+
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking master_task_type changes.

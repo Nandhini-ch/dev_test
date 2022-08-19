@@ -66,7 +66,19 @@ defmodule Inconn2Service.CheckListConfig do
     |> preload_check_type()
   end
 
-  def delete_check(%Check{} = check, prefix), do: update_check(check, %{"active" => false}, prefix)
+  # def delete_check(%Check{} = check, prefix), do: update_check(check, %{"active" => false}, prefix)
+
+  def delete_check(%Check{} = check, prefix) do
+    cond do
+      has_check_list?(check, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Check List assocaited"}
+
+      true ->
+        update_check(check, %{"active" => false}, prefix)
+        {:deleted, "Check was deleted"}
+    end
+  end
 
   # function commented because soft delet was implemented with same function name
   # def delete_check(%Check{} = check, prefix) do
@@ -106,6 +118,13 @@ defmodule Inconn2Service.CheckListConfig do
     |> preload_checks(prefix)
   end
 
+  defp update_checklist_without_validation(%CheckList{} = check_list, attrs, prefix) do
+    check_list
+    |> CheckList.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
   # def delete_check_list(%CheckList{} = check_list, prefix), do: update_check_list(check_list, %{"active" => false}, prefix)
 
   def delete_check_list(%CheckList{} = check_list, prefix) do
@@ -115,7 +134,7 @@ defmodule Inconn2Service.CheckListConfig do
         "Cannot Delete because there are workorder templates assocaited"}
 
       true ->
-        update_check_list(check_list, %{"active" => false}, prefix)
+        update_checklist_without_validation(check_list, %{"active" => false}, prefix)
         {:deleted, "Check list was deleted"}
     end
   end
@@ -138,7 +157,7 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   defp validate_check_ids(cs, prefix) do
-    ids = get_change(cs, :check_ids, nil)
+    ids = get_change(cs, :check_ids, [])
     checks = from(c in Check, where: c.id in ^ids) |> Repo.all(prefix: prefix)
     cond do
       !is_nil(ids) and length(ids) != length(checks) -> add_error(cs, :check_ids, "Check IDs are invalid")

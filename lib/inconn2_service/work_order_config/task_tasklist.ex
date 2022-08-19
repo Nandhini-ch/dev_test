@@ -10,7 +10,6 @@ defmodule Inconn2Service.WorkOrderConfig.TaskTasklist do
 
     timestamps()
   end
-
   @doc false
   def changeset(task_tasklist, attrs) do
     task_tasklist

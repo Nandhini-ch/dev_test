@@ -9,6 +9,13 @@ defmodule Inconn2Service.Util.IndexQueries do
   #alias Inconn2Service.InventoryManagement.Store
   #alias Inconn2Service.AssetConfig.{Site, Zone}
   #alias Inconn2Service.AssetConfig.Party
+  # alias Inconn2Service.Staff.{OrgUnit, Employee, User}
+  # alias Inconn2Service.ContractManagement.{Contract, Scope}
+  # alias Inconn2Service.WorkOrderConfig.MasterTaskType
+  # alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
+  # alias Inconn2Service.CheckListConfig.{Check, CheckType, CheckList}
+  # alias Inconn2Service.Workorder.{WorkorderSchedule, WorkorderTemplate}
+
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
@@ -66,12 +73,21 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def check_list_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"check_id", check_id}, query -> from q in query, where: ^check_id in q.check_ids
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
   def workorder_template_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
     {"workpermit_check_list_id", workpermit_check_list_id}, query -> from q in query, where: q.workpermit_check_list_id == ^workpermit_check_list_id
     {"loto_lock_check_list_id", loto_lock_check_list_id}, query -> from q in query, where: q.loto_lock_check_list_id == ^loto_lock_check_list_id
     {"loto_release_check_list_id", loto_release_check_list_id}, query -> from q in query, where: q.loto_release_check_list_id == ^loto_release_check_list_id
+    {"task_list_id", task_list_id}, query -> from q in query, where: q.task_list_id == ^task_list_id
     _, query -> from q in query, where: q.active end)
   end
 
@@ -129,4 +145,20 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> from q in query, where: q.active
     end)
   end
+
+
+  def task_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"master_task_type_id", master_task_type_id}, query -> from q in query, where: q.master_task_type_id == ^master_task_type_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def task_tasklist_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"task_id", task_id}, query -> from q in query, where: q.task_id == ^task_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
 end

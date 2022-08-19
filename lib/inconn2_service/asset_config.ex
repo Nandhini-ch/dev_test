@@ -1625,7 +1625,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
-  # def delete_party(%Party{} = party, prefix) do
+  # def (%Party{} = party, prefix) do
   #   Repo.delete(party, prefix: prefix)
   # end
 

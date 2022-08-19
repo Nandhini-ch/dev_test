@@ -5,6 +5,7 @@ defmodule Inconn2Service.WorkOrderConfig.MasterTaskType do
   schema "master_task_types" do
     field :description, :string
     field :name, :string
+    field :active, :boolean, default: true
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule Inconn2Service.WorkOrderConfig.MasterTaskType do
   @doc false
   def changeset(master_task_type, attrs) do
     master_task_type
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
   end
 end
