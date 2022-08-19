@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.TransactionView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{TransactionView, UserView}
+  alias Inconn2ServiceWeb.{InventoryItemView, StoreView, TransactionView, UnitOfMeasurementView, UserView}
 
   def render("index.json", %{transactions: transactions}) do
     %{data: render_many(transactions, TransactionView, "transaction.json")}
@@ -24,6 +24,19 @@ defmodule Inconn2ServiceWeb.TransactionView do
       row: transaction.row,
       bin: transaction.bin,
       cost: transaction.cost,
-      remarks: transaction.remarks}
+      remarks: transaction.remarks,
+      dc_no: transaction.dc_no,
+      transaction_date: transaction.transaction_date,
+      transaction_time: transaction.transaction_time,
+      work_order_id: transaction.work_order_id,
+      is_approval_required: transaction.is_approval_required,
+      is_approved: transaction.is_approved,
+      is_acknowledged: transaction.is_acknowledged,
+      emp_id: transaction.emp_id,
+      authorized_by: transaction.authorized_by,
+      department: transaction.department,
+      store: render_one(transaction.store, StoreView, "store_without_content.json"),
+      unit_of_measurement: render_one(transaction.unit_of_measurement, UnitOfMeasurementView, "unit_of_measurement_without_category.json"),
+      inventory_item: render_one(transaction.inventory_item, InventoryItemView, "inventory_item_without_stock.json")}
   end
 end

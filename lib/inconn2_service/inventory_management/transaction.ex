@@ -59,7 +59,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     transaction
     |> cast(attrs, [:is_acknowledged, :is_approved])
     |> validate_inclusion(:is_acknowledged, ["YES", "NO", "RJ"])
-    |> validate_inclusion(:is_approved, ["A", "NO", "RJ"])
+    |> validate_inclusion(:is_approved, ["AP", "NA", "RJ"])
   end
 
   defp set_is_acknowledged(cs) do

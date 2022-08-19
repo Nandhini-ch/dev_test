@@ -334,7 +334,9 @@ defmodule Inconn2Service.InventoryManagement do
 
   #Context functions for Transactions
   def list_transactions(query_params, prefix) do
-    transactions_query(Transaction, query_params) |> Repo.all(prefix: prefix)
+    transactions_query(Transaction, query_params)
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
@@ -342,6 +344,7 @@ defmodule Inconn2Service.InventoryManagement do
   def list_transactions_to_be_acknowledged(user, prefix) do
     from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged == "NACK")
     |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
@@ -349,12 +352,22 @@ defmodule Inconn2Service.InventoryManagement do
   def list_transactions_to_be_approved(user, prefix) do
     from(t in Transaction, where: t.approver_user_id == ^user.id and t.is_approved == "NA")
     |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+  end
+
+  def list_pending_transactions_to_be_approved(user, prefix) do
+    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_approved != "AP")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
   def get_transaction!(id, prefix) do
     Repo.get!(Transaction, id, prefix: prefix)
+    |> preload_stuff_for_transaction()
     |> load_approver_user_for_transaction(prefix)
     |> load_transaction_user_for_transaction(prefix)
   end
@@ -385,6 +398,7 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_inward_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
+    |> preload_stuff_for_transaction()
     |> load_approver_user_for_transaction(prefix)
     |> load_transaction_user_for_transaction(prefix)
   end
@@ -394,6 +408,7 @@ defmodule Inconn2Service.InventoryManagement do
     multi_query_for_issue_transaction(attrs, prefix)
     |> Repo.transaction()
     |> handle_error()
+    |> preload_stuff_for_transaction()
     |> load_approver_user_for_transaction(prefix)
     |> load_transaction_user_for_transaction(prefix)
   end
@@ -403,6 +418,7 @@ defmodule Inconn2Service.InventoryManagement do
     transaction
     |> Transaction.update_changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_stuff_for_transaction()
     |> reduce_stock_on_approval(prefix)
     |> revive_stock_on_acknowledgement_reject(prefix)
     |> load_approver_user_for_transaction(prefix)
@@ -909,6 +925,10 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_unit_of_measurement_and_category_for_conversion({:error, changeset}), do: {:error, changeset}
   defp preload_unit_of_measurement_and_category_for_conversion({:ok, resource}), do: {:ok,preload_unit_of_measurement_and_category_for_conversion(resource)}
   defp preload_unit_of_measurement_and_category_for_conversion(resource), do: resource |> Repo.preload([:uom_category, :from_unit_of_measurement, :to_unit_of_measurement])
+
+  defp preload_stuff_for_transaction({:error, changeset}), do: {:error, changeset}
+  defp preload_stuff_for_transaction({:ok, transaction}), do: {:ok, preload_stuff_for_transaction(transaction)}
+  defp preload_stuff_for_transaction(transaction), do: transaction |> Repo.preload([:inventory_item, :unit_of_measurement, :store])
 
   defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
   defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()
