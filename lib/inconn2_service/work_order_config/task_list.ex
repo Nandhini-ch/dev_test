@@ -7,7 +7,6 @@ defmodule Inconn2Service.WorkOrderConfig.TaskList do
 
   schema "task_lists" do
     field :name, :string
-    field :task_ids, {:array, :integer}
     field :active, :boolean, default: true
     belongs_to :asset_category, AssetCategory
     many_to_many(:tasks, Task, join_through: "task_tasklists", on_delete: :delete_all)
@@ -18,7 +17,7 @@ defmodule Inconn2Service.WorkOrderConfig.TaskList do
   @doc false
   def changeset(task_list, attrs) do
     task_list
-    |> cast(attrs, [:name, :task_ids, :asset_category_id])
+    |> cast(attrs, [:name, :asset_category_id])
     |> validate_required([:name, :asset_category_id])
 
   end

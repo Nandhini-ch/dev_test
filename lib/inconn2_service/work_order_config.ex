@@ -131,7 +131,7 @@ defmodule Inconn2Service.WorkOrderConfig do
     cond do
       has_task_tasklistt?(task, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Task Tasklist assocaited"}
+        "Cannot Delete because there are Task list assocaited"}
 
       true ->
         update_task(task, %{"active" => false}, prefix)
