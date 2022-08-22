@@ -16,7 +16,7 @@ defmodule Inconn2Service.WorkOrderConfig.TaskList do
   @doc false
   def changeset(task_list, attrs) do
     task_list
-    |> cast(attrs, [:name, :task_ids, :asset_category_id])
+    |> cast(attrs, [:name, :task_ids, :asset_category_id, :active])
     |> validate_required([:name, :task_ids, :asset_category_id])
   end
 end

@@ -16,7 +16,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:label, :task_type, :config, :estimated_time])
+    |> cast(attrs, [:label, :task_type, :config, :estimated_time, :active])
     |> validate_required([:label, :task_type, :config, :estimated_time])
     |> validate_inclusion(:task_type, ["IO", "IM", "MT", "OB"])
     |> validate_config()
