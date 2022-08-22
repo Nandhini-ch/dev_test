@@ -62,7 +62,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     options = config["options"]
     if Kernel.is_list(options) do
       if (false not in Enum.map(options, fn x -> Kernel.is_map(x) end)) and (false not in Enum.map(options, fn x -> x not in options--[x] end)) do
-        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "value"] end) and false not in validate_values_of_map(options) do
+        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "value"] end) do
           true -> changeset
           false -> add_error(changeset, :config, "config is invalid")
         end
