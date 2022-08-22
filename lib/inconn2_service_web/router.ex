@@ -397,6 +397,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/transactions", TransactionController, except: [:new, :edit]
     post "/create_transactions", TransactionController, :create_multiple
+    get "/transactions_grouped", TransactionController, :index_grouped
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
     get "/transaction_to_be_approved_grouped", TransactionController, :index_to_be_approved_grouped
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
