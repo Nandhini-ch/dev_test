@@ -48,6 +48,16 @@ defmodule Inconn2ServiceWeb.TransactionController do
     end
   end
 
+  def update(conn, %{"id" => id, "transaction" => transaction_params}) do
+    transaction = InventoryManagement.get_transaction!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Transaction{} = transaction} <- InventoryManagement.update_transaction(transaction, transaction_params,conn.assigns.sub_domain_prefix) do
+      conn
+      |> put_status(:created)
+      |> put_resp_header("location", Routes.transaction_path(conn, :show, transaction))
+      |> render("show.json", transaction: transaction)
+    end
+  end
+
   def approve_transaction(conn, %{"transaction" => transaction_params}) do
     transactions = InventoryManagement.approve_transactions(transaction_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     render(conn, "index.json", transactions: transactions)
