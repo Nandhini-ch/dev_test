@@ -10,7 +10,7 @@ defmodule Inconn2ServiceWeb.TransactionView do
     %{data: render_one(transaction, TransactionView, "transaction.json")}
   end
 
-  def render("trasaction_grouped.json", %{transactions: transactions}) do
+  def render("transaction_grouped.json", %{transactions: transactions}) do
     Enum.map(transactions, fn {k, v} -> {k, render_many(v, TransactionView, "transaction.json")} end) |> Enum.into(%{})
   end
 
