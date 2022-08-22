@@ -637,7 +637,6 @@ defmodule Inconn2Service.WorkOrderConfig do
             :task_tasklists,
             list_tasks_for_task_lists(task_list.id, prefix)
             )
-
   end
 
 end
