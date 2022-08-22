@@ -4,15 +4,6 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.AssetConfig
-  # alias Inconn2Service.Assignment.EmployeeRoster
-  # alias Inconn2Service.Settings.Shift
-  #alias Inconn2Service.InventoryManagement.Store
-  #alias Inconn2Service.AssetConfig.{Site, Zone}
-  #alias Inconn2Service.AssetConfig.Party
-  # alias Inconn2Service.AssetConfig.Party
-  # alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role}
-  # alias Inconn2Service.ContractManagement.{Contract, Scope}
-  # alias Inconn2Service.Settings.Shift
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
@@ -73,12 +64,21 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def check_list_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"check_id", check_id}, query -> from q in query, where: ^check_id in q.check_ids
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
   def workorder_template_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
     {"workpermit_check_list_id", workpermit_check_list_id}, query -> from q in query, where: q.workpermit_check_list_id == ^workpermit_check_list_id
     {"loto_lock_check_list_id", loto_lock_check_list_id}, query -> from q in query, where: q.loto_lock_check_list_id == ^loto_lock_check_list_id
     {"loto_release_check_list_id", loto_release_check_list_id}, query -> from q in query, where: q.loto_release_check_list_id == ^loto_release_check_list_id
+    {"task_list_id", task_list_id}, query -> from q in query, where: q.task_list_id == ^task_list_id
     _, query -> from q in query, where: q.active end)
   end
 
@@ -156,6 +156,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+
   def reports_to_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"reports_to", reports_to}, query -> from q in query, where: q.reports_to == ^reports_to
@@ -163,9 +164,23 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def task_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"master_task_type_id", master_task_type_id}, query -> from q in query, where: q.master_task_type_id == ^master_task_type_id
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
   def alert_notification_configuration_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"user_id", user_id}, query -> from q in query, where: ^user_id in q.addressed_to_user_ids or ^user_id in q.escalated_to_user_ids
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+  def task_tasklist_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"task_id", task_id}, query -> from q in query, where: q.task_id == ^task_id
       _, query -> from q in query, where: q.active
     end)
   end
@@ -198,4 +213,5 @@ defmodule Inconn2Service.Util.IndexQueries do
        _ , query -> query
     end)
   end
+
 end
