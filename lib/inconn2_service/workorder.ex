@@ -1565,7 +1565,7 @@ defmodule Inconn2Service.Workorder do
   def reassign_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
     work_order
     |> WorkOrder.reassign_changeset(attrs)
-    |> Repo.update(prefx: prefix)
+    |> Repo.update(prefix: prefix)
     |> create_status_track_for_reapportion(prefix, user)
   end
 
@@ -1573,7 +1573,7 @@ defmodule Inconn2Service.Workorder do
 
   def create_status_track_for_reapportion({:ok, work_order}, prefix, user) do
     {date, time} = get_site_date_time_as_tuple(work_order.site_id, prefix)
-    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "RAS", "user_id" => user.id, "date" => date, "time" => time}, prefix)
     {:ok, work_order}
   end
 

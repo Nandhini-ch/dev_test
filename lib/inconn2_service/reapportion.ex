@@ -4,6 +4,7 @@ defmodule Inconn2Service.Reapportion do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Staff
+  alias Inconn2Service.Workorder
   alias Inconn2Service.Reapportion.ReassignRescheduleRequest
 
   @spec list_reassign_reschedule_requests(any) :: any
@@ -20,9 +21,9 @@ defmodule Inconn2Service.Reapportion do
     end)
   end
 
-  def create_reassign_reschedule_request(attrs \\ %{}, prefix) do
+  def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
     %ReassignRescheduleRequest{}
-    |> ReassignRescheduleRequest.changeset(attrs)
+    |> ReassignRescheduleRequest.changeset(Map.put(attrs, "requester_user_id", user.id))
     |> add_reports_to(prefix)
     |> Repo.insert(prefix: prefix)
   end
@@ -33,10 +34,19 @@ defmodule Inconn2Service.Reapportion do
     |> Repo.update(prefix: prefix)
   end
 
-  def respond_to_reassign_work_order(%ReassignRescheduleRequest{} = reassign_reschedule_request, attrs, prefix) do
+  def reassign_work_order_update(%ReassignRescheduleRequest{} = reassign_reschedule_request, attrs, prefix, user) do
     reassign_reschedule_request
     |> ReassignRescheduleRequest.update_for_reassign_changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> update_work_order(prefix, user)
+  end
+
+  defp update_work_order({:error, changeset}, _prefix, _user), do: {:error, changeset}
+
+  defp update_work_order({:ok, request}, prefix, user) do
+    work_order = Workorder.get_work_order!(request.work_order_id, prefix)
+    Workorder.reassign_work_order(work_order, %{"user_id" => request.reassign_to_user_id}, prefix, user)
+    {:ok, request}
   end
 
   def delete_reassign_reschedule_request(%ReassignRescheduleRequest{} = reassign_reschedule_request, prefix) do

@@ -410,6 +410,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/my_reports", MyReportController, except: [:edit]
 
     resources "/reassign_reschedule_requests", ReassignRescheduleRequestController, except: [:new, :edit]
-    post "/respond_to_reasign_request", ReassignRescheduleRequestController, :respond_to_reassign_request
+    post "/reassign_reschedule_requests/:id/respond", ReassignRescheduleRequestController, :reassign_response_for_work_order
   end
 end

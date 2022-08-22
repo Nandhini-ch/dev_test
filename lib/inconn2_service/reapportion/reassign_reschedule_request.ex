@@ -11,7 +11,7 @@ defmodule Inconn2Service.Reapportion.ReassignRescheduleRequest do
     field :reschedule_date, :date
     field :reschedule_time, :time
     field :request_for, :string
-    field :status, :string
+    field :status, :string, default: "PD"
     # field :work_order_id, :id
     belongs_to :work_order, WorkOrder
 

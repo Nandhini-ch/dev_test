@@ -184,6 +184,13 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def reassign_reschedule_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"requester_user_id", requester_user_id}, query -> from q in query, where: q.requester_user_id == ^requester_user_id
+      {"reports_to_user_id", reports_to_user_id}, query -> from q in query, where: q.reports_to_user_id == ^reports_to_user_id
+    end)
+  end
+
 
   def transactions_query(query, query_params) do
     Enum.reduce(query_params, query, fn
