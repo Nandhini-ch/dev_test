@@ -13,7 +13,7 @@ defmodule Inconn2ServiceWeb.TransactionController do
 
   def index_grouped(conn, _params) do
     transactions = InventoryManagement.list_transactions_grouped(conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", transactions: transactions)
+    render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
   def index_to_be_acknowledged(conn, _params) do
@@ -28,7 +28,7 @@ defmodule Inconn2ServiceWeb.TransactionController do
 
   def index_to_be_approved_grouped(conn, _params) do
     transactions = InventoryManagement.list_transactions_to_be_approved_grouped(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", transactions: transactions)
+    render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
   def index_prending_to_be_approved(conn, _params) do
