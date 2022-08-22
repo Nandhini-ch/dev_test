@@ -398,8 +398,10 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/transactions", TransactionController, except: [:new, :edit]
     post "/create_transactions", TransactionController, :create_multiple
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
+    get "/transaction_to_be_approved_grouped", TransactionController, :index_to_be_approved_grouped
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
     get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
+    post "/approve_transactions", TransactionController, :approve_transaction
 
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
@@ -410,7 +412,5 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/zones", ZoneController, except: [:new, :edit]
     get "/zones_tree", ZoneController, :tree
     resources "/my_reports", MyReportController, except: [:edit]
-
-
   end
 end

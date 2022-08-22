@@ -62,7 +62,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     options = config["options"]
     if Kernel.is_list(options) do
       if (false not in Enum.map(options, fn x -> Kernel.is_map(x) end)) and (false not in Enum.map(options, fn x -> x not in options--[x] end)) do
-        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "value"] end) do
+        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "value"] end) and validate_unique_labels_and_values(options) do
           true -> changeset
           false -> add_error(changeset, :config, "config is invalid")
         end
@@ -86,10 +86,18 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     end
   end
 
-  defp validate_values_of_map(options) do
-    list = Enum.map(options, fn map ->
-                        Enum.map(Map.values(map), fn x -> Kernel.is_bitstring(x) end) end)
-    values_list = Enum.map(options, fn map -> map["value"] in ["P", "F"] end)
-    List.flatten(list ++ values_list)
+  defp validate_unique_labels_and_values(options) do
+    validate_unique_labels(options) and validate_unique_values(options)
   end
+
+  defp validate_unique_labels(options) do
+    labels = Enum.map(options, fn %{"label" => label} -> label end)
+    labels == Enum.uniq(labels)
+  end
+
+  defp validate_unique_values(options) do
+    values = Enum.map(options, fn %{"value" => value} -> value end)
+    values == Enum.uniq(values)
+  end
+
 end

@@ -17,7 +17,9 @@ defmodule Inconn2ServiceWeb.TaskListView do
   def render("task_list.json", %{task_list: task_list}) do
     %{id: task_list.id,
       name: task_list.name,
-      asset_category_id: task_list.asset_category_id}
+      asset_category_id: task_list.asset_category_id,
+      tasks: render_many(task_list.task_tasklists, TaskListView, "task_with_sequence.json")
+    }
   end
 
   def render("task_with_sequence.json", %{task_list: task_tasklists}) do
