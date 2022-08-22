@@ -21,6 +21,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
+  def index_to_be_approved_grouped(conn, _params) do
+    transactions = InventoryManagement.list_transactions_to_be_approved_grouped(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
   def index_prending_to_be_approved(conn, _params) do
     transactions = InventoryManagement.list_pending_transactions_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)
@@ -41,6 +46,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
       |> put_status(:created)
       |> render("index.json", transactions: transactions)
     end
+  end
+
+  def approve_transaction(conn, %{"transaction" => transaction_params}) do
+    transactions = InventoryManagement.approve_transactions(transaction_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", transactions: transactions)
   end
 
   def show(conn, %{"id" => id}) do

@@ -357,6 +357,16 @@ defmodule Inconn2Service.InventoryManagement do
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
+  def list_transactions_to_be_approved_grouped(user, prefix) do
+    from(t in Transaction, where: t.approver_user_id == ^user.id and t.is_approved == "NA")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Enum.group_by(&(&1.recorded_date))
+  end
+
+
   def list_pending_transactions_to_be_approved(user, prefix) do
     from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_approved != "AP")
     |> Repo.all(prefix: prefix)
@@ -423,6 +433,12 @@ defmodule Inconn2Service.InventoryManagement do
     |> revive_stock_on_acknowledgement_reject(prefix)
     |> load_approver_user_for_transaction(prefix)
     |> load_transaction_user_for_transaction(prefix)
+  end
+
+  def approve_transactions(attrs, prefix, user) do
+    query = from(t in Transaction, where: t.transaction_reference == ^attrs["reference"] and t.approver_user_id == ^user.id)
+    Repo.update_all(query, [set: [is_approved: "AP"]], prefix: prefix)
+    Repo.all(query, prefix: prefix)
   end
 
   #Transaction cannot be deleted
