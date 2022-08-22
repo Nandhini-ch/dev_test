@@ -14,6 +14,7 @@ defmodule Inconn2ServiceWeb.CheckListView do
     %{id: check_list.id,
       name: check_list.name,
       type: check_list.type,
+      site_id: check_list.site_id,
       check_ids: check_list.check_ids}
   end
 
@@ -21,6 +22,7 @@ defmodule Inconn2ServiceWeb.CheckListView do
     %{id: check_list.id,
       name: check_list.name,
       type: check_list.type,
+      site_id: check_list.site_id,
       check_ids: check_list.check_ids,
       checks: render_many(check_list.checks, CheckView, "check.json")}
   end

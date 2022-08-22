@@ -168,6 +168,7 @@ defmodule Inconn2Service.WorkOrderConfig do
   def list_task_lists(prefix) do
     Repo.add_active_filter(TaskList)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn tl -> preload_tasks(tl, prefix) end)
   end
 
   def list_tasks_for_task_lists(task_list_id, prefix) do
@@ -190,7 +191,7 @@ defmodule Inconn2Service.WorkOrderConfig do
       ** (Ecto.NoResultsError)
 
   """
-  def get_task_list!(id, prefix), do: Repo.get!(TaskList, id, prefix: prefix)
+  def get_task_list!(id, prefix), do: Repo.get!(TaskList, id, prefix: prefix) |> preload_tasks(prefix)
 
   @doc """
   Creates a task_list.
@@ -222,7 +223,7 @@ defmodule Inconn2Service.WorkOrderConfig do
 
   def create_task_list_with_tasks(attrs \\ %{}, prefix) do
     case task_list_transactions_for_create(attrs, prefix) do
-      {:ok, %{create_or_update_task_list: task_list}} -> {:ok, task_list}
+      {:ok, %{create_or_update_task_list: task_list}} -> {:ok, task_list} |> preload_tasks(prefix)
       _ -> {:error, "failure"}
     end
   end
@@ -320,6 +321,7 @@ defmodule Inconn2Service.WorkOrderConfig do
       |> TaskList.changeset(attrs)
       |> validate_asset_category_id(prefix)
       |> Repo.update(prefix: prefix)
+      |> preload_tasks(prefix)
   end
 
   def update_task_list_with_tasks(%TaskList{} = task_list, attrs \\ %{}, prefix) do
@@ -390,13 +392,13 @@ defmodule Inconn2Service.WorkOrderConfig do
     cond do
       has_workorder_template?(task_list, prefix) ->
         {:could_not_delete,
-        "Cannot be deleted as there are Equipments associated with it"
+        "Cannot be deleted as there are Workorder Template associated with it"
       }
 
       true ->
         update_task_list(task_list, %{"active" => false}, prefix)
           {:deleted,
-             "The Task List was disabled"
+             "The Task List was deleted"
            }
     end
   end
@@ -619,4 +621,22 @@ defmodule Inconn2Service.WorkOrderConfig do
   def change_task_tasklist(%TaskTasklist{} = task_tasklist, attrs \\ %{}) do
     TaskTasklist.changeset(task_tasklist, attrs)
   end
+
+  # def task_count(task_list, prefix) do
+  #  _query = from(t in TaskTasklist, where: t.task_list_id ==  ^task_list, select: count(t.id))
+  #  |> Repo.one(prefix: prefix)
+  # #  |> Map.put(task_list, )
+  # end
+
+  defp preload_tasks({:ok, task_list}, prefix), do: {:ok, preload_tasks(task_list, prefix)}
+  defp preload_tasks({:error, reason}, _prefix), do: {:error, reason}
+
+  defp preload_tasks(%TaskList{} = task_list, prefix) do
+    Map.put(
+            task_list,
+            :task_tasklists,
+            list_tasks_for_task_lists(task_list.id, prefix)
+            )
+  end
+
 end
