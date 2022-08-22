@@ -11,6 +11,16 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
     render(conn, "index.json", reassign_reschedule_requests: reassign_reschedule_requests)
   end
 
+  def index_to_be_approved(conn, _params) do
+    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_to_be_approved(conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", reassign_reschedule_requests: reassign_reschedule_requests)
+  end
+
+  def index_pending_approvals(conn, _params) do
+    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_pending(conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", reassign_reschedule_requests: reassign_reschedule_requests)
+  end
+
   def create(conn, %{"reassign_reschedule_request" => reassign_reschedule_request_params}) do
     with {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} <- Reapportion.create_reassign_reschedule_request(reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn

@@ -12,6 +12,16 @@ defmodule Inconn2Service.Reapportion do
     Repo.all(ReassignRescheduleRequest, prefix: prefix)
   end
 
+  def list_reassign_reschedule_requests_to_be_approved(prefix, user) do
+    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status != "AP")
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_reassign_reschedule_requests_pending(prefix, user) do
+    from(rrr in ReassignRescheduleRequest, where: rrr.requester_user_id == ^user.id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix)
 
 
@@ -62,7 +72,8 @@ defmodule Inconn2Service.Reapportion do
     employee = Staff.get_employee_of_user(user, prefix)
     cond do
       !is_nil(user) and !is_nil(employee) and !is_nil(employee.reports_to) ->
-        change(cs, %{reports_to_user_id: employee.user_id})
+        reports_to_user = Staff.get_user_from_employee(employee.id, prefix)
+        change(cs, %{reports_to_user_id: reports_to_user.id})
       !is_nil(user) and !is_nil(employee) ->
         add_error(cs, :reports_to_user_id, "The employee has no reports to")
       !is_nil(user) ->
