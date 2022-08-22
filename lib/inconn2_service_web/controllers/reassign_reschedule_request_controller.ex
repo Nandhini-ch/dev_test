@@ -30,6 +30,14 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
     end
   end
 
+  def create_multiple(conn, %{"reassign_reschedule_request" => reassign_reschedule_request_params}) do
+    with {:ok, reassign_reschedule_requests} <- Reapportion.create_reassign_reschedule_requests(reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+      conn
+      |> put_status(:created)
+      |> render("index.json", reassign_reschedule_requests: reassign_reschedule_requests)
+    end
+  end
+
   def show(conn, %{"id" => id}) do
     reassign_reschedule_request = Reapportion.get_reassign_reschedule_request!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", reassign_reschedule_request: reassign_reschedule_request)

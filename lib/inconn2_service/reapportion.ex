@@ -25,10 +25,17 @@ defmodule Inconn2Service.Reapportion do
   def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix)
 
 
-  def create_reassign_reschedule_requests(reassign_attrs, prefix) do
+  def create_reassign_reschedule_requests(reassign_attrs, prefix, user) do
+    result =
     Enum.map(reassign_attrs["work_order_ids"], fn x ->
-      Map.put(reassign_attrs, "work_order_id", x) |> create_reassign_reschedule_request(prefix)
+      Map.put(reassign_attrs, "work_order_id", x) |> create_reassign_reschedule_request(prefix, user)
     end)
+    error_case = Enum.map(result, fn {a, b} -> if a == :error do b end end) |> Enum.filter(fn e -> !is_nil(e) end)
+    IO.inspect(error_case)
+    case length(error_case) do
+      0 -> {:ok, result |> Enum.map(fn {:ok, r} -> r end)}
+      _ ->  {:multiple_error, error_case}
+    end
   end
 
   def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
