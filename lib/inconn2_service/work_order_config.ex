@@ -390,13 +390,13 @@ defmodule Inconn2Service.WorkOrderConfig do
     cond do
       has_workorder_template?(task_list, prefix) ->
         {:could_not_delete,
-        "Cannot be deleted as there are Equipments associated with it"
+        "Cannot be deleted as there are Workorder Template associated with it"
       }
 
       true ->
         update_task_list(task_list, %{"active" => false}, prefix)
           {:deleted,
-             "The Task List was disabled"
+             "The Task List was deleted"
            }
     end
   end
