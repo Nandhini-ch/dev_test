@@ -341,6 +341,15 @@ defmodule Inconn2Service.InventoryManagement do
     |> Enum.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
+  def list_transactions_grouped(query_params, prefix) do
+    transactions_query(Transaction, query_params)
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Enum.group_by(&(&1.transaction_reference))
+  end
+
   def list_transactions_to_be_acknowledged(user, prefix) do
     from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged == "NACK")
     |> Repo.all(prefix: prefix)
@@ -363,7 +372,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
-    |> Enum.group_by(&(&1.recorded_date))
+    |> Enum.group_by(&(&1.transaction_reference))
   end
 
 
