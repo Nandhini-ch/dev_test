@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Workorder do
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Inconn2Service.Util.HelpersFunctions
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
@@ -25,13 +26,15 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Util.HierarchyManager
-  # import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
 
 
   def list_workorder_templates(prefix)  do
-    Repo.all(WorkorderTemplate, prefix: prefix)
+    WorkorderTemplate
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
@@ -44,7 +47,7 @@ defmodule Inconn2Service.Workorder do
       |> update_asset_type(prefix)
       |> validate_asset_category_id(prefix)
       |> validate_task_list_id(prefix)
-      |> validate_task_ids(prefix)
+      # |> validate_task_ids(prefix)
       # |> validate_estimated_time(prefix)
       |> validate_workpermit_check_list_id(prefix)
       |> validate_loto_check_list_id(prefix)
@@ -299,11 +302,25 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  # def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
+  #   Repo.delete(workorder_template, prefix: prefix)
+  #   push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
+  #   {:ok, nil}
+  # end
+
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
-    Repo.delete(workorder_template, prefix: prefix)
-    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
-    {:ok, nil}
+    cond do
+      has_workorder_schedule?(workorder_template, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Workorder Schedule associated"}
+
+        true ->
+          update_workorder_template(workorder_template, %{"active" => false}, prefix, user)
+          {:deleted, "workorder template was deleted"}
+
+    end
   end
+
 
   def change_workorder_template(%WorkorderTemplate{} = workorder_template, attrs \\ %{}) do
     WorkorderTemplate.changeset(workorder_template, attrs)
@@ -330,6 +347,26 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
+
+  def create_workorder_schedules(attrs \\ %{}, prefix) do
+    asset_ids = attrs["asset_ids"]
+    result = create_individual_workorder_schedules(attrs, asset_ids, prefix) |> IO.inspect()
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  defp create_individual_workorder_schedules(attrs, asset_ids, prefix) do
+    asset_ids
+    |> Enum.map(&Elixir.Task.async(fn -> create_workorder_schedule(Map.put(attrs, "asset_id", &1), prefix) end))
+    |> Elixir.Task.await_many(:infinity)
+  end
 
   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}

@@ -14,4 +14,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   defp merge_cutsom_values(nil, new_map), do: new_map
   defp merge_custom_values(existing_map, nil), do: existing_map
   defp merge_custom_values(existing_map, new_map), do: Map.merge(existing_map, new_map)
+
+  def get_success_or_failure_counts(result, status) do
+    Enum.count(result, fn {s, _} -> s == status end)
+  end
+
+  def get_success_or_failure_list(result, status) when is_atom(status) do
+    Keyword.take(result, [status])
+    |> Keyword.values()
+  end
 end
