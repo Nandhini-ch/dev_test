@@ -47,7 +47,7 @@ defmodule Inconn2Service.Workorder do
       |> update_asset_type(prefix)
       |> validate_asset_category_id(prefix)
       |> validate_task_list_id(prefix)
-      |> validate_task_ids(prefix)
+      # |> validate_task_ids(prefix)
       # |> validate_estimated_time(prefix)
       |> validate_workpermit_check_list_id(prefix)
       |> validate_loto_check_list_id(prefix)
@@ -312,7 +312,7 @@ defmodule Inconn2Service.Workorder do
     cond do
       has_workorder_schedule?(workorder_template, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Workorder Template assocaited"}
+        "Cannot Delete because there are Workorder Schedule associated"}
 
         true ->
           update_workorder_template(workorder_template, %{"active" => false}, prefix, user)
