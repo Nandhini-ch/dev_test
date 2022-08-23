@@ -2916,14 +2916,7 @@ defmodule Inconn2Service.Workorder do
           CheckListConfig.get_check_list!(workorder_template.loto_lock_check_list_id, prefix).check_ids
 
         "PRE" ->
-          # check_list = CheckListConfig.get_pre_check_list(work_order.site_id, prefix)
-          case CheckListConfig.get_pre_check_list(work_order.site_id, prefix) do
-            nil ->
-              []
-
-            check_list ->
-              check_list.check_ids
-          end
+          CheckListConfig.get_check_list!(workorder_template.precheck_list_id, prefix).check_ids
       end
 
     Enum.map(check_ids, fn check_id ->
