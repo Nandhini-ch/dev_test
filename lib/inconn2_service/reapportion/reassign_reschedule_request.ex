@@ -35,6 +35,13 @@ defmodule Inconn2Service.Reapportion.ReassignRescheduleRequest do
     |> validate_user_if_approved()
   end
 
+  def update_for_reschedule_changeset(reassign_reschedule_request, attrs) do
+    reassign_reschedule_request
+    |> cast(attrs, [:reschedule_date, :reschedule_time, :status])
+    |> validate_required([:reschedule_date, :reschedule_time, :status])
+    |> validate_inclusion(:status, ["AP", "RJ"])
+  end
+
   defp validate_user_if_approved(cs) do
     case get_field(cs, :status, nil) do
       "AP" -> validate_required(cs, [:reassign_to_user_id])

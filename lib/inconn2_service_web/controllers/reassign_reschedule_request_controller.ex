@@ -12,12 +12,12 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
   end
 
   def index_to_be_approved(conn, _params) do
-    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_to_be_approved(conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_to_be_approved(conn.assigns.sub_domain_prefix, conn.assigns.current_user, conn.query_params)
     render(conn, "index.json", reassign_reschedule_requests: reassign_reschedule_requests)
   end
 
   def index_pending_approvals(conn, _params) do
-    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_pending(conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    reassign_reschedule_requests = Reapportion.list_reassign_reschedule_requests_pending(conn.assigns.sub_domain_prefix, conn.assigns.current_user, conn.query_params)
     render(conn, "index.json", reassign_reschedule_requests: reassign_reschedule_requests)
   end
 
@@ -55,6 +55,13 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
     reassign_reschedule_request = Reapportion.get_reassign_reschedule_request!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} <- Reapportion.reassign_work_order_update(reassign_reschedule_request, reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do   render(conn, "show.json", reassign_reschedule_request: reassign_reschedule_request)
+    end
+  end
+
+  def reschedule_response_for_work_order(conn, %{"id" => id, "reassign_reschedule_request" => reassign_reschedule_request_params}) do
+    reassign_reschedule_request = Reapportion.get_reassign_reschedule_request!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} <- Reapportion.reschedule_work_order_update(reassign_reschedule_request, reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do   render(conn, "show.json", reassign_reschedule_request: reassign_reschedule_request)
     end
   end
 
