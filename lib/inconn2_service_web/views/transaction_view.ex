@@ -11,7 +11,18 @@ defmodule Inconn2ServiceWeb.TransactionView do
   end
 
   def render("transaction_grouped.json", %{transactions: transactions}) do
-    Enum.map(transactions, fn {k, v} -> {k, render_many(v, TransactionView, "transaction.json")} end) |> Enum.into(%{})
+    # Enum.map(transactions, fn {k, v} -> {k, render_many(v, TransactionView, "transaction.json")} end) |> Enum.into(%{})
+    %{data: render_many(transactions, TransactionView, "transaction_for_reference.json")}
+  end
+
+  def render("transaction_for_reference.json", %{transaction: transaction_reference}) do
+    %{
+      reference_no: transaction_reference.reference_no,
+      date: transaction_reference.date,
+      transaction_type: transaction_reference.transaction_type,
+      transaction_user: transaction_reference.transaction_user,
+      transactions: render_many(transaction_reference.transactions, TransactionView, "transaction.json")
+    }
   end
 
   def render("transaction.json", %{transaction: transaction}) do

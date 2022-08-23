@@ -67,6 +67,13 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     |> validate_pause_resume_times()
   end
 
+
+  def reassign_changeset(work_order, attrs) do
+    work_order
+    |> cast(attrs, [:user_id])
+    |> validate_required([:user_id])
+  end
+
   defp validate_start_date_time(cs) do
     scheduled_date = get_field(cs, :scheduled_date)
     scheduled_time = get_field(cs, :scheduled_time)

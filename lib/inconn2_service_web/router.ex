@@ -414,5 +414,13 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/zones", ZoneController, except: [:new, :edit]
     get "/zones_tree", ZoneController, :tree
     resources "/my_reports", MyReportController, except: [:edit]
+
+    get "/reassign_reschedule_requests/to_be_approved", ReassignRescheduleRequestController, :index_to_be_approved
+    get "/reassign_reschedule_requests/pending_approvals", ReassignRescheduleRequestController, :index_pending_approvals
+    resources "/reassign_reschedule_requests", ReassignRescheduleRequestController, except: [:new, :edit]
+    post "/reassign_requests/:id/respond", ReassignRescheduleRequestController, :reassign_response_for_work_order
+    post "/reschedule_requests/:id/respond", ReassignRescheduleRequestController, :reschedule_response_for_work_order
+    post "/reassign_reschedule_requests/create_multiple", ReassignRescheduleRequestController, :create_multiple
+
   end
 end

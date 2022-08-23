@@ -312,7 +312,7 @@ defmodule Inconn2Service.Workorder do
     cond do
       has_workorder_schedule?(workorder_template, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Workorder Schedule associated"}
+        "Cannot Delete because there are Workorder Schedule associated with it"}
 
         true ->
           update_workorder_template(workorder_template, %{"active" => false}, prefix, user)
@@ -1600,6 +1600,28 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  def reassign_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
+    work_order
+    |> WorkOrder.reassign_changeset(attrs)
+    |> Repo.update(prefix: prefix)
+    |> create_status_track_for_reapportion(prefix, user)
+  end
+
+  def create_status_track_for_reapportion({:error, changeset}, _prefix, _user), do: {:error, changeset}
+
+  def create_status_track_for_reapportion({:ok, work_order}, prefix, user) do
+    {date, time} = get_site_date_time_as_tuple(work_order.site_id, prefix)
+    create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "RAS", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+    {:ok, work_order}
+  end
+
+  def get_site_date_time_as_tuple(site_id, prefix) do
+    site = Repo.get!(Site, site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day),
+    Time.new!(date_time.hour, date_time.minute, date_time.second)}
   end
 
   def update_pause_time_in_work_order(work_order, date_time, prefix) do

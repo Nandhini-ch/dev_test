@@ -348,6 +348,20 @@ defmodule Inconn2Service.InventoryManagement do
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
     |> Enum.group_by(&(&1.transaction_reference))
+    |> rearrange_transaction_info()
+  end
+
+  defp rearrange_transaction_info(transactions) do
+    Enum.map(transactions, fn {reference, transactions_for_reference} ->
+      first_transaction = List.first(transactions_for_reference)
+      %{
+        reference_no: reference,
+        date: first_transaction.transaction_date,
+        transaction_type: first_transaction.transaction_type,
+        transaction_user: first_transaction.transaction_user,
+        transactions: transactions_for_reference,
+      }
+    end)
   end
 
   def list_transactions_to_be_acknowledged(user, prefix) do
@@ -373,6 +387,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
     |> Enum.group_by(&(&1.transaction_reference))
+    |> rearrange_transaction_info()
   end
 
 
