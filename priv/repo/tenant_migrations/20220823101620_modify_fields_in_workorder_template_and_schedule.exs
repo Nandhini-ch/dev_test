@@ -5,7 +5,7 @@ defmodule Inconn2Service.Repo.Migrations.ModifyFieldsInWorkorderTemplateAndSched
     alter table("workorder_templates") do
       add :breakdown, :boolean, default: false
       add :audit, :boolean, default: false
-      add :ahdoc, :boolean, default: false
+      add :adhoc, :boolean, default: false
       add :description, :string
       add :is_precheck_required, :boolean, default: false
       add :precheck_list_id, :integer

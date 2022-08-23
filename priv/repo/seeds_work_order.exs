@@ -38,9 +38,9 @@ wkord_tp1 = %{
   "time_end" => "17:00:00",
   "create_new" => "at",
   "max_times" => 5,
-  "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
-  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
-  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
+  "consumables" => [%{"item_id" => 1, "quantity" => 10}, %{"item_id" => 1, "quantity" => 10}],
+  "spares" => [%{"item_id" => 1, "quantity" => 10}, %{"item_id" => 1, "quantity" => 10}],
+  "tools" => [%{"item_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
   "is_loto_required" => false
@@ -146,9 +146,6 @@ wkord_tp6 = %{
   "time_end" => "23:59:59",
   "create_new" => "at",
   "max_times" => 5,
-  "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
-  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
-  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
   "is_loto_required" => false

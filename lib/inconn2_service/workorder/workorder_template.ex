@@ -132,7 +132,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   defp validate_inventory_items(cs, item_type) do
     items = get_field(cs, item_type)
     cond do
-      length(items) != 0 and validate_inner_keys_in_list_of_maps(items, ["item_id", "quantity"]) ->
+      length(items) == 0 or validate_inner_keys_in_list_of_maps(items, ["item_id", "quantity"]) ->
         cs
       true ->
         add_error(cs, item_type, "keys are invalid")
@@ -142,7 +142,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   defp validate_materials(cs) do
     materials = get_field(cs, :materials)
     cond do
-      length(materials) != 0 and validate_inner_keys_in_list_of_maps(materials, ["cost", "item", "quantity"]) ->
+      length(materials) == 0 or validate_inner_keys_in_list_of_maps(materials, ["cost", "item", "quantity"]) ->
         cs
       true ->
         add_error(cs, :materials, "keys are invalid")
@@ -152,7 +152,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   defp validate_manpower(cs) do
     manpower = get_field(cs, :manpower)
     cond do
-      length(manpower) != 0 and validate_inner_keys_in_list_of_maps(manpower, ["cost", "count", "description"]) ->
+      length(manpower) == 0 or validate_inner_keys_in_list_of_maps(manpower, ["cost", "count", "description"]) ->
         cs
       true ->
         add_error(cs, :manpower, "keys are invalid")

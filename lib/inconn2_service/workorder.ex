@@ -51,9 +51,6 @@ defmodule Inconn2Service.Workorder do
       # |> validate_estimated_time(prefix)
       |> validate_workpermit_check_list_id(prefix)
       |> validate_loto_check_list_id(prefix)
-      |> validate_tools(prefix)
-      |> validate_spares(prefix)
-      |> validate_consumables(prefix)
       |> Repo.insert(prefix: prefix)
 
     case result do
@@ -245,9 +242,6 @@ defmodule Inconn2Service.Workorder do
       # |> validate_estimated_time(prefix)
       |> validate_workpermit_check_list_id(prefix)
       |> validate_loto_check_list_id(prefix)
-      |> validate_tools(prefix)
-      |> validate_spares(prefix)
-      |> validate_consumables(prefix)
       |> Repo.update(prefix: prefix)
 
     case result do
@@ -1103,7 +1097,7 @@ defmodule Inconn2Service.Workorder do
       auto_create_workorder_checks(work_order, "LOTO LOCK", prefix)
       auto_create_workorder_checks(work_order, "LOTO RELEASE", prefix)
     end
-    auto_create_workorder_checks(work_order, "PRE", prefix)
+    if workorder_template.is_precheck_required, do: auto_create_workorder_checks(work_order, "PRE", prefix)
   end
 
   defp validate_site_id(cs, prefix) do
