@@ -201,6 +201,13 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def reassign_reschedule_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"request_for", request_for}, query -> from q in query, where: q.request_for == ^request_for
+      _, query -> query
+    end)
+  end
+
 
   def transactions_query(query, query_params) do
     Enum.reduce(query_params, query, fn
