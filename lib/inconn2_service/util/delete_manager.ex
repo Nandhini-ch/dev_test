@@ -26,6 +26,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
   alias Inconn2Service.Workorder.WorkorderTemplate
 
+
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Shift{} = shift, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Employee{} = employee, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"employee_id" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -61,6 +62,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_workorder_schedule?(%Location{} = location, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_schedule?(%WorkorderTemplate{} = workorder_template, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"workorder_template_id" => workorder_template.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_task_list?(%AssetCategory{} = asset_category, prefix), do: (task_list_query(Repo.add_active_filter(TaskList), %{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 

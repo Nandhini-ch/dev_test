@@ -25,13 +25,15 @@ defmodule Inconn2Service.Workorder do
 
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Util.HierarchyManager
-  # import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
 
 
   def list_workorder_templates(prefix)  do
-    Repo.all(WorkorderTemplate, prefix: prefix)
+    WorkorderTemplate
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
@@ -299,11 +301,25 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  # def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
+  #   Repo.delete(workorder_template, prefix: prefix)
+  #   push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
+  #   {:ok, nil}
+  # end
+
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
-    Repo.delete(workorder_template, prefix: prefix)
-    push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
-    {:ok, nil}
+    cond do
+      has_workorder_schedule?(workorder_template, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are Workorder Template assocaited"}
+
+        true ->
+          update_workorder_template(workorder_template, %{"active" => false}, prefix, user)
+          {:deleted, "workorder template was deleted"}
+
+    end
   end
+
 
   def change_workorder_template(%WorkorderTemplate{} = workorder_template, attrs \\ %{}) do
     WorkorderTemplate.changeset(workorder_template, attrs)
