@@ -18,4 +18,5 @@ defmodule Inconn2Service.CheckListConfig.CheckList do
     |> validate_required([:name, :type, :check_ids])
     |> validate_inclusion(:type, ["PRE", "WP", "LOTO"])
   end
+
 end

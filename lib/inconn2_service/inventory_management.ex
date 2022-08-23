@@ -256,7 +256,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def list_inventory_items(query_params, prefix) do
-    dynamic_query_for_inventory_items(from(i in InventoryItem, where: i.active), query_params)
+    inventory_item_query(from(i in InventoryItem, where: i.active), query_params)
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
     |> Repo.preload([:consume_unit_of_measurement, :uom_category, :inventory_supplier_items])
@@ -639,14 +639,6 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp stock_if_exists_query(store_id, item_id) do
     from(s in Stock, where: s.inventory_item_id == ^item_id and s.store_id == ^store_id)
-  end
-
-  defp dynamic_query_for_inventory_items(query, query_params) do
-    Enum.reduce(query_params, query, fn
-      {"asset_category_id", asset_category_id}, query -> from q in query, where: ^asset_category_id in q.asset_category_ids
-      {"type", type}, query -> from q in query, where: q.type == ^type
-      _ , query -> query
-    end)
   end
 
   defp multi_query_for_inward_transaction(attrs, prefix) do

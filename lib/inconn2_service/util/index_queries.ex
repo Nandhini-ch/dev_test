@@ -187,6 +187,15 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+
+  def checklist_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"type", type}, query -> from q in query, where: q.type == ^type
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
   def category_helpdesk_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
@@ -208,6 +217,17 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+  def inventory_item_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"item_type", "spare"}, query -> from q in query, where: q.item_type == "Spare"
+      {"item_type", "tool"}, query -> from q in query, where: q.item_type == "Tool"
+      {"item_type", "part"}, query -> from q in query, where: q.item_type == "Part"
+      {"item_type", "consumable"}, query -> from q in query, where: q.item_type == "Consumable"
+      {"item_type", "measuring_instrument"}, query -> from q in query, where: q.item_type == "Measuring Instrument"
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: ^asset_category_id in q.asset_category_ids
+      _, query -> query
+    end)
+  end
 
   def transactions_query(query, query_params) do
     Enum.reduce(query_params, query, fn
