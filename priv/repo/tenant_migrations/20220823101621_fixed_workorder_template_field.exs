@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Repo.Migrations.ModifyFieldsInWorkorderTemplateAndSchedule do
+defmodule Inconn2Service.Repo.Migrations.FixedWorkorderTemplateFields do
   use Ecto.Migration
 
   def change do
