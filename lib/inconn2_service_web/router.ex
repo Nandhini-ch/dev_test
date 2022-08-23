@@ -152,6 +152,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
+    post "/create_workorder_schedules", WorkorderScheduleController, :create_multiple
     put "/workorder_schedule/:id/pause", WorkorderScheduleController, :pause_schedule
     put "/workorder_schedule/:id/resume", WorkorderScheduleController, :resume_schedule
 

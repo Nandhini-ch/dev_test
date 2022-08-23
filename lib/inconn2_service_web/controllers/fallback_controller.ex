@@ -23,7 +23,6 @@ defmodule Inconn2ServiceWeb.FallbackController do
   end
 
   def call(conn, {:multiple_error, changeset_array}) do
-    IO.inspect(changeset_array)
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(Inconn2ServiceWeb.ChangesetView)
