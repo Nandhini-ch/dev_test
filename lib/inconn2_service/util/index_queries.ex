@@ -212,6 +212,7 @@ defmodule Inconn2Service.Util.IndexQueries do
        {"reference_no", reference_no}, query -> from q in query, where: q.transaction_reference == ^reference_no
        {"type", type}, query -> from q in query, where: q.type == ^type
        {"is_approval_required", "true"}, query -> from q in query, where: q.is_approval_required
+       {"is_approval_required", "false"}, query -> from q in query, where: q.is_approval_required == false
        _ , query -> query
     end)
   end

@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Workorder do
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Inconn2Service.Util.HelpersFunctions
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
@@ -346,6 +347,26 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
+
+  def create_workorder_schedules(attrs \\ %{}, prefix) do
+    asset_ids = attrs["asset_ids"]
+    result = create_individual_workorder_schedules(attrs, asset_ids, prefix) |> IO.inspect()
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  defp create_individual_workorder_schedules(attrs, asset_ids, prefix) do
+    asset_ids
+    |> Enum.map(&Elixir.Task.async(fn -> create_workorder_schedule(Map.put(attrs, "asset_id", &1), prefix) end))
+    |> Elixir.Task.await_many(:infinity)
+  end
 
   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}

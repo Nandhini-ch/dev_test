@@ -368,7 +368,7 @@ tsk2 = %{
   "config" => %{
             "options" => [ %{"label" => "abc", "value" => "P"},
                            %{"label" => "xyz", "value" => "F"},
-                           %{"label" => "qwe", "value" => "F"} ]
+                           %{"label" => "qwe", "value" => "A"} ]
             }
 }
 
