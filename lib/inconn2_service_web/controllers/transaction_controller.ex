@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
+  def index_grouped(conn, _params) do
+    transactions = InventoryManagement.list_transactions_grouped(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "transaction_grouped.json", transactions: transactions)
+  end
+
   def index_to_be_acknowledged(conn, _params) do
     transactions = InventoryManagement.list_transactions_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)
@@ -19,6 +24,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
   def index_to_be_approved(conn, _params) do
     transactions = InventoryManagement.list_transactions_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)
+  end
+
+  def index_to_be_approved_grouped(conn, _params) do
+    transactions = InventoryManagement.list_transactions_to_be_approved_grouped(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
   def index_prending_to_be_approved(conn, _params) do
@@ -41,6 +51,21 @@ defmodule Inconn2ServiceWeb.TransactionController do
       |> put_status(:created)
       |> render("index.json", transactions: transactions)
     end
+  end
+
+  def update(conn, %{"id" => id, "transaction" => transaction_params}) do
+    transaction = InventoryManagement.get_transaction!(id, conn.assigns.sub_domain_prefix)
+    with {:ok, %Transaction{} = transaction} <- InventoryManagement.update_transaction(transaction, transaction_params,conn.assigns.sub_domain_prefix) do
+      conn
+      |> put_status(:created)
+      |> put_resp_header("location", Routes.transaction_path(conn, :show, transaction))
+      |> render("show.json", transaction: transaction)
+    end
+  end
+
+  def approve_transaction(conn, %{"transaction" => transaction_params}) do
+    transactions = InventoryManagement.approve_transactions(transaction_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
+    render(conn, "index.json", transactions: transactions)
   end
 
   def show(conn, %{"id" => id}) do

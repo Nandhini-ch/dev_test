@@ -9,7 +9,7 @@ defmodule Inconn2ServiceWeb.TaskController do
   def index(conn, _params) do
     case Map.get(conn.query_params, "label", nil) do
       nil ->
-        tasks = WorkOrderConfig.list_tasks(conn.assigns.sub_domain_prefix)
+        tasks = WorkOrderConfig.list_tasks(conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", tasks: tasks)
       label ->
         tasks = WorkOrderConfig.search_tasks(label, conn.assigns.sub_domain_prefix)

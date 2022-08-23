@@ -22,6 +22,9 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Prompt.AlertNotificationConfig
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory, CategoryHelpdesk}
+  alias Inconn2Service.WorkOrderConfig.MasterTaskType
+  alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
+  alias Inconn2Service.Workorder.WorkorderTemplate
 
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Shift{} = shift, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -54,6 +57,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_workorder_template?(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_template?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"workpermit_check_list_id" => check_list.id, "loto_lock_check_list_id" => check_list.id, "loto_release_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template?(%TaskList{} = task_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate), %{"task_list_id" => task_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workorder_schedule?(%Location{} = location, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -63,6 +67,9 @@ defmodule Inconn2Service.Util.DeleteManager do
   # def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site), %{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_check?(%CheckType{} = check_type, prefix), do: (check_query(Repo.add_active_filter(Check), %{"check_type_id" => check_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_check_list?(%Check{} = check, prefix), do: (check_list_query(Repo.add_active_filter(CheckList), %{"check_id" => check.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
 
   def has_contract?(%Party{} = party, prefix), do: (contract_query(Repo.add_active_filter(Contract), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
@@ -86,5 +93,10 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_category_helpdesk?(%User{} = user, prefix), do: (category_helpdesk_query(Repo.add_active_filter(CategoryHelpdesk), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workrequest_subcategory?(%WorkrequestCategory{} = workrequest_category, prefix), do: (workrequest_subcategory_query(Repo.add_active_filter(WorkrequestSubcategory), %{"workrequest_category_id" => workrequest_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_task?(%MasterTaskType{} = master_task_type, prefix), do: (task_query(Repo.add_active_filter(Task), %{"master_task_type_id" => master_task_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_task_tasklistt?(%Task{} = task, prefix), do: (task_tasklist_query((TaskTasklist), %{"task_id" => task.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
 
 end

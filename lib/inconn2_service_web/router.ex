@@ -128,11 +128,13 @@ defmodule Inconn2ServiceWeb.Router do
     post "/upload_bankholidays", ReferenceUploadController, :upload_bankholidays
 
     resources "/tasks", TaskController, except: [:new, :edit]
+    resources "/master_task_types", MasterTaskTypeController, except: [:new, :edit]
     put "/tasks/:id/activate", TaskController, :activate_task
     put "/tasks/:id/deactivate", TaskController, :deactivate_task
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     post "/upload_tasks", ReferenceUploadController, :upload_tasks
     resources "/task_lists", TaskListController, except: [:new, :edit]
+    get "/task_lists/:id/tasks", TaskListController, :index_tasks_for_task_list
     put "/task_lists/:id/activate", TaskListController, :activate_task_list
     put "/task_lists/:id/deactivate", TaskListController, :activate_task_list
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
@@ -396,9 +398,12 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/transactions", TransactionController, except: [:new, :edit]
     post "/create_transactions", TransactionController, :create_multiple
+    get "/transactions_grouped", TransactionController, :index_grouped
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
+    get "/transaction_to_be_approved_grouped", TransactionController, :index_to_be_approved_grouped
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
     get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
+    post "/approve_transactions", TransactionController, :approve_transaction
 
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
@@ -409,7 +414,5 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/zones", ZoneController, except: [:new, :edit]
     get "/zones_tree", ZoneController, :tree
     resources "/my_reports", MyReportController, except: [:edit]
-
-
   end
 end
