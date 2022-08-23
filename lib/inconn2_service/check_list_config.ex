@@ -90,8 +90,8 @@ defmodule Inconn2Service.CheckListConfig do
   end
 
   #Context functions for CheckList
-  def list_check_lists(prefix) do
-    Repo.all(Repo.add_active_filter(CheckList), prefix: prefix)
+  def list_check_lists(prefix, query_params) do
+    Repo.all(Repo.add_active_filter(CheckList) |> checklist_query(query_params), prefix: prefix)
   end
 
   def get_check_list!(id, prefix), do: Repo.get!(CheckList, id, prefix: prefix) |> preload_checks(prefix)

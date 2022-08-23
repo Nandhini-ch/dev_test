@@ -21,18 +21,18 @@ defmodule Inconn2Service.CheckListConfig.CheckList do
     # |> validate_site_id()
   end
 
-  defp validate_site_id(cs) do
-    type = get_field(cs, :type, nil)
-    if type != nil do
-      case type do
-        "PRE" ->
-          validate_required(cs, [:site_id])
+  # defp validate_site_id(cs) do
+  #   type = get_field(cs, :type, nil)
+  #   if type != nil do
+  #     case type do
+  #       "PRE" ->
+  #         validate_required(cs, [:site_id])
 
-        _ ->
-          cs
-      end
-    else
-      cs
-    end
-  end
+  #       _ ->
+  #         cs
+  #     end
+  #   else
+  #     cs
+  #   end
+  # end
 end

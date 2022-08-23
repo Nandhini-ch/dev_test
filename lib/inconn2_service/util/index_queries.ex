@@ -187,6 +187,15 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
+
+  def checklist_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"type", type}, query -> from q in query, where: q.type == ^type
+      _, query -> from q in query, where: q.active
+    end)
+  end
+
+
   def category_helpdesk_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
