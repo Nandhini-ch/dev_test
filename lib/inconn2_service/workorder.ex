@@ -312,7 +312,7 @@ defmodule Inconn2Service.Workorder do
     cond do
       has_workorder_schedule?(workorder_template, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Workorder Schedule associated"}
+        "Cannot Delete because there are Workorder Schedule associated with it"}
 
         true ->
           update_workorder_template(workorder_template, %{"active" => false}, prefix, user)
