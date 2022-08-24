@@ -243,5 +243,4 @@ defmodule Inconn2Service.Util.IndexQueries do
        _ , query -> query
     end)
   end
-
 end
