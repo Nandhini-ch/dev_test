@@ -575,8 +575,6 @@ defmodule Inconn2Service.InventoryManagement do
     end
   end
 
-  defp stock_query(query, %{}), do: query
-
   defp stock_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id

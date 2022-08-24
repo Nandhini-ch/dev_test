@@ -25,6 +25,8 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.WorkOrderConfig.MasterTaskType
   alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
   alias Inconn2Service.Workorder.WorkorderTemplate
+  # alias Inconn2Service.InventoryManagement.{Stock, Transaction, InventoryItem,}
+
 
 
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -99,6 +101,4 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_task?(%MasterTaskType{} = master_task_type, prefix), do: (task_query(Repo.add_active_filter(Task), %{"master_task_type_id" => master_task_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_task_tasklistt?(%Task{} = task, prefix), do: (task_tasklist_query((TaskTasklist), %{"task_id" => task.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-
-
 end
