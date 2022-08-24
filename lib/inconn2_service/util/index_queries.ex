@@ -237,7 +237,7 @@ defmodule Inconn2Service.Util.IndexQueries do
        {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
        {"dc_no", dc_no}, query -> from q in query, where: q.dc_no == ^dc_no
        {"reference_no", reference_no}, query -> from q in query, where: q.transaction_reference == ^reference_no
-       {"type", type}, query -> from q in query, where: q.type == ^type
+       {"type", type}, query -> from q in query, where: q.transaction_type == ^type
        {"is_approval_required", "true"}, query -> from q in query, where: q.is_approval_required
        {"is_approval_required", "false"}, query -> from q in query, where: q.is_approval_required == false
        _ , query -> query
