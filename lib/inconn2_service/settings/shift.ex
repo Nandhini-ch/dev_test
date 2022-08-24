@@ -11,6 +11,7 @@ defmodule Inconn2Service.Settings.Shift do
     field :start_date, :date
     field :start_time, :time
     field :active, :boolean, default: true
+    field :code, :string
     belongs_to :site, Site
     timestamps()
   end
@@ -26,7 +27,8 @@ defmodule Inconn2Service.Settings.Shift do
       :start_date,
       :end_date,
       :site_id,
-      :active
+      :active,
+      :code
     ])
     |> validate_required([
       :name,
@@ -40,6 +42,8 @@ defmodule Inconn2Service.Settings.Shift do
     |> validate_date_order
     |> validate_applicable_days
     |> unique_constraint(:name, name: :index_shifts_dates)
+    |> unique_constraint([:code])
+    |> validate_code()
     |> assoc_constraint(:site)
   end
 
@@ -63,7 +67,18 @@ defmodule Inconn2Service.Settings.Shift do
       true -> changeset
       _ -> add_error(changeset, :applicable_days, "cannot be anything other than 1,2,3,4,5,6,7")
     end
-
     # Date.day_of_week returns 1,2,3,4,5,6,7 depending on the start default date
   end
+
+
+  defp validate_code(cs) do
+    code = get_field(cs, :code, nil)
+    cond do
+      !is_nil(code) and String.match?(code, ~r/^[A-Z]/) and String.length(code) == 1 -> cs
+      !is_nil(code) and String.match?(code, ~r/^[A-Z]/) -> add_error(cs, :code, "Code should be only one letter")
+      !is_nil(code) -> add_error(cs, :code, "Code should be upper case")
+      true -> cs
+    end
+  end
+
 end

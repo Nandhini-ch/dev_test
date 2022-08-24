@@ -18,6 +18,7 @@ defmodule Inconn2ServiceWeb.ShiftView do
       end_time: shift.end_time,
       applicable_days: shift.applicable_days,
       start_date: shift.start_date,
-      end_date: shift.end_date}
+      end_date: shift.end_date,
+      code: shift.code }
   end
 end
