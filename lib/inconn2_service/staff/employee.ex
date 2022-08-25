@@ -11,6 +11,7 @@ defmodule Inconn2Service.Staff.Employee do
     field :mobile_no, :string
     field :salary, :float
     field :designation, :string
+    field :designation_id, :integer
     field :email, :string
     field :employment_start_date, :date
     field :employment_end_date, :date
@@ -37,6 +38,7 @@ defmodule Inconn2Service.Staff.Employee do
       :employment_start_date,
       :employment_end_date,
       :designation,
+      :designation_id,
       :email,
       :employee_id,
       :landline_no,
