@@ -421,6 +421,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/reassign_requests/:id/respond", ReassignRescheduleRequestController, :reassign_response_for_work_order
     post "/reschedule_requests/:id/respond", ReassignRescheduleRequestController, :reschedule_response_for_work_order
     post "/reassign_reschedule_requests/create_multiple", ReassignRescheduleRequestController, :create_multiple
+    resources "/designations", DesignationController, except: [:new, :edit]
+
 
   end
 end
