@@ -355,8 +355,8 @@ tsk1 = %{
   "master_task_type_id" => mas_tsk_type1c.id,
   "estimated_time" => 60,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "P"},
-                           %{"label" => "xyz", "value" => "F"} ]
+            "options" => [ %{"label" => "abc", "value" => "P", "raise_ticket" => false},
+                           %{"label" => "xyz", "value" => "F", "raise_ticket" => true} ]
             }
 }
 
@@ -366,9 +366,9 @@ tsk2 = %{
   "master_task_type_id" => mas_tsk_type1c.id,
   "estimated_time" => 120,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "P"},
-                           %{"label" => "xyz", "value" => "F"},
-                           %{"label" => "qwe", "value" => "A"} ]
+            "options" => [ %{"label" => "abc", "value" => "P", "raise_ticket" => false},
+                           %{"label" => "xyz", "value" => "F", "raise_ticket" => true},
+                           %{"label" => "qwe", "value" => "A", "raise_ticket" => false} ]
             }
 }
 

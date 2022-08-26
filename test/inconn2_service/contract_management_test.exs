@@ -132,4 +132,69 @@ defmodule Inconn2Service.ContractManagementTest do
       assert %Ecto.Changeset{} = ContractManagement.change_scope(scope)
     end
   end
+
+  describe "manpower_configurations" do
+    alias Inconn2Service.ContractManagement.ManpowerConfiguration
+
+    @valid_attrs %{designation_id: 42, quantity: 42, shift_id: 42, site_id: 42}
+    @update_attrs %{designation_id: 43, quantity: 43, shift_id: 43, site_id: 43}
+    @invalid_attrs %{designation_id: nil, quantity: nil, shift_id: nil, site_id: nil}
+
+    def manpower_configuration_fixture(attrs \\ %{}) do
+      {:ok, manpower_configuration} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> ContractManagement.create_manpower_configuration()
+
+      manpower_configuration
+    end
+
+    test "list_manpower_configurations/0 returns all manpower_configurations" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert ContractManagement.list_manpower_configurations() == [manpower_configuration]
+    end
+
+    test "get_manpower_configuration!/1 returns the manpower_configuration with given id" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert ContractManagement.get_manpower_configuration!(manpower_configuration.id) == manpower_configuration
+    end
+
+    test "create_manpower_configuration/1 with valid data creates a manpower_configuration" do
+      assert {:ok, %ManpowerConfiguration{} = manpower_configuration} = ContractManagement.create_manpower_configuration(@valid_attrs)
+      assert manpower_configuration.designation_id == 42
+      assert manpower_configuration.quantity == 42
+      assert manpower_configuration.shift_id == 42
+      assert manpower_configuration.site_id == 42
+    end
+
+    test "create_manpower_configuration/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = ContractManagement.create_manpower_configuration(@invalid_attrs)
+    end
+
+    test "update_manpower_configuration/2 with valid data updates the manpower_configuration" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert {:ok, %ManpowerConfiguration{} = manpower_configuration} = ContractManagement.update_manpower_configuration(manpower_configuration, @update_attrs)
+      assert manpower_configuration.designation_id == 43
+      assert manpower_configuration.quantity == 43
+      assert manpower_configuration.shift_id == 43
+      assert manpower_configuration.site_id == 43
+    end
+
+    test "update_manpower_configuration/2 with invalid data returns error changeset" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert {:error, %Ecto.Changeset{}} = ContractManagement.update_manpower_configuration(manpower_configuration, @invalid_attrs)
+      assert manpower_configuration == ContractManagement.get_manpower_configuration!(manpower_configuration.id)
+    end
+
+    test "delete_manpower_configuration/1 deletes the manpower_configuration" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert {:ok, %ManpowerConfiguration{}} = ContractManagement.delete_manpower_configuration(manpower_configuration)
+      assert_raise Ecto.NoResultsError, fn -> ContractManagement.get_manpower_configuration!(manpower_configuration.id) end
+    end
+
+    test "change_manpower_configuration/1 returns a manpower_configuration changeset" do
+      manpower_configuration = manpower_configuration_fixture()
+      assert %Ecto.Changeset{} = ContractManagement.change_manpower_configuration(manpower_configuration)
+    end
+  end
 end

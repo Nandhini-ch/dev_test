@@ -243,4 +243,11 @@ defmodule Inconn2Service.Util.IndexQueries do
        _ , query -> query
     end)
   end
+
+  def manpower_configuration_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
+      _, query -> query
+    end)
+  end
 end

@@ -14,7 +14,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.AssetConfig.Party
   alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role}
-  alias Inconn2Service.ContractManagement.{Contract, Scope}
+  alias Inconn2Service.ContractManagement.{Contract, Scope, ManpowerConfiguration}
   alias Inconn2Service.Settings.Shift
   # alias Inconn2Service.Ticket
   # alias Inconn2Service.Prompt.AlertNotificationConfig
@@ -89,6 +89,8 @@ defmodule Inconn2Service.Util.DeleteManager do
 
 
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_manpower_configuration?(%Contract{} = contract, prefix), do: (manpower_configuration_query(Repo.add_active_filter(ManpowerConfiguration), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(Employee), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
