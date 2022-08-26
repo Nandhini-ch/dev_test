@@ -386,8 +386,9 @@ defmodule Inconn2Service.Report do
             end
 
         workrequest_sub_category =
-          if wr.workrequest_subcategory_id != nil do
-            Ticket.get_workrequest_subcategory!(wr.workrequest_subcategory_id, prefix)
+          if wr.workrequest_subcategory != nil do
+            # Ticket.get_workrequest_subcategory!(wr.workrequest_subcategory_id, prefix)
+            wr.workrequest_subcategory
           else
             nil
           end
@@ -439,7 +440,7 @@ defmodule Inconn2Service.Report do
           asset_category: asset_category,
           ticket_type: (if wr.is_external_ticket do "External" else "Internal" end),
           ticket_category: workrequest_category,
-          ticket_subcategory: workrequest_sub_category,
+          ticket_subcategory: workrequest_sub_category.name,
           description: wr.description,
           raised_by: raised_by,
           assigned_to: assigned_to,
@@ -1152,6 +1153,7 @@ defmodule Inconn2Service.Report do
   end
 
   defp create_table_body(report_body_json, "WR") do
+    IO.inspect(report_body_json)
     Enum.map(report_body_json, fn rbj ->
       [
         :tr,
