@@ -846,18 +846,7 @@ defmodule Inconn2Service.Staff do
   #   end
   # end
 
-  @doc """
-  Updates a role_profile.
 
-  ## Examples
-
-      iex> update_role_profile(role_profile, %{field: new_value})
-      {:ok, %RoleProfile{}}
-
-      iex> update_role_profile(role_profile, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_role_profile(%RoleProfile{} = role_profile, attrs, prefix) do
     result = role_profile
             |> RoleProfile.changeset(attrs)
@@ -877,5 +866,38 @@ defmodule Inconn2Service.Staff do
 
   def change_role_profile(%RoleProfile{} = role_profile, attrs \\ %{}) do
     RoleProfile.changeset(role_profile, attrs)
+  end
+
+  alias Inconn2Service.Staff.Designation
+
+
+  def list_designations(prefix) do
+    Repo.all(Designation, prefix: prefix)
+  end
+
+
+  def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
+
+  def create_designation(attrs \\ %{}, prefix) do
+    %Designation{}
+    |> Designation.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+
+  def update_designation(%Designation{} = designation, attrs, prefix) do
+    designation
+    |> Designation.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  def delete_designation(%Designation{} = designation, prefix) do
+    Repo.delete(designation, prefix: prefix)
+  end
+
+
+  def change_designation(%Designation{} = designation, attrs \\ %{}) do
+    Designation.changeset(designation, attrs)
   end
 end

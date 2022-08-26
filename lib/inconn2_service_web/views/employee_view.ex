@@ -27,6 +27,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       org_unit: render_one(employee.org_unit, OrgUnitView, "org_unit.json"),
       reports_to: render_one(employee.reports_to_employee, EmployeeView, "employee_without_org_unit.json"),
       party_id: employee.party_id,
+      designation_id: employee.designation_id,
       skills: (if is_nil(employee.skills), do: [], else: render_many(employee.skills, AssetCategoryView, "asset_category.json"))
     }
   end
@@ -41,6 +42,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       designation: employee.designation,
       email: employee.email,
       employee_id: employee.employee_id,
+      designation_id: employee.designation_id,
       landline_no: employee.landline_no,
       mobile_no: employee.mobile_no,
       salary: employee.salary,
@@ -60,6 +62,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       employment_start_date: employee.employment_start_date,
       employment_end_date: employee.employment_end_date,
       designation: employee.designation,
+      designation_id: employee.designation_id,
       email: employee.email,
       employee_id: employee.employee_id,
       landline_no: employee.landline_no,
