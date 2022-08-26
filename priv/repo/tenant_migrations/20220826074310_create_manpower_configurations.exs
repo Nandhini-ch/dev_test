@@ -7,7 +7,9 @@ defmodule Inconn2Service.Repo.Migrations.CreateManpowerConfigurations do
       add :designation_id, :integer
       add :shift_id, :integer
       add :quantity, :integer
-      add :contract, references(:contract_id, on_delete: :nothing)
+      add :active, :boolean
+      add :contract_id, references(:contracts, on_delete: :nothing)
+
 
       timestamps()
     end

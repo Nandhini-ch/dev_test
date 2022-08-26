@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.ManpowerConfigurationController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    manpower_configurations = ContractManagement.list_manpower_configurations(conn.assigns.sub_domain_prefix)
+    manpower_configurations = ContractManagement.list_manpower_configurations(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "index.json", manpower_configurations: manpower_configurations)
   end
 

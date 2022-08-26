@@ -18,8 +18,8 @@ defmodule Inconn2ServiceWeb.ScopeController do
   end
 
   def index_site_for_scope(conn, params) do
-    scopes = ContractManagement.get_site_from_scopes(params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", scopes: scopes)
+    sites = ContractManagement.get_site_from_scopes(params, conn.assigns.sub_domain_prefix)
+    render(conn, "sites.json", sites: sites)
   end
 
   def create(conn, %{"scope" => scope_params}) do

@@ -8,6 +8,7 @@ defmodule Inconn2Service.ContractManagement.ManpowerConfiguration do
     field :quantity, :integer
     field :shift_id, :integer
     field :site_id, :integer
+    field :active, :boolean, default: true
     belongs_to :contract, Contract
 
     timestamps()
@@ -16,7 +17,7 @@ defmodule Inconn2Service.ContractManagement.ManpowerConfiguration do
   @doc false
   def changeset(manpower_configuration, attrs) do
     manpower_configuration
-    |> cast(attrs, [:site_id, :designation_id, :shift_id, :quantity, :contract_id])
+    |> cast(attrs, [:site_id, :designation_id, :shift_id, :quantity, :contract_id, :active])
     |> validate_required([:site_id, :shift_id, :contract_id])
   end
 end
