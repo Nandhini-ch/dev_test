@@ -581,7 +581,7 @@ defmodule Inconn2Service.InventoryManagement do
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
       _, query -> query
     end)
-  end
+  end  
 
   defp inventory_supplier_item_query(query, %{}), do: add_active_condition(query)
 
