@@ -23,4 +23,8 @@ defmodule Inconn2ServiceWeb.ScopeView do
       name: scope.name,
       contract_id: scope.contract_id}
   end
+
+  def render("sites.json", %{sites: sites}) do
+    %{data: render_many(sites, SiteView, "site.json")}
+  end
 end
