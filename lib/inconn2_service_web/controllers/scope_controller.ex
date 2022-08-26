@@ -11,8 +11,14 @@ defmodule Inconn2ServiceWeb.ScopeController do
     render(conn, "index.json", scopes: scopes)
   end
 
+
   def index(conn, _params) do
     scopes = ContractManagement.list_scopes(conn.query_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", scopes: scopes)
+  end
+
+  def index_site_for_scope(conn, params) do
+    scopes = ContractManagement.get_site_from_scopes(params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", scopes: scopes)
   end
 

@@ -82,6 +82,10 @@ defmodule Inconn2Service.ContractManagement do
     |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
   end
 
+  def get_site_from_scopes(params, prefix) do
+    list_scopes(params, prefix) |> Enum.map(fn x -> x.site end)
+  end
+
   def list_scopes(contract_id, params, prefix) do
     from(s in Scope, where: s.contract_id == ^contract_id)
     |> Repo.add_active_filter()
@@ -185,4 +189,37 @@ defmodule Inconn2Service.ContractManagement do
     from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
     |> Repo.all(prefix: prefix)
   end
+
+  alias Inconn2Service.ContractManagement.ManpowerConfiguration
+
+  def list_manpower_configurations(prefix) do
+    Repo.all(ManpowerConfiguration, prefix: prefix)
+  end
+
+
+  def get_manpower_configuration!(id, prefix), do: Repo.get!(ManpowerConfiguration, id, prefix: prefix)
+
+  def create_manpower_configuration(attrs \\ %{}, prefix) do
+    %ManpowerConfiguration{}
+    |> ManpowerConfiguration.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+
+  def update_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, attrs, prefix) do
+    manpower_configuration
+    |> ManpowerConfiguration.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  def delete_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, prefix) do
+    Repo.delete(manpower_configuration, prefix: prefix)
+  end
+
+
+  def change_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, attrs \\ %{}) do
+    ManpowerConfiguration.changeset(manpower_configuration, attrs)
+  end
+
 end
