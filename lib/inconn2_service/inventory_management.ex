@@ -461,7 +461,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   def approve_transactions(attrs, prefix, user) do
     query = from(t in Transaction, where: t.transaction_reference == ^attrs["reference"] and t.approver_user_id == ^user.id)
-    Repo.update_all(query, [set: [is_approved: "AP"]], prefix: prefix)
+    Repo.update_all(query, [set: [is_approved: "AP", status: "AP"]], prefix: prefix)
     Repo.all(query, prefix: prefix)
   end
 
@@ -670,8 +670,10 @@ defmodule Inconn2Service.InventoryManagement do
     item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix)
 
     cond do
-      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id})
-      is_transaction_approval_required && is_nil(approver_user_id) -> validate_required(cs, [:approvaer_user_id])
+      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id, status: "AP"})
+      is_transaction_approval_required && !is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id, status: "AP"})
+      is_transaction_approval_required && is_nil(approver_user_id) -> validate_required(cs, [:approver_user_id])
+      !is_transaction_approval_required -> change(cs, %{status: "ACKP"})
       true -> cs
     end
   end
