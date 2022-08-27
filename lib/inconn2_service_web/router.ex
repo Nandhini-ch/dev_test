@@ -423,6 +423,10 @@ defmodule Inconn2ServiceWeb.Router do
     post "/reassign_reschedule_requests/create_multiple", ReassignRescheduleRequestController, :create_multiple
     resources "/designations", DesignationController, except: [:new, :edit]
 
+    resources "/manpower_configurations", ManpowerConfigurationController, except: [:new, :edit]
+    get "/contracts/:contract_id/sites", ScopeController, :index_site_for_scope
+
+
 
   end
 end
