@@ -64,7 +64,7 @@ zone_2 = %{"name" => "zone 2", "parent_id" => zn1_c.id}
 zone_3 = %{"name" => "zone 3", "parent_id" => zn2_c.id}
 {:ok, zn3_c} = AssetConfig.create_zone(zone_3, "inc_bata")
 
-site = %{
+site_1 = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
   "site_code" => "BRCHN_MNTRD",
@@ -86,6 +86,31 @@ site = %{
     "land_line" => "+91-44-2457727",
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
+  }
+}
+
+site_2 = %{
+  "name" => "Test",
+  "description" => "Main branch at Mount road",
+  "site_code" => "TEST",
+  "party_id" => 1,
+  "zone_id" => zn2_c.id,
+  "time_zone" => "Europe/Berlin",
+  "address" => %{
+    "address_line1" => "18, First Street",
+    "address_line2" => "Mountroad",
+    "city" => "Chennai",
+    "state" => "Tamilnadu",
+    "country" => "India",
+    "postcode" => "600040"
+  },
+  "contact" => %{
+    "first_name" => "Bala",
+    "last_name" => "Chandar",
+    "designation" => "Sales Head",
+    "land_line" => "+91-44-2457727",
+    "mobile" => "+91-9840022485",
+    "email" => "ba@bata.co.in"
   }
 }
 
@@ -117,7 +142,8 @@ site = %{
 #   }
 # }
 
-{:ok, sc} = AssetConfig.create_site(site, "inc_bata")
+{:ok, sc} = AssetConfig.create_site(site_1, "inc_bata")
+{:ok, sc_2} = AssetConfig.create_site(site_2, "inc_bata")
 
 si_cf1 = %{
   "site_id" => sc.id,
