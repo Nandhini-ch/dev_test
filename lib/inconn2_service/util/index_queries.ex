@@ -250,6 +250,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   def manpower_configuration_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
+      {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
       _, query -> query
     end)
   end
