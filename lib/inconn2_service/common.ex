@@ -810,4 +810,33 @@ defmodule Inconn2Service.Common do
       }, prefix
     )
   end
+
+  alias Inconn2Service.Common.Widget
+
+
+  def list_widgets do
+    Repo.all(Widget)
+  end
+
+  def get_widget!(id), do: Repo.get!(Widget, id)
+
+  def create_widget(attrs \\ %{}) do
+    %Widget{}
+    |> Widget.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_widget(%Widget{} = widget, attrs) do
+    widget
+    |> Widget.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_widget(%Widget{} = widget) do
+    Repo.delete(widget)
+  end
+
+  def change_widget(%Widget{} = widget, attrs \\ %{}) do
+    Widget.changeset(widget, attrs)
+  end
 end
