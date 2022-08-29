@@ -143,6 +143,7 @@ defmodule Inconn2Service.ContractManagement do
 
   def list_manpower_configurations(prefix, query_params) do
     manpower_configuration_query(ManpowerConfiguration, query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> group_by_site_and_designation()
     |> List.flatten()
