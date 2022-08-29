@@ -21,7 +21,7 @@ defmodule Inconn2ServiceWeb.ManpowerConfigurationController do
   # end
 
   def create(conn, %{"manpower_configuration" => manpower_configuration_params}) do
-    with {:ok, manpower_configurations} <- ContractManagement.create_manpower_configurations(manpower_configuration_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, manpower_configurations} <- ContractManagement.create_or_update_manpower_configurations(:create_multiple_manpower_configurations, manpower_configuration_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> render("index.json", manpower_configurations: manpower_configurations)
@@ -34,7 +34,7 @@ defmodule Inconn2ServiceWeb.ManpowerConfigurationController do
   end
 
   def update(conn, %{"manpower_configuration" => manpower_configuration_params}) do
-    with {:ok, manpower_configurations} <- ContractManagement.update_manpower_configurations(manpower_configuration_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, manpower_configurations} <- ContractManagement.create_or_update_manpower_configurations(:update_multiple_manpower_configurations, manpower_configuration_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:ok)
       |> render("index.json", manpower_configurations: manpower_configurations)
