@@ -3,7 +3,7 @@ defmodule Inconn2Service.ContractManagement do
   import Inconn2Service.Util.DeleteManager
   # import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
-  # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.HelpersFunctions
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   alias Inconn2Service.ContractManagement.Scope
@@ -141,13 +141,83 @@ defmodule Inconn2Service.ContractManagement do
   end
 
   def list_manpower_configurations(prefix, query_params) do
-    Repo.all(manpower_configuration_query(ManpowerConfiguration, query_params), prefix: prefix)
+    manpower_configuration_query(ManpowerConfiguration, query_params)
+    |> Repo.all(prefix: prefix)
+    |> group_by_site_and_designation()
+    |> List.flatten()
+    |> Stream.map(&(form_config(&1, prefix)))
     |> Stream.map(fn mc -> preload_site(mc, prefix) end)
-    |> Stream.map(fn mc -> preload_shift(mc, prefix) end)
     |> Enum.map(fn mc -> preload_designation(mc, prefix) end)
+    |> IO.inspect()
+  end
+
+  def form_config(map, prefix) do
+    config =
+        Enum.map(map.grouped_by_designation_and_site, fn x ->
+          %{
+            shift_id: x.shift_id,
+            quantity: x.quantity,
+            id: x.id
+          }
+          |> preload_shift(prefix)
+        end)
+    %{
+      site_id: map.site_id,
+      designation_id: map.designation_id,
+      config: config
+    }
+  end
+
+  def group_by_site_and_designation(list) do
+    Enum.group_by(list, &(&1.site_id))
+    |> Enum.map(fn {site_id, v} -> group_by_designation_for_site(site_id, v) end)
+  end
+
+  def group_by_designation_for_site(site_id, list) do
+    Enum.group_by(list, &(&1.designation_id))
+    |> Enum.map(&(form_by_designation(site_id, &1)))
+  end
+
+  def form_by_designation(site_id, {k, v}) do
+    %{
+      designation_id: k,
+      site_id: site_id,
+      grouped_by_designation_and_site: v
+    }
+  end
+
+  def get_manpower_configuration_with_preloads!(id, prefix) do
+    get_manpower_configuration!(id, prefix)
+    |> preload_site(prefix)
+    |> preload_shift(prefix)
+    |> preload_designation(prefix)
   end
 
   def get_manpower_configuration!(id, prefix), do: Repo.get!(ManpowerConfiguration, id, prefix: prefix)
+
+  def create_manpower_configurations(attrs \\ %{}, prefix) do
+    result = create_multiple_manpower_configurations(attrs, prefix)
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  def create_multiple_manpower_configurations(attrs, prefix) do
+    Enum.map(attrs["config"],
+             &Task.async(fn ->
+                            create_manpower_configuration(
+                              Map.put(attrs, "shift_id", &1["shift_id"])
+                              |> Map.put("quantity", &1["quantity"]),
+                              prefix)
+                          end))
+    |> Task.await_many(:infinity)
+  end
 
   def create_manpower_configuration(attrs \\ %{}, prefix) do
     %ManpowerConfiguration{}
@@ -156,6 +226,30 @@ defmodule Inconn2Service.ContractManagement do
     |> preload_site(prefix)
     |> preload_shift(prefix)
     |> preload_designation(prefix)
+  end
+
+  def update_manpower_configurations(attrs, prefix) do
+    result = update_multiple_manpower_configurations(attrs, prefix)
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  def update_multiple_manpower_configurations(attrs, prefix) do
+    attrs
+    |> Enum.map(&Task.async(fn -> update_individual_manpower_configuration(&1, prefix) end))
+    |> Task.await_many(:infinity)
+  end
+
+  def update_individual_manpower_configuration(attrs, prefix) do
+    get_manpower_configuration!(attrs["id"], prefix)
+    |> update_manpower_configuration(%{"quantity" => attrs["quantity"]}, prefix)
   end
 
   def update_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, attrs, prefix) do
