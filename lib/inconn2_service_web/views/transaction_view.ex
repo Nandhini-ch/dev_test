@@ -51,6 +51,7 @@ defmodule Inconn2ServiceWeb.TransactionView do
       authorized_by: transaction.authorized_by,
       department: transaction.department,
       store: render_one(transaction.store, StoreView, "store_without_content.json"),
+      status: transaction.status,
       unit_of_measurement: render_one(transaction.unit_of_measurement, UnitOfMeasurementView, "unit_of_measurement_without_category.json"),
       inventory_item: render_one(transaction.inventory_item, InventoryItemView, "inventory_item_without_stock.json")}
   end
