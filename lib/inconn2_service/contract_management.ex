@@ -6,6 +6,7 @@ defmodule Inconn2Service.ContractManagement do
   import Inconn2Service.Util.HelpersFunctions
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  alias Inconn2Service.ContractManagement
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
   alias Inconn2Service.ContractManagement.ManpowerConfiguration
@@ -142,13 +143,13 @@ defmodule Inconn2Service.ContractManagement do
 
   def list_manpower_configurations(prefix, query_params) do
     manpower_configuration_query(ManpowerConfiguration, query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> group_by_site_and_designation()
     |> List.flatten()
     |> Stream.map(&(form_config(&1, prefix)))
     |> Stream.map(fn mc -> preload_site(mc, prefix) end)
     |> Enum.map(fn mc -> preload_designation(mc, prefix) end)
-    |> IO.inspect()
   end
 
   def form_config(map, prefix) do
@@ -195,19 +196,6 @@ defmodule Inconn2Service.ContractManagement do
 
   def get_manpower_configuration!(id, prefix), do: Repo.get!(ManpowerConfiguration, id, prefix: prefix)
 
-  def create_manpower_configurations(attrs \\ %{}, prefix) do
-    result = create_multiple_manpower_configurations(attrs, prefix)
-
-    failures = get_success_or_failure_list(result, :error)
-    case length(failures) do
-      0 ->
-        {:ok, get_success_or_failure_list(result, :ok)}
-
-      _ ->
-        {:multiple_error, failures}
-    end
-  end
-
   def create_multiple_manpower_configurations(attrs, prefix) do
     Enum.map(attrs["config"],
              &Task.async(fn ->
@@ -228,8 +216,8 @@ defmodule Inconn2Service.ContractManagement do
     |> preload_designation(prefix)
   end
 
-  def update_manpower_configurations(attrs, prefix) do
-    result = update_multiple_manpower_configurations(attrs, prefix)
+  def create_or_update_manpower_configurations(action_func, attrs, prefix) do
+    result = apply(ContractManagement, action_func, [attrs, prefix])
 
     failures = get_success_or_failure_list(result, :error)
     case length(failures) do
