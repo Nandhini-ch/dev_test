@@ -52,7 +52,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     |> cast(attrs, [:asset_category_id, :name, :description, :task_list_id, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :is_workpermit_required, :is_workorder_approval_required, :workpermit_check_list_id,
                     :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :is_workorder_acknowledgement_required, :breakdown, :audit, :adhoc,
                     :is_precheck_required, :precheck_list_id, :is_materials_required,
-                    :is_manpower_required, :materials, :manpower, :parts, :measuring_instruments])
+                    :is_manpower_required, :materials, :manpower, :parts, :measuring_instruments, :active])
     |> validate_required([:asset_category_id, :name, :task_list_id, :estimated_time, :scheduled])
     |> validate_scheduled()
     |> validate_time_required()

@@ -187,6 +187,11 @@ defmodule Inconn2Service.AssetConfig do
            "Cannot be deleted as there are Store associated with it"
         }
 
+      has_manpower_configuration?(site, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+        }
+
       true ->
        update_site(site, %{"active" => false}, prefix)
          {:deleted,

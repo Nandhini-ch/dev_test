@@ -11,8 +11,10 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Account.Auth
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.AssetCategory
-  alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile,User}
+  alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile, User, Designation}
   alias Inconn2Service.Util.HierarchyManager
+  alias Inconn2Service.ContractManagement.ManpowerConfiguration
+
 
   def list_org_units(prefix) do
     OrgUnit
@@ -872,9 +874,10 @@ defmodule Inconn2Service.Staff do
 
 
   def list_designations(prefix) do
-    Repo.all(Designation, prefix: prefix)
+    Designation
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
-
 
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
 
@@ -892,8 +895,29 @@ defmodule Inconn2Service.Staff do
   end
 
 
+  # def delete_designation(%Designation{} = designation, prefix) do
+  #   Repo.delete(designation, prefix: prefix)
+  # end
+
+
   def delete_designation(%Designation{} = designation, prefix) do
-    Repo.delete(designation, prefix: prefix)
+    cond do
+      has_employee?(designation, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Employee associated with it"
+        }
+
+        has_manpower_configuration?(designation, prefix) ->
+          {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+          }
+
+      true ->
+         update_designation(designation, %{"active" => false}, prefix)
+          {:deleted,
+             "The designation was disabled"
+          }
+    end
   end
 
 

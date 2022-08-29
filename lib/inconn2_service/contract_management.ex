@@ -263,7 +263,7 @@ defmodule Inconn2Service.ContractManagement do
 
   def delete_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, prefix) do
     # Repo.delete(manpower_configuration, prefix: prefix)
-    update_manpower_configuration(manpower_configuration, %{"active" => true}, prefix)
+    update_manpower_configuration(manpower_configuration, %{"active" => false}, prefix)
     {:deleted, "Manpower configuration was deleted"}
   end
 
