@@ -27,7 +27,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     field :emp_id, :string
     field :authorized_by, :string
     field :department, :string
-    field :status, :string, default: "CR"
+    field :status, :string
     # field :item_id, :id
     belongs_to :inventory_item, InventoryItem
     # field :unit_of_measurement_id, :id
@@ -59,24 +59,34 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
 
   def update_changeset(transaction, attrs) do
     transaction
-    |> cast(attrs, [:is_acknowledged, :is_approved, :status, :transaction_type])
-    |> validate_inclusion(:is_acknowledged, ["YES", "NO", "RJ"])
+    |> cast(attrs, [:is_acknowledged, :is_approved, :status, :transaction_type, :status])
+    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "RJ"])
     |> validate_inclusion(:is_approved, ["AP", "NA", "RJ"])
-    |> change_is_acknowledged_for_acnkowledge()
+    |> change_status_for_acknowledge()
+    |> change_status_for_approved()
     |> validate_status_for_issue()
   end
 
   defp validate_status_for_issue(cs) do
     case get_field(cs, :transaction_type) do
-      # "IN" -> validate_inclusion(cs, :status, ["CR", "CP"])
-      "IS" -> validate_inclusion(cs, :status, ["CR", "AP", "ACKP", "ACK"])
+      "IN" -> validate_inclusion(cs, :status, ["CR", "CP"])
+      "IS" -> validate_inclusion(cs, :status, ["CR", "NA", "APRJ", "ACKP", "ACKRJ", "CP"])
       _ -> cs
     end
   end
 
-  def change_is_acknowledged_for_acnkowledge(cs) do
+  def change_status_for_acknowledge(cs) do
     case get_field(cs, :is_acknowledged, nil) do
-      "ACK" -> change(cs, %{status: "ACK"})
+      "ACK" -> change(cs, %{status: "CP"})
+      "RJ" -> change(cs, %{status: "ACKRJ"})
+      _ -> cs
+    end
+  end
+
+  defp change_status_for_approved(cs) do
+    case get_field(cs, :is_approved, nil) do
+      "AP" -> change(cs, %{status: "ACKP"})
+      "RJ" -> change(cs, %{status: "APRJ"})
       _ -> cs
     end
   end

@@ -20,7 +20,8 @@ defmodule Inconn2ServiceWeb.TransactionView do
       reference_no: transaction_reference.reference_no,
       date: transaction_reference.date,
       transaction_type: transaction_reference.transaction_type,
-      transaction_user: (if !is_nil(transaction_reference.transaction_user) do transaction_reference.transaction_user.name else nil end),
+      transaction_user: (if !is_nil(transaction_reference.transaction_user) do transaction_reference.transaction_user.username else nil end),
+      status: transaction_reference.status,
       transactions: render_many(transaction_reference.transactions, TransactionView, "transaction.json")
     }
   end

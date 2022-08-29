@@ -349,6 +349,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
     |> Enum.group_by(&(&1.transaction_reference))
     |> rearrange_transaction_info()
+    |> put_approval_status_for_transactions()
   end
 
   defp rearrange_transaction_info(transactions) do
@@ -364,8 +365,28 @@ defmodule Inconn2Service.InventoryManagement do
     end)
   end
 
+  defp put_approval_status_for_transactions(transactions) do
+    Enum.map(transactions, fn t -> put_approval_status(t, t.transaction_type) end)
+  end
+
+  defp put_approval_status(transaction, "IN") do
+    Map.put(transaction, :status, "Completed")
+  end
+
+  defp put_approval_status(transaction, "IS") do
+    statuses = Enum.map(transaction.transactions, fn x -> x.status end)
+    is_approved_statuses = Enum.filter(transaction.transactions, fn x -> x.is_approval_required and x.is_approved == "AP" end)
+    cond do
+      "APRJ" in statuses or length(is_approved_statuses) > 0 ->
+        Map.put(transaction, :status, "Received Approval")
+
+      true ->
+        Map.put(transaction, :status, "Created")
+    end
+  end
+
   def list_transactions_to_be_acknowledged(user, prefix) do
-    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged == "NACK")
+    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_acknowledged != "ACK" and t.status == "ACKP")
     |> Repo.all(prefix: prefix)
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
@@ -381,7 +402,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   def list_transactions_to_be_approved_grouped(user, prefix) do
-    from(t in Transaction, where: t.approver_user_id == ^user.id and t.is_approved == "NA")
+    from(t in Transaction, where: t.approver_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
     |> Repo.all(prefix: prefix)
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
@@ -659,10 +680,13 @@ defmodule Inconn2Service.InventoryManagement do
       |> check_store_layout_config(prefix)
       |> calculate_cost()
       |> convert_quantity(prefix)
+      |> put_inward_status()
       |> Repo.insert(prefix: prefix)
       |> create_supplier_item_record(prefix)
     end
   end
+
+  defp put_inward_status(cs), do: change(cs, %{status: "CP"})
 
   defp check_for_approval_flow(cs, prefix) do
     is_transaction_approval_required = get_field(cs, :is_approval_required, nil)
@@ -670,8 +694,8 @@ defmodule Inconn2Service.InventoryManagement do
     item = get_field(cs, :inventory_item_id) |> get_inventory_item!(prefix)
 
     cond do
-      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id, status: "AP"})
-      is_transaction_approval_required && !is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id, status: "AP"})
+      is_transaction_approval_required && is_nil(approver_user_id) && !is_nil(item.approval_user_id) -> change(cs, %{approver_user_id: item.approval_user_id, is_approved: "NA", status: "NA"})
+      is_transaction_approval_required && !is_nil(approver_user_id) -> change(cs, %{status: "NA", is_approved: "NA"})
       is_transaction_approval_required && is_nil(approver_user_id) -> validate_required(cs, [:approver_user_id])
       !is_transaction_approval_required -> change(cs, %{status: "ACKP"})
       true -> cs
@@ -710,6 +734,7 @@ defmodule Inconn2Service.InventoryManagement do
       |> convert_quantity(prefix)
       |> check_stock_upto_store(prefix)
       |> check_stock_upto_bin(prefix)
+      |> check_for_approval_flow(prefix)
       |> Repo.insert(prefix: prefix)
     end
   end
@@ -782,7 +807,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp revive_stock_on_acknowledgement_reject({:ok, transaction}, prefix) do
     case transaction.is_acknowledged do
-      "YES" ->
+      "ACK" ->
         {:ok, transaction}
 
       "RJ" ->
