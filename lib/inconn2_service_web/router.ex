@@ -429,5 +429,11 @@ defmodule Inconn2ServiceWeb.Router do
     post "/create_manpower_configurations", ManpowerConfigurationController, :create
     put "/update_manpower_configurations", ManpowerConfigurationController, :update
     get "/contracts/:contract_id/sites", ScopeController, :index_site_for_scope
+
+    resources "/widgets", WidgetController, except: [:new, :edit]
+    get "/user_widget_configs", UserWidgetConfigController, :index
+    post "/user_widget_configs", UserWidgetConfigController, :create_or_update
+    delete "/user_widget_configs", UserWidgetConfigController, :delete_multiple
+
   end
 end
