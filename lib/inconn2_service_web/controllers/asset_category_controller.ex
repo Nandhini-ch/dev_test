@@ -32,6 +32,11 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
     render(conn, "assets.json", assets: assets)
   end
 
+  def assets_for_site(conn, %{"site_id" => site_id, "asset_category_id" => asset_category_id}) do
+    assets = AssetConfig.get_assets(site_id, asset_category_id, conn.assigns.sub_domain_prefix)
+    render(conn, "assets.json", assets: assets)
+  end
+
   def create(conn, %{"asset_category" => asset_category_params}) do
     with {:ok, %AssetCategory{} = asset_category} <-
            AssetConfig.create_asset_category(asset_category_params, conn.assigns.sub_domain_prefix) do

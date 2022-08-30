@@ -341,10 +341,28 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
+  def get_workorder_schedules_by_ids(ids, prefix) do
+    from(ws in WorkorderSchedule, where: ws.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
 
   def create_workorder_schedules(attrs \\ %{}, prefix) do
     asset_ids = attrs["asset_ids"]
-    result = create_individual_workorder_schedules(attrs, asset_ids, prefix) |> IO.inspect()
+    result = create_individual_workorder_schedules(attrs, asset_ids, prefix)
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  def update_workorder_schedules(attrs \\ %{}, prefix) do
+    workorder_schedule_ids = attrs["workorder_schedule_ids"]
+    result = update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix)
 
     failures = get_success_or_failure_list(result, :error)
     case length(failures) do
@@ -359,6 +377,12 @@ defmodule Inconn2Service.Workorder do
   defp create_individual_workorder_schedules(attrs, asset_ids, prefix) do
     asset_ids
     |> Enum.map(&Elixir.Task.async(fn -> create_workorder_schedule(Map.put(attrs, "asset_id", &1), prefix) end))
+    |> Elixir.Task.await_many(:infinity)
+  end
+
+  defp update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix) do
+    get_workorder_schedules_by_ids(workorder_schedule_ids, prefix)
+    |> Enum.map(&Elixir.Task.async(fn -> update_workorder_schedule(&1, attrs, prefix) end))
     |> Elixir.Task.await_many(:infinity)
   end
 

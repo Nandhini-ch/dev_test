@@ -73,6 +73,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
+    get "/sites/:site_id/asset_categories/:asset_category_id/assets", AssetCategoryController, :assets_for_site
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
@@ -155,6 +156,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     post "/create_workorder_schedules", WorkorderScheduleController, :create_multiple
+    put "/update_workorder_schedules", WorkorderScheduleController, :update_multiple
     put "/workorder_schedule/:id/pause", WorkorderScheduleController, :pause_schedule
     put "/workorder_schedule/:id/resume", WorkorderScheduleController, :resume_schedule
 
