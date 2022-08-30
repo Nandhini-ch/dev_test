@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
     render(conn, "index.json", workorder_templates: workorder_templates)
   end
 
+  def index_assets_and_schedules(conn, %{"site_id" => site_id, "workorder_template_id" => workorder_template_id}) do
+    {assets, workorder_schedules} = Workorder.list_assets_and_schedules(site_id, workorder_template_id, conn.assigns.sub_domain_prefix)
+    render(conn, "assets_and_schedules.json", assets: assets, workorder_schedules: workorder_schedules)
+  end
+
   def create(conn, %{"workorder_template" => workorder_template_params}) do
     with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.create_workorder_template(workorder_template_params, conn.assigns.sub_domain_prefix) do
       conn

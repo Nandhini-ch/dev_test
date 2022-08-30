@@ -49,9 +49,9 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     |> validate_required([:transaction_reference, :transaction_type , :inventory_item_id, :unit_of_measurement_id,
                           :store_id,  :quantity,  :is_approval_required, :transaction_date, :transaction_time])
     |> validate_inclusion(:transaction_type, ["IN",  "IS"])
-    |> set_is_acknowledged()
     |> set_is_approved()
-    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "RJ"])
+    |> set_is_acknowledged()
+    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "ACKP", "RJ"])
     |> validate_inclusion(:is_approved, ["AP", "NA", "RJ"])
     |> validate_fields_based_on_transaction_type()
     |> validate_status_for_issue()
@@ -60,23 +60,26 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   def update_changeset(transaction, attrs) do
     transaction
     |> cast(attrs, [:is_acknowledged, :is_approved, :status, :transaction_type, :status])
-    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "RJ"])
+    |> validate_inclusion(:is_acknowledged, ["ACK", "NACK", "ACKP", "RJ"])
     |> validate_inclusion(:is_approved, ["AP", "NA", "RJ"])
-    |> change_status_for_acknowledge()
     |> change_status_for_approved()
+    |> change_status_for_acknowledge()
     |> validate_status_for_issue()
   end
 
   defp validate_status_for_issue(cs) do
     case get_field(cs, :transaction_type) do
       "IN" -> validate_inclusion(cs, :status, ["CR", "CP"])
-      "IS" -> validate_inclusion(cs, :status, ["CR", "NA", "APRJ", "ACKP", "ACKRJ", "CP"])
+      "IS" -> validate_inclusion(cs, :status, ["CR", "NA", "APRJ", "AP", "ACKP", "ACKRJ", "CP"])
       _ -> cs
     end
   end
 
   def change_status_for_acknowledge(cs) do
+    # IO.inspect("09897988-89980780")
+    # IO.inspect(get_change(cs, :is_acknowledged, nil))
     case get_field(cs, :is_acknowledged, nil) do
+      "ACKP" -> change(cs, %{status: "ACKP"})
       "ACK" -> change(cs, %{status: "CP"})
       "RJ" -> change(cs, %{status: "ACKRJ"})
       _ -> cs
@@ -84,8 +87,9 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   end
 
   defp change_status_for_approved(cs) do
+    # IO.inspect(get_change(cs, :is_approved, nil))
     case get_field(cs, :is_approved, nil) do
-      "AP" -> change(cs, %{status: "ACKP"})
+      "AP" -> change(cs, %{status: "AP"})
       "RJ" -> change(cs, %{status: "APRJ"})
       _ -> cs
     end
