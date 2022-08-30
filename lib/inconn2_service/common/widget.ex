@@ -14,6 +14,6 @@ defmodule Inconn2Service.Common.Widget do
   def changeset(widget, attrs) do
     widget
     |> cast(attrs, [:code, :description, :title])
-    |> validate_required([:code, :description, :title])
+    |> validate_required([:code, :title])
   end
 end

@@ -12,11 +12,10 @@ defmodule Inconn2ServiceWeb.WidgetController do
   end
 
   def create(conn, %{"widget" => widget_params}) do
-    with {:ok, %Widget{} = widget} <- Common.create_widget(widget_params) do
+    with {:ok, widgets} <- Common.create_widgets(widget_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.widget_path(conn, :show, widget))
-      |> render("show.json", widget: widget)
+      |> render("index.json", widgets: widgets)
     end
   end
 

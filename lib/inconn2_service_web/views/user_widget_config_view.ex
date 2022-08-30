@@ -13,6 +13,8 @@ defmodule Inconn2ServiceWeb.UserWidgetConfigView do
   def render("user_widget_config.json", %{user_widget_config: user_widget_config}) do
     %{id: user_widget_config.id,
       widget_code: user_widget_config.widget_code,
+      title: user_widget_config.widget.title,
+      description: user_widget_config.widget.description,
       position: user_widget_config.position,
       user_id: user_widget_config.user_id}
   end
