@@ -74,6 +74,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
     get "/sites/:site_id/asset_categories/:asset_category_id/assets", AssetCategoryController, :assets_for_site
+    get "/sites/:site_id/workorder_templates/:workorder_template_id/assets", WorkorderTemplateController, :index_assets_and_schedules
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
@@ -406,6 +407,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
     get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
     post "/approve_transactions", TransactionController, :approve_transaction
+    post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
+
 
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]

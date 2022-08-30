@@ -68,6 +68,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
+  def issue_approved_transaction(conn, %{"transaction" => transaction_params}) do
+    transactions = InventoryManagement.issue_approved_transactions(transaction_params, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
   def show(conn, %{"id" => id}) do
     transaction = InventoryManagement.get_transaction!(id,conn.assigns.sub_domain_prefix)
     render(conn, "show.json", transaction: transaction)
