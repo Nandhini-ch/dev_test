@@ -1,5 +1,6 @@
 defmodule Inconn2Service.DashboardConfiguration do
 
+  import Ecto.Changeset
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
@@ -55,12 +56,24 @@ defmodule Inconn2Service.DashboardConfiguration do
   def create_user_widget_config(attrs \\ %{}, prefix) do
     %UserWidgetConfig{}
     |> UserWidgetConfig.changeset(attrs)
+    |> validate_widget_code()
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp validate_widget_code(cs) do
+    code = get_field(cs, :widget_code)
+    cond do
+      code && Common.get_widget_by_code(code) ->
+        cs
+      true ->
+        add_error(cs, :widget_code, "is invalid")
+    end
   end
 
   def update_user_widget_config(%UserWidgetConfig{} = user_widget_config, attrs, prefix) do
     user_widget_config
     |> UserWidgetConfig.changeset(attrs)
+    |> validate_widget_code()
     |> Repo.update(prefix: prefix)
   end
 

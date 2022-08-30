@@ -818,7 +818,7 @@ defmodule Inconn2Service.Common do
   end
 
   def get_widget!(id), do: Repo.get!(Widget, id)
-  def get_widget_by_code(code), do: Repo.get_by!(Widget, [code: code])
+  def get_widget_by_code(code), do: Repo.get_by(Widget, [code: code])
 
   def create_widgets(attrs \\ []) do
     Enum.map(attrs, fn x -> create_widget(x) end)
