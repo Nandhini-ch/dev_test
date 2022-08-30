@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.WorkorderTemplateView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.WorkorderTemplateView
+  alias Inconn2ServiceWeb.{AssetCategoryView, WorkorderTemplateView, WorkorderScheduleView}
 
   def render("index.json", %{workorder_templates: workorder_templates}) do
     %{data: render_many(workorder_templates, WorkorderTemplateView, "workorder_template.json")}
@@ -52,4 +52,14 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       measuring_instruments: workorder_template.measuring_instruments
     }
   end
+
+  def render("assets_and_schedules.json", %{assets: assets, workorder_schedules: workorder_schedules}) do
+    %{
+      data: %{
+        new: render_many(assets, AssetCategoryView, "asset_node.json"),
+        existing: render_many(workorder_schedules, WorkorderScheduleView, "workorder_schedule.json")
+      }
+    }
+  end
+
 end
