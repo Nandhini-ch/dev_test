@@ -145,6 +145,8 @@ defmodule Inconn2Service.Util.IndexQueries do
       {"id", id}, query -> from q in query, where: q.id == ^id
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
       {"org_unit_id", org_unit_id }, query -> from q in query, where: q.org_unit_id == ^org_unit_id
+      # {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
+      {"designation_id", designation_id}, query -> from q in query, where: q.designation_id == ^designation_id
       _, query -> from q in query, where: q.active
     end)
   end
@@ -160,7 +162,6 @@ defmodule Inconn2Service.Util.IndexQueries do
       _, query -> from q in query, where: q.active
     end)
   end
-
 
   def reports_to_query(query, query_params) do
     Enum.reduce(query_params, query, fn
@@ -190,14 +191,12 @@ defmodule Inconn2Service.Util.IndexQueries do
     end)
   end
 
-
   def checklist_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"type", type}, query -> from q in query, where: q.type == ^type
       _, query -> from q in query, where: q.active
     end)
   end
-
 
   def category_helpdesk_query(query, query_params) do
     Enum.reduce(query_params, query, fn
@@ -251,6 +250,8 @@ defmodule Inconn2Service.Util.IndexQueries do
     Enum.reduce(query_params, query, fn
       {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      {"designation_id", designation_id}, query -> from q in query, where: q.designation_id == ^designation_id
+      {"shift_id", shift_id}, query -> from q in query, where: q.shift_id == ^shift_id
       _, query -> query
     end)
   end
