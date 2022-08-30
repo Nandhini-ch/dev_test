@@ -13,7 +13,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.Workorder.{WorkorderSchedule, WorkorderTemplate}
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.AssetConfig.Party
-  alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role}
+  alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role, Designation }
   alias Inconn2Service.ContractManagement.{Contract, Scope, ManpowerConfiguration}
   alias Inconn2Service.Settings.Shift
   # alias Inconn2Service.Ticket
@@ -27,12 +27,9 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.Workorder.WorkorderTemplate
   # alias Inconn2Service.InventoryManagement.{Stock, Transaction, InventoryItem,}
 
-
-
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Shift{} = shift, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Employee{} = employee, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"employee_id" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-
 
   def has_shift?(%Site{} = site, prefix), do: (shift_query(Repo.add_active_filter(Shift),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
@@ -74,7 +71,6 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_check_list?(%Check{} = check, prefix), do: (check_list_query(Repo.add_active_filter(CheckList), %{"check_id" => check.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-
   def has_contract?(%Party{} = party, prefix), do: (contract_query(Repo.add_active_filter(Contract), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_org_unit?(%Party{} = party, prefix), do: (org_unit_query(Repo.add_active_filter(OrgUnit), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -82,15 +78,18 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_employee?(%Party{} = party, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee?(%OrgUnit{} = org_unit, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"org_unit_id" => org_unit.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee?(%User{} = user, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_employee?(%Designation{} = designation, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"designation_id" => designation.id}) |> Repo.all(prefix: prefix)) |> length() > 0
 
   def has_user?(%Party{} = party, prefix), do: (user_query(Repo.add_active_filter(User), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_user?(%Employee{} = employee, prefix), do: (user_query(Repo.add_active_filter(User), %{"employee_id" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_user?(%Role{} = role, prefix), do: (user_query(Repo.add_active_filter(User), %{"role_id" => role.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-
   def has_scope?(%Contract{} = contract, prefix), do: (scope_query(Repo.add_active_filter(Scope), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_manpower_configuration?(%Contract{} = contract, prefix), do: (manpower_configuration_query(Repo.add_active_filter(ManpowerConfiguration), %{"contract_id" => contract.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_manpower_configuration?(%Site{} = site, prefix), do: (manpower_configuration_query(Repo.add_active_filter(ManpowerConfiguration), %{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_manpower_configuration?(%Shift{} = shift, prefix), do: (manpower_configuration_query(Repo.add_active_filter(ManpowerConfiguration), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_manpower_configuration?(%Designation{} = designation, prefix), do: (manpower_configuration_query(Repo.add_active_filter(ManpowerConfiguration), %{"designation_id" => designation.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(Employee), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
@@ -102,5 +101,6 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_task?(%MasterTaskType{} = master_task_type, prefix), do: (task_query(Repo.add_active_filter(Task), %{"master_task_type_id" => master_task_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_task_tasklistt?(%Task{} = task, prefix), do: (task_tasklist_query((TaskTasklist), %{"task_id" => task.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_task_tasklistt?(%Task{} = task, prefix), do: (task_tasklist_query((Repo.add_active_filter(TaskTasklist)), %{"task_id" => task.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
 end

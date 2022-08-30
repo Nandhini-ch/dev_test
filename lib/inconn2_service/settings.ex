@@ -163,6 +163,11 @@ defmodule Inconn2Service.Settings do
         "Cannot be deleted as there are Roster associated with it"
         }
 
+      has_manpower_configuration?(shift, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+        }
+
       true ->
         update_shift(shift, %{"active" => false}, prefix)
            {:deleted,
