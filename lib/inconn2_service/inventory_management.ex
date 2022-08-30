@@ -409,6 +409,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
     |> Enum.group_by(&(&1.transaction_reference))
     |> rearrange_transaction_info()
+    |> put_approval_status_for_transactions()
   end
 
 
@@ -482,8 +483,16 @@ defmodule Inconn2Service.InventoryManagement do
 
   def approve_transactions(attrs, prefix, user) do
     query = from(t in Transaction, where: t.transaction_reference == ^attrs["reference"] and t.approver_user_id == ^user.id)
-    Repo.update_all(query, [set: [is_approved: "AP", status: "AP"]], prefix: prefix)
+    Repo.update_all(query, [set: [is_approved: attrs["status"], status: "AP"]], prefix: prefix)
     Repo.all(query, prefix: prefix)
+  end
+
+  def issue_approved_transactions(attrs, prefix) do
+    query = from(t in Transaction, where: t.transaction_reference == ^attrs["reference"])
+    # Repo.update_all(query, [set: [is_approved: "AP", status: "AP"]], prefix: prefix)
+    transactions = Repo.all(query, prefix: prefix)
+    Enum.map(transactions,fn t -> update_transaction(t, %{"status" => "ACKP"}, prefix) end)
+    |> Enum.map(fn {:ok, transaction} -> transaction end)
   end
 
   #Transaction cannot be deleted
@@ -794,7 +803,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp reduce_stock_on_approval({:ok, transaction}, prefix) do
     cond do
-      transaction.is_approval_required && transaction.is_approved ->
+      transaction.status == "ACKP" ->
         reduce_stock(transaction, prefix)
         {:ok, transaction}
 
