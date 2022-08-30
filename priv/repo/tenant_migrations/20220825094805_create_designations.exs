@@ -5,7 +5,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateDesignations do
     create table(:designations) do
       add :name, :string
       add :description, :string
-      add :active, :boolean
       timestamps()
     end
 
