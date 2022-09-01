@@ -15,6 +15,6 @@ defmodule Inconn2Service.Common.Widget do
     widget
     |> cast(attrs, [:code, :description, :title])
     |> validate_required([:code, :title])
-    |> unique_constraint(:code)
+    # |> unique_constraint(:code)
   end
 end

@@ -10,7 +10,7 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsRegardingDashboards do
       add :meter_type, :string
     end
 
-    create unique_index(:widgets, [:code])
+
   end
 
 end
