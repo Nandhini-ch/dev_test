@@ -87,8 +87,12 @@ defmodule Inconn2Service.DashboardConfiguration do
     end)
   end
 
-  def delete_user_widget_config(user_widget_config, prefix) do
-    Repo.delete(user_widget_config, prefix: prefix)
+  def delete_user_widget_config(params, user, prefix) do
+    get_widget_config_by_code_and_user(
+          params["widget_code"],
+          get_user_from_map(params, user),
+          prefix)
+    |> Repo.delete(prefix: prefix)
   end
 
   def change_user_widget_config(%UserWidgetConfig{} = user_widget_config, attrs \\ %{}) do

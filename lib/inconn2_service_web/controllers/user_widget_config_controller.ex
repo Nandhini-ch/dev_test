@@ -30,6 +30,12 @@ defmodule Inconn2ServiceWeb.UserWidgetConfigController do
     render(conn, "show.json", user_widget_config: user_widget_config)
   end
 
+  def delete(conn, params) do
+    with {:ok, _} <- DashboardConfiguration.delete_user_widget_config(params, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
+      send_resp(conn, :no_content, "")
+    end
+  end
+
   def delete_multiple(conn, %{"user_widget_configs" => user_widget_config_params}) do
     DashboardConfiguration.delete_user_widget_configs(user_widget_config_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     send_resp(conn, :no_content, "")

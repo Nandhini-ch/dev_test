@@ -338,11 +338,21 @@ defmodule Inconn2Service.Workorder do
     |> Repo.preload(:workorder_template)
   end
 
-
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
+
   def get_workorder_schedules_by_ids(ids, prefix) do
     from(ws in WorkorderSchedule, where: ws.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_schedules_by_asset_ids_and_template(workorder_template_id, asset_ids, asset_type, prefix) do
+    from(ws in WorkorderSchedule, where: ws.asset_id in ^asset_ids and ws.asset_type == ^asset_type and ws.workorder_template_id == ^workorder_template_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_schedule_by_template_and_asset(asset_id, wot_id, prefix) do
+    from(ws in WorkorderSchedule, where: ws.asset_id == ^asset_id and ws.workorder_template_id == ^wot_id)
     |> Repo.all(prefix: prefix)
   end
 
@@ -390,6 +400,7 @@ defmodule Inconn2Service.Workorder do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_unique_schedule(prefix)
               |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
@@ -401,6 +412,17 @@ defmodule Inconn2Service.Workorder do
           {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
       _ ->
         result
+    end
+  end
+
+  defp validate_unique_schedule(cs, prefix) do
+    wot_id = get_field(cs, :workorder_template_id)
+    asset_id = get_field(cs, :asset_id)
+    cond do
+      wot_id && asset_id && length(get_workorder_schedule_by_template_and_asset(asset_id, wot_id, prefix)) == 0 ->
+        cs
+      true ->
+        add_error(cs, :asset_id, "Schedule already exists")
     end
   end
 
@@ -3256,6 +3278,31 @@ defmodule Inconn2Service.Workorder do
     case current_user.employee do
       nil-> current_user.username
       employee -> employee.first_name
+    end
+  end
+
+  def list_assets_and_schedules(site_id, workorder_template_id, prefix) do
+    wot = get_workorder_template(workorder_template_id, prefix)
+    assets = AssetConfig.get_assets(site_id, wot.asset_category_id, prefix)
+    asset_ids = Enum.map(assets, &(&1.id))
+    workorder_schedules = get_workorder_schedules_by_asset_ids_and_template(wot.id, asset_ids, wot.asset_type, prefix)
+                          |> Enum.map(&(get_asset_and_site(&1, prefix)))
+    scheduled_asset_ids = Enum.map(workorder_schedules, &(&1.asset_id))
+    assets = Enum.filter(assets, fn asset -> asset.id not in scheduled_asset_ids end)
+    {assets, workorder_schedules}
+  end
+
+  defp get_asset_and_site(workorder_schedule, prefix) do
+    asset_id = workorder_schedule.asset_id
+    case workorder_schedule.asset_type do
+      "L" -> location = AssetConfig.get_location!(asset_id, prefix)
+             site = AssetConfig.get_site!(location.site_id, prefix)
+             Map.put_new(workorder_schedule, :site, site)
+             |> Map.put_new(:asset, location)
+      "E" -> equipment = AssetConfig.get_equipment!(asset_id, prefix)
+             site = AssetConfig.get_site!(equipment.site_id, prefix)
+             Map.put_new(workorder_schedule, :site, site)
+             |> Map.put_new(:asset, equipment)
     end
   end
 end
