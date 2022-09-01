@@ -79,7 +79,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     # IO.inspect("09897988-89980780")
     # IO.inspect(get_change(cs, :is_acknowledged, nil))
     case get_field(cs, :is_acknowledged, nil) do
-      "ACKP" -> change(cs, %{status: "ACKP"})
+      "ACKP" -> change(cs, %{status: "ACKP", is_acknowleged: "NACK"})
       "ACK" -> change(cs, %{status: "CP"})
       "RJ" -> change(cs, %{status: "ACKRJ"})
       _ -> cs
@@ -96,10 +96,18 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   end
 
   defp set_is_acknowledged(cs) do
-    case get_field(cs, :transaction_type) do
-      "IS" -> change(cs, %{is_acknowledged: "NACK"})
-      _ -> cs
+    is_approval_required = get_field(cs, :is_approval_required)
+    transaction_type = get_field(cs, :transaction_type)
+    cond do
+      transaction_type == "IS" and is_approval_required -> cs
+      transaction_type == "IS" -> change(cs, %{is_acknowledged: "NACK"})
+      true -> cs
     end
+    # case get_field(cs, :transaction_type) do
+    #   "IS" ->
+    #     change(cs, %{is_acknowledged: "NACK"})
+    #   _ -> cs
+    # end
   end
 
   defp set_is_approved(cs) do
