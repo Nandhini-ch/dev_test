@@ -19,6 +19,7 @@ defmodule Inconn2ServiceWeb.MeterReadingView do
       unit_of_measurement: meter_reading.unit_of_measurement,
       absolute_value: meter_reading.absolute_value,
       cumulative_value: meter_reading.cumulative_value,
+      meter_type: meter_reading.meter_type,
       work_order_id: meter_reading.work_order_id}
   end
 end
