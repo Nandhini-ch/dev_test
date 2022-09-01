@@ -79,7 +79,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     # IO.inspect("09897988-89980780")
     # IO.inspect(get_change(cs, :is_acknowledged, nil))
     case get_field(cs, :is_acknowledged, nil) do
-      "ACKP" -> change(cs, %{status: "ACKP", is_acknowleged: "NACK"})
+      "ACKP" -> change(cs, %{status: "ACKP", is_acknowledged: "NACK"})
       "ACK" -> change(cs, %{status: "CP"})
       "RJ" -> change(cs, %{status: "ACKRJ"})
       _ -> cs
