@@ -967,6 +967,7 @@ defmodule Inconn2Service.Workorder do
               |> WorkOrder.changeset(attrs)
               |> status_created(prefix)
               |> status_assigned(prefix)
+              |> prefill_status_for_workorder_approval()
               |> validate_site_id(prefix)
               |> validate_asset_id_workorder(prefix)
               |> validate_user_id(prefix)
@@ -984,6 +985,27 @@ defmodule Inconn2Service.Workorder do
 
       _ ->
         result
+    end
+  end
+
+  defp prefill_status_for_workorder_approval(cs) do
+    is_approval_required = get_change(cs, :is_workorder_approval_required, nil)
+    is_assigned = get_change(cs, :status, nil)
+    cond do
+      !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
+      true -> cs
+    end
+  end
+
+  defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
+    is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
+    is_assigned = get_change(cs, :status, nil)
+    cond do
+      is_approval_required and is_assigned == "as" ->
+        update_status_track(work_order, user, prefix, "woap")
+        change(cs, %{status: "woap"})
+      true ->
+        cs
     end
   end
 
@@ -1315,6 +1337,7 @@ defmodule Inconn2Service.Workorder do
             |> self_assign(work_order, user)
             |> validate_user_id(prefix)
             |> status_assigned(work_order, user, prefix)
+            |> prefill_status_for_workorder_approval(work_order, user, prefix)
             |> status_reassigned(work_order, user, prefix)
             |> status_rescheduled(work_order, user, prefix)
             |> update_status(work_order, user, prefix)
@@ -1804,21 +1827,25 @@ defmodule Inconn2Service.Workorder do
   def create_status_track(work_order, user, prefix) do
     case work_order.status do
       "cr" ->
-            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-            date_time = DateTime.now!(site.time_zone)
-            date = Date.new!(date_time.year, date_time.month, date_time.day)
-            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, get_work_order!(work_order.id, prefix)}
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
       "as" ->
-            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-            date_time = DateTime.now!(site.time_zone)
-            date = Date.new!(date_time.year, date_time.month, date_time.day)
-            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, get_work_order!(work_order.id, prefix)}
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+      "woap" ->
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
     end
+    {:ok, work_order}
+  end
+
+  defp get_date_time_for_site(work_order, prefix) do
+    site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
   end
 
   defp status_created(cs, prefix) do
@@ -3148,6 +3175,7 @@ defmodule Inconn2Service.Workorder do
       |> set_user_id_for_approval(user)
       |> set_discrepancy_check_ids(prefix)
       |> set_approved()
+      |> check_remarks_for_aprroved()
       |> Repo.insert(prefix: prefix)
 
     case workorder_approval_track do
@@ -3177,7 +3205,7 @@ defmodule Inconn2Service.Workorder do
 
   def approve_work_order_execution(work_order_id, prefix, user) do
     get_work_order!(work_order_id, prefix)
-    |> update_work_order_without_validations(%{"status" => "woap"}, prefix, user)
+    |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
   end
 
 
@@ -3263,6 +3291,19 @@ defmodule Inconn2Service.Workorder do
         change(cs, approved: true)
       else
         change(cs, approved: false) |> validate_required([:remarks])
+      end
+    else
+      cs
+    end
+  end
+
+  defp check_remarks_for_aprroved(cs) do
+    type = get_field(cs, :type, nil)
+    if type in ["WOA", "ACK"] do
+      IO.inspect(get_field(cs, :approved, nil))
+      case get_field(cs, :approved, nil) do
+        false -> add_error(cs, :remarks, "Remarks needed for not approving")
+        _ -> cs
       end
     else
       cs
