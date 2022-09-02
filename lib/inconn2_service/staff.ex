@@ -259,7 +259,7 @@ defmodule Inconn2Service.Staff do
     {:ok, employee |> preload_employee(prefix)}
   end
 
-  defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: employee
+  defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: Map.put(employee, :reports_to_employee, nil)
 
   defp preload_employee(employee, prefix) when not is_nil(employee.reports_to) do
     reports_to_employee = Repo.get!(Employee, employee.reports_to, prefix: prefix)
@@ -272,11 +272,11 @@ defmodule Inconn2Service.Staff do
 
   defp preload_skills(employee, prefix) when not is_nil(employee.skills) do
     asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end)
-    Map.put(employee, :skills, asset_categories)
+    Map.put(employee, :preloaded_skills, asset_categories)
   end
 
   defp preload_skills(employee, _prefix) when is_nil(employee.skills) do
-    Map.put(employee, :skills, [])
+    Map.put(employee, :preloaded_skills, [])
   end
 
   def get_employee_of_user(user, prefix) do
