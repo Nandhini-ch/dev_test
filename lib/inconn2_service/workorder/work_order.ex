@@ -62,7 +62,9 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     # |> validate_start_time()
     |> validate_date_order()
     |> validate_time_order()
-    |> validate_inclusion(:status, ["cr", "as", "woap", "woaa", "woar", "wp", "wpp", "wpa", "wpr", "ltla", "ltlp", "ltrp","ltra", "ltlr", "ltrr", "ackp", "ackr", "ip", "cp", "ltr", "cn", "hl"])
+    |> validate_inclusion(:status, ["cr", "as", "woap", "woaa", "woar", "wpap", "wp", "wpp", "wpa", "wpr",
+                                    "ltlap", "ltla", "ltlp", "prep", "prea", "exec", "ltrap", "ltrp","ltra",
+                                    "ltlr", "ltrr", "ackp", "ackr", "ip", "cp", "ltr", "cn", "hl"])
     |> validate_based_on_type()
     |> validate_pause_resume_times()
   end

@@ -225,7 +225,19 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_employees(user, prefix) do
+  def list_employees(%{"designation_id" => designation_id}, user, prefix) do
+      filters = filter_by_user_is_licensee(user, prefix)
+      Employee
+      |> where(^filters)
+      |> where([designation_id: ^designation_id, active: true])
+      |> Repo.all(prefix: prefix)
+      |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+      |> Repo.preload(:org_unit)
+    end
+
+  def list_employees(_, user, prefix) do
+    IO.puts("!!!!!!!!!!!!!!!!!!!")
     filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
@@ -234,6 +246,7 @@ defmodule Inconn2Service.Staff do
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
+    |> IO.inspect
   end
 
   defp filter_by_user_is_licensee(user, prefix) do
