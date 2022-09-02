@@ -5,7 +5,7 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
   schema "workorder_approval_tracks" do
     field :approved, :boolean, default: false
     field :discrepancy_workorder_check_ids, {:array, :integer}
-    field :approved_workorder_check_ids, {:array, :integer}
+    field :accepted_workorder_check_ids, {:array, :integer}
     field :remarks, :string
     field :type, :string
     field :approval_user_id, :integer
@@ -17,7 +17,7 @@ defmodule Inconn2Service.Workorder.WorkorderApprovalTrack do
   @doc false
   def changeset(workorder_approval_track, attrs) do
     workorder_approval_track
-    |> cast(attrs, [:work_order_id, :approval_user_id, :type, :approved, :remarks, :discrepancy_workorder_check_ids, :approved_workorder_check_ids])
+    |> cast(attrs, [:work_order_id, :approval_user_id, :type, :approved, :remarks, :discrepancy_workorder_check_ids, :accepted_workorder_check_ids])
     |> validate_required([:work_order_id, :type, :approved])
     |> validate_inclusion(:type, ["WP", "LOTO LOCK", "LOTO RELEASE", "WOA", "ACK"])
     |> assoc_constraint(:work_order)
