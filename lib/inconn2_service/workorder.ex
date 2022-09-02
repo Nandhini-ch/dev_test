@@ -1766,12 +1766,18 @@ defmodule Inconn2Service.Workorder do
 
   def approve_work_permit_in_work_order(work_order_id, prefix, user) do
     work_order = get_work_order!(work_order_id, prefix)
-    if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
-      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
-      update_work_order_without_validations(work_order, attrs, prefix, user)
-     else
-      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
-      update_work_order_without_validations(work_order, attrs, prefix, user)
+    {:ok, work_order} =
+      if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
+        attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
+        update_work_order_without_validations(work_order, attrs, prefix, user)
+      else
+        attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
+        update_work_order_without_validations(work_order, attrs, prefix, user)
+      end
+    if work_order.status == "wpa" and work_order.is_loto_required do
+      update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
     end
   end
 
@@ -1809,7 +1815,9 @@ defmodule Inconn2Service.Workorder do
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
     if length(all_pre_checks) == length(results) do
-      update_work_order(work_order, %{"precheck_completed" => true}, prefix, user)
+      # {:ok, work_order} =
+      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => "exec"}, prefix, user)
+        # update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
     results
   end
@@ -2596,10 +2604,18 @@ defmodule Inconn2Service.Workorder do
       _ ->
             if (actual_start_length == workorder_tasks_length) and (actual_end_length == workorder_tasks_length) do
               attrs =
-                if work_order.is_workorder_acknowledgement_required do
-                  %{"status" => "ackp"}
-                else
-                  %{"status" => "cp"}
+                # if work_order.is_workorder_acknowledgement_required do
+                #   %{"status" => "ackp"}
+                # else
+                #   %{"status" => "cp"}
+                # end
+                cond do
+                  work_order.is_loto_required ->
+                    %{"status" => "ltrap"}
+                  work_order.is_workorder_acknowledgement_required ->
+                    %{"status" => "ackp"}
+                  true ->
+                    %{"status" => "cp"}
                 end
               update_work_order_status(work_order, attrs, prefix, user)
               {:ok, workorder_task}
@@ -3064,10 +3080,20 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_workorder_checks_by_type(work_order_id, check_type, prefix) do
+    updated_type = match_type(check_type)
     WorkorderCheck
-    |> where([type: ^check_type, work_order_id: ^work_order_id])
+    |> where([type: ^updated_type, work_order_id: ^work_order_id])
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn x -> preload_checks(x, prefix) end)
+  end
+
+  defp match_type(type) do
+    case type do
+      "wp" -> "WP"
+      "ll" -> "LOTO LOCK"
+      "lr" -> "LOTO RELEASE"
+      "pre" -> "PRE"
+    end
   end
 
   def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix) |> preload_checks(prefix)
@@ -3178,12 +3204,21 @@ defmodule Inconn2Service.Workorder do
       |> check_remarks_for_aprroved()
       |> Repo.insert(prefix: prefix)
 
+
     case workorder_approval_track do
       {:ok, created_workorder_approval_track} ->
         if created_workorder_approval_track.approved do
           case created_workorder_approval_track.type do
             "WP" ->
               approve_work_permit_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "LOTO LOCK" ->
+              approve_loto_lock_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "LOTO RELEASE" ->
+              approve_loto_release_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
               workorder_approval_track
 
             "WOA" ->
@@ -3203,9 +3238,34 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp approve_loto_lock_in_work_order(work_order_id, prefix, user) do
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "ltla"}, prefix, user)
+    update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+  end
+
+  defp approve_loto_release_in_work_order(work_order_id, prefix, user) do
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "ltra"}, prefix, user)
+    # update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    if work_order.is_workorder_acknowledgement_required do
+      update_work_order_without_validations(work_order, %{"status" => "ackp"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "cp"}, prefix, user)
+    end
+  end
+
   def approve_work_order_execution(work_order_id, prefix, user) do
-    get_work_order!(work_order_id, prefix)
-    |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
+    if work_order.is_workpermit_required do
+      update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    end
   end
 
 
