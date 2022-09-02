@@ -11,6 +11,7 @@ defmodule Inconn2Service.Measurements.MeterReading do
     field :cumulative_value, :float
     field :unit_of_measurement, :string
     field :work_order_id, :integer
+    field :meter_type, :string
 
     timestamps()
   end
@@ -18,8 +19,9 @@ defmodule Inconn2Service.Measurements.MeterReading do
   @doc false
   def changeset(meter_reading, attrs) do
     meter_reading
-    |> cast(attrs, [:site_id, :asset_id, :asset_type, :recorded_date_time, :unit_of_measurement, :absolute_value, :cumulative_value, :work_order_id])
-    |> validate_required([:site_id, :asset_id, :asset_type, :recorded_date_time, :unit_of_measurement, :absolute_value, :cumulative_value, :work_order_id])
+    |> cast(attrs, [:site_id, :asset_id, :asset_type, :recorded_date_time, :unit_of_measurement, :absolute_value, :cumulative_value, :work_order_id, :meter_type])
+    |> validate_required([:site_id, :asset_id, :asset_type, :recorded_date_time, :unit_of_measurement, :absolute_value, :cumulative_value, :work_order_id, :meter_type])
     |> validate_inclusion(:asset_type, ["L", "E"])
+    |> validate_inclusion(:meter_type, ["E", "F", "W"])
   end
 end
