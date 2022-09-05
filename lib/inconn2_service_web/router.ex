@@ -441,6 +441,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
 
     get "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
+    get "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
 
   end
 end

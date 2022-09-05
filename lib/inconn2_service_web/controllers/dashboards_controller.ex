@@ -15,4 +15,9 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "detailed_charts.json", data: data)
   end
 
+  def get_energy_performance_indicator(conn, params) do
+    data = DashboardCharts.get_energy_performance_indicator(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
 end

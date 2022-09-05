@@ -62,4 +62,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def change_nil_to_zero(nil), do: 0
   def change_nil_to_zero(data), do: data
 
+  def change_nil_to_one(nil), do: 1
+  def change_nil_to_one(data), do: data
+
 end
