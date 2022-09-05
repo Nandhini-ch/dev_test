@@ -339,15 +339,15 @@ defmodule Inconn2ServiceWeb.Router do
 
     # get "/mobile/work_orders_test", WorkOrderController, :get_work_order_for_mobile_test
 
-    get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
-    get "/dashboards/workflow_ticket_pie_chart", DashboardController, :get_workflow_ticket_pie_chart
-    get "/dashboards/workflow_workorder_pie_chart", DashboardController, :get_workflow_workorder_pie_chart
-    get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
-    get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
-    get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
+    # get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
+    # get "/dashboards/workflow_ticket_pie_chart", DashboardController, :get_workflow_ticket_pie_chart
+    # get "/dashboards/workflow_workorder_pie_chart", DashboardController, :get_workflow_workorder_pie_chart
+    # get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
+    # get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
+    # get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
 
-    get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
-    get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
+    # get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
+    # get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
     get "/sites_for_attendance", EmployeeRosterController, :index_sites_for_attendance
@@ -437,6 +437,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/user_widget_configs", UserWidgetConfigController, :index
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
     delete "/user_widget_configs", UserWidgetConfigController, :delete
+
+    get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
+
+    get "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
 
   end
 end
