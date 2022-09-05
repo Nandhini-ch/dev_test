@@ -26,6 +26,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def workorder_in_my_approvals(conn, _ ) do
+    work_orders = Workorder.list_work_orders_in_my_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def work_orders_to_be_acknowledged(conn, _) do
     work_orders = Workorder.get_work_order_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
