@@ -33,6 +33,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> DateTime.to_naive()
   end
 
+  def get_site_config_for_dashboards(site_id, prefix) do
+    case AssetConfig.get_site_config_by_site_id_and_type(site_id, "DASH", prefix) do
+      nil -> %{}
+      site_config -> site_config.config
+    end
+  end
+
   def form_date_list_from_iso(from_date, to_date) do
     form_date_list(
       Date.from_iso8601!(from_date),

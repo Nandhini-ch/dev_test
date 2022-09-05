@@ -12,9 +12,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   defp get_individual_energy_consumption_data(date, params, prefix) do
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
     value =
-      NumericalData.get_energy_consumption_for_site(
-                      params["site_id"],
+      NumericalData.get_energy_consumption_for_assets(
+                      config["energy_main_meters"],
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
                       prefix)
