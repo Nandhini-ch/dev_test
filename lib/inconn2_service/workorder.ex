@@ -338,13 +338,41 @@ defmodule Inconn2Service.Workorder do
     |> Repo.preload(:workorder_template)
   end
 
-
   def get_workorder_schedule!(id, prefix), do: Repo.get!(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
   def get_workorder_schedule(id, prefix), do: Repo.get(WorkorderSchedule, id, prefix: prefix) |> Repo.preload(:workorder_template)
 
+  def get_workorder_schedules_by_ids(ids, prefix) do
+    from(ws in WorkorderSchedule, where: ws.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_schedules_by_asset_ids_and_template(workorder_template_id, asset_ids, asset_type, prefix) do
+    from(ws in WorkorderSchedule, where: ws.asset_id in ^asset_ids and ws.asset_type == ^asset_type and ws.workorder_template_id == ^workorder_template_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_schedule_by_template_and_asset(asset_id, wot_id, prefix) do
+    from(ws in WorkorderSchedule, where: ws.asset_id == ^asset_id and ws.workorder_template_id == ^wot_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def create_workorder_schedules(attrs \\ %{}, prefix) do
     asset_ids = attrs["asset_ids"]
-    result = create_individual_workorder_schedules(attrs, asset_ids, prefix) |> IO.inspect()
+    result = create_individual_workorder_schedules(attrs, asset_ids, prefix)
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  def update_workorder_schedules(attrs \\ %{}, prefix) do
+    workorder_schedule_ids = attrs["workorder_schedule_ids"]
+    result = update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix)
 
     failures = get_success_or_failure_list(result, :error)
     case length(failures) do
@@ -362,10 +390,17 @@ defmodule Inconn2Service.Workorder do
     |> Elixir.Task.await_many(:infinity)
   end
 
+  defp update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix) do
+    get_workorder_schedules_by_ids(workorder_schedule_ids, prefix)
+    |> Enum.map(&Elixir.Task.async(fn -> update_workorder_schedule(&1, attrs, prefix) end))
+    |> Elixir.Task.await_many(:infinity)
+  end
+
   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
+              |> validate_unique_schedule(prefix)
               |> validate_for_future_date(prefix)
               |> validate_first_occurence_time(prefix)
               |> calculate_next_occurrence(prefix)
@@ -377,6 +412,17 @@ defmodule Inconn2Service.Workorder do
           {:ok, Repo.get!(WorkorderSchedule, workorder_schedule.id, prefix: prefix) |> Repo.preload(:workorder_template)}
       _ ->
         result
+    end
+  end
+
+  defp validate_unique_schedule(cs, prefix) do
+    wot_id = get_field(cs, :workorder_template_id)
+    asset_id = get_field(cs, :asset_id)
+    cond do
+      wot_id && asset_id && length(get_workorder_schedule_by_template_and_asset(asset_id, wot_id, prefix)) == 0 ->
+        cs
+      true ->
+        add_error(cs, :asset_id, "Schedule already exists")
     end
   end
 
@@ -921,6 +967,7 @@ defmodule Inconn2Service.Workorder do
               |> WorkOrder.changeset(attrs)
               |> status_created(prefix)
               |> status_assigned(prefix)
+              |> prefill_status_for_workorder_approval()
               |> validate_site_id(prefix)
               |> validate_asset_id_workorder(prefix)
               |> validate_user_id(prefix)
@@ -938,6 +985,27 @@ defmodule Inconn2Service.Workorder do
 
       _ ->
         result
+    end
+  end
+
+  defp prefill_status_for_workorder_approval(cs) do
+    is_approval_required = get_change(cs, :is_workorder_approval_required, nil)
+    is_assigned = get_change(cs, :status, nil)
+    cond do
+      !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
+      true -> cs
+    end
+  end
+
+  defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
+    is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
+    is_assigned = get_change(cs, :status, nil)
+    cond do
+      is_approval_required and is_assigned == "as" ->
+        update_status_track(work_order, user, prefix, "woap")
+        change(cs, %{status: "woap"})
+      true ->
+        cs
     end
   end
 
@@ -1269,6 +1337,7 @@ defmodule Inconn2Service.Workorder do
             |> self_assign(work_order, user)
             |> validate_user_id(prefix)
             |> status_assigned(work_order, user, prefix)
+            |> prefill_status_for_workorder_approval(work_order, user, prefix)
             |> status_reassigned(work_order, user, prefix)
             |> status_rescheduled(work_order, user, prefix)
             |> update_status(work_order, user, prefix)
@@ -1697,12 +1766,18 @@ defmodule Inconn2Service.Workorder do
 
   def approve_work_permit_in_work_order(work_order_id, prefix, user) do
     work_order = get_work_order!(work_order_id, prefix)
-    if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
-      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
-      update_work_order_without_validations(work_order, attrs, prefix, user)
-     else
-      attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
-      update_work_order_without_validations(work_order, attrs, prefix, user)
+    {:ok, work_order} =
+      if work_order.workpermit_obtained_from_user_ids ++ [user.id] == work_order.workpermit_approval_user_ids do
+        attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id], "status" => "wpa"}
+        update_work_order_without_validations(work_order, attrs, prefix, user)
+      else
+        attrs = %{"workpermit_obtained_from_user_ids" => work_order.workpermit_obtained_from_user_ids ++ [user.id]}
+        update_work_order_without_validations(work_order, attrs, prefix, user)
+      end
+    if work_order.status == "wpa" and work_order.is_loto_required do
+      update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
     end
   end
 
@@ -1740,7 +1815,9 @@ defmodule Inconn2Service.Workorder do
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
     if length(all_pre_checks) == length(results) do
-      update_work_order(work_order, %{"precheck_completed" => true}, prefix, user)
+      # {:ok, work_order} =
+      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => "exec"}, prefix, user)
+        # update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
     results
   end
@@ -1758,21 +1835,25 @@ defmodule Inconn2Service.Workorder do
   def create_status_track(work_order, user, prefix) do
     case work_order.status do
       "cr" ->
-            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-            date_time = DateTime.now!(site.time_zone)
-            date = Date.new!(date_time.year, date_time.month, date_time.day)
-            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, get_work_order!(work_order.id, prefix)}
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
       "as" ->
-            site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-            date_time = DateTime.now!(site.time_zone)
-            date = Date.new!(date_time.year, date_time.month, date_time.day)
-            time = Time.new!(date_time.hour, date_time.minute, date_time.second)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-            {:ok, get_work_order!(work_order.id, prefix)}
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+      "woap" ->
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
     end
+    {:ok, work_order}
+  end
+
+  defp get_date_time_for_site(work_order, prefix) do
+    site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+    date_time = DateTime.now!(site.time_zone)
+    {Date.new!(date_time.year, date_time.month, date_time.day), Time.new!(date_time.hour, date_time.minute, date_time.second)}
   end
 
   defp status_created(cs, prefix) do
@@ -2523,10 +2604,18 @@ defmodule Inconn2Service.Workorder do
       _ ->
             if (actual_start_length == workorder_tasks_length) and (actual_end_length == workorder_tasks_length) do
               attrs =
-                if work_order.is_workorder_acknowledgement_required do
-                  %{"status" => "ackp"}
-                else
-                  %{"status" => "cp"}
+                # if work_order.is_workorder_acknowledgement_required do
+                #   %{"status" => "ackp"}
+                # else
+                #   %{"status" => "cp"}
+                # end
+                cond do
+                  work_order.is_loto_required ->
+                    %{"status" => "ltrap"}
+                  work_order.is_workorder_acknowledgement_required ->
+                    %{"status" => "ackp"}
+                  true ->
+                    %{"status" => "cp"}
                 end
               update_work_order_status(work_order, attrs, prefix, user)
               {:ok, workorder_task}
@@ -2991,10 +3080,20 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_workorder_checks_by_type(work_order_id, check_type, prefix) do
+    updated_type = match_type(check_type)
     WorkorderCheck
-    |> where([type: ^check_type, work_order_id: ^work_order_id])
+    |> where([type: ^updated_type, work_order_id: ^work_order_id])
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn x -> preload_checks(x, prefix) end)
+  end
+
+  defp match_type(type) do
+    case type do
+      "wp" -> "WP"
+      "ll" -> "LOTO LOCK"
+      "lr" -> "LOTO RELEASE"
+      "pre" -> "PRE"
+    end
   end
 
   def get_workorder_check!(id, prefix), do: Repo.get!(WorkorderCheck, id, prefix: prefix) |> preload_checks(prefix)
@@ -3102,7 +3201,9 @@ defmodule Inconn2Service.Workorder do
       |> set_user_id_for_approval(user)
       |> set_discrepancy_check_ids(prefix)
       |> set_approved()
+      |> check_remarks_for_aprroved()
       |> Repo.insert(prefix: prefix)
+
 
     case workorder_approval_track do
       {:ok, created_workorder_approval_track} ->
@@ -3110,6 +3211,14 @@ defmodule Inconn2Service.Workorder do
           case created_workorder_approval_track.type do
             "WP" ->
               approve_work_permit_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "LOTO LOCK" ->
+              approve_loto_lock_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
+              workorder_approval_track
+
+            "LOTO RELEASE" ->
+              approve_loto_release_in_work_order(created_workorder_approval_track.work_order_id, prefix, user)
               workorder_approval_track
 
             "WOA" ->
@@ -3129,9 +3238,34 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp approve_loto_lock_in_work_order(work_order_id, prefix, user) do
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "ltla"}, prefix, user)
+    update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+  end
+
+  defp approve_loto_release_in_work_order(work_order_id, prefix, user) do
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "ltra"}, prefix, user)
+    # update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    if work_order.is_workorder_acknowledgement_required do
+      update_work_order_without_validations(work_order, %{"status" => "ackp"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "cp"}, prefix, user)
+    end
+  end
+
   def approve_work_order_execution(work_order_id, prefix, user) do
-    get_work_order!(work_order_id, prefix)
-    |> update_work_order_without_validations(%{"status" => "woap"}, prefix, user)
+    {:ok, work_order} =
+      get_work_order!(work_order_id, prefix)
+      |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
+    if work_order.is_workpermit_required do
+      update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
+    else
+      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    end
   end
 
 
@@ -3223,6 +3357,19 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp check_remarks_for_aprroved(cs) do
+    type = get_field(cs, :type, nil)
+    if type in ["WOA", "ACK"] do
+      IO.inspect(get_field(cs, :approved, nil))
+      case get_field(cs, :approved, nil) do
+        false -> add_error(cs, :remarks, "Remarks needed for not approving")
+        _ -> cs
+      end
+    else
+      cs
+    end
+  end
+
   defp get_employee_from_user_id(user_id, prefix) do
     user = Staff.get_user!(user_id, prefix)
     if is_nil(user.employee_id), do: user.username, else: Staff.get_employee!(user.employee_id, prefix).first_name
@@ -3232,6 +3379,31 @@ defmodule Inconn2Service.Workorder do
     case current_user.employee do
       nil-> current_user.username
       employee -> employee.first_name
+    end
+  end
+
+  def list_assets_and_schedules(site_id, workorder_template_id, prefix) do
+    wot = get_workorder_template(workorder_template_id, prefix)
+    assets = AssetConfig.get_assets(site_id, wot.asset_category_id, prefix)
+    asset_ids = Enum.map(assets, &(&1.id))
+    workorder_schedules = get_workorder_schedules_by_asset_ids_and_template(wot.id, asset_ids, wot.asset_type, prefix)
+                          |> Enum.map(&(get_asset_and_site(&1, prefix)))
+    scheduled_asset_ids = Enum.map(workorder_schedules, &(&1.asset_id))
+    assets = Enum.filter(assets, fn asset -> asset.id not in scheduled_asset_ids end)
+    {assets, workorder_schedules}
+  end
+
+  defp get_asset_and_site(workorder_schedule, prefix) do
+    asset_id = workorder_schedule.asset_id
+    case workorder_schedule.asset_type do
+      "L" -> location = AssetConfig.get_location!(asset_id, prefix)
+             site = AssetConfig.get_site!(location.site_id, prefix)
+             Map.put_new(workorder_schedule, :site, site)
+             |> Map.put_new(:asset, location)
+      "E" -> equipment = AssetConfig.get_equipment!(asset_id, prefix)
+             site = AssetConfig.get_site!(equipment.site_id, prefix)
+             Map.put_new(workorder_schedule, :site, site)
+             |> Map.put_new(:asset, equipment)
     end
   end
 end

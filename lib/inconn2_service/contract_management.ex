@@ -3,13 +3,17 @@ defmodule Inconn2Service.ContractManagement do
   import Inconn2Service.Util.DeleteManager
   # import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
-  # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.HelpersFunctions
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
+  alias Inconn2Service.ContractManagement
   alias Inconn2Service.ContractManagement.Scope
   alias Inconn2Service.ContractManagement.Contract
+  alias Inconn2Service.ContractManagement.ManpowerConfiguration
   alias Inconn2Service.AssetConfig.{Location, AssetCategory}
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Settings
+  alias Inconn2Service.Staff
 
   def list_contracts(params, prefix) do
     Contract
@@ -58,7 +62,10 @@ defmodule Inconn2Service.ContractManagement do
         {:could_not_delete,
           "Cannot be deleted as there are Scopes associated with it"
         }
-
+      has_manpower_configuration?(contract, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Manpower conigurations associated with it"
+        }
       true ->
        update_contract(contract, %{"active" => false}, prefix)
          {:deleted,
@@ -80,6 +87,10 @@ defmodule Inconn2Service.ContractManagement do
     |> Stream.map(fn s -> preload_site(s, prefix) end)
     |> Stream.map(fn s -> preload_locations(s, prefix) end)
     |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
+  end
+
+  def get_site_from_scopes(params, prefix) do
+    list_scopes(params, prefix) |> Enum.map(fn x -> x.site end)
   end
 
   def list_scopes(contract_id, params, prefix) do
@@ -130,6 +141,132 @@ defmodule Inconn2Service.ContractManagement do
     Scope.changeset(scope, attrs)
   end
 
+  def list_manpower_configurations(prefix, query_params) do
+    manpower_configuration_query(ManpowerConfiguration, query_params)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> group_by_site_and_designation()
+    |> List.flatten()
+    |> Stream.map(&(form_config(&1, prefix)))
+    |> Stream.map(fn mc -> preload_site(mc, prefix) end)
+    |> Enum.map(fn mc -> preload_designation(mc, prefix) end)
+  end
+
+  def form_config(map, prefix) do
+    config =
+        Enum.map(map.grouped_by_designation_and_site, fn x ->
+          %{
+            shift_id: x.shift_id,
+            quantity: x.quantity,
+            id: x.id
+          }
+          |> preload_shift(prefix)
+        end)
+    %{
+      site_id: map.site_id,
+      designation_id: map.designation_id,
+      config: config
+    }
+  end
+
+  def group_by_site_and_designation(list) do
+    Enum.group_by(list, &(&1.site_id))
+    |> Enum.map(fn {site_id, v} -> group_by_designation_for_site(site_id, v) end)
+  end
+
+  def group_by_designation_for_site(site_id, list) do
+    Enum.group_by(list, &(&1.designation_id))
+    |> Enum.map(&(form_by_designation(site_id, &1)))
+  end
+
+  def form_by_designation(site_id, {k, v}) do
+    %{
+      designation_id: k,
+      site_id: site_id,
+      grouped_by_designation_and_site: v
+    }
+  end
+
+  def get_manpower_configuration_with_preloads!(id, prefix) do
+    get_manpower_configuration!(id, prefix)
+    |> preload_site(prefix)
+    |> preload_shift(prefix)
+    |> preload_designation(prefix)
+  end
+
+  def get_manpower_configuration!(id, prefix), do: Repo.get!(ManpowerConfiguration, id, prefix: prefix)
+
+  def create_multiple_manpower_configurations(attrs, prefix) do
+    Enum.map(attrs["config"],
+             &Task.async(fn ->
+                            create_manpower_configuration(
+                              Map.put(attrs, "shift_id", &1["shift_id"])
+                              |> Map.put("quantity", &1["quantity"]),
+                              prefix)
+                          end))
+    |> Task.await_many(:infinity)
+  end
+
+  def create_manpower_configuration(attrs \\ %{}, prefix) do
+    %ManpowerConfiguration{}
+    |> ManpowerConfiguration.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+    |> preload_site(prefix)
+    |> preload_shift(prefix)
+    |> preload_designation(prefix)
+  end
+
+  def create_or_update_manpower_configurations(action_func, attrs, prefix) do
+    result = apply(ContractManagement, action_func, [attrs, prefix])
+
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  def update_multiple_manpower_configurations(attrs, prefix) do
+    attrs
+    |> Enum.map(&Task.async(fn -> update_individual_manpower_configuration(&1, prefix) end))
+    |> Task.await_many(:infinity)
+  end
+
+  def update_individual_manpower_configuration(attrs, prefix) do
+    get_manpower_configuration!(attrs["id"], prefix)
+    |> update_manpower_configuration(%{"quantity" => attrs["quantity"]}, prefix)
+  end
+
+  def update_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, attrs, prefix) do
+    manpower_configuration
+    |> ManpowerConfiguration.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+    |> preload_site(prefix)
+    |> preload_shift(prefix)
+    |> preload_designation(prefix)
+  end
+
+  def delete_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, prefix) do
+    # Repo.delete(manpower_configuration, prefix: prefix)
+    update_manpower_configuration(manpower_configuration, %{"active" => false}, prefix)
+    {:deleted, "Manpower configuration was deleted"}
+  end
+
+  def change_manpower_configuration(%ManpowerConfiguration{} = manpower_configuration, attrs \\ %{}) do
+    ManpowerConfiguration.changeset(manpower_configuration, attrs)
+  end
+
+  defp preload_shift({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_shift({:ok, manpower_configuration}, prefix), do: {:ok, preload_shift(manpower_configuration, prefix)}
+  defp preload_shift(manpower_configuration, prefix), do: Map.put(manpower_configuration, :shift, Settings.get_shift!(manpower_configuration.shift_id, prefix))
+
+  defp preload_designation({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_designation({:ok, manpower_configuration}, prefix), do: {:ok, preload_designation(manpower_configuration, prefix)}
+  defp preload_designation(manpower_configuration, prefix), do: Map.put(manpower_configuration, :designation, Staff.get_designation!(manpower_configuration.designation_id, prefix))
+
   defp insert_scope(attrs, "by_site", prefix) do
     attrs_for_sites = seperate_attrs_for_site(attrs["site_ids"], attrs)
     result =
@@ -168,8 +305,8 @@ defmodule Inconn2Service.ContractManagement do
   defp preload_service_provider(contract, prefix), do: Map.put(contract, :service_provider, AssetConfig.get_party!(contract.party_id, prefix))
 
   defp preload_site({:error, changeset}, _prefix), do: {:error, changeset}
-  defp preload_site({:ok, scope}, prefix), do: {:ok, preload_site(scope, prefix)}
-  defp preload_site(scope, prefix), do: Map.put(scope, :site, AssetConfig.get_site!(scope.site_id, prefix))
+  defp preload_site({:ok, resource}, prefix), do: {:ok, preload_site(resource, prefix)}
+  defp preload_site(resource, prefix), do: Map.put(resource, :site, AssetConfig.get_site!(resource.site_id, prefix))
 
   defp preload_locations({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_locations({:ok, scopes}, prefix), do: {:ok, preload_locations(scopes, prefix)}

@@ -73,6 +73,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
+    get "/sites/:site_id/asset_categories/:asset_category_id/assets", AssetCategoryController, :assets_for_site
+    get "/sites/:site_id/workorder_templates/:workorder_template_id/assets", WorkorderTemplateController, :index_assets_and_schedules
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
@@ -155,6 +157,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
     post "/create_workorder_schedules", WorkorderScheduleController, :create_multiple
+    put "/update_workorder_schedules", WorkorderScheduleController, :update_multiple
     put "/workorder_schedule/:id/pause", WorkorderScheduleController, :pause_schedule
     put "/workorder_schedule/:id/resume", WorkorderScheduleController, :resume_schedule
 
@@ -404,6 +407,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
     get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
     post "/approve_transactions", TransactionController, :approve_transaction
+    post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
+
 
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
@@ -421,6 +426,17 @@ defmodule Inconn2ServiceWeb.Router do
     post "/reassign_requests/:id/respond", ReassignRescheduleRequestController, :reassign_response_for_work_order
     post "/reschedule_requests/:id/respond", ReassignRescheduleRequestController, :reschedule_response_for_work_order
     post "/reassign_reschedule_requests/create_multiple", ReassignRescheduleRequestController, :create_multiple
+    resources "/designations", DesignationController, except: [:new, :edit]
+
+    resources "/manpower_configurations", ManpowerConfigurationController, except: [:new, :edit, :update]
+    post "/create_manpower_configurations", ManpowerConfigurationController, :create
+    put "/update_manpower_configurations", ManpowerConfigurationController, :update
+    get "/contracts/:contract_id/sites", ScopeController, :index_site_for_scope
+
+    resources "/widgets", WidgetController, except: [:new, :edit]
+    get "/user_widget_configs", UserWidgetConfigController, :index
+    post "/user_widget_configs", UserWidgetConfigController, :create_or_update
+    delete "/user_widget_configs", UserWidgetConfigController, :delete
 
   end
 end

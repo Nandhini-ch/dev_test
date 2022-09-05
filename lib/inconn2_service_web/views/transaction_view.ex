@@ -21,6 +21,7 @@ defmodule Inconn2ServiceWeb.TransactionView do
       date: transaction_reference.date,
       transaction_type: transaction_reference.transaction_type,
       transaction_user: (if !is_nil(transaction_reference.transaction_user) do transaction_reference.transaction_user.username else nil end),
+      status: transaction_reference.status,
       transactions: render_many(transaction_reference.transactions, TransactionView, "transaction.json")
     }
   end
@@ -51,6 +52,7 @@ defmodule Inconn2ServiceWeb.TransactionView do
       authorized_by: transaction.authorized_by,
       department: transaction.department,
       store: render_one(transaction.store, StoreView, "store_without_content.json"),
+      status: transaction.status,
       unit_of_measurement: render_one(transaction.unit_of_measurement, UnitOfMeasurementView, "unit_of_measurement_without_category.json"),
       inventory_item: render_one(transaction.inventory_item, InventoryItemView, "inventory_item_without_stock.json")}
   end

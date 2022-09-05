@@ -187,6 +187,11 @@ defmodule Inconn2Service.AssetConfig do
            "Cannot be deleted as there are Store associated with it"
         }
 
+      has_manpower_configuration?(site, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+        }
+
       true ->
        update_site(site, %{"active" => false}, prefix)
          {:deleted,
@@ -282,6 +287,18 @@ defmodule Inconn2Service.AssetConfig do
     case asset_type do
       "L" -> from(l in Location, where: l.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
       "E" -> from(e in Equipment, where: e.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
+    end
+  end
+
+  def get_assets(site_id, asset_category_id, prefix) do
+    asset_category = get_asset_category!(asset_category_id, prefix)
+    asset_type = asset_category.asset_type
+    subtree = HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix)
+    ids = Enum.map(subtree, fn x -> Map.fetch!(x, :id) end)
+
+    case asset_type do
+      "L" -> from(l in Location, where: l.asset_category_id in ^ids and l.site_id == ^site_id) |> Repo.all(prefix: prefix)
+      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids and e.site_id == ^site_id) |> Repo.all(prefix: prefix)
     end
   end
 

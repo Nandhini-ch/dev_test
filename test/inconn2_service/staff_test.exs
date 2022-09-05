@@ -451,4 +451,65 @@ defmodule Inconn2Service.StaffTest do
       assert %Ecto.Changeset{} = Staff.change_role_profile(role_profile)
     end
   end
+
+  describe "designations" do
+    alias Inconn2Service.Staff.Designation
+
+    @valid_attrs %{description: "some description", name: "some name"}
+    @update_attrs %{description: "some updated description", name: "some updated name"}
+    @invalid_attrs %{description: nil, name: nil}
+
+    def designation_fixture(attrs \\ %{}) do
+      {:ok, designation} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Staff.create_designation()
+
+      designation
+    end
+
+    test "list_designations/0 returns all designations" do
+      designation = designation_fixture()
+      assert Staff.list_designations() == [designation]
+    end
+
+    test "get_designation!/1 returns the designation with given id" do
+      designation = designation_fixture()
+      assert Staff.get_designation!(designation.id) == designation
+    end
+
+    test "create_designation/1 with valid data creates a designation" do
+      assert {:ok, %Designation{} = designation} = Staff.create_designation(@valid_attrs)
+      assert designation.description == "some description"
+      assert designation.name == "some name"
+    end
+
+    test "create_designation/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Staff.create_designation(@invalid_attrs)
+    end
+
+    test "update_designation/2 with valid data updates the designation" do
+      designation = designation_fixture()
+      assert {:ok, %Designation{} = designation} = Staff.update_designation(designation, @update_attrs)
+      assert designation.description == "some updated description"
+      assert designation.name == "some updated name"
+    end
+
+    test "update_designation/2 with invalid data returns error changeset" do
+      designation = designation_fixture()
+      assert {:error, %Ecto.Changeset{}} = Staff.update_designation(designation, @invalid_attrs)
+      assert designation == Staff.get_designation!(designation.id)
+    end
+
+    test "delete_designation/1 deletes the designation" do
+      designation = designation_fixture()
+      assert {:ok, %Designation{}} = Staff.delete_designation(designation)
+      assert_raise Ecto.NoResultsError, fn -> Staff.get_designation!(designation.id) end
+    end
+
+    test "change_designation/1 returns a designation changeset" do
+      designation = designation_fixture()
+      assert %Ecto.Changeset{} = Staff.change_designation(designation)
+    end
+  end
 end

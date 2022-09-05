@@ -11,8 +11,10 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Account.Auth
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.AssetCategory
-  alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile,User}
+  alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile, User, Designation}
   alias Inconn2Service.Util.HierarchyManager
+  alias Inconn2Service.ContractManagement.ManpowerConfiguration
+
 
   def list_org_units(prefix) do
     OrgUnit
@@ -223,7 +225,19 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_employees(user, prefix) do
+  def list_employees(%{"designation_id" => designation_id}, user, prefix) do
+      filters = filter_by_user_is_licensee(user, prefix)
+      Employee
+      |> where(^filters)
+      |> where([designation_id: ^designation_id, active: true])
+      |> Repo.all(prefix: prefix)
+      |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+      |> Repo.preload(:org_unit)
+    end
+
+  def list_employees(_, user, prefix) do
+    IO.puts("!!!!!!!!!!!!!!!!!!!")
     filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
@@ -232,6 +246,7 @@ defmodule Inconn2Service.Staff do
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
+    |> IO.inspect
   end
 
   defp filter_by_user_is_licensee(user, prefix) do
@@ -847,18 +862,7 @@ defmodule Inconn2Service.Staff do
   #   end
   # end
 
-  @doc """
-  Updates a role_profile.
 
-  ## Examples
-
-      iex> update_role_profile(role_profile, %{field: new_value})
-      {:ok, %RoleProfile{}}
-
-      iex> update_role_profile(role_profile, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_role_profile(%RoleProfile{} = role_profile, attrs, prefix) do
     result = role_profile
             |> RoleProfile.changeset(attrs)
@@ -878,5 +882,60 @@ defmodule Inconn2Service.Staff do
 
   def change_role_profile(%RoleProfile{} = role_profile, attrs \\ %{}) do
     RoleProfile.changeset(role_profile, attrs)
+  end
+
+  alias Inconn2Service.Staff.Designation
+
+
+  def list_designations(prefix) do
+    Designation
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
+
+  def create_designation(attrs \\ %{}, prefix) do
+    %Designation{}
+    |> Designation.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+
+  def update_designation(%Designation{} = designation, attrs, prefix) do
+    designation
+    |> Designation.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  # def delete_designation(%Designation{} = designation, prefix) do
+  #   Repo.delete(designation, prefix: prefix)
+  # end
+
+
+  def delete_designation(%Designation{} = designation, prefix) do
+    cond do
+      has_employee?(designation, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Employee associated with it"
+        }
+
+        has_manpower_configuration?(designation, prefix) ->
+          {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+          }
+
+      true ->
+         update_designation(designation, %{"active" => false}, prefix)
+          {:deleted,
+             "The designation was disabled"
+          }
+    end
+  end
+
+
+  def change_designation(%Designation{} = designation, attrs \\ %{}) do
+    Designation.changeset(designation, attrs)
   end
 end
