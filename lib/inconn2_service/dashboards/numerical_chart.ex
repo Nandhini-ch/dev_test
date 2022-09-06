@@ -28,5 +28,4 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     from_dt = NaiveDateTime.add(to_dt, -86400)
     NumericalData.get_energy_consumption_for_assets(config["energy_main_meters"], from_dt, to_dt, prefix)
   end
-
 end
