@@ -63,9 +63,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_individual_energy_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
+    energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     value =
       NumericalData.get_energy_consumption_for_assets(
-                      config["energy_main_meters"],
+                      energy_main_meters,
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
                       prefix)
@@ -111,9 +112,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_individual_energy_performance_indicator(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
+    energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     energy_consumption =
       NumericalData.get_energy_consumption_for_assets(
-                      config["energy_main_meters"],
+                      energy_main_meters,
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
                       prefix)
@@ -135,9 +137,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_individual_water_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
+    water_main_meters = convert_nil_to_list(config["water_main_meters"])
     value =
       NumericalData.get_water_consumption_for_assets(
-                      config["water_main_meters"],
+                      water_main_meters,
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
                       prefix)
@@ -183,9 +186,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_individual_fuel_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
+    fuel_main_meters = convert_nil_to_list(config["fuel_main_meters"])
     value =
-      NumericalData.get_fuel_consumption_for_asset(
-                      config["fuel_main_meters"],
+      NumericalData.get_fuel_consumption_for_assets(
+                      fuel_main_meters,
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
                       prefix)

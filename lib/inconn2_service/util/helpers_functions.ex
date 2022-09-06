@@ -65,6 +65,9 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def change_nil_to_one(nil), do: 1
   def change_nil_to_one(data), do: data
 
+  def convert_nil_to_list(nil), do: []
+  def convert_nil_to_list(list), do: list
+
   def convert_string_list_to_list(nil), do: []
   def convert_string_list_to_list(string) do
     String.split(string, ",")
