@@ -73,7 +73,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      date: date,
+      label: date,
       dataSets: [
         %{
           name: "Energy Consumption",
@@ -86,7 +86,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_individual_energy_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_cost_per_unit = change_nil_to_zero(config["energy_cost_per_unit"])
-    asset_ids = convert_string_list_to_list(params["asset_ids"])
+    asset_ids = convert_nil_to_list(params["asset_ids"])
 
     data_sets =
           Enum.map(asset_ids, fn asset_id ->
@@ -104,7 +104,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      date: date,
+      label: date,
       dataSets: data_sets
     }
 
@@ -125,7 +125,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       epi = energy_consumption / area_in_sqft
 
     %{
-      date: date,
+      label: date,
       dataSets: [
         %{
           name: "EPI",
@@ -147,7 +147,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      date: date,
+      label: date,
       dataSets: [
         %{
           name: "Water Consumption",
@@ -160,7 +160,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_individual_water_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     water_cost_per_unit = change_nil_to_zero(config["water_cost_per_unit"])
-    asset_ids = convert_string_list_to_list(params["asset_ids"])
+    asset_ids = convert_nil_to_list(params["asset_ids"])
 
     data_sets =
           Enum.map(asset_ids, fn asset_id ->
@@ -178,7 +178,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      date: date,
+      label: date,
       dataSets: data_sets
     }
 
@@ -196,7 +196,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      date: date,
+      label: date,
       dataSets: [
         %{
           name: "Fuel Consumption",
@@ -209,7 +209,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_individual_fuel_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     fuel_cost_per_unit = change_nil_to_zero(config["fuel_cost_per_unit"])
-    asset_ids = convert_string_list_to_list(params["asset_ids"])
+    asset_ids = convert_nil_to_list(params["asset_ids"])
 
     data_sets =
           Enum.map(asset_ids, fn asset_id ->
@@ -227,7 +227,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      date: date,
+      label: date,
       dataSets: data_sets
     }
 
