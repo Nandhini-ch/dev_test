@@ -80,13 +80,20 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   end
 
   def progressing_workorders(site_id, from_date, to_date) do
-    add_status_filter_to_workorder_query(get_workorder_general_query(site_id, from_date, to_date), ["cp", "cn"], "not")
+    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cp", "cn"], "not")
   end
 
   def in_progress_workorders(site_id, from_date, to_date) do
-    add_status_filter_to_workorder_query(get_workorder_general_query(site_id, from_date, to_date), ["ip"], "in")
+    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["ip"], "in")
   end
 
+  def get_open_tickets(site_id, from_datetime, to_datetime) do
+    add_status_filter_to_query(get_work_request_general_query(site_id, from_datetime, to_datetime), ["CP", "CS"], "not")
+  end
+
+  def get_close_tickets(site_id, from_datetime, to_datetime) do
+    add_status_filter_to_query(get_work_request_general_query(site_id, from_datetime, to_datetime), ["cp"], "in")
+  end
 
   defp get_workorder_general_query(site_id, from_date, to_date) do
     from(wo in WorkOrder, where: wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id)
@@ -96,7 +103,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     from(wr in WorkRequest, where: wr.raised_date_time >= ^from_datetime and wr.raised_date_time <= ^to_datetime and wr.site_id == ^site_id)
   end
 
-  defp add_status_filter_to_workorder_query(query, statuses, inclusion) do
+  defp add_status_filter_to_query(query, statuses, inclusion) do
     case inclusion do
       "in" -> from q in query, where: q.status in ^statuses
       "not" -> from q in query, where: q.status not in ^statuses
