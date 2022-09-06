@@ -2,6 +2,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.NumericalData
+  alias Inconn2Service.AssetConfig
 
   #Energy meters
   def get_energy_consumption(params, prefix) do
@@ -9,6 +10,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, prefix) end))
+    |> Enum.map(&Task.await/1)
+  end
+
+  def get_energy_cost(params, prefix) do
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+
+    date_list
+    |> Enum.map(&Task.async(fn -> get_individual_energy_cost_for_assets(&1, params, prefix) end))
     |> Enum.map(&Task.await/1)
   end
 
@@ -36,7 +45,6 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
-
   defp get_individual_energy_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     value =
@@ -56,6 +64,33 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         }
       ]
     }
+  end
+
+  defp get_individual_energy_cost_for_assets(date, params, prefix) do
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    energy_cost_per_unit = change_nil_to_zero(config["energy_cost_per_unit"])
+    asset_ids = convert_string_list_to_list(params["asset_ids"])
+
+    data_sets =
+          Enum.map(asset_ids, fn asset_id ->
+            energy_consumption = NumericalData.get_energy_consumption_for_asset(
+                                    asset_id,
+                                    NaiveDateTime.new!(date, ~T[00:00:00]),
+                                    NaiveDateTime.new!(date, ~T[23:59:59]),
+                                    prefix)
+                                  |> change_nil_to_zero()
+            %{
+              name: AssetConfig.get_equipment!(asset_id, prefix).name,
+              value: energy_consumption * energy_cost_per_unit
+            }
+
+          end)
+
+    %{
+      date: date,
+      dataSets: data_sets
+    }
+
   end
 
   defp get_individual_energy_performance_indicator(date, params, prefix) do
