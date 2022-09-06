@@ -77,12 +77,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         key: "FUCON",
         name: "Fuel Consumption",
         displayTxt: fuel_consumption,
-        unit: "kilo ltrs",
+        unit: "ltrs",
         type: 1
       },
       %{
         id: 8,
-        key: "FUCON",
+        key: "FUCOS",
         name: "Fuel Cost",
         displayTxt: fuel_cost,
         unit: "INR",

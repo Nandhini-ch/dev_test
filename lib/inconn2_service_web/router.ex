@@ -441,13 +441,13 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
 
-    get "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
-    get "/dashboards/energy_cost", DashboardsController, :get_energy_cost
-    get "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
-    get "/dashboards/water_consumption", DashboardsController, :get_water_consumption
-    get "/dashboards/water_cost", DashboardsController, :get_water_cost
-    get "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption
-    get "/dashboards/fuel_cost", DashboardsController, :get_fuel_cost
+    post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
+    post "/dashboards/energy_cost", DashboardsController, :get_energy_cost
+    post "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
+    post "/dashboards/water_consumption", DashboardsController, :get_water_consumption
+    post "/dashboards/water_cost", DashboardsController, :get_water_cost
+    post "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption
+    post "/dashboards/fuel_cost", DashboardsController, :get_fuel_cost
 
 
   end
