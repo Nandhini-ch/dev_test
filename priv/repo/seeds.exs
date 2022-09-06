@@ -403,7 +403,7 @@ tsk3 = %{
   "task_type" => "MT",
   "master_task_type_id" => mas_tsk_type2c.id,
   "estimated_time" => 15,
-  "config" => %{"UOM" => "ampere", "type" => "A", "min_value" => 10, "max_value" => 1000, "threshold_value" => 700}
+  "config" => %{"meter_type" => "E", "UOM" => "ampere", "type" => "A", "min_value" => 10, "max_value" => 1000, "threshold_value" => 700}
 }
 
 tsk4 = %{

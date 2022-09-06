@@ -844,6 +844,11 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_work_orders_in_my_approval(user, prefix) do
+     get_work_order_premits_to_be_approved(user, prefix) ++ get_work_orders_to_be_approved(user, prefix) ++ get_work_order_to_be_acknowledged(user, prefix) ++ get_work_order_loto_to_be_checked(user, prefix)
+  end
+
+
   def list_active_work_orders(prefix) do
     query = from wo in WorkOrder, where: wo.status != "cp"
     Repo.all(query, prefix: prefix) |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -959,6 +964,11 @@ defmodule Inconn2Service.Workorder do
 
     WorkOrder
     |> where([loto_checker_user_id: ^user.id, status: ^status])
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_work_order_loto_to_be_checked(user, prefix) do
+    from(wo in WorkOrder, where: wo.loto_checker_user_id == ^user.id and wo.status in ["ltlp", "ltrp"])
     |> Repo.all(prefix: prefix)
   end
 
