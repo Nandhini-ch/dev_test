@@ -95,6 +95,18 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     add_status_filter_to_query(get_work_request_general_query(site_id, from_datetime, to_datetime), ["cp"], "in")
   end
 
+  def get_open_ticket_chart(site_id, from_datetime, to_datetime, ticket_category_ids) do
+    query = get_open_tickets(site_id, from_datetime, to_datetime)
+    from(q in query, where: q.workrequest_category_id in ^ticket_category_ids)
+  end
+
+  def get_close_ticket_chart(site_id, from_datetime, to_datetime, ticket_category_ids) do
+    query = get_close_tickets(site_id, from_datetime, to_datetime)
+    from(q in query, where: q.workrequest_category_id in ^ticket_category_ids)
+  end
+
+  # def service_workorder_status_chart(site_id, from_date, to_date, )
+
   defp get_workorder_general_query(site_id, from_date, to_date) do
     from(wo in WorkOrder, where: wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id)
   end
