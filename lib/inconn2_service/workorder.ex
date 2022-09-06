@@ -3103,6 +3103,7 @@ defmodule Inconn2Service.Workorder do
       "ll" -> "LOTO LOCK"
       "lr" -> "LOTO RELEASE"
       "pre" -> "PRE"
+      _ -> type
     end
   end
 
