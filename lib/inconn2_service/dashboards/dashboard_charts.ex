@@ -37,11 +37,27 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
+  def get_water_cost(params, prefix) do
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+
+    date_list
+    |> Enum.map(&Task.async(fn -> get_individual_water_cost_for_assets(&1, params, prefix) end))
+    |> Enum.map(&Task.await/1)
+  end
+
   def get_fuel_consumption(params, prefix) do
     date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_fuel_consumption_data(&1, params, prefix) end))
+    |> Enum.map(&Task.await/1)
+  end
+
+  def get_fuel_cost(params, prefix) do
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+
+    date_list
+    |> Enum.map(&Task.async(fn -> get_individual_fuel_cost_for_assets(&1, params, prefix) end))
     |> Enum.map(&Task.await/1)
   end
 
@@ -138,10 +154,37 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     }
   end
 
+  defp get_individual_water_cost_for_assets(date, params, prefix) do
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    water_cost_per_unit = change_nil_to_zero(config["water_cost_per_unit"])
+    asset_ids = convert_string_list_to_list(params["asset_ids"])
+
+    data_sets =
+          Enum.map(asset_ids, fn asset_id ->
+            water_consumption = NumericalData.get_water_consumption_for_asset(
+                                    asset_id,
+                                    NaiveDateTime.new!(date, ~T[00:00:00]),
+                                    NaiveDateTime.new!(date, ~T[23:59:59]),
+                                    prefix)
+                                  |> change_nil_to_zero()
+            %{
+              name: AssetConfig.get_equipment!(asset_id, prefix).name,
+              value: water_consumption * water_cost_per_unit
+            }
+
+          end)
+
+    %{
+      date: date,
+      dataSets: data_sets
+    }
+
+  end
+
   defp get_individual_fuel_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     value =
-      NumericalData.get_energy_consumption_for_assets(
+      NumericalData.get_fuel_consumption_for_asset(
                       config["fuel_main_meters"],
                       NaiveDateTime.new!(date, ~T[00:00:00]),
                       NaiveDateTime.new!(date, ~T[23:59:59]),
@@ -157,5 +200,32 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         }
       ]
     }
+  end
+
+  defp get_individual_fuel_cost_for_assets(date, params, prefix) do
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    fuel_cost_per_unit = change_nil_to_zero(config["fuel_cost_per_unit"])
+    asset_ids = convert_string_list_to_list(params["asset_ids"])
+
+    data_sets =
+          Enum.map(asset_ids, fn asset_id ->
+            fuel_consumption = NumericalData.get_fuel_consumption_for_asset(
+                                    asset_id,
+                                    NaiveDateTime.new!(date, ~T[00:00:00]),
+                                    NaiveDateTime.new!(date, ~T[23:59:59]),
+                                    prefix)
+                                  |> change_nil_to_zero()
+            %{
+              name: AssetConfig.get_equipment!(asset_id, prefix).name,
+              value: fuel_consumption * fuel_cost_per_unit
+            }
+
+          end)
+
+    %{
+      date: date,
+      dataSets: data_sets
+    }
+
   end
 end

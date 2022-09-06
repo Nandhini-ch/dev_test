@@ -21,9 +21,15 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       get_water_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
 
+    water_cost_per_unit = change_nil_to_zero(config["water_cost_per_unit"])
+    water_cost = water_consumption * water_cost_per_unit
+
     fuel_consumption =
       get_fuel_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
+
+    fuel_cost_per_unit = change_nil_to_zero(config["fuel_cost_per_unit"])
+    fuel_cost = fuel_consumption * fuel_cost_per_unit
 
     [
       %{
@@ -59,11 +65,27 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         type: 1
       },
       %{
+        id: 6,
+        key: "WACOS",
+        name: "Water Cost",
+        displayTxt: water_cost,
+        unit: "INR",
+        type: 1
+      },
+      %{
         id: 7,
         key: "FUCON",
         name: "Fuel Consumption",
         displayTxt: fuel_consumption,
         unit: "kilo ltrs",
+        type: 1
+      },
+      %{
+        id: 8,
+        key: "FUCON",
+        name: "Fuel Cost",
+        displayTxt: fuel_cost,
+        unit: "INR",
         type: 1
       }
 
