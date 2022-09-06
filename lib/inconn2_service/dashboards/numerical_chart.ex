@@ -21,6 +21,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       get_water_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
 
+    fuel_consumption =
+      get_fuel_consumption_for_24_hours(site_id, config, prefix)
+      |> change_nil_to_zero()
+
     [
       %{
         id: 1,
@@ -51,7 +55,15 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         key: "WACON",
         name: "Water Consumption",
         displayTxt: water_consumption,
-        unit: "kL",
+        unit: "kilo ltrs",
+        type: 1
+      },
+      %{
+        id: 7,
+        key: "FUCON",
+        name: "Fuel Consumption",
+        displayTxt: fuel_consumption,
+        unit: "kilo ltrs",
         type: 1
       }
 
@@ -69,6 +81,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
     NumericalData.get_water_consumption_for_assets(config["water_main_meters"], from_dt, to_dt, prefix)
+  end
+
+  def get_fuel_consumption_for_24_hours(site_id, config, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+    NumericalData.get_fuel_consumption_for_assets(config["fuel_main_meters"], from_dt, to_dt, prefix)
   end
 
 end
