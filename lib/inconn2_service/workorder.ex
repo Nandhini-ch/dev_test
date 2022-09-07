@@ -841,6 +841,7 @@ defmodule Inconn2Service.Workorder do
     limit = Date.utc_today() |> Date.add(-7)
     from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -851,7 +852,9 @@ defmodule Inconn2Service.Workorder do
 
   def list_active_work_orders(prefix) do
     query = from wo in WorkOrder, where: wo.status != "cp"
-    Repo.all(query, prefix: prefix) |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+    Repo.all(query, prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
@@ -896,7 +899,7 @@ defmodule Inconn2Service.Workorder do
           []
 
         employee ->
-          asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+          asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
             from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
@@ -906,6 +909,7 @@ defmodule Inconn2Service.Workorder do
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -917,6 +921,11 @@ defmodule Inconn2Service.Workorder do
       false ->
         work_order
     end
+  end
+
+  def preload_work_order_template_repeat_unit(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    Map.put(work_order, :frequency, workorder_template.repeat_unit)
   end
 
   def get_work_orders_by_workorder_schedule_id(workorder_schedule_id, prefix) do
@@ -965,11 +974,13 @@ defmodule Inconn2Service.Workorder do
     WorkOrder
     |> where([loto_checker_user_id: ^user.id, status: ^status])
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def get_work_order_loto_to_be_checked(user, prefix) do
     from(wo in WorkOrder, where: wo.loto_checker_user_id == ^user.id and wo.status in ["ltlp", "ltrp"])
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
