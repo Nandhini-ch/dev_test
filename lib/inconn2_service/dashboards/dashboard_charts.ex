@@ -6,7 +6,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   #Energy meters
   def get_energy_consumption(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, prefix) end))
@@ -14,7 +14,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_energy_cost(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_cost_for_assets(&1, params, prefix) end))
@@ -22,7 +22,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_energy_performance_indicator(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_performance_indicator(&1, params, prefix) end))
@@ -30,7 +30,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_water_consumption(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_water_consumption_data(&1, params, prefix) end))
@@ -38,7 +38,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_water_cost(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_water_cost_for_assets(&1, params, prefix) end))
@@ -46,7 +46,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_fuel_consumption(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_fuel_consumption_data(&1, params, prefix) end))
@@ -54,7 +54,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_fuel_cost(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"])
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_fuel_cost_for_assets(&1, params, prefix) end))
