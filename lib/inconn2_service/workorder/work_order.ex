@@ -33,8 +33,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :is_loto_required, :boolean
     field :loto_lock_check_list_id, :integer
     field :loto_release_check_list_id, :integer
-    field :pre_check_required, :boolean, default: false
-    field :precheck_completed, :boolean, default: false
+    field :pre_check_required, :boolean
+    field :precheck_completed, :boolean
     field :is_deactivated, :boolean, null: false, default: false
     field :deactivated_date_time, :naive_datetime
     has_many :workorder_tasks, Inconn2Service.Workorder.WorkorderTask
@@ -54,7 +54,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
                     :workpermit_approval_user_ids, :workpermit_obtained_from_user_ids, :is_workorder_approval_required,
                     :is_workpermit_required, :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id,
                     :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :loto_checker_user_id,
-                    :is_deactivated, :deactivated_date_time, :pause_resume_times, :is_paused])
+                    :is_deactivated, :deactivated_date_time, :pause_resume_times, :is_paused, :pre_check_required])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK", "TKT"])
     |> validate_start_date_time()
