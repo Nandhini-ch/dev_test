@@ -526,13 +526,13 @@ defmodule Inconn2Service.Workorder do
     if get_change(cs, :first_occurrence_date, nil) != nil or get_change(cs, :first_occurrence_time, nil) != nil do
         workorder_template = Repo.get(WorkorderTemplate, workorder_template_id, prefix: prefix)
         if workorder_template != nil do
-          applicable_start = workorder_template.applicable_start
-          case Date.compare(applicable_start,first_date) do
-            :gt ->
-              add_error(cs, :first_occurrence_date, "should be greater than or equal to applicable start date")
-            _ ->
+          # applicable_start = workorder_template.applicable_start
+          # case Date.compare(applicable_start,first_date) do
+          #   :gt ->
+          #     add_error(cs, :first_occurrence_date, "should be greater than or equal to applicable start date")
+          #   _ ->
               change(cs, %{next_occurrence_date: first_date, next_occurrence_time: first_time})
-          end
+          # end
         else
           cs
         end
