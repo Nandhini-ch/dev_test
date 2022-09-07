@@ -33,6 +33,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> DateTime.to_naive()
   end
 
+  def get_site_date_now(site_id, prefix) do
+    AssetConfig.get_site!(site_id, prefix)
+    |> Map.fetch!(:time_zone)
+    |> DateTime.now!()
+    |> DateTime.to_date()
+  end
+
   def get_site_config_for_dashboards(site_id, prefix) do
     case AssetConfig.get_site_config_by_site_id_and_type(site_id, "DASH", prefix) do
       nil -> %{}
@@ -40,7 +47,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
-  def form_date_list_from_iso(from_date, to_date) do
+  def form_date_list_from_iso(nil, nil, site_id, prefix) do
+    to_date = get_site_date_now(site_id, prefix)
+    from_date = Date.add(to_date, -30)
+    form_date_list(from_date, to_date)
+  end
+
+  def form_date_list_from_iso(from_date, to_date, _site_id, _prefix) do
     form_date_list(
       Date.from_iso8601!(from_date),
       Date.from_iso8601!(to_date)
