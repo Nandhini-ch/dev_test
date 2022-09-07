@@ -1,9 +1,16 @@
 defmodule Inconn2ServiceWeb.DashboardsController do
   use Inconn2ServiceWeb, :controller
 
-  alias Inconn2Service.Dashboards.{NumericalChart, DashboardCharts}
-
+  alias Inconn2Service.Dashboards.{NumericalChart, DashboardCharts, Helpers}
+  alias Inconn2ServiceWeb.AssetCategoryView
   action_fallback Inconn2ServiceWeb.FallbackController
+
+  def get_assets_for_dashboards(conn, %{"site_id" => site_id, "type" => type}) do
+    assets = Helpers.get_assets_for_dashboards(site_id, type, conn.assigns.sub_domain_prefix)
+    conn
+    |> put_view(AssetCategoryView)
+    |> render("assets.json", assets: assets)
+  end
 
   def get_high_level_data(conn, %{"site_id" => site_id}) do
     data = NumericalChart.get_numerical_charts_for_24_hours(site_id, conn.assigns.sub_domain_prefix)
