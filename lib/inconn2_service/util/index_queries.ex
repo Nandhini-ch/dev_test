@@ -142,13 +142,17 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   def employee_query(query, query_params) do
     Enum.reduce(query_params, query, fn
+      {"id", id}, query -> from q in query, where: q.id == ^id
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
       {"org_unit_id", org_unit_id }, query -> from q in query, where: q.org_unit_id == ^org_unit_id
-      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
+      # {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
       {"designation_id", designation_id}, query -> from q in query, where: q.designation_id == ^designation_id
       _, query -> from q in query, where: q.active
     end)
   end
+
+  def employee_query_for_user(query, nil), do: from q in query, where: q.id == 0
+  def employee_query_for_user(query, id), do: from q in query, where: q.id == ^id
 
   def user_query(query, query_params) do
     Enum.reduce(query_params, query, fn

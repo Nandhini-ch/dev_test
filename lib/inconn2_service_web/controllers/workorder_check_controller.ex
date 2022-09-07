@@ -44,7 +44,7 @@ defmodule Inconn2ServiceWeb.WorkorderCheckController do
     render(conn, "index.json", workorder_checks: workorder_checks)
   end
 
-  def self_update_pre(conn, %{"workorder_check_ids" => workorder_check_ids}) do
+  def self_update_pre(conn, %{"workorder_checks" => %{"workorder_check_ids" => workorder_check_ids}}) do
     workorder_checks = Workorder.update_pre_checks(workorder_check_ids, conn.assigns.sub_domain_prefix, conn.assigns.current_user)
     render(conn, "index.json", workorder_checks: workorder_checks)
   end

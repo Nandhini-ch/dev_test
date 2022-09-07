@@ -177,10 +177,10 @@ defmodule Inconn2ServiceWeb.Router do
     post "/work_orders/approve_loto_release/:id", WorkOrderController, :approve_loto_release
     get "/work_orders/loto_lock_pending", WorkOrderController, :work_order_loto_lock_to_be_checked
     get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
+    put "/self_approve_pre_checks", WorkorderCheckController, :self_update_pre
     get "/work_orders/my_approvals", WorkOrderController, :workorder_in_my_approvals
     put "/pause_work_order/:id", WorkOrderController, :pause_work_order
     put "/resume_work_order/:id", WorkOrderController, :resume_work_order
-    post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
