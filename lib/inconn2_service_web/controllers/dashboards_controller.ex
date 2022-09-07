@@ -25,6 +25,11 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "detailed_charts.json", data: data)
   end
 
+  def get_top_three_consumers(conn, params) do
+    data = DashboardCharts.get_top_three_consumers(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
   def get_water_consumption(conn, params) do
     data = DashboardCharts.get_water_consumption(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
@@ -45,4 +50,8 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "detailed_charts.json", data: data)
   end
 
+  def get_submeters_consumption(conn, params) do
+    data = DashboardCharts.get_consumption_for_submeters(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end
