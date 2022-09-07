@@ -439,6 +439,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
     delete "/user_widget_configs", UserWidgetConfigController, :delete
 
+    get "/meter_assets", DashboardsController, :get_assets_for_dashboards
+
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
 
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
