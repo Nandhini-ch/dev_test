@@ -2625,40 +2625,20 @@ defmodule Inconn2Service.Workorder do
   defp auto_update_workorder_status(workorder_task, prefix, user) do
     work_order = get_work_order!(workorder_task.work_order_id, prefix)
     workorder_tasks = list_workorder_tasks(prefix, workorder_task.work_order_id)
-    actual_start_length = Enum.map(workorder_tasks, fn workorder_task -> workorder_task.actual_start_time end)
-                          |> Enum.filter(fn actual_start -> actual_start != nil end)
-                          |> Kernel.length()
-    actual_end_length = Enum.map(workorder_tasks, fn workorder_task -> workorder_task.actual_end_time end)
-                        |> Enum.filter(fn actual_end -> actual_end != nil end)
-                        |> Kernel.length()
-    workorder_tasks_length = Kernel.length(workorder_tasks)
-    case actual_start_length do
-      0 ->
-            {:ok, workorder_task}
-      _ ->
-            if (actual_start_length == workorder_tasks_length) and (actual_end_length == workorder_tasks_length) do
-              attrs =
-                # if work_order.is_workorder_acknowledgement_required do
-                #   %{"status" => "ackp"}
-                # else
-                #   %{"status" => "cp"}
-                # end
-                cond do
-                  work_order.is_loto_required ->
-                    %{"status" => "ltrap"}
-                  work_order.is_workorder_acknowledgement_required ->
-                    %{"status" => "ackp"}
-                  true ->
-                    %{"status" => "cp"}
-                end
-              update_work_order_status(work_order, attrs, prefix, user)
-              {:ok, workorder_task}
-            else
-              attrs = %{"status" => "ip"}
-              update_work_order_status(work_order, attrs, prefix, user)
-              {:ok, workorder_task}
-            end
+    date_time_completed = Enum.map(workorder_tasks, fn t -> t.date_time end)
+    if !(nil in date_time_completed) do
+      attrs =
+      cond do
+        work_order.is_loto_required ->
+          %{"status" => "ltrap"}
+        work_order.is_workorder_acknowledgement_required ->
+          %{"status" => "ackp"}
+        true ->
+          %{"status" => "cp"}
+      end
+      update_work_order_status(work_order, attrs, prefix, user)
     end
+    {:ok, workorder_task}
   end
 
   defp parse_naivedatetime(nil), do: nil
