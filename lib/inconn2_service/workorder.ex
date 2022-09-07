@@ -1825,9 +1825,7 @@ defmodule Inconn2Service.Workorder do
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
     if length(all_pre_checks) == length(results) do
-      # {:ok, work_order} =
       update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => "exec"}, prefix, user)
-        # update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
     results
   end
@@ -3208,7 +3206,7 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_approval_track(attrs \\ %{}, prefix, user) do
     workorder_approval_track =
       %WorkorderApprovalTrack{}
-      |> WorkorderApprovalTrack.changeset(attrs)
+      |> WorkorderApprovalTrack.changeset(put_approval_status(attrs, attrs["type"]))
       |> set_user_id_for_approval(user)
       |> set_discrepancy_check_ids(prefix)
       |> set_approved()
@@ -3246,6 +3244,14 @@ defmodule Inconn2Service.Workorder do
         end
       _ ->
         workorder_approval_track
+    end
+  end
+
+  defp put_approval_status(attrs, type) do
+    case type do
+      "LL" -> Map.put(attrs, "type", "LOTO LOCK")
+      "LR" -> Map.put(attrs, "type", "LOTO RELEASE")
+      _ -> attrs
     end
   end
 
