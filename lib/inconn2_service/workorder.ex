@@ -918,8 +918,9 @@ defmodule Inconn2Service.Workorder do
     case is_struct(work_order) do
       true ->
         get_work_order_with_asset(work_order, prefix)
+        |> preload_work_order_template_repeat_unit(prefix)
       false ->
-        work_order
+        work_order |> preload_work_order_template_repeat_unit(prefix)
     end
   end
 
@@ -1027,7 +1028,7 @@ defmodule Inconn2Service.Workorder do
     is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
     is_assigned = get_change(cs, :status, nil)
     cond do
-      is_approval_required and is_assigned == "as" ->
+      !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
         change(cs, %{status: "woap"})
       true ->
@@ -1379,7 +1380,7 @@ defmodule Inconn2Service.Workorder do
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix)
-          result
+          {:ok, get_work_order!(updated_work_order.id, prefix)}
       _ ->
         result
     end
