@@ -1787,7 +1787,7 @@ defmodule Inconn2Service.Workorder do
     if work_order.status == "wpa" and work_order.is_loto_required do
       update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
     else
-      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+      update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
   end
 
@@ -1824,10 +1824,19 @@ defmodule Inconn2Service.Workorder do
 
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
-    if length(all_pre_checks) == length(results) do
-      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => "exec"}, prefix, user)
+    if length(all_pre_checks) == length(results) do\
+      status = get_next_status(work_order)
+      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => status}, prefix, user)
     end
     results
+  end
+
+  def get_next_status(work_order) do
+    cond do
+      work_order.is_workpermit_required -> "wpap"
+      work_order.is_loto_required -> "ltlap"
+      true -> "exec"
+    end
   end
 
   def delete_work_order(%WorkOrder{} = work_order, prefix) do
@@ -2836,6 +2845,7 @@ defmodule Inconn2Service.Workorder do
 
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, workorder_template, prefix, zone) do
     asset = get_asset(workorder_schedule, prefix)
+    IO.inspect(workorder_template.is_precheck_required)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
                                             # "asset_type" => workorder_template.asset_type,
@@ -2854,6 +2864,7 @@ defmodule Inconn2Service.Workorder do
                                             "loto_lock_check_list_id" => workorder_template.loto_lock_check_list_id,
                                             "loto_release_check_list_id" => workorder_template.loto_release_check_list_id,
                                             "loto_checker_user_id" => workorder_schedule.loto_checker_user_id,
+                                            "pre_check_required" => workorder_template.is_precheck_required
                                             }, prefix)
 
     # auto_assign_user(work_order, prefix)
@@ -3259,7 +3270,7 @@ defmodule Inconn2Service.Workorder do
     {:ok, work_order} =
       get_work_order!(work_order_id, prefix)
       |> update_work_order_without_validations(%{"status" => "ltla"}, prefix, user)
-    update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
   end
 
   defp approve_loto_release_in_work_order(work_order_id, prefix, user) do
@@ -3278,10 +3289,15 @@ defmodule Inconn2Service.Workorder do
     {:ok, work_order} =
       get_work_order!(work_order_id, prefix)
       |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
-    if work_order.is_workpermit_required do
-      update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
-    else
-      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    cond do
+      work_order.pre_check_required ->
+        update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+      work_order.is_workpermit_required ->
+        update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
+      work_order.is_loto_required ->
+        update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
+      true ->
+        update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
   end
 
