@@ -98,7 +98,7 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     case query_params["type"] do
       "WOA" ->
           send_for_work_order_approval(conn, query_params["id"])
-      "WPA" ->
+      "WP" ->
           send_for_workpermit_approval(conn, query_params["id"])
       "LL" ->
           send_for_loto_lock_approval(conn, query_params["id"])
