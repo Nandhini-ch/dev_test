@@ -100,9 +100,9 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
           send_for_work_order_approval(conn, query_params["id"])
       "WPA" ->
           send_for_workpermit_approval(conn, query_params["id"])
-      "LLA" ->
+      "LL" ->
           send_for_loto_lock_approval(conn, query_params["id"])
-      "LRA" ->
+      "LR" ->
           send_for_loto_release_approval(conn, query_params["id"])
     end
   end
