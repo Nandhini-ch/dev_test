@@ -444,6 +444,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
     post "/dashboards/energy_cost", DashboardsController, :get_energy_cost
     post "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
+    post "/dashboards/top_three", DashboardsController, :get_top_three_consumers
     post "/dashboards/water_consumption", DashboardsController, :get_water_consumption
     post "/dashboards/water_cost", DashboardsController, :get_water_cost
     post "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption

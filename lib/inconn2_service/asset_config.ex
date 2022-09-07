@@ -945,6 +945,11 @@ defmodule Inconn2Service.AssetConfig do
     end)
   end
 
+  def list_equipments_not_in_given_ids(ids, prefix) do
+    from(e in Equipment, where: e.id not in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_equipments_ticket_qr(site_id, prefix) do
     equipment = list_equipments(site_id, prefix)
     Enum.map(equipment, fn e ->
