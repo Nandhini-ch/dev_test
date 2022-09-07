@@ -20,9 +20,11 @@ chk6 = %{"label" => "check 6","check_type_id" => chk_typ1.id}
 
 chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
 chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}
+chk_lst3 = %{"name" => "check list 2", "type" => "PRE", "check_ids" => [5, 6]}
 
 {:ok, chk_lst1c} = CheckListConfig.create_check_list(chk_lst1, "inc_bata")
 {:ok, chk_lst2c} = CheckListConfig.create_check_list(chk_lst2, "inc_bata")
+{:ok, chk_lst3c} = CheckListConfig.create_check_list(chk_lst3, "inc_bata")
 
 wkord_tp1 = %{
   "asset_category_id" => 2,
@@ -64,6 +66,8 @@ wkord_tp2 = %{
   "is_workorder_approval_required" => true,
   "is_workorder_acknowledgement_required" => true,
   "is_workpermit_required" => true,
+  "is_precheck_required" => true,
+  "precheck_list_id" => chk_lst3c.id,
   "workpermit_check_list_id" => chk_lst1c.id,
   "is_loto_required" => true,
   "loto_lock_check_list_id" => chk_lst2c.id,
