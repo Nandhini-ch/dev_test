@@ -241,6 +241,7 @@ defmodule Inconn2Service.Staff do
     filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
@@ -271,7 +272,7 @@ defmodule Inconn2Service.Staff do
   end
 
   defp preload_skills(employee, prefix) when not is_nil(employee.skills) do
-    asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end)
+    asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end) |> Enum.filter(fn x -> not is_nil(x) end)
     Map.put(employee, :preloaded_skills, asset_categories)
   end
 

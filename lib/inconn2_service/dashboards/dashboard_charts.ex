@@ -73,6 +73,15 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
+  def get_consumption_for_submeters(params, prefix) do
+    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+    date_list
+    |> Enum.map(&Task.async(fn -> get_individual_consumption_for_submeters_assets(&1, params, prefix) end))
+    |> Enum.map(&Task.await/1)
+  end
+
+
   defp get_individual_energy_consumption_data(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
@@ -295,6 +304,31 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       label: date,
       dataSets: data_sets
     }
+  end
+
+  defp get_individual_consumption_for_submeters_assets(date, params, prefix) do
+    get_site_config_for_dashboards(params["site_id"], prefix)
+    asset_ids = convert_nil_to_list(params["asset_ids"])
+
+    data_sets =
+          Enum.map(asset_ids, fn asset_id ->
+            energy_consumption = NumericalData.get_energy_consumption_for_asset(
+                                    asset_id,
+                                    NaiveDateTime.new!(date, ~T[00:00:00]),
+                                    NaiveDateTime.new!(date, ~T[23:59:59]),
+                                    prefix)
+                                  |> change_nil_to_zero()
+            %{
+              name: AssetConfig.get_equipment!(asset_id, prefix).name,
+              value: energy_consumption
+            }
+          end)
+
+    %{
+      label: date,
+      dataSets: data_sets
+    }
 
   end
+
 end

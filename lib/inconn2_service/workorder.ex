@@ -841,6 +841,7 @@ defmodule Inconn2Service.Workorder do
     limit = Date.utc_today() |> Date.add(-7)
     from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -851,7 +852,9 @@ defmodule Inconn2Service.Workorder do
 
   def list_active_work_orders(prefix) do
     query = from wo in WorkOrder, where: wo.status != "cp"
-    Repo.all(query, prefix: prefix) |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+    Repo.all(query, prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def list_work_orders_for_user_by_qr(qr_string, user, prefix) do
@@ -896,7 +899,7 @@ defmodule Inconn2Service.Workorder do
           []
 
         employee ->
-          asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+          asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
             from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
@@ -906,6 +909,7 @@ defmodule Inconn2Service.Workorder do
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -919,6 +923,11 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def preload_work_order_template_repeat_unit(work_order, prefix) do
+    workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
+    Map.put(work_order, :frequency, workorder_template.repeat_unit)
+  end
+
   def get_work_orders_by_workorder_schedule_id(workorder_schedule_id, prefix) do
     from(wo in WorkOrder, where: wo.workorder_schedule_id == ^workorder_schedule_id)
     |> Repo.all(prefix: prefix)
@@ -927,7 +936,7 @@ defmodule Inconn2Service.Workorder do
   def get_work_order_premits_to_be_approved(user, prefix) do
     work_orders = WorkOrder |> where(status: "wpp") |> Repo.all(prefix: prefix)
     Enum.map(work_orders, fn wo ->
-      if List.first(wo.workpermit_approval_user_ids -- wo.workpermit_obtained_from_user_ids) == [user.id] do
+      if (wo.workpermit_approval_user_ids -- wo.workpermit_obtained_from_user_ids) |> List.first() == user.id do
         wo
       else
         "not_required"
@@ -935,6 +944,7 @@ defmodule Inconn2Service.Workorder do
 
     end)
     |> Enum.filter(fn x -> x != "not_required" end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -942,6 +952,7 @@ defmodule Inconn2Service.Workorder do
     WorkOrder
     |> where([status: "woap", workorder_approval_user_id: ^user.id])
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -949,6 +960,7 @@ defmodule Inconn2Service.Workorder do
     WorkOrder
     |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id])
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -965,11 +977,15 @@ defmodule Inconn2Service.Workorder do
     WorkOrder
     |> where([loto_checker_user_id: ^user.id, status: ^status])
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def get_work_order_loto_to_be_checked(user, prefix) do
     from(wo in WorkOrder, where: wo.loto_checker_user_id == ^user.id and wo.status in ["ltlp", "ltrp"])
     |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
   def create_work_order(attrs \\ %{}, prefix, user \\ %{id: nil}) do
@@ -1787,7 +1803,7 @@ defmodule Inconn2Service.Workorder do
     if work_order.status == "wpa" and work_order.is_loto_required do
       update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
     else
-      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+      update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
   end
 
@@ -1824,12 +1840,19 @@ defmodule Inconn2Service.Workorder do
 
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
-    if length(all_pre_checks) == length(results) do
-      # {:ok, work_order} =
-      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => "exec"}, prefix, user)
-        # update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
+    if length(all_pre_checks) == length(results) do\
+      status = get_next_status(work_order)
+      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => status}, prefix, user)
     end
     results
+  end
+
+  def get_next_status(work_order) do
+    cond do
+      work_order.is_workpermit_required -> "wpap"
+      work_order.is_loto_required -> "ltlap"
+      true -> "exec"
+    end
   end
 
   def delete_work_order(%WorkOrder{} = work_order, prefix) do
@@ -2838,6 +2861,7 @@ defmodule Inconn2Service.Workorder do
 
   defp update_workorder_and_workorder_schedule_and_scheduler(workorder_schedule, workorder_template, prefix, zone) do
     asset = get_asset(workorder_schedule, prefix)
+    IO.inspect(workorder_template.is_precheck_required)
     {:ok, work_order} = create_work_order(%{"site_id" => asset.site_id,
                                             "asset_id" => workorder_schedule.asset_id,
                                             # "asset_type" => workorder_template.asset_type,
@@ -2856,6 +2880,7 @@ defmodule Inconn2Service.Workorder do
                                             "loto_lock_check_list_id" => workorder_template.loto_lock_check_list_id,
                                             "loto_release_check_list_id" => workorder_template.loto_release_check_list_id,
                                             "loto_checker_user_id" => workorder_schedule.loto_checker_user_id,
+                                            "pre_check_required" => workorder_template.is_precheck_required
                                             }, prefix)
 
     # auto_assign_user(work_order, prefix)
@@ -3103,6 +3128,7 @@ defmodule Inconn2Service.Workorder do
       "ll" -> "LOTO LOCK"
       "lr" -> "LOTO RELEASE"
       "pre" -> "PRE"
+      _ -> type
     end
   end
 
@@ -3207,7 +3233,7 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_approval_track(attrs \\ %{}, prefix, user) do
     workorder_approval_track =
       %WorkorderApprovalTrack{}
-      |> WorkorderApprovalTrack.changeset(attrs)
+      |> WorkorderApprovalTrack.changeset(put_approval_status(attrs, attrs["type"]))
       |> set_user_id_for_approval(user)
       |> set_discrepancy_check_ids(prefix)
       |> set_approved()
@@ -3248,11 +3274,19 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  defp put_approval_status(attrs, type) do
+    case type do
+      "LL" -> Map.put(attrs, "type", "LOTO LOCK")
+      "LR" -> Map.put(attrs, "type", "LOTO RELEASE")
+      _ -> attrs
+    end
+  end
+
   defp approve_loto_lock_in_work_order(work_order_id, prefix, user) do
     {:ok, work_order} =
       get_work_order!(work_order_id, prefix)
       |> update_work_order_without_validations(%{"status" => "ltla"}, prefix, user)
-    update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
   end
 
   defp approve_loto_release_in_work_order(work_order_id, prefix, user) do
@@ -3271,10 +3305,15 @@ defmodule Inconn2Service.Workorder do
     {:ok, work_order} =
       get_work_order!(work_order_id, prefix)
       |> update_work_order_without_validations(%{"status" => "woaa"}, prefix, user)
-    if work_order.is_workpermit_required do
-      update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
-    else
-      update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+    cond do
+      work_order.pre_check_required ->
+        update_work_order_without_validations(work_order, %{"status" => "prep"}, prefix, user)
+      work_order.is_workpermit_required ->
+        update_work_order_without_validations(work_order, %{"status" => "wpap"}, prefix, user)
+      work_order.is_loto_required ->
+        update_work_order_without_validations(work_order, %{"status" => "ltlap"}, prefix, user)
+      true ->
+        update_work_order_without_validations(work_order, %{"status" => "exec"}, prefix, user)
     end
   end
 

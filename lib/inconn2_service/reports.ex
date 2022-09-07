@@ -14,7 +14,7 @@ defmodule Inconn2Service.Reports do
   def get_my_report!(id, prefix), do: Repo.get!(MyReport, id, prefix: prefix)
 
   def create_my_report(attrs \\ %{}, user, prefix) do
-    attrs = Map.put(attrs, :user_id, user.id)
+    attrs = Map.put(attrs, "user_id", user.id)
     %MyReport{}
     |> MyReport.changeset(attrs)
     |> Repo.insert(prefix: prefix)
