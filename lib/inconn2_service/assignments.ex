@@ -18,6 +18,7 @@ defmodule Inconn2Service.Assignments do
     |> preload_rosters(from_date, to_date, prefix)
   end
 
+  defp preload_rosters(nil, _from_date, _to_date, _prefix), do: nil
   defp preload_rosters(master_roster, from_date, to_date, prefix) do
     Map.put(
       master_roster,
