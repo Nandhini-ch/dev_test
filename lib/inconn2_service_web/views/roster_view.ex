@@ -17,14 +17,6 @@ defmodule Inconn2ServiceWeb.RosterView do
     }
   end
 
-  # def render("index.json", %{rosters: rosters}) do
-  #   %{data: render_many(rosters, RosterView, "roster.json")}
-  # end
-
-  # def render("show.json", %{roster: roster}) do
-  #   %{data: render_one(roster, RosterView, "roster.json")}
-  # end
-
   def render("roster.json", %{roster: roster}) do
     %{id: roster.id,
       shift_id: roster.shift_id,

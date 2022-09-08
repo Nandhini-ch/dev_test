@@ -84,39 +84,11 @@ defmodule Inconn2Service.Assignments do
       struct.date == attrs["date"]
   end
 
-  # def list_master_rosters do
-  #   Repo.all(MasterRoster)
-  # end
-
-  # def get_master_roster!(id), do: Repo.get!(MasterRoster, id)
-
   def create_master_roster(attrs \\ %{}, prefix) do
     %MasterRoster{}
     |> MasterRoster.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
-
-  # def update_master_roster(%MasterRoster{} = master_roster, attrs) do
-  #   master_roster
-  #   |> MasterRoster.changeset(attrs)
-  #   |> Repo.update()
-  # end
-
-  # def delete_master_roster(%MasterRoster{} = master_roster) do
-  #   Repo.delete(master_roster)
-  # end
-
-  # def change_master_roster(%MasterRoster{} = master_roster, attrs \\ %{}) do
-  #   MasterRoster.changeset(master_roster, attrs)
-  # end
-
-  # alias Inconn2Service.Assignments.Roster
-
-  # def list_rosters do
-  #   Repo.all(Roster)
-  # end
-
-  # def get_roster!(id), do: Repo.get!(Roster, id)
 
   def get_rosters(nil, nil, prefix) do
     Roster
@@ -160,17 +132,8 @@ defmodule Inconn2Service.Assignments do
     |> Repo.insert(prefix: prefix)
   end
 
-  # def update_roster(%Roster{} = roster, attrs) do
-  #   roster
-  #   |> Roster.changeset(attrs)
-  #   |> Repo.update()
-  # end
-
   def delete_roster(%Roster{} = roster, prefix) do
     Repo.delete(roster, prefix: prefix)
   end
 
-  # def change_roster(%Roster{} = roster, attrs \\ %{}) do
-  #   Roster.changeset(roster, attrs)
-  # end
 end
