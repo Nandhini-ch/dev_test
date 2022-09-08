@@ -104,8 +104,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     get_workorder_general_query(site_id, from_date, to_date) |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, asset_category_ids, nil, _asset_type, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date)
+  def get_workorder_for_chart(site_id, from_date, to_date, asset_category_ids, nil, _asset_type, statuses, inclusion, prefix) do
+    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion)
     from(q in query, join: wot in WorkorderTemplate, on: q.workorder_template_id == wot.id,
                      join: ac in AssetCategory, on: ac.id == wot.asset_category_id and wot.asset_category_id in ^asset_category_ids,
                      select: %{
@@ -115,8 +115,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, nil, asset_ids, asset_type, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date)
+  def get_workorder_for_chart(site_id, from_date, to_date, nil, asset_ids, asset_type, statuses, inclusion, prefix) do
+    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion)
     from(q in query, where: q.asset_id in ^asset_ids and q.asset_type == ^asset_type,
                      select: %{
                       asset_id: q.asset_id,
@@ -170,6 +170,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     case inclusion do
       "in" -> from q in query, where: q.status in ^statuses
       "not" -> from q in query, where: q.status not in ^statuses
+      _ -> query
     end
   end
 

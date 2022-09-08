@@ -117,4 +117,17 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
   end
 
+  def get_workorder_inprogress_number(site_id, params, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    NumericalData.get_workorder_for_chart(site_id,
+                   from_date,
+                   to_date,
+                   nil,
+                   params["asset_ids"],
+                   params["asset_type"],
+                   ["cp", "cl"],
+                   "not",
+                   prefix)
+  end
+
 end
