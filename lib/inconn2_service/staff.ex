@@ -307,6 +307,10 @@ defmodule Inconn2Service.Staff do
     |> Repo.preload(:org_unit)
   end
 
+  def get_employee_without_preloads!(id, prefix) do
+    Repo.get!(Employee, id, prefix: prefix)
+  end
+
   def get_employee!(id, prefix) do
     Repo.get!(Employee, id, prefix: prefix)
     |> preload_employee(prefix)

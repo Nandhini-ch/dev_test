@@ -62,6 +62,14 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_from_date_to_date_from_iso(nil, nil), do: {nil, nil}
+  def get_from_date_to_date_from_iso(from_date, to_date) do
+    {
+      Date.from_iso8601!(from_date),
+      Date.from_iso8601!(to_date)
+    }
+  end
+
   def form_date_list_from_iso(nil, nil, site_id, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -30)
