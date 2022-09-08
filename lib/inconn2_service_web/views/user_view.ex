@@ -17,6 +17,8 @@ defmodule Inconn2ServiceWeb.UserView do
       email: user.email,
       mobile_no: user.mobile_no,
       party_id: user.party_id,
+      first_name: user.first_name,
+      last_name: user.last_name
     }
   end
 
@@ -32,6 +34,8 @@ defmodule Inconn2ServiceWeb.UserView do
       mobile_no: user.mobile_no,
       party_id: user.party_id,
       role_id: user.role_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
       employee: render_one(user.employee, EmployeeView, "employee_with_org_unit_only.json")
     }
   end
@@ -44,6 +48,8 @@ defmodule Inconn2ServiceWeb.UserView do
       mobile_no: user.mobile_no,
       party_id: user.party_id,
       role_id: user.role_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
       employee: render_one(user.employee, EmployeeView, "employee_without_org_unit.json")
     }
   end
