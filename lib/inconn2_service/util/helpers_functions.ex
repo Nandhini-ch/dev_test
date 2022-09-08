@@ -33,6 +33,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> DateTime.to_naive()
   end
 
+  def get_site_date_now(site_id, prefix) do
+    AssetConfig.get_site!(site_id, prefix)
+    |> Map.fetch!(:time_zone)
+    |> DateTime.now!()
+    |> DateTime.to_date()
+  end
+
   def get_site_config_for_dashboards(site_id, prefix) do
     case AssetConfig.get_site_config_by_site_id_and_type(site_id, "DASH", prefix) do
       nil -> %{}
@@ -40,7 +47,28 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
-  def form_date_list_from_iso(from_date, to_date) do
+  def get_from_date_to_date_from_iso(nil, nil, site_id, prefix) do
+    site_date = get_site_date_now(site_id, prefix)
+    {
+      Date.add(site_date, -30),
+      site_date
+    }
+  end
+
+  def get_from_date_to_date_from_iso(from_date, to_date, _site_id, _prefix) do
+    {
+      Date.from_iso8601!(from_date),
+      Date.from_iso8601!(to_date)
+    }
+  end
+
+  def form_date_list_from_iso(nil, nil, site_id, prefix) do
+    to_date = get_site_date_now(site_id, prefix)
+    from_date = Date.add(to_date, -30)
+    form_date_list(from_date, to_date)
+  end
+
+  def form_date_list_from_iso(from_date, to_date, _site_id, _prefix) do
     form_date_list(
       Date.from_iso8601!(from_date),
       Date.from_iso8601!(to_date)
@@ -61,5 +89,17 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def change_nil_to_zero(nil), do: 0
   def change_nil_to_zero(data), do: data
+
+  def change_nil_to_one(nil), do: 1
+  def change_nil_to_one(data), do: data
+
+  def convert_nil_to_list(nil), do: []
+  def convert_nil_to_list(list), do: list
+
+  def convert_string_list_to_list(nil), do: []
+  def convert_string_list_to_list(string) do
+    String.split(string, ",")
+    |> Enum.map(&(String.to_integer(&1)))
+  end
 
 end

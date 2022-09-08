@@ -177,9 +177,10 @@ defmodule Inconn2ServiceWeb.Router do
     post "/work_orders/approve_loto_release/:id", WorkOrderController, :approve_loto_release
     get "/work_orders/loto_lock_pending", WorkOrderController, :work_order_loto_lock_to_be_checked
     get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
+    put "/self_approve_pre_checks", WorkorderCheckController, :self_update_pre
+    get "/work_orders/my_approvals", WorkOrderController, :workorder_in_my_approvals
     put "/pause_work_order/:id", WorkOrderController, :pause_work_order
     put "/resume_work_order/:id", WorkOrderController, :resume_work_order
-    post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
@@ -438,9 +439,19 @@ defmodule Inconn2ServiceWeb.Router do
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
     delete "/user_widget_configs", UserWidgetConfigController, :delete
 
+    get "/meter_assets", DashboardsController, :get_assets_for_dashboards
+
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
 
-    get "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
+    post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
+    post "/dashboards/energy_cost", DashboardsController, :get_energy_cost
+    post "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
+    post "/dashboards/top_three", DashboardsController, :get_top_three_consumers
+    post "/dashboards/water_consumption", DashboardsController, :get_water_consumption
+    post "/dashboards/water_cost", DashboardsController, :get_water_cost
+    post "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption
+    post "/dashboards/fuel_cost", DashboardsController, :get_fuel_cost
+    post "/dashboards/submeters_consumption", DashboardsController, :get_submeters_consumption
 
   end
 end

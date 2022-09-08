@@ -213,6 +213,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       deactivated_date_time: work_order.deactivated_date_time,
       overdue: work_order.overdue,
       pause_resume_times: work_order.pause_resume_times,
+      frequency: work_order.frequency,
       is_paused: work_order.is_paused}
   end
 

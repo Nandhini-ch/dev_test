@@ -20,9 +20,11 @@ chk6 = %{"label" => "check 6","check_type_id" => chk_typ1.id}
 
 chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
 chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}
+chk_lst3 = %{"name" => "check list 2", "type" => "PRE", "check_ids" => [5, 6]}
 
 {:ok, chk_lst1c} = CheckListConfig.create_check_list(chk_lst1, "inc_bata")
 {:ok, chk_lst2c} = CheckListConfig.create_check_list(chk_lst2, "inc_bata")
+{:ok, chk_lst3c} = CheckListConfig.create_check_list(chk_lst3, "inc_bata")
 
 wkord_tp1 = %{
   "asset_category_id" => 2,
@@ -63,8 +65,13 @@ wkord_tp2 = %{
   "workorder_prior_time" => 180,
   "is_workorder_approval_required" => true,
   "is_workorder_acknowledgement_required" => true,
-  "is_workpermit_required" => false,
-  "is_loto_required" => false,
+  "is_workpermit_required" => true,
+  "is_precheck_required" => true,
+  "precheck_list_id" => chk_lst3c.id,
+  "workpermit_check_list_id" => chk_lst1c.id,
+  "is_loto_required" => true,
+  "loto_lock_check_list_id" => chk_lst2c.id,
+  "loto_release_check_list_id" => chk_lst2c.id,
 }
 
 wkord_tp3 = %{
@@ -159,7 +166,7 @@ wkord_tp6 = %{
 {:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_bata")
 
 wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2, "workpermit_approval_user_ids" => [2], "loto_checker_user_id" => 2}
 wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [2, 4] }
 wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [1, 2, 4] }

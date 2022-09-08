@@ -77,7 +77,9 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_employee?(%Party{} = party, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee?(%OrgUnit{} = org_unit, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"org_unit_id" => org_unit.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_employee?(%User{} = user, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_employee?(%User{} = user, prefix), do: (employee_query_for_user(Repo.add_active_filter(Employee), user.employee_id) |> Repo.all(prefix: prefix) |> length()) > 0
+  # def has_employee?(%User{} = user, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee?(%Designation{} = designation, prefix), do: (employee_query(Repo.add_active_filter(Employee), %{"designation_id" => designation.id}) |> Repo.all(prefix: prefix)) |> length() > 0
 
   def has_user?(%Party{} = party, prefix), do: (user_query(Repo.add_active_filter(User), %{"party_id" => party.id}) |> Repo.all(prefix: prefix) |> length()) > 0
