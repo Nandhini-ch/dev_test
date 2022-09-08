@@ -331,4 +331,45 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   end
 
+  def get_ppm_chart(params, prefix) do
+    case params["asset_category_ids"] do
+      nil -> IO.inspect("Using Asset IDs")
+      _ -> get_ppms_using_asset_category_ids(params, prefix)
+    end
+  end
+
+  defp get_ppms_using_asset_category_ids(params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    work_orders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        params["asset_category_ids"],
+        nil,
+        nil,
+        prefix)
+
+    Enum.group_by(work_orders, &(&1.asset_category_id))
+    |> Stream.map(fn {asset_category_id, work_orders} ->
+          %{
+            label: asset_category_id,
+            datasets: calculate_datasets(work_orders)
+          }
+      end)
+  end
+
+  defp calculate_datasets(work_orders) do
+    [
+      %{
+        name: "Scheduled",
+        value: Stream.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+      },
+      %{
+        name: "Completed",
+        value: Stream.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
+      }
+    ]
+  end
+
 end

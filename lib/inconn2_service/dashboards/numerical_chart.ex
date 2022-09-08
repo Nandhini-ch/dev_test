@@ -111,4 +111,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     NumericalData.get_fuel_consumption_for_assets(config["fuel_main_meters"], from_dt, to_dt, prefix)
   end
 
+  def get_work_order_scheduled_chart(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+    NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+  end
+
 end
