@@ -20,11 +20,11 @@ defmodule Inconn2ServiceWeb.RosterView do
   def render("roster.json", %{roster: roster}) do
     %{id: roster.id,
       shift_id: roster.shift_id,
-      shift_name: roster.shift.name,
-      shift_code: roster.shift.code,
+      shift_name: roster.shift_name,
+      shift_code: roster.shift_code,
       employee_id: roster.employee_id,
-      employee_first_name: roster.employee.first_name,
-      employee_last_name: roster.employee.last_name,
+      employee_first_name: roster.employee_first_name,
+      employee_last_name: roster.employee_last_name,
       date: roster.date}
   end
 end
