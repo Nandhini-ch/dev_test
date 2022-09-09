@@ -53,6 +53,8 @@ defmodule Inconn2Service.Assignments do
   end
 
   defp check_and_create_rosters(master_roster_id, new_attrs_list, prefix) do
+    # {from_date, to_date} = get_date_range_from_attrs_dates(new_attrs_list)
+    # existing_list = get_rosters_by_master_roster_and_dates(master_roster_id, from_date, to_date, prefix)
     existing_list = get_rosters_by_master_roster_id(master_roster_id, prefix)
     new_attrs_list =
       Enum.map(new_attrs_list, fn attrs ->
@@ -80,6 +82,13 @@ defmodule Inconn2Service.Assignments do
     end
   end
 
+  defp get_date_range_from_attrs_dates(attrs_list) do
+    date_list =
+          Stream.map(attrs_list, &(Date.from_iso8601!(&1["date"])))
+          |> Enum.sort(Date)
+    {List.first(date_list), List.last(date_list)}
+  end
+
   defp match_attrs_and_struct_roster(attrs, struct) do
       struct.shift_id == attrs["shift_id"] and
       struct.employee_id == attrs["employee_id"] and
@@ -100,31 +109,58 @@ defmodule Inconn2Service.Assignments do
   end
 
   def get_rosters(from_date, to_date, prefix) do
-    from(r in Roster, where: r.date >= ^from_date and r.date <= ^to_date)
-    |> Repo.all(prefix: prefix)
-    |> Stream.map(&(preload_employee(&1, prefix)))
-    |> Enum.map(&(preload_shift(&1, prefix)))
+    rosters =
+      from(r in Roster, where: r.date >= ^from_date and r.date <= ^to_date)
+      |> Repo.all(prefix: prefix)
+      |> Stream.map(&(preload_employee(&1, prefix)))
+      |> Enum.map(&(preload_shift(&1, prefix)))
+
+    form_date_list(from_date, to_date)
+    |> fill_rosters_with_empty_maps(rosters)
+  end
+
+  defp fill_rosters_with_empty_maps(date_list, rosters) do
+    roster_date_list = Enum.map(rosters, &(&1.date))
+    Enum.reduce(date_list, rosters, fn date, acc ->
+      if date in roster_date_list do
+        rosters
+      else
+        empty_map = %{
+          date: date,
+          id: nil,
+          shift_id: nil,
+          shift_name: nil,
+          shift_code: nil,
+          employee_id: nil,
+          employee_first_name: nil,
+          employee_last_name: nil
+        }
+        [empty_map | acc]
+      end
+    end)
   end
 
   defp preload_employee(roster, prefix) do
-    Map.put(
-      roster,
-      :employee,
-      Staff.get_employee_without_preloads!(roster.employee_id, prefix)
-      )
+    employee = Staff.get_employee_without_preloads!(roster.employee_id, prefix)
+    Map.merge(roster, %{employee_first_name: employee.first_name, employee_last_name: employee.last_name})
   end
 
   defp preload_shift(roster, prefix) do
-    Map.put(
-      roster,
-      :shift,
-      Settings.get_shift!(roster.shift_id, prefix)
-      )
+    shift = Settings.get_shift!(roster.shift_id, prefix)
+    Map.merge(roster, %{shift_name: shift.name, shift_code: shift.code})
   end
 
   def get_rosters_by_master_roster_id(master_roster_id, prefix) do
     Roster
     |> where([master_roster_id: ^master_roster_id])
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_rosters_by_master_roster_and_dates(master_roster_id, from_date, to_date, prefix) do
+    from(r in Roster,
+     where: r.master_roster_id == ^master_roster_id and
+            r.date >= ^from_date and
+            r.date <= ^to_date)
     |> Repo.all(prefix: prefix)
   end
 
