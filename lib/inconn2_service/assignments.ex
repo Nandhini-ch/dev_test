@@ -25,7 +25,7 @@ defmodule Inconn2Service.Assignments do
     Map.put(
       master_roster,
       :rosters,
-      get_rosters(from_date, to_date, prefix)
+      get_rosters(master_roster.id, from_date, to_date, prefix)
     )
   end
 
@@ -101,16 +101,20 @@ defmodule Inconn2Service.Assignments do
     |> Repo.insert(prefix: prefix)
   end
 
-  def get_rosters(nil, nil, prefix) do
+  def get_rosters(master_roster_id, nil, nil, prefix) do
     Roster
+    |> where([master_roster_id: ^master_roster_id])
     |> Repo.all(prefix: prefix)
     |> Stream.map(&(preload_employee(&1, prefix)))
     |> Enum.map(&(preload_shift(&1, prefix)))
   end
 
-  def get_rosters(from_date, to_date, prefix) do
+  def get_rosters(master_roster_id, from_date, to_date, prefix) do
     rosters =
-      from(r in Roster, where: r.date >= ^from_date and r.date <= ^to_date)
+      from(r in Roster,
+       where: r.master_roster_id == ^master_roster_id and
+              r.date >= ^from_date and
+              r.date <= ^to_date)
       |> Repo.all(prefix: prefix)
       |> Stream.map(&(preload_employee(&1, prefix)))
       |> Enum.map(&(preload_shift(&1, prefix)))
@@ -120,7 +124,7 @@ defmodule Inconn2Service.Assignments do
   end
 
   defp fill_rosters_with_empty_maps(date_list, rosters) do
-    roster_date_list = Enum.map(rosters, &(&1.date))
+    roster_date_list = Enum.map(rosters, &(&1.date)) |> Enum.uniq()
     Enum.reduce(date_list, rosters, fn date, acc ->
       if date in roster_date_list do
         rosters
