@@ -31,6 +31,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     fuel_cost_per_unit = change_nil_to_zero(config["fuel_cost_per_unit"])
     fuel_cost = fuel_consumption * fuel_cost_per_unit
 
+    ppm_compliance = get_work_order_scheduled_chart(site_id, prefix)
+
+    open_work_orders = get_workorder_inprogress_number(site_id, prefix)
+
+    open_ticket_status = get_open_ticket_status(site_id, prefix)
+
     [
       %{
         id: 1,
@@ -87,10 +93,32 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displayTxt: fuel_cost,
         unit: "INR",
         type: 1
+      },
+      %{
+        id: 11,
+        key: "PPMCW",
+        name: "PPM Compliance",
+        unit: "%",
+        type: 1,
+        displaytTxt: ppm_compliance
+      },
+      %{
+        id: "12",
+        key: "OPWOR",
+        name: "Open/in-progress Workorder status",
+        unit: "%",
+        type: 1,
+        displayTxt: open_work_orders,
+      },
+      %{
+        id: "13",
+        key: "OPTIC",
+        name: "Open/in-progress Ticket status",
+        unit: "%",
+        type: 1,
+        displayTxt: open_ticket_status,
       }
-
     ]
-
   end
 
   def get_energy_consumption_for_24_hours(site_id, config, prefix) do
@@ -113,21 +141,22 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def get_work_order_scheduled_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
-    NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+    div(
+      NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
+      NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+    ) * 100
   end
 
-  def get_workorder_inprogress_number(site_id, params, prefix) do
+  def get_workorder_inprogress_number(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.get_workorder_for_chart(site_id,
-                   from_date,
-                   to_date,
-                   nil,
-                   params["asset_ids"],
-                   params["asset_type"],
-                   ["cp", "cl"],
-                   "not",
-                   prefix)
+    NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
   end
 
+  def get_open_ticket_status(site_id, prefix) do
+    {from_datetime, to_datetime} = get_month_date_time_till_now(site_id, prefix)
+    div(
+      NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix),
+      NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix)
+    ) * 100
+  end
 end
