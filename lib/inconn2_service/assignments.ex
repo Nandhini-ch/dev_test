@@ -12,7 +12,9 @@ defmodule Inconn2Service.Assignments do
   def get_master_roster(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"])
 
-    get_master_roster_without_preloads(params["site_id"], params["designation_id"], prefix)
+    {:ok, master_roster} = check_and_create_master_roster(params, prefix)
+
+    master_roster
     |> Repo.preload(:site)
     |> Repo.preload(:designation)
     |> preload_rosters(from_date, to_date, prefix)
