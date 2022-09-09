@@ -3392,7 +3392,7 @@ defmodule Inconn2Service.Workorder do
     if type in ["WOA", "ACK"] do
       IO.inspect(get_field(cs, :approved, nil))
       case get_field(cs, :approved, nil) do
-        false -> add_error(cs, :remarks, "Remarks needed for not approving")
+        false -> validate_required(cs, [:remarks])
         _ -> cs
       end
     else
