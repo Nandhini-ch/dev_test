@@ -127,7 +127,7 @@ defmodule Inconn2Service.Assignments do
     roster_date_list = Enum.map(rosters, &(&1.date)) |> Enum.uniq()
     Enum.reduce(date_list, rosters, fn date, acc ->
       if date in roster_date_list do
-        rosters
+        acc
       else
         empty_map = %{
           date: date,
