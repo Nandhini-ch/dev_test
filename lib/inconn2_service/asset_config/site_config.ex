@@ -33,7 +33,7 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
     type = get_field(changeset, :type)
     case type do
       "DASH" ->
-        if Map.keys(config) == @dash_config do
+        if Map.keys(config) -- @dash_config == [] do
           changeset
         else
           add_error(changeset, :config, "config is invalid")
