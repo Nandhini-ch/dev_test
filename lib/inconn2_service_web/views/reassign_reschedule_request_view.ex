@@ -19,7 +19,7 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestView do
       reschedule_time: reassign_reschedule_request.reschedule_time,
       request_for: reassign_reschedule_request.request_for,
       work_order_id: reassign_reschedule_request.work_order_id,
-      asset_name: reassign_reschedule_request.work_order_id,
+      asset_name: reassign_reschedule_request.asset_name,
       frequency: reassign_reschedule_request.frequency,
       status: reassign_reschedule_request.status}
   end
