@@ -26,7 +26,7 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.reassign_reschedule_request_path(conn, :show, reassign_reschedule_request))
-      |> render("show.json", reassign_reschedule_request: reassign_reschedule_request)
+      |> render("show_without_preload.json", reassign_reschedule_request: reassign_reschedule_request)
     end
   end
 
@@ -47,7 +47,7 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
     reassign_reschedule_request = Reapportion.get_reassign_reschedule_request!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} <- Reapportion.update_reassign_reschedule_request(reassign_reschedule_request, reassign_reschedule_request_params, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", reassign_reschedule_request: reassign_reschedule_request)
+      render(conn, "show_without_preload.json", reassign_reschedule_request: reassign_reschedule_request)
     end
   end
 
