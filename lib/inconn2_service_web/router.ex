@@ -54,6 +54,7 @@ defmodule Inconn2ServiceWeb.Router do
     pipe_through [:api, :authenticate]
 
     resources "/sites", SiteController, except: [:new, :edit]
+    get "/sites_for_user", SiteController, :index_for_user
     resources "/site_config", SiteConfigController, except: [:new, :edit]
     get "/sites?active=true", SiteController, :index
     get "/sites?active=false", SiteController, :index

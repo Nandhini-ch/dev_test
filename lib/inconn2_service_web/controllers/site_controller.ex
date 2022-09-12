@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.SiteController do
     render(conn, "index.json", sites: sites)
   end
 
+  def index_for_user(conn, _params) do
+    sites = AssetConfig.list_sites_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", sites: sites)
+  end
+
   def create(conn, %{"site" => site_params}) do
     with {:ok, %Site{} = site} <-
            AssetConfig.create_site(site_params, conn.assigns.sub_domain_prefix) do
