@@ -66,4 +66,19 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_segr_for_generators(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_ppm_compliance_chart(conn, params) do
+    data = DashboardCharts.get_ppm_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_open_inprogress_wo_chart(conn, params) do
+    data = DashboardCharts.get_open_workorder_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_open_ticket_status_chart(conn, params) do
+    data = DashboardCharts.get_ticket_open_status_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end

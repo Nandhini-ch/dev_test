@@ -38,6 +38,14 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     segr = get_segr_for_24_hours(site_id, config, prefix)
 
+    ppm_compliance = get_work_order_scheduled_chart(site_id, prefix)
+
+    open_work_orders = get_workorder_inprogress_number(site_id, prefix)
+
+    open_ticket_status = get_open_ticket_status(site_id, prefix)
+
+    work_order_statuses = get_workorder_status_chart(site_id, prefix)
+
     [
       %{
         id: 1,
@@ -124,10 +132,40 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         unit: "kwhr/litr",
         type: 1,
         displayTxt: segr
+      },
+      %{
+        id: 11,
+        key: "PPMCW",
+        name: "PPM Compliance",
+        unit: "%",
+        type: 1,
+        displaytTxt: ppm_compliance
+      },
+      %{
+        id: "12",
+        key: "OPWOR",
+        name: "Open/in-progress Workorder status",
+        unit: "%",
+        type: 1,
+        displayTxt: open_work_orders,
+      },
+      %{
+        id: "13",
+        key: "OPTIC",
+        name: "Open/in-progress Ticket status",
+        unit: "%",
+        type: 1,
+        displayTxt: open_ticket_status,
+      },
+      %{
+        id: "14",
+        key: "SEWOR",
+        name: "Service Workorder Status",
+        unit: "%",
+        type: 3,
+        chartResp: work_order_statuses,
       }
-
     ]
-
   end
 
   def get_energy_consumption_for_24_hours(site_id, config, prefix) do
@@ -189,4 +227,45 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     energy_consumption / fuel_consumption
   end
 
+  def get_work_order_scheduled_chart(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    div(
+      NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
+      NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+    ) * 100
+  end
+
+  def get_workorder_inprogress_number(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+  end
+
+  def get_open_ticket_status(site_id, prefix) do
+    {from_datetime, to_datetime} = get_month_date_time_till_now(site_id, prefix)
+    div(
+      NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix),
+      NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix)
+    ) * 100
+  end
+
+  def get_workorder_status_chart(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    [
+      %{
+        label: "Open",
+        value: div(NumericalData.open_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#ff0000"
+      },
+      %{
+        label: "In Progress",
+        value: div(NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#00ff00"
+      },
+      %{
+        label: "Closed",
+        value: div(NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#ffbf00"
+      }
+    ]
+  end
 end
