@@ -142,7 +142,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displaytTxt: ppm_compliance
       },
       %{
-        id: "12",
+        id: 12,
         key: "OPWOR",
         name: "Open/in-progress Workorder status",
         unit: "%",
@@ -150,7 +150,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displayTxt: open_work_orders,
       },
       %{
-        id: "13",
+        id: 13,
         key: "OPTIC",
         name: "Open/in-progress Ticket status",
         unit: "%",
@@ -158,7 +158,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displayTxt: open_ticket_status,
       },
       %{
-        id: "14",
+        id: 14,
         key: "SEWOR",
         name: "Service Workorder Status",
         unit: "%",
@@ -231,7 +231,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
     div(
       NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
-      NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+      NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
     ) * 100
   end
 
@@ -243,8 +243,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_open_ticket_status(site_id, prefix) do
     {from_datetime, to_datetime} = get_month_date_time_till_now(site_id, prefix)
     div(
-      NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix),
-      NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix)
+      NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix) |> Enum.count(),
+      NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix) |> Enum.count() |> change_nil_to_one()
     ) * 100
   end
 
@@ -253,17 +253,26 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     [
       %{
         label: "Open",
-        value: div(NumericalData.open_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        value: div(
+                   NumericalData.open_workorders(site_id, from_date, to_date, prefix) |> length(),
+                   NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
+                   ) * 100,
         color: "#ff0000"
       },
       %{
         label: "In Progress",
-        value: div(NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        value: div(
+                    NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> length(),
+                    NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
+                    ) * 100,
         color: "#00ff00"
       },
       %{
         label: "Closed",
-        value: div(NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        value: div(
+                    NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> length(),
+                    NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
+                    ) * 100,
         color: "#ffbf00"
       }
     ]
