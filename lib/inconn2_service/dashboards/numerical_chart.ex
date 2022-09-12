@@ -1,7 +1,8 @@
 defmodule Inconn2Service.Dashboards.NumericalChart do
 
   import Inconn2Service.Util.HelpersFunctions
-  alias Inconn2Service.Dashboards.NumericalData
+  alias Inconn2Service.Dashboards.{NumericalData, Helpers}
+  alias Inconn2Service.AssetConfig
 
   def get_numerical_charts_for_24_hours(site_id, prefix) do
 
@@ -17,6 +18,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     area_in_sqft = change_nil_to_one(config["area"])
     epi = energy_consumption / area_in_sqft
 
+    top_3_data_list = get_top_three_consumers_for_24_hours(site_id, config, prefix)
+
     water_consumption =
       get_water_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
@@ -30,6 +33,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     fuel_cost_per_unit = change_nil_to_zero(config["fuel_cost_per_unit"])
     fuel_cost = fuel_consumption * fuel_cost_per_unit
+
+    sub_meters_energy_data_list = get_energy_of_sub_meters_for_24_hours(site_id, config, prefix)
+
+    segr = get_segr_for_24_hours(site_id, config, prefix)
 
     [
       %{
@@ -55,6 +62,17 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displayTxt: epi,
         unit: "kWh/sqft",
         type: 1
+      },
+      %{
+        id: 4,
+        key: "ENTOP",
+        name: "Top 3 non main meter consumption",
+        unit: "kWh",
+        type: 2,
+        tableInfo: %{
+            headers: ["Name", "Consumption ( kWh )"],
+            list: top_3_data_list
+        }
       },
       %{
         id: 5,
@@ -87,6 +105,25 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         displayTxt: fuel_cost,
         unit: "INR",
         type: 1
+      },
+      %{
+        id: 9,
+        key: "ENSUB",
+        name: "Sub meters - Consumption",
+        unit: "kWh",
+        type: 2,
+        tableInfo: %{
+            headers: ["Name", "Consumption ( kWh )"],
+            list: sub_meters_energy_data_list
+        }
+      },
+      %{
+        id: 10,
+        key: "SEGRE",
+        name: "SEGR",
+        unit: "kwhr/litr",
+        type: 1,
+        displayTxt: segr
       }
 
     ]
@@ -109,6 +146,47 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
     NumericalData.get_fuel_consumption_for_assets(config["fuel_main_meters"], from_dt, to_dt, prefix)
+  end
+
+  def get_top_three_consumers_for_24_hours(site_id, config, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+
+    energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+
+    asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
+
+    [Enum.at(asset_and_energy_list, 0), Enum.at(asset_and_energy_list, 1), Enum.at(asset_and_energy_list, 2)]
+    |> Stream.filter(&(not is_nil(&1)))
+    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: value} end)
+  end
+
+  def get_energy_of_sub_meters_for_24_hours(site_id, config, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+
+    energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+
+    asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
+
+    asset_and_energy_list
+    |> Stream.filter(&(not is_nil(&1)))
+    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: value} end)
+  end
+
+  def get_segr_for_24_hours(site_id, config, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+
+    generators = config["generators"]
+
+    energy_consumption = NumericalData.get_energy_consumption_for_assets(generators, from_dt, to_dt, prefix)
+                        |> change_nil_to_zero()
+
+    fuel_consumption = NumericalData.get_fuel_consumption_for_assets(generators, from_dt, to_dt, prefix)
+                      |> change_nil_to_one()
+
+    energy_consumption / fuel_consumption
   end
 
 end

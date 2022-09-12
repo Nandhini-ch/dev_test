@@ -61,4 +61,9 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_consumption_for_submeters(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_segr(conn, params) do
+    data = DashboardCharts.get_segr_for_generators(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end

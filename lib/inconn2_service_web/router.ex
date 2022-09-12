@@ -455,6 +455,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption
     post "/dashboards/fuel_cost", DashboardsController, :get_fuel_cost
     post "/dashboards/submeters_consumption", DashboardsController, :get_submeters_consumption
+    post "/dashboards/segr", DashboardsController, :get_segr
 
   end
 end

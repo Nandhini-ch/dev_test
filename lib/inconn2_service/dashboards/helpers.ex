@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Dashboards.Helpers do
 
   import Inconn2Service.Util.HelpersFunctions
+  alias Inconn2Service.Dashboards.NumericalData
   alias Inconn2Service.AssetConfig
 
   def get_assets_for_dashboards(site_id, type, prefix) do
@@ -12,16 +13,24 @@ defmodule Inconn2Service.Dashboards.Helpers do
         |> get_generators(prefix)
 
       _ ->
-        config[match_type_and_config_key(type)]
+        config[match_ac_type_and_config_key(type)]
         |> get_meters(prefix)
     end
   end
 
-  defp match_type_and_config_key(type) do
+  defp match_ac_type_and_config_key(type) do
     case type do
       "E" -> "energy_asset_category"
       "W" -> "water_asset_category"
       "F" -> "fuel_asset_category"
+    end
+  end
+
+  defp match_main_meters_type_and_config_key(type) do
+    case type do
+      "E" -> "energy_main_meters"
+      "W" -> "water_main_meters"
+      "F" -> "fuel_main_meters"
     end
   end
 
@@ -30,4 +39,24 @@ defmodule Inconn2Service.Dashboards.Helpers do
   defp get_meters(nil, _prefix), do: []
   defp get_meters(asset_category_id, prefix), do: AssetConfig.get_assets_by_asset_category_id(asset_category_id, prefix)
 
+  def get_sub_meter_assets(config, meter_type, prefix) do
+    asset_category_id = config[match_ac_type_and_config_key(meter_type)]
+    main_meter_ids = config[match_main_meters_type_and_config_key(meter_type)] |> convert_nil_to_list()
+    AssetConfig.list_equipments_of_asset_category_and_not_in_given_ids(asset_category_id, main_meter_ids, prefix)
+  end
+
+  def get_assets_and_energy_list(assets, from_dt, to_dt, prefix) do
+    assets
+      |> Stream.map(&Task.async(fn -> get_asset_and_energy_tuple(&1, from_dt, to_dt, prefix) end))
+      |> Stream.map(&Task.await/1)
+      |> Enum.sort_by(fn {_asset, value} -> value end, :desc)
+  end
+
+  defp get_asset_and_energy_tuple(asset, from_dt, to_dt, prefix) do
+    {
+      asset,
+      NumericalData.get_energy_consumption_for_asset(asset.id, from_dt, to_dt, prefix)
+      |> change_nil_to_zero()
+    }
+  end
 end
