@@ -281,7 +281,7 @@ defmodule Inconn2Service.Staff do
   end
 
   def get_employee_of_user(user, prefix) do
-    Repo.get(Employee, user.id, prefix: prefix)
+    Repo.get(Employee, user.employee_id, prefix: prefix)
   end
 
   def get_reportees_for_logged_in_user(user, prefix) do
