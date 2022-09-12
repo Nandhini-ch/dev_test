@@ -11,21 +11,29 @@ defmodule Inconn2Service.Reapportion do
   # @spec list_reassign_reschedule_requests(any) :: any
   def list_reassign_reschedule_requests(prefix) do
     Repo.all(ReassignRescheduleRequest, prefix: prefix)
+    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
   end
 
   def list_reassign_reschedule_requests_to_be_approved(prefix, user, query_params) do
     from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status != "AP")
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
   end
 
   def list_reassign_reschedule_requests_pending(prefix, user, query_params) do
     from(rrr in ReassignRescheduleRequest, where: rrr.requester_user_id == ^user.id)
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
   end
 
-  def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix)
+  defp set_asset_name(request, prefix) do
+    work_order = Workorder.get_work_order!(request.work_order.id, prefix)
+    Map.put(request, :asset_name, work_order.asset_name)
+  end
+
+  def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix) |> set_asset_name(prefix)
 
 
   def create_reassign_reschedule_requests(reassign_attrs, prefix, user) do
@@ -117,8 +125,8 @@ defmodule Inconn2Service.Reapportion do
     employee = Staff.get_employee_of_user(user, prefix)
     cond do
       !is_nil(user) and !is_nil(employee) and !is_nil(employee.reports_to) ->
-        reports_to_user = Staff.get_user_from_employee(employee.id, prefix)
-        change(cs, %{reports_to_user_id: reports_to_user.id})
+        # reports_to_user = Staff.get_user_from_employee(employee.id, prefix)
+        change(cs, %{reports_to_user_id: employee.reports_to})
       !is_nil(user) and !is_nil(employee) ->
         add_error(cs, :reports_to_user_id, "The employee has no reports to")
       !is_nil(user) ->
