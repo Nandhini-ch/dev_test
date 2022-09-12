@@ -37,6 +37,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     open_ticket_status = get_open_ticket_status(site_id, prefix)
 
+    work_order_statuses = get_workorder_status_chart(site_id, prefix)
+
     [
       %{
         id: 1,
@@ -117,6 +119,15 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         unit: "%",
         type: 1,
         displayTxt: open_ticket_status,
+      },
+      %{
+        id: "14",
+        key: "SEWOR",
+        name: "Service Workorder Status",
+        unit: "%",
+        type: 3,
+        chartResp: work_order_statuses,
+
       }
     ]
   end
@@ -158,5 +169,26 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix),
       NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix)
     ) * 100
+  end
+
+  def get_workorder_status_chart(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    [
+      %{
+        label: "Open",
+        value: div(NumericalData.open_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#ff0000"
+      },
+      %{
+        label: "In Progress",
+        value: div(NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#00ff00"
+      },
+      %{
+        label: "Closed",
+        value: div(NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> length(), NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length()) * 100,
+        color: "#ffbf00"
+      }
+    ]
   end
 end

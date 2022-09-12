@@ -478,41 +478,4 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       }
     ]
   end
-
-  # defp calculate_datasets(work_orders, "scheduled/completed") do
-  #   [
-  #     %{
-  #       name: "Scheduled",
-  #       value: Stream.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
-  #     },
-  #     %{
-  #       name: "Completed",
-  #       value: Stream.filter(work_orders, fn wo -> wo.status not in ["cp", "cl"] end) |> Enum.count()
-  #     }
-  #   ]
-  # end
-
-  # def get_inprogress_to_completed_chart(site_id, params, prefix) do
-  #   {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
-  #   work_orders =
-  #     NumericalData.get_workorder_for_chart(
-  #       params["site_id"],
-  #       from_date,
-  #       to_date,
-  #       params["asset_category_ids"],
-  #       nil,
-  #       nil,
-  #       [],
-  #       nil,
-  #       prefix)
-
-  #   Enum.group_by(work_orders, &(&1.asset_category_id))
-  #   |> Stream.map(fn {asset_category_id, work_orders} ->
-  #         %{
-  #           label: asset_category_id,
-  #           datasets: calculate_datasets(work_orders)
-  #         }
-  #     end)
-  # end
-
 end

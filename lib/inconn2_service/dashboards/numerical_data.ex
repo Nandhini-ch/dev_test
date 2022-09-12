@@ -125,8 +125,14 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
+  def open_workorders(site_id, from_date, to_date, prefix) do
+    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cr"], "in")
+    |> Repo.all(prefix: prefix)
+  end
+
   def progressing_workorders(site_id, from_date, to_date, prefix) do
-    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cp", "cn"], "not") |> Repo.all(prefix: prefix)
+    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cp", "cn"], "not")
+    |> Repo.all(prefix: prefix)
   end
 
   def in_progress_workorders(site_id, from_date, to_date, prefix) do
