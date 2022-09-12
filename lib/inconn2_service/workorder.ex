@@ -1572,7 +1572,7 @@ defmodule Inconn2Service.Workorder do
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
     end
-    if alert.type == "al" and alert_config.is_escalation_required do
+    if alert.type == "al" and !is_nil(alert_config) and alert_config.is_escalation_required do
       Common.create_alert_notification_scheduler(%{
         "alert_code" => alert.code,
         "alert_identifier_date_time" => alert_identifier_date_time,
