@@ -40,7 +40,7 @@ config :inconn2_service, Inconn2Service.Mailer,
   adapter: Swoosh.Adapters.SMTP,
   relay: "smtp.office365.com",
   username: "info@inconn.com",
-  password: "Wynwy@!$",
+  password: "Welcome@321",
   tls: :always,
   auth: :always,
   port: 587
