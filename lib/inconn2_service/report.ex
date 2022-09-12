@@ -433,8 +433,6 @@ defmodule Inconn2Service.Report do
             nil
           end
 
-
-
         %{
           asset_name: asset_name,
           asset_category: asset_category,
@@ -447,9 +445,9 @@ defmodule Inconn2Service.Report do
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
-          time_taken_to_close: time_taken_to_close,
-          date: "#{wr.raised_date_time.year}-#{wr.raised_date_time.month}-#{wr.raised_date_time.day}",
-          time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}:#{wr.raised_date_time.second}"
+          time_taken_to_close: calculate_times_from_minutes(time_taken_to_close * 60),
+          date: "#{wr.raised_date_time.date}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
+          time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}"
         }
       end)
 
@@ -467,6 +465,23 @@ defmodule Inconn2Service.Report do
       _ ->
         result
     end
+  end
+
+  defp calculate_times_from_minutes(minutes) do
+    [hours, rest] = get_hours(minutes)
+    minutes = get_minutes(rest)
+    "#{hours}:#{minutes}"
+  end
+
+  defp get_hours(minutes) do
+    div(minutes, 60)
+    |> Float.to_string()
+    |> String.split(".")
+  end
+
+  defp get_minutes(minutes) do
+    {number, _} = Float.parse(minutes)
+    number * 60
   end
 
   defp get_site_date_time(site) do
