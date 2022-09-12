@@ -29,7 +29,7 @@ defmodule Inconn2Service.Reapportion do
   end
 
   defp set_asset_name(request, prefix) do
-    work_order = Workorder.get_work_order!(request.work_order.id, prefix)
+    work_order = Workorder.get_work_order!(request.work_order_id, prefix)
     Map.put(request, :asset_name, work_order.asset_name)
   end
 
