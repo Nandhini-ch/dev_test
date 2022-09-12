@@ -17,6 +17,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
   alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.ContractManagement.Contract
 
   def list_zones(prefix) do
     Zone
@@ -90,6 +91,23 @@ defmodule Inconn2Service.AssetConfig do
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
    |> sort_sites()
+  end
+
+  def list_sites_for_user(user, prefix) do
+    case get_party!(user.party_id, prefix).party_type do
+      "AO" -> list_sites(%{"party_id" => user.party_id}, prefix)
+      "SP" -> list_sites_by_contract_and_manpower(user.party_id, prefix)
+    end
+  end
+
+  def list_sites_by_contract_and_manpower(party_id, prefix) do
+    from(c in Contract, where: c.party_id == ^party_id,
+      join: sc in Scope, on: c.id == sc.contract_id,
+      join: s in Site, on: s.id == sc.site_id,
+      select: s)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.uniq()
   end
 
   def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
