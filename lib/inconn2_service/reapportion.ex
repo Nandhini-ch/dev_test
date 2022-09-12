@@ -31,6 +31,8 @@ defmodule Inconn2Service.Reapportion do
   defp set_asset_name(request, prefix) do
     work_order = Workorder.get_work_order!(request.work_order_id, prefix)
     Map.put(request, :asset_name, work_order.asset_name)
+    |> Map.put(:type, work_order.type)
+    |> Map.put(:frequency, work_order.frequency)
   end
 
   def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix) |> set_asset_name(prefix)
