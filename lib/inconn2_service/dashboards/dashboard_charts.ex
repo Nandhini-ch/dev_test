@@ -353,6 +353,19 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_open_workorder_chart(params, prefix) do
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_open_workorder_using_asset_category_ids(params, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_open_workorder_using_assets(params, prefix)
+
+      not is_nil(params["location_id"]) ->
+        get_open_workorder_using_location(params, prefix)
+    end
+  end
+
+  def get_open_workorder_using_asset_category_ids(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
       NumericalData.get_workorder_for_chart(
         params["site_id"],
@@ -364,6 +377,43 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         [],
         nil,
         prefix) |> group_by_asset_category("open/ip")
+  end
+
+  defp get_open_workorder_using_assets(params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        location_ids,
+        "L",
+        [],
+        nil,
+        prefix) |> group_by_asset("open/ip", "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        equipment_ids,
+        "E",
+        [],
+        nil,
+        prefix) |> group_by_asset("open/ip", "E", prefix)
+    IO.inspect(equipment_workorders)
+    location_workorders ++ equipment_workorders
+  end
+
+  defp get_open_workorder_using_location(params, prefix) do
+    asset_ids_map = AssetConfig.get_asset_ids_for_location(params["location_id"], prefix) |> IO.inspect()
+    params = Map.put(params, "asset_ids", asset_ids_map)
+    get_open_workorder_using_assets(params, prefix)
   end
 
   def get_ticket_open_status_chart(params, prefix) do
