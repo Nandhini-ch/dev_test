@@ -582,6 +582,22 @@ defmodule Inconn2Service.AssetConfig do
     from(l in Location, where: l.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
+  def get_asset_ids_for_location(location_id, prefix) do
+    location_ids = get_location!(location_id, prefix)
+                    |> HierarchyManager.subtree()
+                    |> get_ids_from_query(prefix)
+
+    equipment_ids = from(e in Equipment, where: e.location_id in ^location_ids)
+                    |> get_ids_from_query(prefix)
+
+
+    get_asset_ids_and_type_map(location_ids, "L") ++
+    get_asset_ids_and_type_map(equipment_ids, "E")
+
+  end
+
+  defp get_asset_ids_and_type_map(ids, asset_type), do: Enum.map(ids, fn id -> %{"id" => id, "type" => asset_type} end)
+
   def get_location!(id, prefix), do: Repo.get!(Location, id, prefix: prefix)
   def get_location(id, prefix), do: Repo.get(Location, id, prefix: prefix)
 
