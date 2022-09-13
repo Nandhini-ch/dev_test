@@ -8,6 +8,7 @@ defmodule Inconn2Service.ContractManagement.Contract do
     field :description, :string
     field :end_date, :date
     field :name, :string
+    field :contract_type, :string
     field :start_date, :date
     field :is_effective_status, :boolean
     field :active, :boolean, default: true
@@ -19,8 +20,9 @@ defmodule Inconn2Service.ContractManagement.Contract do
   @doc false
   def changeset(contract, attrs) do
     contract
-    |> cast(attrs, [:name, :description, :start_date, :end_date, :party_id, :is_effective_status, :active])
-    |> validate_required([:name, :start_date, :end_date, :party_id, :is_effective_status, :active])
+    |> cast(attrs, [:name, :contract_type, :description, :start_date, :end_date, :party_id, :is_effective_status, :active])
+    |> validate_required([:name, :contract_type, :start_date, :end_date, :party_id, :is_effective_status, :active])
+    |> validate_inclusion(:contract_type, ["SFM", "OFM", "NAMC", "CAMC"])
     |> validate_contract_date()
   end
 

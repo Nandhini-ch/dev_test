@@ -42,6 +42,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       breakdown: workorder_template.breakdown,
       audit: workorder_template.audit,
       adhoc: workorder_template.adhoc,
+      amc: workorder_template.amc,
       is_precheck_required: workorder_template.is_precheck_required,
       precheck_list_id: workorder_template.precheck_list_id,
       is_materials_required: workorder_template.is_materials_required,

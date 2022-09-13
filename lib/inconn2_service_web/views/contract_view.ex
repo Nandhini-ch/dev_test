@@ -13,6 +13,7 @@ defmodule Inconn2ServiceWeb.ContractView do
   def render("contract.json", %{contract: contract}) do
     %{id: contract.id,
       name: contract.name,
+      contract_type: contract.contract_type,
       description: contract.description,
       start_date: contract.start_date,
       # scopes: render_many(contract.scopes, ScopeView, "scope.json"),

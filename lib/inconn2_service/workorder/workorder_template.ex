@@ -14,6 +14,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :breakdown, :boolean, default: false
     field :audit, :boolean, default: false
     field :adhoc, :boolean, default: false
+    field :amc, :boolean, default: false
     field :repeat_every, :integer
     field :repeat_unit, :string
     field :applicable_start, :date
@@ -50,7 +51,7 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
   def changeset(workorder_template, attrs) do
     workorder_template
     |> cast(attrs, [:asset_category_id, :name, :description, :task_list_id, :estimated_time, :scheduled, :repeat_every, :repeat_unit, :applicable_start, :applicable_end, :time_start, :time_end, :create_new, :max_times, :tools, :spares, :consumables, :workorder_prior_time, :is_workpermit_required, :is_workorder_approval_required, :workpermit_check_list_id,
-                    :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :is_workorder_acknowledgement_required, :breakdown, :audit, :adhoc,
+                    :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :is_workorder_acknowledgement_required, :breakdown, :audit, :adhoc, :amc,
                     :is_precheck_required, :precheck_list_id, :is_materials_required,
                     :is_manpower_required, :materials, :manpower, :parts, :measuring_instruments, :active])
     |> validate_required([:asset_category_id, :name, :task_list_id, :estimated_time, :scheduled])
