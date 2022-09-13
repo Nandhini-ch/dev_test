@@ -340,9 +340,15 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_ppm_chart(params, prefix) do
-    case params["asset_category_ids"] do
-      nil -> get_ppms_for_assets(params, prefix)
-      _ -> get_ppms_using_asset_category_ids(params, prefix)
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_ppms_using_asset_category_ids(params, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_ppms_using_assets(params, prefix)
+
+      not is_nil(params["location_id"]) ->
+        get_ppms_using_location(params, prefix)
     end
   end
 
@@ -435,7 +441,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     location_workorders ++ equipment_workorders
   end
 
-  defp get_ppms_for_assets(params, prefix) do
+  defp get_ppms_using_assets(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
     location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
     equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
@@ -480,6 +486,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         nil,
         prefix) |> group_by_asset_category("scheduled/completed")
   end
+
+  defp get_ppms_using_location(params, prefix) do
+    asset_ids_map = AssetConfig.get_asset_ids_for_location(params["location_id"], prefix) |> IO.inspect()
+    params = Map.put(params, "asset_ids", asset_ids_map)
+    get_ppms_using_assets(params, prefix)
+  end
+
 
   defp group_by_asset(work_orders, organize_for, asset_type, prefix) do
     Enum.group_by(work_orders, &(&1.asset_id))
