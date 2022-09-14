@@ -9,6 +9,7 @@ defmodule Inconn2ServiceWeb.ReportView do
   end
 
   def render("inventory_report.json", %{inventory_info: inventory_info}) do
+    IO.inspect(inventory_info)
     %{
       data: render_many(inventory_info, ReportView, "inventory_report_item.json")
     }
@@ -20,7 +21,7 @@ defmodule Inconn2ServiceWeb.ReportView do
     }
   end
 
-  def render("inventory_report_item.json", %{item: item}) do
+  def render("inventory_report_item.json", %{report: item}) do
     %{
       date: item.date,
       item_name: item.item_name,
