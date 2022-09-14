@@ -796,8 +796,14 @@ defmodule Inconn2Service.Report do
       end)
   |> List.flatten()
   |> filter_for_assets(asset_ids)
-  |> Enum.sort_by(fn x ->  {x.date.year, x.date.month, x.date.day} end)
-  # |> Enum.group_by(&(&1.date))
+  # |> Enum.sort_by(fn x ->  {x.date.year, x.date.month, x.date.day} end)
+  |> Enum.group_by(&(&1.date.month))
+  |> Enum.map(fn {_k, v} ->
+      grouped_by_date = Enum.group_by(v, &(&1.date))
+      Enum.map(grouped_by_date, fn { date, wo } ->
+        %{start: date, name: "#{length(wo)}", work_order: wo}
+      end)
+     end)
   end
 
   def filter_for_assets(list, []), do: list
