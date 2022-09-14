@@ -390,6 +390,18 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     end
   end
 
+  def get_equipment_under_maintenance_chart(params, prefix) do
+    site_dt = get_site_date_time_now(params["site_id"], prefix)
+
+    NumericalData.get_equipment_with_status("BRK", params, prefix)
+    |> Enum.map(fn equipment ->
+        %{
+          equipment: equipment,
+          age: NumericalData.get_equipment_ageing(equipment, site_dt, prefix)
+        }
+      end)
+  end
+
   defp get_workorder_status_for_asset_categories(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
       NumericalData.get_workorder_for_chart(

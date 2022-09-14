@@ -139,7 +139,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         name: "PPM Compliance",
         unit: "%",
         type: 1,
-        displaytTxt: ppm_compliance
+        displayTxt: ppm_compliance
       },
       %{
         id: 12,
@@ -229,10 +229,11 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def get_work_order_scheduled_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    div(
-      NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
-      NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
-    ) * 100
+
+    progressing_wo = NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
+    completed_wo = NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
+
+    (progressing_wo / completed_wo) * 100
   end
 
   def get_workorder_inprogress_number(site_id, prefix) do

@@ -1,11 +1,12 @@
 defmodule Inconn2Service.Dashboards.NumericalData do
   import Ecto.Query, warn: false
+  import Inconn2Service.Util.IndexQueries
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Measurements.MeterReading
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.Workorder.WorkOrder
-  alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
   alias Inconn2Service.Ticket.WorkRequest
 
 
@@ -193,5 +194,23 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     end
   end
 
+  def get_equipment_with_status(status, params, prefix) do
+    equipment_query(Equipment, Map.put(params, "status", status))
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_equipment_ageing(equipment, site_dt, prefix) do
+    date_time =
+      from(as in AssetStatusTrack,
+            where: as.asset_id == ^equipment.id and
+                  as.asset_type == "E" and
+                  as.status_changed == "BRK",
+            select: as.changed_date_time)
+      |> Repo.all(prefix: prefix)
+      |> Enum.sort_by(&(&1), NaiveDateTime)
+      |> hd()
+
+    NaiveDateTime.diff(site_dt, date_time)
+  end
 
 end
