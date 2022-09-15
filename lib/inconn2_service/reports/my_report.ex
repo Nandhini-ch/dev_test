@@ -18,6 +18,6 @@ defmodule Inconn2Service.Reports.MyReport do
     my_report
     |> cast(attrs, [:name, :description, :code, :report_params, :user_id])
     |> validate_required([:name, :description, :code, :report_params, :user_id])
-    |> validate_inclusion(:code, ["AST", "TKT", "WOR"])
+    |> validate_inclusion(:code, ["AST", "TKT", "WOR", "INT"])
   end
 end

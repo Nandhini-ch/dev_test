@@ -843,7 +843,7 @@ defmodule Inconn2Service.Report do
         new_date_list = date_list ++ [next_date(repeat_unit, repeat_every, List.last(date_list))]
         calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
 
-      :gt ->
+      _ ->
         date_list
     end
   end
@@ -1326,7 +1326,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_inventory_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.date, d.name, d.type, d.store_name, d.transaction_type, d.transaction_quantity, d.uom, d.aisle, d.bin, d.row, d.cost]
+        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.uom, d.aisle, d.bin, d.row, d.cost]
       end)
 
     [report_headers] ++ body
