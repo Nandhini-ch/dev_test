@@ -460,7 +460,9 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/ppm_compliance", DashboardsController, :get_ppm_compliance_chart
     post "/dashboards/open_work_orders", DashboardsController, :get_open_inprogress_wo_chart
     post "/dashboards/ticket_status", DashboardsController, :get_open_ticket_status_chart
-    post "/dashboards/workorder_status", DashboardsController, :get_workorder_status_chart
+    post "/dashboards/service_workorder_status", DashboardsController, :get_ticket_workorder_status_chart
+    post "/dashboards/breakdown_workorder_status", DashboardsController, :get_breakdown_workorder_status_chart
+    post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
 
   end
 end

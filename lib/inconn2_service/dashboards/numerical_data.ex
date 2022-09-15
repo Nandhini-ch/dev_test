@@ -107,8 +107,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     get_workorder_general_query(site_id, from_date, to_date) |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, asset_category_ids, nil, _asset_type, statuses, inclusion, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion)
+  def get_workorder_for_chart(site_id, from_date, to_date, asset_category_ids, nil, _asset_type, statuses, inclusion, type, prefix) do
+    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion) |> add_workorder_type_filter_to_query(type)
     from(q in query, join: wot in WorkorderTemplate, on: q.workorder_template_id == wot.id,
                      join: ac in AssetCategory, on: ac.id == wot.asset_category_id and wot.asset_category_id in ^asset_category_ids,
                      select: %{
@@ -119,10 +119,31 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, nil, asset_ids, asset_type, statuses, inclusion, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion)
+  def get_workorder_for_chart(site_id, from_date, to_date, nil, asset_ids, asset_type, statuses, inclusion, type, prefix) do
+    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion) |> add_workorder_type_filter_to_query(type)
     from(q in query, where: q.asset_id in ^asset_ids and q.asset_type == ^asset_type)
 
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_for_chart(site_id, from_date, to_date, statuses, inclusion, type, prefix) do
+    get_workorder_general_query(site_id, from_date, to_date)
+    |> add_status_filter_to_query(statuses, inclusion)
+    |> add_workorder_type_filter_to_query(type)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_work_requests(site_id, params, from_datetime, to_datetime, statuses, inclusion, prefix) do
+    get_work_request_general_query(site_id, from_datetime, to_datetime)
+    |> work_request_query(params)
+    |> add_status_filter_to_query(statuses, inclusion)
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:workrequest_category])
+  end
+
+  def get_work_requests(site_id, from_datetime, to_datetime, statuses, inclusion, prefix) do
+    get_work_request_general_query(site_id, from_datetime, to_datetime)
+    |> add_status_filter_to_query(statuses, inclusion)
     |> Repo.all(prefix: prefix)
   end
 
@@ -131,8 +152,10 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
-  def progressing_workorders(site_id, from_date, to_date, prefix) do
-    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cp", "cn"], "not")
+  def progressing_workorders(site_id, from_date, to_date, type, prefix) do
+    get_workorder_general_query(site_id, from_date, to_date)
+    |> add_status_filter_to_query(["cp", "cn"], "not")
+    |> add_workorder_type_filter_to_query(type)
     |> Repo.all(prefix: prefix)
   end
 
@@ -141,8 +164,10 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
-  def completed_workorders(site_id, from_date, to_date, prefix) do
-    add_status_filter_to_query(get_workorder_general_query(site_id, from_date, to_date), ["cp"], "in")
+  def completed_workorders(site_id, from_date, to_date, type, prefix) do
+    get_workorder_general_query(site_id, from_date, to_date)
+    |> add_status_filter_to_query(["cp"], "in")
+    |> add_workorder_type_filter_to_query(type)
     |> Repo.all(prefix: prefix)
   end
 
@@ -165,12 +190,6 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   #   from(q in query, where: q.workrequest_category_id in ^ticket_category_ids)
   # end
 
-  def get_work_requests(site_id, from_datetime, to_datetime, prefix) do
-    add_status_filter_to_query(get_work_request_general_query(site_id, from_datetime, to_datetime), ["CL"], "not")
-    |> Repo.all(prefix: prefix)
-    |> Repo.preload([:workrequest_categories])
-  end
-
   def get_close_ticket_chart(site_id, from_datetime, to_datetime, ticket_category_ids) do
     query = get_close_tickets(site_id, from_datetime, to_datetime)
     from(q in query, where: q.workrequest_category_id in ^ticket_category_ids)
@@ -192,6 +211,11 @@ defmodule Inconn2Service.Dashboards.NumericalData do
       "not" -> from q in query, where: q.status not in ^statuses
       _ -> query
     end
+  end
+
+  defp add_workorder_type_filter_to_query(query, nil), do: query
+  defp add_workorder_type_filter_to_query(query, type) do
+    from q in query, where: q.type == ^type
   end
 
   def get_equipment_with_status(status, params, prefix) do

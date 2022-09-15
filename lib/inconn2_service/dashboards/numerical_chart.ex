@@ -38,13 +38,17 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     segr = get_segr_for_24_hours(site_id, config, prefix)
 
-    ppm_compliance = get_work_order_scheduled_chart(site_id, prefix)
+    ppm_compliance = get_ppm_compliance(site_id, prefix)
 
-    open_work_orders = get_workorder_inprogress_number(site_id, prefix)
+    open_work_order_status = get_open_workorder_status(site_id, prefix)
 
     open_ticket_status = get_open_ticket_status(site_id, prefix)
 
-    work_order_statuses = get_workorder_status_chart(site_id, prefix)
+    ticket_work_order_status = get_ticket_workorder_status_chart(site_id, prefix)
+
+    breakdown_work_order_status = get_breakdown_workorder_status_shcart(site_id, prefix)
+
+    equipments_under_maintenance = get_equipment_under_maintenance(site_id, prefix)
 
     [
       %{
@@ -147,13 +151,13 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         name: "Open/in-progress Workorder status",
         unit: "%",
         type: 1,
-        displayTxt: open_work_orders,
+        displayTxt: open_work_order_status,
       },
       %{
         id: 13,
         key: "OPTIC",
         name: "Open/in-progress Ticket status",
-        unit: "%",
+        unit: "Tickets",
         type: 1,
         displayTxt: open_ticket_status,
       },
@@ -163,8 +167,24 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         name: "Service Workorder Status",
         unit: "%",
         type: 3,
-        chartResp: work_order_statuses,
-      }
+        chartResp: ticket_work_order_status,
+      },
+      %{
+        id: 15,
+        key: "BRWOR",
+        name: "Breakdown work Status – YTD",
+        unit: "WorkOrders",
+        type: 1,
+        displayTxt: breakdown_work_order_status
+      },
+      %{
+        id: 16,
+        key: "EQUMN",
+        name: "Equipment under maintenance at present",
+        unit: "assets",
+        type: 4,
+        displayTxt: equipments_under_maintenance
+     }
     ]
   end
 
@@ -227,55 +247,66 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     energy_consumption / fuel_consumption
   end
 
-  def get_work_order_scheduled_chart(site_id, prefix) do
+  def get_ppm_compliance(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    progressing_wo = NumericalData.progressing_workorders(site_id, from_date, to_date, prefix) |> Enum.count(),
-    completed_wo = NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
+    completed_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp"], "in", "PRV", prefix) |> Enum.count() |> change_nil_to_one()
+    progressing_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp", "cn"], "not", "PRV", prefix) |> Enum.count()
 
     (progressing_wo / completed_wo) * 100
   end
 
-  def get_workorder_inprogress_number(site_id, prefix) do
+  def get_open_workorder_status(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> Enum.count()
+
+    open_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp", "cn"], "not", nil, prefix) |> Enum.count() |> change_nil_to_one()
+    inprogress_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cr", "as", "cp", "cn"], "not", nil, prefix) |> Enum.count()
+
+    (inprogress_wo / open_wo) * 100
   end
 
   def get_open_ticket_status(site_id, prefix) do
     {from_datetime, to_datetime} = get_month_date_time_till_now(site_id, prefix)
-    div(
-      NumericalData.inprogress_tickets(site_id, from_datetime, to_datetime, prefix) |> Enum.count(),
-      NumericalData.get_open_tickets(site_id, from_datetime, to_datetime, prefix) |> Enum.count() |> change_nil_to_one()
-    ) * 100
+    NumericalData.get_work_requests(site_id, from_datetime, to_datetime, ["CL", "CP", "RJ", "CS"], "not", prefix)
+    |> Enum.count()
   end
 
-  def get_workorder_status_chart(site_id, prefix) do
+  def get_ticket_workorder_status_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+
+    total_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "TKT", prefix)
+    total_count = total_wo |> length() |> change_nil_to_one()
+    open_count = Enum.count(total_wo, fn wo -> wo.status in ["cr", "as"] end)
+    completed_count = Enum.count(total_wo, fn wo -> wo.status == "cp" end)
+    inprogress_count = Enum.count(total_wo, fn wo -> wo.status not in ["cr", "as", "cp", "cn", "hl"] end)
+
     [
       %{
         label: "Open",
-        value: div(
-                   NumericalData.open_workorders(site_id, from_date, to_date, prefix) |> length(),
-                   NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
-                   ) * 100,
+        value: (open_count / total_count) * 100,
         color: "#ff0000"
       },
       %{
         label: "In Progress",
-        value: div(
-                    NumericalData.in_progress_workorders(site_id, from_date, to_date, prefix) |> length(),
-                    NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
-                    ) * 100,
+        value: (inprogress_count / total_count) * 100,
         color: "#00ff00"
       },
       %{
         label: "Closed",
-        value: div(
-                    NumericalData.completed_workorders(site_id, from_date, to_date, prefix) |> length(),
-                    NumericalData.get_for_workorder_count(site_id, from_date, to_date, prefix) |> length() |> change_nil_to_one()
-                    ) * 100,
+        value: (completed_count / total_count) * 100,
         color: "#ffbf00"
       }
     ]
+  end
+
+  def get_breakdown_workorder_status_shcart(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "BRK", prefix)
+    |> length()
+  end
+
+  def get_equipment_under_maintenance(site_id, prefix) do
+    NumericalData.get_equipment_with_status("OFF", %{"site_id" => site_id}, prefix)
+    |> length()
   end
 end

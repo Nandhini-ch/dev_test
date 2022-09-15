@@ -123,6 +123,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def change_nil_to_one(nil), do: 1
   def change_nil_to_one(0), do: 1
+  def change_nil_to_one([]), do: 1
   def change_nil_to_one(data), do: data
 
   def convert_nil_to_list(nil), do: []

@@ -82,8 +82,18 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "detailed_charts.json", data: data)
   end
 
-  def get_workorder_status_chart(conn, params) do
-    data = DashboardCharts.get_workorder_status_chart(params, conn.assigns.sub_domain_prefix)
+  def get_ticket_workorder_status_chart(conn, params) do
+    data = DashboardCharts.get_ticket_workorder_status_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_breakdown_workorder_status_chart(conn, params) do
+    data = DashboardCharts.get_breakdown_workorder_status_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_equipment_under_maintenance_chart(conn, params) do
+    data = DashboardCharts.get_equipment_under_maintenance_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
 end
