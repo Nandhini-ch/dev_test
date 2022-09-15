@@ -31,6 +31,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
+  def index_submitted_for_approval_grouped(conn, _params) do
+    transactions = InventoryManagement.list_transactions_submitted_for_approved_grouped(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "transaction_grouped.json", transactions: transactions)
+  end
+
   def index_prending_to_be_approved(conn, _params) do
     transactions = InventoryManagement.list_pending_transactions_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)

@@ -410,6 +410,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/transactions_grouped", TransactionController, :index_grouped
     get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
     get "/transaction_to_be_approved_grouped", TransactionController, :index_to_be_approved_grouped
+    get "/transaction_sent_for_approval", TransactionController, :index_submitted_for_approval_grouped
     get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
     get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
     post "/approve_transactions", TransactionController, :approve_transaction

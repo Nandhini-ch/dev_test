@@ -412,6 +412,17 @@ defmodule Inconn2Service.InventoryManagement do
     |> put_approval_status_for_transactions()
   end
 
+  def list_transactions_submitted_for_approved_grouped(user, prefix) do
+    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Enum.group_by(&(&1.transaction_reference))
+    |> rearrange_transaction_info()
+    |> put_approval_status_for_transactions()
+  end
+
 
   def list_pending_transactions_to_be_approved(user, prefix) do
     from(t in Transaction, where: t.transaction_user_id == ^user.id and t.is_approved != "AP")
@@ -611,7 +622,7 @@ defmodule Inconn2Service.InventoryManagement do
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
       _, query -> query
     end)
-  end  
+  end
 
   defp inventory_supplier_item_query(query, %{}), do: add_active_condition(query)
 
