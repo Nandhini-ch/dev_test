@@ -17,6 +17,11 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
     end
   end
 
+  def index_for_location(conn, %{"location_id" => location_id}) do
+    asset_categories = AssetConfig.list_asset_categories_for_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", asset_categories: asset_categories)
+  end
+
   def tree(conn, _params) do
     asset_categories = AssetConfig.list_asset_categories_tree(conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", asset_categories: asset_categories)

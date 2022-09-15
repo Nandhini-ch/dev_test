@@ -340,67 +340,72 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   def get_ppm_chart(params, prefix) do
-    case params["asset_category_ids"] do
-      nil -> get_ppms_for_assets(params, prefix)
-      _ -> get_ppms_using_asset_category_ids(params, prefix)
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_ppms_using_asset_category_ids(params, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_ppms_using_assets(params, prefix)
+
     end
   end
 
   def get_open_workorder_chart(params, prefix) do
-    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
-      NumericalData.get_workorder_for_chart(
-        params["site_id"],
-        from_date,
-        to_date,
-        params["asset_category_ids"],
-        nil,
-        nil,
-        [],
-        nil,
-        prefix) |> group_by_asset_category("open/ip")
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_open_workorder_using_asset_category_ids(params, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_open_workorder_using_assets(params, prefix)
+
+    end
   end
 
   def get_ticket_open_status_chart(params, prefix) do
     {from_date_time, to_date_time} =
-      get_site_date_time(params["from_date"], params["to_date"], params["site_id"], prefix)
-    NumericalData.get_work_requests(
-      params["site_id"],
-      from_date_time,
-      to_date_time,
-      prefix
-    ) |> group_by_ticket_category("open/ip/ticket")
+        get_site_date_time(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+    NumericalData.get_work_requests(params["site_id"], params, from_date_time, to_date_time, ["CL"], "not", prefix)
+    |> group_by_ticket_category("open/ip/ticket")
   end
 
-  defp get_ppms_for_assets(params, prefix) do
-    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
-    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
-    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
-    location_workorders =
-      NumericalData.get_workorder_for_chart(
-        params["site_id"],
-        from_date,
-        to_date,
-        nil,
-        location_ids,
-        "L",
-        [],
-        nil,
-        prefix) |> group_by_asset("scheduled/completed", "L", prefix)
+  def get_ticket_workorder_status_chart(params, prefix) do
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_workorder_status_for_asset_categories(params, "TKT", prefix)
 
-    equipment_workorders =
-      NumericalData.get_workorder_for_chart(
-        params["site_id"],
-        from_date,
-        to_date,
-        nil,
-        equipment_ids,
-        "E",
-        [],
-        nil,
-        prefix) |> group_by_asset("scheduled/completed", "E", prefix)
-    # Map.merge(location_workorders, equipment_workorders)
-    IO.inspect(equipment_workorders)
-    location_workorders ++ equipment_workorders
+      not is_nil(params["asset_ids"]) ->
+        get_workorder_status_for_assets(params, "TKT", prefix)
+
+    end
+  end
+
+  def get_breakdown_workorder_status_chart(params, prefix) do
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_workorder_status_for_asset_categories(params, "BRK", prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_workorder_status_for_assets(params, "BRK", prefix)
+
+    end
+  end
+
+  def get_equipment_under_maintenance_chart(params, prefix) do
+    site_dt = get_site_date_time_now(params["site_id"], prefix)
+
+    NumericalData.get_equipment_with_status("OFF", params, prefix)
+    |> Enum.map(fn equipment ->
+        %{
+          label: equipment.name,
+          dataSets: [
+              %{
+                  name: "Ageing",
+                  value: NumericalData.get_equipment_ageing(equipment, site_dt, prefix)
+              }
+          ]
+      }
+      end)
   end
 
   defp get_ppms_using_asset_category_ids(params, prefix) do
@@ -414,7 +419,137 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         nil,
         [],
         nil,
+        "PRV",
         prefix) |> group_by_asset_category("scheduled/completed")
+  end
+
+  defp get_ppms_using_assets(params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        location_ids,
+        "L",
+        [],
+        nil,
+        "PRV",
+        prefix) |> group_by_asset("scheduled/completed", "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        equipment_ids,
+        "E",
+        [],
+        nil,
+        "PRV",
+        prefix) |> group_by_asset("scheduled/completed", "E", prefix)
+
+    location_workorders ++ equipment_workorders
+  end
+
+  def get_open_workorder_using_asset_category_ids(params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        params["asset_category_ids"],
+        nil,
+        nil,
+        ["cp", "cn"],
+        "not",
+        nil,
+        prefix) |> group_by_asset_category("open/ip")
+  end
+
+  defp get_open_workorder_using_assets(params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        location_ids,
+        "L",
+        ["cp", "cn", "hl"],
+        "not",
+        nil,
+        prefix) |> group_by_asset("open/ip", "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        equipment_ids,
+        "E",
+        ["cp", "cn", "hl"],
+        "not",
+        nil,
+        prefix) |> group_by_asset("open/ip", "E", prefix)
+
+    location_workorders ++ equipment_workorders
+  end
+
+  defp get_workorder_status_for_asset_categories(params, type, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+      NumericalData.get_workorder_for_chart(
+          params["site_id"],
+          from_date,
+          to_date,
+          params["asset_category_ids"],
+          nil,
+          nil,
+          [],
+          nil,
+          type,
+          prefix) |> group_by_asset_category("workorder_status")
+  end
+
+  defp get_workorder_status_for_assets(params, type, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        location_ids,
+        "L",
+        [],
+        nil,
+        type,
+        prefix) |> group_by_asset("workorder_status", "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_workorder_for_chart(
+        params["site_id"],
+        from_date,
+        to_date,
+        nil,
+        equipment_ids,
+        "E",
+        [],
+        nil,
+        type,
+        prefix) |> group_by_asset("workorder_status", "E", prefix)
+
+    location_workorders ++ equipment_workorders
   end
 
   defp group_by_asset(work_orders, organize_for, asset_type, prefix) do
@@ -448,24 +583,48 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     end)
   end
 
-  defp calculate_datasets(work_orders, "scheduled/completed") do
+  defp calculate_datasets(work_orders, "workorder_status") do
     [
       %{
-        name: "Scheduled",
-        value: work_orders |> Enum.count()
+        name: "Open",
+        value: Stream.filter(work_orders, fn wo -> wo.status in ["cr", "as"] end) |> Enum.count()
       },
       %{
         name: "Completed",
         value: Stream.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+      },
+      %{
+        name: "In Progress",
+        value: Stream.filter(work_orders, fn wo -> wo.status not in ["cr", "as", "cp", "cn", "hl"] end) |> Enum.count()
+      }
+    ]
+  end
+
+  defp calculate_datasets(work_orders, "scheduled/completed") do
+    completed_count = Stream.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+    incomplete_count = Stream.filter(work_orders, fn wo -> wo.status != "cp" end) |> Enum.count()
+    total_count = Enum.count(work_orders) |> change_nil_to_one()
+
+    [
+      %{
+        name: "Scheduled",
+        value: (incomplete_count/total_count) * 100
+      },
+      %{
+        name: "Completed",
+        value: (completed_count/total_count) * 100
       }
     ]
   end
 
   defp calculate_datasets(work_orders, "open/ip") do
+    inprogress_count = Enum.count(work_orders, fn wo -> wo.status not in ["cr", "as"] end)
+    total_count = Enum.count(work_orders) |> change_nil_to_one()
+
     [
       %{
-        name: "Tickets",
-        value: div(Enum.map(work_orders, fn wo -> wo.status not in ["cr", "as"] end) |> Enum.count(), Enum.count(work_orders)) * 100
+        name: "Workorders",
+        value: (inprogress_count/total_count) * 100
       }
     ]
   end
@@ -474,11 +633,11 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Open",
-        value: Stream.filter(work_requests, fn wr -> wr.status not in ["CP"] end) |> Enum.count()
+        value: Stream.filter(work_requests, fn wr -> wr.status in ["RS", "ROP"] end) |> Enum.count()
       },
       %{
         name: "In Progress",
-        value: Stream.filter(work_requests, fn wr -> wr.status not in ["CR", "CP"] end) |> Enum.count()
+        value: Stream.filter(work_requests, fn wr -> wr.status in ["AP", "AS"] end) |> Enum.count()
       },
       %{
         name: "Completed",

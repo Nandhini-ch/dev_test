@@ -1,5 +1,7 @@
 defmodule Inconn2Service.Util.HelpersFunctions do
 
+  import Ecto.Query, warn: false
+  alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
 
   def is_date?(date) do
@@ -24,6 +26,11 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def get_success_or_failure_list(result, status) when is_atom(status) do
     Keyword.take(result, [status])
     |> Keyword.values()
+  end
+
+  def get_ids_from_query(query, prefix) do
+    from(q in query, select: q.id)
+    |> Repo.all(prefix: prefix)
   end
 
   def get_site_date_time_now(site_id, prefix) do
@@ -116,6 +123,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def change_nil_to_one(nil), do: 1
   def change_nil_to_one(0), do: 1
+  def change_nil_to_one([]), do: 1
   def change_nil_to_one(data), do: data
 
   def convert_nil_to_list(nil), do: []
