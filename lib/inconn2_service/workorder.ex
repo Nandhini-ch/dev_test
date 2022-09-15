@@ -949,6 +949,13 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def get_work_orders_submitted_for_approval(user, prefix) do
+    (from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"])
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
   def get_work_orders_to_be_approved(user, prefix) do
     WorkOrder
     |> where([status: "woap", workorder_approval_user_id: ^user.id])

@@ -180,6 +180,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
     put "/self_approve_pre_checks", WorkorderCheckController, :self_update_pre
     get "/work_orders/my_approvals", WorkOrderController, :workorder_in_my_approvals
+    get "/work_orders/submitted_for_approval", WorkOrderController, :work_orders_submitted_for_approval
     put "/pause_work_order/:id", WorkOrderController, :pause_work_order
     put "/resume_work_order/:id", WorkOrderController, :resume_work_order
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
@@ -242,6 +243,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_requests/approvals", WorkRequestController, :index_approval_required
     get "/work_requests/category_helpdesk", WorkRequestController, :index_tickets_of_helpdesk_user
     get "/work_requests/acknowledge", WorkRequestController, :index_for_acknowledgement
+    get "/work_requests/approval_pending", WorkRequestController, :index_for_approval_pending
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
     put "/update_work_requests", WorkRequestController, :update_multiple
