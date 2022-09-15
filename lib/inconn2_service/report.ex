@@ -13,7 +13,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Staff.{User, Employee}
   alias Inconn2Service.{Inventory, Staff}
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
-  alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
 
   def work_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
@@ -175,7 +175,7 @@ defmodule Inconn2Service.Report do
   def inventory_report(prefix, query_params) do
     rectified_query_params = rectify_query_params(query_params)
     query = inventory_report_query()
-    headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "UOM", "Aisle", "Row", "Bin", "Cost"]
+    headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "Reorder Level", "UOM", "Aisle", "Row", "Bin", "Cost", "Supplier"]
     query_with_params =
       Enum.reduce(rectified_query_params, query, fn
         {"transaction_type", transaction_type}, query -> from q in query, where: q.transaction_type == ^transaction_type
@@ -220,13 +220,15 @@ defmodule Inconn2Service.Report do
       left_join: i in InventoryItem, on: i.id == t.inventory_item_id,
       left_join: st in Stock, on: st.inventory_item_id == i.id and st.store_id == t.store_id,
       left_join: u in UnitOfMeasurement, on: u.id == t.unit_of_measurement_id,
-      join: s in Store, on: s.id == t.store_id,
+      left_join: s in Store, on: s.id == t.store_id,
+      left_join: su in InventorySupplier, on: su.id == t.inventory_supplier_id,
       select: %{
         date: t.transaction_date,
         item_name: i.name,
         item_type: i.item_type,
         store_name: s.name,
         site_id: s.site_id,
+        reorder_level: i.minimum_stock_level,
         transaction_type: t.transaction_type,
         transaction_quantity: t.quantity,
         asset_category_ids: i.asset_category_ids,
@@ -234,7 +236,8 @@ defmodule Inconn2Service.Report do
         aisle: t.aisle,
         bin: t.bin,
         row: t.row,
-        cost: t.cost
+        cost: t.cost,
+        supplier: su.name
       }
   end
 
@@ -447,7 +450,7 @@ defmodule Inconn2Service.Report do
     locations_data = get_location_details(prefix, query_params)
 
 
-    report_headers = ["Asset Name", "Asset Code", "Asset Category", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion Percentage"]
+    report_headers = ["Asset Name", "Asset Code", "Asset Category", "Asset Type", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion Percentage"]
 
     filters = filter_data(query_params, prefix)
 
@@ -586,6 +589,7 @@ defmodule Inconn2Service.Report do
       %{
         asset_name: e.name,
         asset_code: e.equipment_code,
+        asset_type: "Equipment",
         asset_category: AssetConfig.get_asset_category!(e.asset_category_id, prefix).name,
         status: e.status,
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
@@ -714,6 +718,7 @@ defmodule Inconn2Service.Report do
       %{
         asset_name: l.name,
         asset_code: l.location_code,
+        asset_type: "Location",
         asset_category: AssetConfig.get_asset_category!(l.asset_category_id, prefix).name,
         status: l.status,
         criticality: (if l.criticality <= 2, do: "Critical", else: "Not Critical"),
@@ -1099,6 +1104,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_type
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.status
         ],
         [
@@ -1220,6 +1230,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.reorder_level
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.uom
         ],
         [
@@ -1242,6 +1257,11 @@ defmodule Inconn2Service.Report do
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.cost
         ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.supplier
+        ]
       ]
     end)
   end
@@ -1326,7 +1346,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_inventory_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.uom, d.aisle, d.bin, d.row, d.cost]
+        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.bin, d.row, d.cost, d.supplier]
       end)
 
     [report_headers] ++ body
@@ -1344,7 +1364,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_asset_status_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, d.asset_category, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
+        [d.asset_name, d.asset_code, d.asset_category, d.asset_type, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
       end)
 
     [report_headers] ++ body

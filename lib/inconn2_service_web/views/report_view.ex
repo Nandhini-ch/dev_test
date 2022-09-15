@@ -33,7 +33,9 @@ defmodule Inconn2ServiceWeb.ReportView do
       aisle: item.aisle,
       bin: item.bin,
       row: item.row,
-      cost: item.cost
+      cost: item.cost,
+      reorder_level: item.reorder_level,
+      supplier: item.supplier
     }
   end
 end
