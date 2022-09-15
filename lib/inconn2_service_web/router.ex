@@ -71,6 +71,7 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
+    get "/asset_categories_for_location/:location_id", AssetCategoryController, :index_for_location
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
@@ -97,6 +98,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
     get "/sites/:site_id/locations/leaves", LocationController, :leaves
+    get "/assets_for_location/:location_id", LocationController, :get_assets_for_location
     get "/download_locations", ReferenceDownloadController, :download_locations
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
@@ -444,6 +446,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/rosters", RosterController, :create_or_update
 
     get "/meter_assets", DashboardsController, :get_assets_for_dashboards
+    get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
 
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
 

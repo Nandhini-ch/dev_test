@@ -273,6 +273,15 @@ defmodule Inconn2Service.AssetConfig do
     from(a in AssetCategory, where: a.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
+  def list_asset_categories_for_location(location_id, prefix) do
+    {locations, equipments} = get_assets_for_location(location_id, prefix)
+
+    locations ++ equipments
+    |> Stream.map(&(&1.asset_category_id))
+    |> Enum.uniq()
+    |> get_asset_category_by_ids(prefix)
+  end
+
   def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
   def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
   def get_asset_category_by_ids(ids, prefix) do
@@ -580,6 +589,16 @@ defmodule Inconn2Service.AssetConfig do
       |> MapSet.to_list()
 
     from(l in Location, where: l.id in ^ids) |> Repo.all(prefix: prefix)
+  end
+
+  def get_assets_for_location(location_id, prefix) do
+    locations = get_location!(location_id, prefix)
+                |> HierarchyManager.subtree()
+                |> Repo.all(prefix: prefix)
+
+    equipments = list_equipments_by_location_ids(Enum.map(locations, &(&1.id)), prefix)
+
+    {locations, equipments}
   end
 
   def get_asset_ids_for_location(location_id, prefix) do
@@ -977,6 +996,11 @@ defmodule Inconn2Service.AssetConfig do
         asset_qr_url: "/api/equipments/#{e.id}/qr_code"
       }
     end)
+  end
+
+  def list_equipments_by_location_ids(location_ids, prefix) do
+    from(e in Equipment, where: e.location_id in ^location_ids)
+    |> Repo.all(prefix: prefix)
   end
 
   def list_equipments_by_ids(ids, prefix) do

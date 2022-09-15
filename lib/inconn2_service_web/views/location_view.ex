@@ -86,4 +86,27 @@ defmodule Inconn2ServiceWeb.LocationView do
       children: render_many(location.children, LocationView, "location_node.json")
     }
   end
+
+  def render("assets.json", %{locations: locations, equipments: equipments}) do
+    %{data:
+        render_many(locations, LocationView, "location_asset_node.json") ++
+        render_many(equipments, LocationView, "equipment_asset_node.json")
+      }
+  end
+
+  def render("location_asset_node.json", %{location: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      type: "L"
+    }
+  end
+
+  def render("equipment_asset_node.json", %{location: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      type: "E"
+    }
+  end
 end
