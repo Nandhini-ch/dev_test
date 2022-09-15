@@ -2,7 +2,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
-  alias Inconn2Service.AssetConfig
 
   def get_numerical_charts_for_24_hours(site_id, prefix) do
 
@@ -244,16 +243,16 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     fuel_consumption = NumericalData.get_fuel_consumption_for_assets(generators, from_dt, to_dt, prefix)
                       |> change_nil_to_one()
 
-    energy_consumption / fuel_consumption
+    calculate_percentage(energy_consumption, fuel_consumption)
   end
 
   def get_ppm_compliance(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    completed_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp"], "in", "PRV", prefix) |> Enum.count() |> change_nil_to_one()
-    progressing_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp", "cn"], "not", "PRV", prefix) |> Enum.count()
+    scheduled_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "PRV", prefix) |> Enum.count() |> change_nil_to_one()
+    completed_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp"], "in", "PRV", prefix) |> Enum.count()
 
-    (progressing_wo / completed_wo) * 100
+    calculate_percentage(completed_wo, scheduled_wo)
   end
 
   def get_open_workorder_status(site_id, prefix) do
@@ -262,7 +261,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     open_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp", "cn"], "not", nil, prefix) |> Enum.count() |> change_nil_to_one()
     inprogress_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cr", "as", "cp", "cn"], "not", nil, prefix) |> Enum.count()
 
-    (inprogress_wo / open_wo) * 100
+    calculate_percentage(inprogress_wo, open_wo)
   end
 
   def get_open_ticket_status(site_id, prefix) do
@@ -278,22 +277,22 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     total_count = total_wo |> length() |> change_nil_to_one()
     open_count = Enum.count(total_wo, fn wo -> wo.status in ["cr", "as"] end)
     completed_count = Enum.count(total_wo, fn wo -> wo.status == "cp" end)
-    inprogress_count = Enum.count(total_wo, fn wo -> wo.status not in ["cr", "as", "cp", "cn", "hl"] end)
+    inprogress_count = Enum.count(total_wo, fn wo -> wo.status not in ["cr", "as", "cp",] end)
 
     [
       %{
         label: "Open",
-        value: (open_count / total_count) * 100,
+        value: calculate_percentage(open_count, total_count),
         color: "#ff0000"
       },
       %{
         label: "In Progress",
-        value: (inprogress_count / total_count) * 100,
+        value: calculate_percentage(inprogress_count, total_count),
         color: "#00ff00"
       },
       %{
         label: "Closed",
-        value: (completed_count / total_count) * 100,
+        value: calculate_percentage(completed_count, total_count),
         color: "#ffbf00"
       }
     ]
