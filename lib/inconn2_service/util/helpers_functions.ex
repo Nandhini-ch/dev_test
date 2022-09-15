@@ -118,6 +118,12 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
+  def calculate_percentage(numerator, 0), do: numerator
+  def calculate_percentage(numerator, denominator) do
+    ((numerator/denominator) * 100)
+    |> Float.ceil(2)
+  end
+
   def change_nil_to_zero(nil), do: 0
   def change_nil_to_zero(data), do: data
 
