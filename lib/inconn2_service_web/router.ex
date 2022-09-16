@@ -359,6 +359,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites_for_attendance", EmployeeRosterController, :index_sites_for_attendance
     get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]
+    get "/attendances_for_user", AttendanceController, :index_for_user
     resources "/attendance_references", AttendanceReferenceController, except: [:new, :edit]
     get "/attendance_reference_for_employee", AttendanceReferenceController, :get_attendance_reference_for_employee
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
