@@ -211,6 +211,7 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/employees_of_party", EmployeeController, :index_of_party
     get "/reportees", EmployeeController, :reportees_for_logged_in_user
     get "/employees/:employee_id/reportees", EmployeeController, :reportees_for_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
