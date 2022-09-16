@@ -418,9 +418,6 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
-    |> Enum.group_by(&(&1.transaction_reference))
-    |> rearrange_transaction_info()
-    |> put_approval_status_for_transactions()
   end
 
 
