@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.EmployeeController do
     render(conn, "index.json", employees: employees)
   end
 
+  def index_of_party(conn, _params) do
+    employees = Staff.list_employees_of_party(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index_without_preloads.json", employees: employees)
+  end
+
   def reportees_for_logged_in_user(conn, _params) do
     employees = Staff.get_reportees_for_logged_in_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", employees: employees)

@@ -225,6 +225,13 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_employees_of_party(user, prefix) do
+    Employee
+    |> where([party_id: ^user.party_id])
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_employees(%{"designation_id" => designation_id}, user, prefix) do
       filters = filter_by_user_is_licensee(user, prefix)
       Employee

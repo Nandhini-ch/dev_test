@@ -6,6 +6,10 @@ defmodule Inconn2ServiceWeb.EmployeeView do
     %{data: render_many(employees, EmployeeView, "employee.json")}
   end
 
+  def render("index_without_preloads.json", %{employees: employees}) do
+    %{data: render_many(employees, EmployeeView, "employee_without_org_unit.json")}
+  end
+
   def render("show.json", %{employee: employee}) do
     %{data: render_one(employee, EmployeeView, "employee.json")}
   end
