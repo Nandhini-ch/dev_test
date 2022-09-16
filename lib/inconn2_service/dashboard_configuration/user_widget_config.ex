@@ -6,6 +6,7 @@ defmodule Inconn2Service.DashboardConfiguration.UserWidgetConfig do
   schema "user_widget_configs" do
     field :position, :integer
     field :widget_code, :string
+    field :device, :string
     belongs_to :user, User
 
     timestamps()
@@ -14,7 +15,8 @@ defmodule Inconn2Service.DashboardConfiguration.UserWidgetConfig do
   @doc false
   def changeset(user_widget_config, attrs) do
     user_widget_config
-    |> cast(attrs, [:widget_code, :position, :user_id])
-    |> validate_required([:widget_code, :position, :user_id])
+    |> cast(attrs, [:widget_code, :position, :user_id, :device])
+    |> validate_required([:widget_code, :position, :user_id, :device])
+    |> validate_inclusion(:device, ["web", "mob"])
   end
 end

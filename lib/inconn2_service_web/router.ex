@@ -444,7 +444,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/widgets", WidgetController, except: [:new, :edit]
     get "/user_widget_configs", UserWidgetConfigController, :index
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
-    delete "/user_widget_configs", UserWidgetConfigController, :delete
 
     get "/rosters", RosterController, :index
     post "/rosters", RosterController, :create_or_update
