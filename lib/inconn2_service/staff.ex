@@ -456,6 +456,13 @@ defmodule Inconn2Service.Staff do
     |> Repo.preload(employee: :org_unit)
   end
 
+  def get_reportee_users(user, _prefix) when is_nil(user.employee_id), do: []
+  def get_reportee_users(user, prefix) when not is_nil(user.employee_id) do
+    from(e in Employee, where: e.reports_to == ^user.employee_id and e.active,
+      join: u in User, on: u.employee_id == e.id,
+      select: u)
+    |> Repo.all(prefix: prefix)
+  end
 
   def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
   def get_user(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)

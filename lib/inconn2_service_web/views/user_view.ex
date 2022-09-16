@@ -6,6 +6,10 @@ defmodule Inconn2ServiceWeb.UserView do
     %{data: render_many(users, UserView, "user.json")}
   end
 
+  def render("index_without_preloads.json", %{users: users}) do
+    %{data: render_many(users, UserView, "user_without_preloads.json")}
+  end
+
   def render("show.json", %{user: user}) do
     %{data: render_one(user, UserView, "user.json")}
   end
@@ -51,6 +55,19 @@ defmodule Inconn2ServiceWeb.UserView do
       first_name: user.first_name,
       last_name: user.last_name,
       employee: render_one(user.employee, EmployeeView, "employee_without_org_unit.json")
+    }
+  end
+
+  def render("user_without_preloads.json", %{user: user}) do
+    %{
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      mobile_no: user.mobile_no,
+      party_id: user.party_id,
+      role_id: user.role_id,
+      first_name: user.first_name,
+      last_name: user.last_name
     }
   end
 

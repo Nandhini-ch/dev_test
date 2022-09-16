@@ -216,6 +216,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
     resources "/users", UserController, except: [:new, :edit]
+    get "/reportee_users", UserController, :reportee_users
     put "/users/:id/change_password", UserController, :change_password
     get "/download_users", ReferenceDownloadController, :download_users
     resources "/modules", ModuleController, only: [:index, :show]
