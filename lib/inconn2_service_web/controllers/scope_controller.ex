@@ -55,7 +55,7 @@ defmodule Inconn2ServiceWeb.ScopeController do
   def delete(conn, %{"id" => id}) do
     scope = ContractManagement.get_scope!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Scope{}} <- ContractManagement.delete_scope(scope, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- ContractManagement.delete_scope(scope, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

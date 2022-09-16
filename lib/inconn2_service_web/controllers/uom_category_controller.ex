@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.UomCategoryController do
   def delete(conn, %{"id" => id}) do
     uom_category = InventoryManagement.get_uom_category!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %UomCategory{}} <- InventoryManagement.delete_uom_category(uom_category, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- InventoryManagement.delete_uom_category(uom_category, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

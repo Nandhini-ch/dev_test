@@ -54,7 +54,7 @@ defmodule Inconn2ServiceWeb.TaskListController do
   def delete(conn, %{"id" => id}) do
     task_list = WorkOrderConfig.get_task_list!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %TaskList{}} <- WorkOrderConfig.delete_task_list(task_list, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- WorkOrderConfig.delete_task_list(task_list, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
