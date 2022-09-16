@@ -10,10 +10,44 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
-  alias Inconn2Service.Staff.{User, Employee}
+  alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit}
   alias Inconn2Service.{Inventory, Staff}
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
+
+  def people_report(prefix, query_params) do
+    report_headers = ["First Name", "Last Name", "Designation", "Department", "Employee Code", "Attendance Percentage", "Work Done Time"]
+    filters = filter_data(query_params, prefix)
+    result =
+      people_report_query(query_params)
+      |> Repo.all(prefix: prefix)
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("People Report", filters, result, report_headers, "PPL")
+
+      "csv" ->
+        csv_for_people_report(report_headers, result)
+
+      _ ->
+        result
+    end
+  end
+
+  defp people_report_query(query_params) do
+    from(e in Employee, where: e.party_id == ^query_params["party_id"],
+          left_join: d in Designation, on: e.designation_id == d.id,
+          left_join: o in OrgUnit, on: e.org_unit_id == o.id,
+          select: %{
+            first_name: e.first_name,
+            last_name: e.last_name,
+            emp_code: e.employee_id,
+            designation: d.name,
+            department: o.name,
+            attendance_percentage: nil,
+            work_done_time: nil
+    })
+  end
 
   def work_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
@@ -1082,6 +1116,49 @@ defmodule Inconn2Service.Report do
     ]
   end
 
+  defp create_table_body(report_body_json, "PPL") do
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.first_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.last_name
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.emp_code
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.designation
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.department
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.attendance_percentage
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.work_done_time
+        ]
+      ]
+    end)
+  end
+
   defp create_table_body(report_body_json, "AST") do
     Enum.map(report_body_json, fn rbj ->
       [
@@ -1365,6 +1442,15 @@ defmodule Inconn2Service.Report do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.asset_code, d.asset_category, d.asset_type, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
+      end)
+
+    [report_headers] ++ body
+  end
+
+  defp csv_for_people_report(report_headers, data) do
+    body =
+      Enum.map(data, fn d ->
+        [d.first_name, d.last_name, d.designation, d.department, d.emp_code, d.attendance_percentage, d.work_done_time]
       end)
 
     [report_headers] ++ body
