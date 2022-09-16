@@ -450,6 +450,11 @@ defmodule Inconn2ServiceWeb.Router do
     get "/rosters", RosterController, :index
     post "/rosters", RosterController, :create_or_update
 
+    resources "/teams", TeamController, except: [:new, :edit]
+    get "/teams/:team_id/team_members", TeamMemberController, :index
+    post "/teams/:team_id/team_members", TeamMemberController, :create
+    delete "/teams/:team_id/team_members", TeamMemberController, :delete
+
     get "/meter_assets", DashboardsController, :get_assets_for_dashboards
     get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
 

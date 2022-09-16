@@ -275,4 +275,13 @@ defmodule Inconn2Service.Util.IndexQueries do
       _ , query -> query
     end)
   end
+
+  def team_member_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"employee_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
+      {"employee_ids", employee_ids}, query -> from q in query, where: q.employee_id in ^employee_ids
+      {"team_id", team_id}, query -> from q in query, where: q.team_id == ^team_id
+      _ , query -> query
+    end)
+  end
 end
