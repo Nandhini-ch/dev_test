@@ -373,17 +373,18 @@ defmodule Inconn2Service.Assignment do
     Map.put(attendance, :shift, shift)
   end
 
-  defp get_date_time_for_query(query_params, prefix) do
+  defp get_date_time_for_query(query_params, _prefix) do
     if query_params["from_date"] != nil and query_params["to_date"] != nil do
       {from_date, to_date} = {NaiveDateTime.from_iso8601!(query_params["from_date"] <> " 00:00:00"), NaiveDateTime.from_iso8601!(query_params["to_date"] <> " 23:59:59")}
       Map.put(query_params, "from_date", from_date)
       |> Map.put("to_date", to_date)
     else
-      site = AssetConfig.get_site!(query_params["site_id"], prefix)
-      date = DateTime.now!(site.time_zone) |> DateTime.to_date()
-      {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
-      Map.put(query_params, "from_date", from_date)
-      |> Map.put("to_date", to_date)
+      # site = AssetConfig.get_site!(query_params["site_id"], prefix)
+      # date = DateTime.now!(site.time_zone) |> DateTime.to_date()
+      # {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
+      # Map.put(query_params, "from_date", from_date)
+      # |> Map.put("to_date", to_date)
+      query_params
     end
   end
 
