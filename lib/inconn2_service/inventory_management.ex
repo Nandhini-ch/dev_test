@@ -517,6 +517,11 @@ defmodule Inconn2Service.InventoryManagement do
     stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:inventory_item, :store])
   end
 
+  def list_stocks_for_storekeeper(user, prefix) do
+    store_ids = list_stores(%{"storekeeper_user_id" => user.id}, prefix) |> Enum.map(fn s -> s.id end)
+    list_stocks(%{"store_ids" => store_ids}, prefix)
+  end
+
   def get_stock!(id, prefix), do: Repo.get!(Stock, id, prefix: prefix)
 
   def create_stock(attrs \\ %{}, prefix) do
@@ -617,6 +622,7 @@ defmodule Inconn2Service.InventoryManagement do
     Enum.reduce(query_params, query, fn
       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+      {"store_ids", store_ids}, query -> from q in query, where: q.store_id in ^store_ids
       _, query -> query
     end)
   end

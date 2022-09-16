@@ -418,6 +418,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
 
 
+    get "/stocks_for_storekeeper", StockController, :index_for_storekeeper
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
