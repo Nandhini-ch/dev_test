@@ -169,7 +169,7 @@ defmodule Inconn2Service.Ticket do
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
-    |> Enum.map(fn wr -> exclude_work_request_approved(wr, current_user, prefix) end)
+    |> Enum.filter(fn wr -> exclude_work_request_approved(wr, current_user, prefix) end)
   end
 
   defp exclude_work_request_approved(work_request, current_user, prefix) do
