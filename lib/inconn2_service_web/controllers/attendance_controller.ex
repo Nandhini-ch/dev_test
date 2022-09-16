@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.AttendanceController do
     render(conn, "index.json", attendances: attendances)
   end
 
+  def index_for_user(conn, _params) do
+    attendances = Assignment.list_attendances_for_user(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", attendances: attendances)
+  end
+
   def create(conn, %{"attendance" => attendance_params}) do
     with {:ok, %Attendance{} = attendance} <- Assignment.create_attendance(attendance_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
