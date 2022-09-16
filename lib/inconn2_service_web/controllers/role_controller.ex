@@ -37,7 +37,7 @@ defmodule Inconn2ServiceWeb.RoleController do
   def delete(conn, %{"id" => id}) do
     role = Staff.get_role!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Role{}} <- Staff.delete_role(role, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Staff.delete_role(role, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

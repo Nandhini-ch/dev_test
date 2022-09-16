@@ -41,7 +41,7 @@ defmodule Inconn2ServiceWeb.ContractController do
   def delete(conn, %{"id" => id}) do
     contract = ContractManagement.get_contract!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Contract{}} <- ContractManagement.delete_contract(contract, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- ContractManagement.delete_contract(contract, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

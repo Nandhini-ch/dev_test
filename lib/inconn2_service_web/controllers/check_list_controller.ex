@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.CheckListController do
   def delete(conn, %{"id" => id}) do
     check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %CheckList{}} <- CheckListConfig.delete_check_list(check_list, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- CheckListConfig.delete_check_list(check_list, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

@@ -2,7 +2,7 @@ defmodule Inconn2ServiceWeb.ManpowerConfigurationController do
   use Inconn2ServiceWeb, :controller
 
   alias Inconn2Service.ContractManagement
-  alias Inconn2Service.ContractManagement.ManpowerConfiguration
+  # alias Inconn2Service.ContractManagement.ManpowerConfiguration
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
@@ -44,7 +44,7 @@ defmodule Inconn2ServiceWeb.ManpowerConfigurationController do
   def delete(conn, %{"id" => id}) do
     manpower_configuration = ContractManagement.get_manpower_configuration!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %ManpowerConfiguration{}} <- ContractManagement.delete_manpower_configuration(manpower_configuration, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- ContractManagement.delete_manpower_configuration(manpower_configuration, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

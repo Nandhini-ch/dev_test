@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.MasterTaskTypeController do
   def delete(conn, %{"id" => id}) do
     master_task_type = WorkOrderConfig.get_master_task_type!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %MasterTaskType{}} <- WorkOrderConfig.delete_master_task_type(master_task_type, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- WorkOrderConfig.delete_master_task_type(master_task_type, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

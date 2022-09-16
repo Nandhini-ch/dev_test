@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.CheckTypeController do
   def delete(conn, %{"id" => id}) do
     check_type = CheckListConfig.get_check_type!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %CheckType{}} <- CheckListConfig.delete_check_type(check_type, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- CheckListConfig.delete_check_type(check_type, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

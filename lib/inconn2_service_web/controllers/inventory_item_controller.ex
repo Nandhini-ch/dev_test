@@ -41,7 +41,7 @@ defmodule Inconn2ServiceWeb.InventoryItemController do
   def delete(conn, %{"id" => id}) do
     inventory_item = InventoryManagement.get_inventory_item!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %InventoryItem{}} <- InventoryManagement.delete_inventory_item(inventory_item, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- InventoryManagement.delete_inventory_item(inventory_item, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

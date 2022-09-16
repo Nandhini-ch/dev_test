@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.DesignationController do
   def delete(conn, %{"id" => id}) do
     designation = Staff.get_designation!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Designation{}} <- Staff.delete_designation(designation, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Staff.delete_designation(designation, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

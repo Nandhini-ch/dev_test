@@ -50,20 +50,20 @@ defmodule Inconn2ServiceWeb.EmployeeController do
   def delete(conn, %{"id" => id}) do
     employee = Staff.get_employee!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Employee{}} <- Staff.delete_employee(employee, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Staff.delete_employee(employee, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
 
-  defp temporary_patch_for_skills(employee_params) do
-    skills = employee_params["skills"]
-    if skills != [] or skills != nil do
-      skills = Enum.map(skills, fn skill -> skill["id"] end)
-      Map.put(employee_params, "skills", skills)
-    else
-      employee_params
-    end
-  end
+  # defp temporary_patch_for_skills(employee_params) do
+  #   skills = employee_params["skills"]
+  #   if skills != [] or skills != nil do
+  #     skills = Enum.map(skills, fn skill -> skill["id"] end)
+  #     Map.put(employee_params, "skills", skills)
+  #   else
+  #     employee_params
+  #   end
+  # end
 
   def temporary_fix_for_role_id(employee_params) do
     if Map.has_key?(employee_params, "role") do

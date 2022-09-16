@@ -46,8 +46,8 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveController do
     render(conn, "success.json", alert_notification_reserve: %{data: "success"})
   end
 
-  def populate_alerts(conn, _params) do
-    Inconn2Service.SeedAlert.seed_alerts()
-    render(conn, "success.json", alert_notification_reserve: %{data: "success"})
-  end
+  # def populate_alerts(conn, _params) do
+  #   Inconn2Service.SeedAlert.seed_alerts()
+  #   render(conn, "success.json", alert_notification_reserve: %{data: "success"})
+  # end
 end

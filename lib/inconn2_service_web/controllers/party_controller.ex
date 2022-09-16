@@ -37,7 +37,7 @@ defmodule Inconn2ServiceWeb.PartyController do
   def delete(conn, %{"id" => id}) do
     party = AssetConfig.get_party!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Party{}} <- AssetConfig.delete_party(party, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- AssetConfig.delete_party(party, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

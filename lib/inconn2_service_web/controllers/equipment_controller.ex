@@ -95,7 +95,7 @@ defmodule Inconn2ServiceWeb.EquipmentController do
   def delete(conn, %{"id" => id}) do
     equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
 
-    with {_, nil} <-
+    with {:deleted, _} <-
            AssetConfig.delete_equipment(equipment, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end

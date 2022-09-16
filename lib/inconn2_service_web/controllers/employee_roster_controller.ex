@@ -72,7 +72,7 @@ defmodule Inconn2ServiceWeb.EmployeeRosterController do
   def delete(conn, %{"id" => id}) do
     employee_roster = Assignment.get_employee_roster!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %EmployeeRoster{}} <- Assignment.delete_employee_roster(employee_roster, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Assignment.delete_employee_roster(employee_roster, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

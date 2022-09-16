@@ -51,7 +51,7 @@ defmodule Inconn2ServiceWeb.HolidayController do
   def delete(conn, %{"id" => id}) do
     holiday = Settings.get_holiday!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Holiday{}} <- Settings.delete_holiday(holiday, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Settings.delete_holiday(holiday, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskController do
   def delete(conn, %{"id" => id}) do
     category_helpdesk = Ticket.get_category_helpdesk!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %CategoryHelpdesk{}} <- Ticket.delete_category_helpdesk(category_helpdesk, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Ticket.delete_category_helpdesk(category_helpdesk, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

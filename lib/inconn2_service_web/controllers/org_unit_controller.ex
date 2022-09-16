@@ -46,7 +46,7 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
   def delete(conn, %{"id" => id}) do
     org_unit = Staff.get_org_unit!(id, conn.assigns.sub_domain_prefix)
 
-    with {_, nil} <- Staff.delete_org_unit(org_unit, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Staff.delete_org_unit(org_unit, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

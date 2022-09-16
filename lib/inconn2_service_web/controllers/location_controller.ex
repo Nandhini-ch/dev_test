@@ -90,18 +90,18 @@ defmodule Inconn2ServiceWeb.LocationController do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
     # <<<<<<< Updated upstream
-    with {_, nil} <-
+    with {:deleted, _} <-
            AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
       # =======
-      case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
-        {:ok, %Location{}} ->
-          send_resp(conn, :no_content, "")
+      # case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
+      #   {:ok, %Location{}} ->
+      #     send_resp(conn, :no_content, "")
 
-        {_, nil} ->
-          send_resp(conn, :no_content, "")
-          # >>>>>>> Stashed changes
-      end
+      #   {_, nil} ->
+      #     send_resp(conn, :no_content, "")
+      #     # >>>>>>> Stashed changes
+      # end
     end
   end
 
