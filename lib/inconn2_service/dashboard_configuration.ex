@@ -8,21 +8,38 @@ defmodule Inconn2Service.DashboardConfiguration do
 
   alias Inconn2Service.DashboardConfiguration.UserWidgetConfig
 
-  def list_user_widget_configs(user_id, prefix) do
-    from(uwc in UserWidgetConfig, where: uwc.user_id == ^user_id)
+  def list_user_widget_configs(params, user, prefix) do
+    user_id = get_user_from_map(params, user)
+    list_user_widget_configs_for_user(user_id, params["device"], prefix)
+  end
+
+  def list_user_widget_configs_for_user(user_id, device, prefix) do
+    from(uwc in UserWidgetConfig, where: uwc.user_id == ^user_id and uwc.device == ^device)
     |> Repo.all(prefix: prefix)
     |> preload_widgets()
   end
 
-  def get_widget_config_by_code_and_user(widget_code, user_id, prefix) do
-    from(uwc in UserWidgetConfig, where: uwc.user_id == ^user_id and uwc.widget_code == ^widget_code)
+  def get_widget_config_by_code_and_user_and_device(widget_code, user_id, device, prefix) do
+    from(uwc in UserWidgetConfig, where: uwc.user_id == ^user_id and uwc.widget_code == ^widget_code and uwc.device == ^device)
     |> Repo.one(prefix: prefix)
   end
 
   def get_user_widget_config!(id, prefix), do: Repo.get!(UserWidgetConfig, id, prefix: prefix)
 
-  def create_or_update_configs(attrs_list \\ [], user, prefix) do
-    result = create_or_update_multiple_widget_configs(attrs_list, user, prefix)
+  def create_or_update_configs(attrs, user, prefix) do
+    user_id = get_user_from_map(attrs, user)
+
+    list_user_widget_configs_for_user(user_id, attrs["device"], prefix)
+    |> Stream.map(&Task.async(fn -> delete_user_widget_config(&1, prefix) end))
+    |> Enum.map(&Task.await/1)
+
+    result =
+      attrs["config"]
+      |> Stream.map(fn config ->
+            config |> Map.put("device", attrs["device"]) |> Map.put("user_id", user_id)
+         end)
+      |> Stream.map(&Task.async(fn -> create_user_widget_config(&1, prefix) end))
+      |> Enum.map(&Task.await/1)
 
     failures = get_success_or_failure_list(result, :error)
     case length(failures) do
@@ -32,24 +49,6 @@ defmodule Inconn2Service.DashboardConfiguration do
 
       _ ->
         {:multiple_error, failures}
-    end
-  end
-
-  def create_or_update_multiple_widget_configs(attrs_list, user, prefix) do
-    Enum.map(attrs_list, fn attrs ->
-      if is_nil(attrs["user_id"]) do
-        create_or_update_individual_widget_config(Map.put(attrs, "user_id", user.id), prefix)
-      else
-        create_or_update_individual_widget_config(attrs, prefix)
-      end
-    end)
-  end
-
-  def create_or_update_individual_widget_config(attrs, prefix) do
-    widget_config = get_widget_config_by_code_and_user(attrs["widget_code"], attrs["user_id"], prefix)
-    case widget_config do
-      nil -> create_user_widget_config(attrs, prefix)
-      _ -> update_user_widget_config(widget_config, attrs, prefix)
     end
   end
 
@@ -77,22 +76,8 @@ defmodule Inconn2Service.DashboardConfiguration do
     |> Repo.update(prefix: prefix)
   end
 
-  def delete_user_widget_configs(delete_list, user, prefix) do
-    Enum.map(delete_list, fn delete_map ->
-        get_widget_config_by_code_and_user(
-          delete_map["widget_code"],
-          get_user_from_map(delete_map, user),
-          prefix)
-        |> Repo.delete(prefix: prefix)
-    end)
-  end
-
-  def delete_user_widget_config(params, user, prefix) do
-    get_widget_config_by_code_and_user(
-          params["widget_code"],
-          get_user_from_map(params, user),
-          prefix)
-    |> Repo.delete(prefix: prefix)
+  def delete_user_widget_config(%UserWidgetConfig{} = user_widget_config, prefix) do
+    Repo.delete(user_widget_config, prefix: prefix)
   end
 
   def change_user_widget_config(%UserWidgetConfig{} = user_widget_config, attrs \\ %{}) do
