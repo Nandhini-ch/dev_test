@@ -164,7 +164,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP"]
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP", "ROP", "CS"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
