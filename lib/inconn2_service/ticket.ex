@@ -169,6 +169,12 @@ defmodule Inconn2Service.Ticket do
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Enum.map(fn wr -> exclude_work_request_approved(wr, current_user, prefix) end)
+  end
+
+  defp exclude_work_request_approved(work_request, current_user, prefix) do
+    from(a in Inconn2Service.Ticket.Approval, where: a.work_request_id == ^work_request.id and a.user_id == ^current_user.id)
+    |> Repo.exists?(prefix: prefix)
   end
 
   def list_work_requests_sent_for_approval(current_user, prefix) do
