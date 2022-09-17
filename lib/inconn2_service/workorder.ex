@@ -932,7 +932,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_order_for_team(user, prefix) when not is_nil(user.employee_id) do
-    teams = Staff.get_teams_ids_for_user(user, prefix)
+    teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
     from(wo in WorkOrder, where: wo.user_id in ^team_user_ids and not wo.is_deactivated and wo.status in ["cp", "cn"])
     |> Repo.all(prefix: prefix)

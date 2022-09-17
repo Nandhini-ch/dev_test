@@ -1050,7 +1050,9 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
-  def get_teams_ids_for_user(_user, _prefix), do: []
+  def get_team_ids_for_user(_user, _prefix) do
+    []
+  end
 
 
   def get_team_users(teams, prefix) do
@@ -1058,7 +1060,7 @@ defmodule Inconn2Service.Staff do
     from(tm in TeamMember, where: tm.team_id in ^team_ids)
     |> Repo.all(prefix: prefix)
     |> Enum.uniq()
-    |> Stream.map(fn e -> get_user_from_employee(e.id, prefix) end)
+    |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
     |> Enum.filter(fn u -> !is_nil(u) end)
   end
 end
