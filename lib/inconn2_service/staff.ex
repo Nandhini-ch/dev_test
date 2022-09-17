@@ -1031,7 +1031,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
-  def get_teams_for_user(_user, _prefix), do: []
+  def get_teams_ids_for_user(_user, _prefix), do: []
 
 
   def get_team_users(teams, prefix) do

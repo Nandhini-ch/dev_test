@@ -849,6 +849,24 @@ defmodule Inconn2Service.Workorder do
      get_work_order_premits_to_be_approved(user, prefix) ++ get_work_orders_to_be_approved(user, prefix) ++ get_work_order_to_be_acknowledged(user, prefix) ++ get_work_order_loto_to_be_checked(user, prefix)
   end
 
+  def get_work_order_in_approval_for_teams(user, prefix) when not is_nil(user.employee_id) do
+    teams = Staff.get_teams_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    from(wo in WorkOrder, where: wo.workorder_approval_user_id in ^team_user_ids or
+                                 wo.loto_checker_user_id in ^team_user_ids or
+                                 wo.workorder_acknowledgement_user_id in ^team_user_ids)
+    |> Repo.all(prefix: prefix)
+    |> filter_for_workpermit_approval_in_team(team_user_ids)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
+  def get_work_order_in_approval_for_teams(_user, _prefix), do: []
+
+  def filter_for_workpermit_approval_in_team(work_orders, team_user_ids) do
+    Enum.filter(work_orders, fn wo -> List.first(wo.workpermit_approval_user_ids) in team_user_ids end)
+  end
+
 
   def list_active_work_orders(prefix) do
     query = from wo in WorkOrder, where: wo.status != "cp"
