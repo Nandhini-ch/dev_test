@@ -356,6 +356,11 @@ defmodule Inconn2Service.Assignment do
     |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
   end
 
+  def list_attendances_for_team(team_id, prefix) do
+    employee_ids = Staff.get_employee_ids_of_team(team_id, prefix)
+    list_attendances(%{"employee_ids" => employee_ids}, prefix)
+  end
+
   def list_attendances_for_user(_query_params, user, _prefix) when is_nil(user.employee_id), do: []
   def list_attendances_for_user(query_params, user, prefix) when not is_nil(user.employee_id) do
     Map.put(query_params, "employee_id", user.employee_id)

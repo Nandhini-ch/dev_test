@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.TeamController do
     render(conn, "index.json", teams: teams)
   end
 
+  def index_for_user(conn, _params) do
+    teams = Staff.list_teams_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", teams: teams)
+  end
+
   def create(conn, %{"team" => team_params}) do
     with {:ok, %Team{} = team} <- Staff.create_team(team_params, conn.assigns.sub_domain_prefix) do
       conn

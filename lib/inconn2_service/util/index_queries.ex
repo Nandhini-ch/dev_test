@@ -269,6 +269,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   def attendance_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"employee_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
+      {"employee_ids", employee_ids}, query -> from q in query, where: q.employee_id in ^employee_ids
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
       {"from_date", from_date}, query -> from q in query, where: q.in_time >= ^from_date
       {"to_date", to_date}, query -> from q in query, where: q.in_time <= ^to_date
