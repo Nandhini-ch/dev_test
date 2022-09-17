@@ -480,7 +480,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
 
     scope "/my_teams" do
-
+      get "/", TeamController, :index_for_user
     end
 
   end

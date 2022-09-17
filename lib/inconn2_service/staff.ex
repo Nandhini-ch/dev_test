@@ -963,6 +963,17 @@ defmodule Inconn2Service.Staff do
     Repo.all(Team, prefix: prefix)
   end
 
+  def list_teams_for_user(user, prefix) do
+    get_teams_for_user(user, prefix)
+    |> Enum.map(&(&1.team_id))
+    |> get_teams_by_ids(prefix)
+  end
+
+  def get_teams_by_ids(team_ids, prefix) do
+    from(t in Team, where: t.id in ^team_ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_team!(id, prefix), do: Repo.get!(Team, id, prefix: prefix)
 
   def create_team(attrs \\ %{}, prefix) do
