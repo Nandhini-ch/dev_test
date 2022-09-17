@@ -964,7 +964,7 @@ defmodule Inconn2Service.Staff do
   end
 
   def list_teams_for_user(user, prefix) do
-    get_teams_for_user(user, prefix)
+    get_team_ids_for_user(user, prefix)
     |> Enum.map(&(&1.team_id))
     |> get_teams_by_ids(prefix)
   end
@@ -1006,6 +1006,11 @@ defmodule Inconn2Service.Staff do
   defp preload_employees_team(team, prefix) do
     employee = Repo.get!(Employee, team.employee_id, prefix: prefix)
     Map.put(team, :employee, employee)
+  end
+
+  def get_employee_ids_of_team(team_id, prefix) do
+    from(tm in TeamMember, where: tm.team_id == ^team_id, select: tm.employee_id)
+    |> Repo.all(prefix: prefix)
   end
 
   def get_team_member!(id, prefix), do: Repo.get!(TeamMember, id, prefix: prefix)
