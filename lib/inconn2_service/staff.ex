@@ -4,7 +4,7 @@ defmodule Inconn2Service.Staff do
   import Comeonin
   import Inconn2Service.Util.DeleteManager
   import Inconn2Service.Util.IndexQueries
-  # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -1012,6 +1012,7 @@ defmodule Inconn2Service.Staff do
   end
 
   def delete_team_members(team_id, employee_ids, prefix) do
+    employee_ids = convert_string_list_to_list(employee_ids)
     TeamMember
     |> team_member_query(%{"team_id" => team_id, "employee_ids" => employee_ids})
     |> Repo.all(prefix: prefix)
