@@ -123,6 +123,7 @@ defmodule Inconn2Service.Ticket do
   def list_work_requests_for_team(user, prefix) when not is_nil(user.employee_id) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    |> IO.inspect()
     from(w in WorkRequest, where: w.assigned_user_id in ^team_user_ids and w.status not in ["CS", "CL"])
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)

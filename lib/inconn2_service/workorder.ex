@@ -854,7 +854,9 @@ defmodule Inconn2Service.Workorder do
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
     from(wo in WorkOrder, where: wo.workorder_approval_user_id in ^team_user_ids or
                                  wo.loto_checker_user_id in ^team_user_ids or
-                                 wo.workorder_acknowledgement_user_id in ^team_user_ids)
+                                 wo.workorder_acknowledgement_user_id in ^team_user_ids and
+                                 not wo.is_deactivated and
+                                 wo.status not in ["cp", "cs"])
     |> Repo.all(prefix: prefix)
     |> filter_for_workpermit_approval_in_team(team_user_ids)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
@@ -934,7 +936,7 @@ defmodule Inconn2Service.Workorder do
   def list_work_order_for_team(user, prefix) when not is_nil(user.employee_id) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
-    from(wo in WorkOrder, where: wo.user_id in ^team_user_ids and not wo.is_deactivated and wo.status in ["cp", "cn"])
+    from(wo in WorkOrder, where: wo.user_id in ^team_user_ids and not wo.is_deactivated and wo.status not in ["cp", "cn"])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
