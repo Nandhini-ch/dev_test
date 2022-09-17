@@ -5,8 +5,8 @@ defmodule Inconn2ServiceWeb.TeamMemberController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    team_members = Staff.list_team_members(conn.assigns.sub_domain_prefix)
+  def index(conn, %{"team_id" => team_id}) do
+    team_members = Staff.list_team_members(team_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", team_members: team_members)
   end
 

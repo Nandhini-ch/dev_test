@@ -987,8 +987,10 @@ defmodule Inconn2Service.Staff do
 
   alias Inconn2Service.Staff.TeamMember
 
-  def list_team_members(prefix) do
-    Repo.all(TeamMember, prefix: prefix)
+  def list_team_members(team_id, prefix) do
+    TeamMember
+    |> where([team_id: ^team_id])
+    |> Repo.all(prefix: prefix)
     |> Enum.map(fn team -> preload_employees_team(team, prefix) end)
   end
 
