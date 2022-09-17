@@ -25,6 +25,11 @@ defmodule Inconn2ServiceWeb.UserController do
     end
   end
 
+  def reportee_users(conn, _params) do
+    users = Staff.get_reportee_users(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index_without_preloads.json", users: users)
+  end
+
   def create(conn, %{"user" => user_params}) do
     with {:ok, %User{} = user} <- Staff.create_user(user_params, conn.assigns.sub_domain_prefix) do
        conn

@@ -181,7 +181,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         key: "EQUMN",
         name: "Equipment under maintenance at present",
         unit: "assets",
-        type: 4,
+        type: 1,
         displayTxt: equipments_under_maintenance
      }
     ]
