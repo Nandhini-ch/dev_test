@@ -26,6 +26,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def work_orders_for_teams(conn, _) do
+    work_orders = Workorder.list_work_order_for_team(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def work_orders_to_be_approved(conn, _) do
     work_orders = Workorder.get_work_orders_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)

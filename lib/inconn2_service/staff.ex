@@ -1026,7 +1026,7 @@ defmodule Inconn2Service.Staff do
     TeamMember.changeset(team_member, attrs)
   end
 
-  def get_teams_for_user(user, prefix) when not is_nil(user.employee_id) do
+  def get_team_ids_for_user(user, prefix) when not is_nil(user.employee_id) do
     from(tm in TeamMember, where: tm.employee_id == ^user.employee_id)
     |> Repo.all(prefix: prefix)
   end
@@ -1035,10 +1035,11 @@ defmodule Inconn2Service.Staff do
 
 
   def get_team_users(teams, prefix) do
-    team_ids = Enum.map(teams, fn t -> t.id end)
+    team_ids = Enum.map(teams, fn t -> t.team_id end)
     from(tm in TeamMember, where: tm.team_id in ^team_ids)
     |> Repo.all(prefix: prefix)
     |> Enum.uniq()
-    |> Enum.map(fn e -> get_user_from_employee(e.id, prefix) end)
+    |> Stream.map(fn e -> get_user_from_employee(e.id, prefix) end)
+    |> Enum.filter(fn u -> !is_nil(u) end)
   end
 end
