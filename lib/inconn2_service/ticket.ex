@@ -120,6 +120,15 @@ defmodule Inconn2Service.Ticket do
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
   end
 
+  def list_work_requests_for_team(user, prefix) do
+    teams = Staff.get_teams_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    from(w in WorkRequest, where: w.assigned_user_id in ^team_user_ids and w.status not in ["CS", "CL"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+  end
+
   def list_work_requests_for_assigned_user(user, prefix) do
     from(w in WorkRequest, where: w.assigned_user_id == ^user.id and w.status not in ["CS", "CL"])
     WorkRequest |> where([assigned_user_id: ^user.id])

@@ -481,6 +481,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     scope "/my_teams" do
       get "/work_orders", WorkOrderController, :work_orders_for_teams
+      get "/work_requests", WorkRequestController, :index_for_team
     end
 
   end
