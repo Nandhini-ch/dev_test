@@ -16,6 +16,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
+  def index_grouped_team(conn, _params) do
+    transactions = InventoryManagement.list_transactions_for_team(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "transaction_grouped.json", transactions: transactions)
+  end
+
   def index_to_be_acknowledged(conn, _params) do
     transactions = InventoryManagement.list_transactions_to_be_acknowledged(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", transactions: transactions)

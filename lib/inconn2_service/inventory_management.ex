@@ -139,6 +139,9 @@ defmodule Inconn2Service.InventoryManagement do
       {"storekeeper_user_id", storekeeper_user_id}, query ->
         from q in query, where: q.storekeeper_user_id == ^storekeeper_user_id
 
+      {"storekeeper_user_ids", storekeeper_user_ids}, query ->
+        from q in query, where: q.storekeeper_user_id in ^storekeeper_user_ids
+
      _ , query ->
         query
     end) |> add_active_condition()
@@ -403,6 +406,20 @@ defmodule Inconn2Service.InventoryManagement do
 
   def list_transactions_to_be_approved_grouped(user, prefix) do
     from(t in Transaction, where: t.approver_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Enum.group_by(&(&1.transaction_reference))
+    |> rearrange_transaction_info()
+    |> put_approval_status_for_transactions()
+  end
+
+  def list_transactions_for_team(user, prefix) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    store_ids = list_stores(%{"storekeeper_user_ids" => team_user_ids}, prefix) |> Enum.map(fn s -> s.id end)
+    from(t in Transaction, where: t.store_id in ^store_ids)
     |> Repo.all(prefix: prefix)
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)

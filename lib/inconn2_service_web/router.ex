@@ -483,6 +483,7 @@ defmodule Inconn2ServiceWeb.Router do
       get "/work_orders", WorkOrderController, :work_orders_for_teams
       get "/work_requests", WorkRequestController, :index_for_team
       get "/pending_approvals", WorkOrderController, :work_orders_with_pending_approval_for_teams
+      get "/transactions", TransactionController, :index_grouped_team
     end
 
   end
