@@ -35,7 +35,8 @@ defmodule Inconn2Service.Report do
   end
 
   defp people_report_query(query_params) do
-    from(e in Employee, where: e.party_id == ^query_params["party_id"],
+    query = people_report_dynamic_query(rectify_query_params(query_params))
+    from(e in query,
           left_join: d in Designation, on: e.designation_id == d.id,
           left_join: o in OrgUnit, on: e.org_unit_id == o.id,
           select: %{
@@ -47,6 +48,14 @@ defmodule Inconn2Service.Report do
             attendance_percentage: nil,
             work_done_time: nil
     })
+  end
+
+  defp people_report_dynamic_query(query_params) do
+    query = from(e in Employee)
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      _,  query -> query
+    end)
   end
 
   def work_status_report(prefix, query_params) do
