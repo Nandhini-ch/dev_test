@@ -10,7 +10,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
-  alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit}
+  alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit, Role, RoleProfile}
   alias Inconn2Service.{Inventory, Staff}
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
@@ -39,6 +39,9 @@ defmodule Inconn2Service.Report do
     from(e in query,
           left_join: d in Designation, on: e.designation_id == d.id,
           left_join: o in OrgUnit, on: e.org_unit_id == o.id,
+          join: u in User, on: u.employee_id == e.id,
+          join: r in Role, on: u.role_id == r.id,
+          join: rp in RoleProfile, on: r.role_profile_id == rp.id,
           select: %{
             first_name: e.first_name,
             last_name: e.last_name,
@@ -54,6 +57,7 @@ defmodule Inconn2Service.Report do
     query = from(e in Employee)
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: ^asset_category_id in q.skills
       _,  query -> query
     end)
   end
