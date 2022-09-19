@@ -82,6 +82,15 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_from_and_to_date_time(nil, nil), do: {nil, nil}
+  def get_from_and_to_date_time(from_date, to_date) do
+    {from_date_as_date, to_date_as_date} = get_from_date_to_date_from_iso(from_date, to_date)
+    {
+      NaiveDateTime.new!(from_date_as_date, ~T[00:00:00]),
+      NaiveDateTime.new!(to_date_as_date, ~T[00:00:00])
+    }
+  end
+
   def get_month_date_time_till_now(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
     {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}

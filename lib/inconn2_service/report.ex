@@ -1,5 +1,6 @@
 defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
@@ -12,6 +13,8 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
   alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit, Role, RoleProfile}
   alias Inconn2Service.{Inventory, Staff}
+  alias Inconn2Service.Assignments.{Roster, MasterRoster}
+  alias Inconn2Service.Assignment.Attendance
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
 
@@ -21,6 +24,7 @@ defmodule Inconn2Service.Report do
     result =
       people_report_query(query_params)
       |> Repo.all(prefix: prefix)
+      |> Enum.map(fn x -> load_people_attendance_percent(x, query_params, prefix) end)
 
     case query_params["type"] do
       "pdf" ->
@@ -45,12 +49,41 @@ defmodule Inconn2Service.Report do
           select: %{
             first_name: e.first_name,
             last_name: e.last_name,
+            employee_id: e.id,
             emp_code: e.employee_id,
             designation: d.name,
             department: o.name,
             attendance_percentage: nil,
             work_done_time: nil
     })
+  end
+
+  defp load_people_attendance_percent(record, query_params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(query_params["from_date"], query_params["to_date"])
+    {from_datetime, to_datetime} = get_from_and_to_date_time(query_params["from_date"], query_params["to_date"])
+    expected_attendance_count =
+      from(r in Roster, where: r.employee_id == ^record.employee_id and r.date >= ^from_date and r.date <= ^to_date,
+          join: mr in MasterRoster, on: mr.id == r.master_roster_id,
+          select: %{
+            site_id: mr.site_id,
+            shift_id: r.shift_id,
+            date: r.date
+      })
+      |> Repo.all(prefix: prefix)
+      |> Enum.count()
+
+    actual_attendance =
+      from(a in Attendance, where: a.employee_id == ^record.employee_id and a.in_time >= ^from_datetime and a.in_time <= ^to_datetime)
+      |> Repo.all(prefix: prefix)
+
+
+    work_done_time =
+      Stream.map(actual_attendance, fn a -> NaiveDateTime.diff(a.out_time, a.in_time) end)
+      |> Enum.sum()
+
+    Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
+    |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
+
   end
 
   defp people_report_dynamic_query(query_params) do
