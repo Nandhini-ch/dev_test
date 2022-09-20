@@ -17,7 +17,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
   alias Inconn2Service.AssetConfig.Party
-  alias Inconn2Service.ContractManagement.Contract
+  alias Inconn2Service.ContractManagement.{Contract, Scope}
 
   def list_zones(prefix) do
     Zone

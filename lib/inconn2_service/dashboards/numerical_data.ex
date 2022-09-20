@@ -237,4 +237,51 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     NaiveDateTime.diff(site_dt, date_time)
   end
 
+  def get_mtbf_of_equipment(equipment_id, from_dt, to_dt, prefix) do
+    query = asset_status_track_query(equipment_id, "E", ["BRK"], "not", from_dt, to_dt)
+    hours = from(q in query, select: q.hours)
+            |> Repo.all(prefix: prefix)
+            |> Enum.filter(fn hr -> hr != nil end)
+
+    breakdown_times =
+      from(q in asset_status_track_query(equipment_id, "E", ["BRK"], "in", from_dt, to_dt), select: count(q.hours))
+      |> Repo.one(prefix: prefix)
+
+    case breakdown_times do
+      0 ->
+         0
+      _ ->
+          Enum.sum(hours) / length(hours)
+    end
+  end
+
+  def get_mttr_of_equipment(equipment_id, from_dt, to_dt, prefix) do
+    query = asset_status_track_query(equipment_id, "E", ["BRK"], "in", from_dt, to_dt)
+    hours = from(q in query, select: q.hours)
+            |> Repo.all(prefix: prefix)
+            |> Enum.filter(fn hr -> hr != nil end)
+
+    case length(hours) do
+      0 ->
+         0
+      length ->
+          Enum.sum(hours) / length
+    end
+  end
+
+  defp asset_status_track_query(asset_id, asset_type, statuses, inclusion, from_dt, to_dt) do
+    query =
+      from(as in AssetStatusTrack,
+            where: as.asset_id == ^asset_id and
+                   as.asset_type == ^asset_type and
+                   as.changed_date_time >= ^from_dt and
+                   as.changed_date_time <= ^to_dt
+                   )
+
+    case inclusion do
+      "in" -> from q in query, where: q.status_changed in ^statuses
+      "not" -> from q in query, where: q.status_changed not in ^statuses
+      _ -> query
+    end
+  end
 end

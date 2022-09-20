@@ -8,7 +8,7 @@ defmodule Inconn2Service.AssetConfig.AssetStatusTrack do
     field :changed_date_time, :naive_datetime
     field :status_changed, :string
     field :user_id, :integer
-    field :hours, :float, default: 0.0
+    field :hours, :float
 
     timestamps()
   end
