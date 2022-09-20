@@ -657,7 +657,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        push_alert_notification_for_asset(nil, location, "L", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, location, "L", prefix) end)
         result
       _ ->
         result
@@ -729,7 +729,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_location} ->
         update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
-        push_alert_notification_for_asset(location, updated_location, "L", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(location, updated_location, "L", prefix) end)
         result
       _ ->
         result
@@ -905,7 +905,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
-        push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix) end)
         {:deleted, "Location was deleted"}
     end
   end
@@ -1191,7 +1191,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        push_alert_notification_for_asset(nil, equipment, "E", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, equipment, "E", prefix) end)
         result
       _ ->
         result
@@ -1278,7 +1278,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_equipment} ->
         update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
-        push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix) end)
         result
       _ ->
         result
@@ -1391,7 +1391,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
-        push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix) end)
         {:deleted, "Equipment was deleted"}
     end
   end

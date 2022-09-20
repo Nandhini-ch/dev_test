@@ -55,7 +55,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        # push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
+        Elixir.Task.start(fn -> push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{}) end)
         {:ok, updated_template}
       _ ->
         result
@@ -167,69 +167,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp validate_tools(cs, prefix) do
-    tools = get_field(cs, :tools)
-    if tools != [] do
-      tool_maps = validate_item_map_keys(tools)
-      if length(tool_maps) == length(tools) do
-        tool_ids = Enum.map(tools, fn x -> x["id"] end)
-        validate_item_ids(cs, tool_ids, prefix)
-      else
-        add_error(cs, :tools, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_spares(cs, prefix) do
-    spares = get_field(cs, :spares)
-    if spares != [] do
-      spare_maps = validate_item_map_keys(spares)
-      if length(spare_maps) == length(spares) do
-        spare_ids = Enum.map(spares, fn x -> x["id"] end)
-        validate_item_ids(cs, spare_ids, prefix)
-      else
-        add_error(cs, :spares, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_consumables(cs, prefix) do
-    consumables = get_field(cs, :consumables)
-    if consumables != [] do
-      consumable_maps = validate_item_map_keys(consumables)
-      if length(consumable_maps) == length(consumables) do
-        consumable_ids = Enum.map(consumables, fn x -> x["id"] end)
-        validate_item_ids(cs, consumable_ids, prefix)
-      else
-        add_error(cs, :consumables, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_item_map_keys(items) do
-    Enum.filter(items, fn item ->
-                    Map.keys(item) == ["id", "quantity", "uom_id"]
-                  end)
-  end
-
-  defp validate_item_ids(cs, item_ids, prefix) do
-    if item_ids != [] do
-      items = from(i in Item, where: i.id in ^item_ids)
-              |> Repo.all(prefix: prefix)
-      case length(item_ids) == length(items) do
-        true -> cs
-        false -> add_error(cs, :items, "Item IDs are invalid")
-      end
-    else
-      cs
-    end
-  end
 
   def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix, user) do
    result =
@@ -246,7 +183,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        # push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
+        Elixir.Task.start(fn -> push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user) end)
         {:ok, updated_template}
       _ ->
         result
@@ -286,9 +223,6 @@ defmodule Inconn2Service.Workorder do
           "type" => alert.type,
           "description" => description,
         }
-        # Enum.each(site_ids, fn site_id ->
-
-        # end)
         Enum.map(user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
@@ -551,7 +485,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
-          push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified")
+          Elixir.Task.start(fn -> push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified") end)
           zone = get_time_zone(workorder_schedule, prefix)
           work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
           case work_scheduler do
@@ -1418,7 +1352,7 @@ defmodule Inconn2Service.Workorder do
           delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
-          push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix)
+          Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
           {:ok, get_work_order!(updated_work_order.id, prefix)}
       _ ->
         result
