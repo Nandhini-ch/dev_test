@@ -20,7 +20,7 @@ defmodule Inconn2ServiceWeb.DashboardsController do
   end
 
   def get_high_level_data(conn, %{"site_id" => site_id}) do
-    data = NumericalChart.get_numerical_charts_for_24_hours(site_id, conn.assigns.sub_domain_prefix)
+    data = NumericalChart.get_numerical_charts_for_24_hours(site_id, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "high_level.json", data: data)
   end
 
