@@ -2,6 +2,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
+  alias Inconn2Service.AssetConfig
 
   def get_numerical_charts_for_24_hours(site_id, prefix) do
 
@@ -48,6 +49,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     breakdown_work_order_status = get_breakdown_workorder_status_shcart(site_id, prefix)
 
     equipments_under_maintenance = get_equipment_under_maintenance(site_id, prefix)
+
+    mtbf = get_mtbf(site_id, prefix)
+
+    mttr = get_mttr(site_id, prefix)
 
     [
       %{
@@ -183,7 +188,23 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
         unit: "assets",
         type: 1,
         displayTxt: equipments_under_maintenance
-     }
+     },
+     %{
+        id: 17,
+        key: "MTBF",
+        name: "Mean time between failures",
+        unit: "YTD",
+        type: 1,
+        displayTxt: mtbf
+      },
+      %{
+        id: 18,
+        key: "MTTR",
+        name: "Mean time between failures",
+        unit: "YTD",
+        type: 1,
+        displayTxt: mttr
+      }
     ]
   end
 
@@ -308,4 +329,21 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     NumericalData.get_equipment_with_status("OFF", %{"site_id" => site_id}, prefix)
     |> length()
   end
+
+  def get_mtbf(site_id, prefix) do
+    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    AssetConfig.list_equipments(site_id, prefix)
+    |> Stream.map(&Task.async(fn -> NumericalData.get_mtbf_of_equipment(&1.id, from_dt, to_dt, prefix) end))
+    |> Stream.map(&Task.await/1)
+    |> Enum.sum()
+  end
+
+  def get_mttr(site_id, prefix) do
+    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    AssetConfig.list_equipments(site_id, prefix)
+    |> Stream.map(&Task.async(fn -> NumericalData.get_mttr_of_equipment(&1.id, from_dt, to_dt, prefix) end))
+    |> Stream.map(&Task.await/1)
+    |> Enum.sum()
+  end
+
 end

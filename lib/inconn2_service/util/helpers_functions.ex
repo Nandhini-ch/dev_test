@@ -54,6 +54,30 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
+  def get_yesterday_date(site_id, prefix) do
+    get_site_date_now(site_id, prefix)
+    |> Date.add(-1)
+  end
+
+  def get_yesterday_date_time(site_id, prefix) do
+    date = get_yesterday_date(site_id, prefix)
+    {
+      NaiveDateTime.new!(date, ~T[00:00:00]),
+      NaiveDateTime.new!(date, ~T[23:59:59])
+    }
+  end
+
+  def get_month_date_time_till_now(site_id, prefix) do
+    {from_date, to_date} = get_month_date_till_now(site_id, prefix)
+    {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}
+  end
+
+  def get_month_date_till_now(site_id, prefix) do
+    to_date = get_site_date_now(site_id, prefix)
+    from_date = Date.new!(to_date.year, to_date.month, 01)
+    {from_date, to_date}
+  end
+
   def get_site_date_time(from_date, to_date, site_id, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(from_date, to_date, site_id, prefix)
     {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}

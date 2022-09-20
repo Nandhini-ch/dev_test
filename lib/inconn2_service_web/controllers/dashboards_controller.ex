@@ -103,4 +103,14 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_equipment_under_maintenance_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_equipment_mtbf(conn, params) do
+    data = DashboardCharts.get_mtbf_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_equipment_mttr(conn, params) do
+    data = DashboardCharts.get_mttr_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end
