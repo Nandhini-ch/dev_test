@@ -470,6 +470,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/service_workorder_status", DashboardsController, :get_ticket_workorder_status_chart
     post "/dashboards/breakdown_workorder_status", DashboardsController, :get_breakdown_workorder_status_chart
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
+    post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
+    post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
 
   end
 end

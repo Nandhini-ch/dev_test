@@ -408,6 +408,28 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       end)
   end
 
+  def get_mtbf_chart(params, prefix) do
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_mtbf_or_mttr_for_asset_categories(params, "MTBF", :get_mtbf_of_equipment, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_mtbf_or_mttr_for_assets(params, "MTBF", :get_mtbf_of_equipment, prefix)
+
+    end
+  end
+
+  def get_mttr_chart(params, prefix) do
+    cond do
+      not is_nil(params["asset_category_ids"]) ->
+        get_mtbf_or_mttr_for_asset_categories(params, "MTTR", :get_mttr_of_equipment, prefix)
+
+      not is_nil(params["asset_ids"]) ->
+        get_mtbf_or_mttr_for_assets(params, "MTTR", :get_mttr_of_equipment, prefix)
+
+    end
+  end
+
   defp get_ppms_using_asset_category_ids(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
       NumericalData.get_workorder_for_chart(
@@ -645,4 +667,71 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       }
     ]
   end
+
+  defp get_mtbf_or_mttr_for_asset_categories(params, label, query_func, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+    Enum.map(params["asset_category_ids"], fn ac_id ->
+      get_mtbf_or_mttr_for_asset_category(
+        ac_id,
+        NaiveDateTime.new!(from_date, ~T[00:00:00]),
+        NaiveDateTime.new!(to_date, ~T[23:59:59]),
+        label,
+        query_func,
+        prefix
+      )
+    end)
+  end
+
+  defp get_mtbf_or_mttr_for_assets(params, label, query_func, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+    Enum.map(params["asset_ids"], fn asset_id ->
+      get_mtbf_or_mttr_for_individual_asset(
+        AssetConfig.get_equipment!(asset_id, prefix),
+        NaiveDateTime.new!(from_date, ~T[00:00:00]),
+        NaiveDateTime.new!(to_date, ~T[23:59:59]),
+        label,
+        query_func,
+        prefix)
+    end)
+  end
+
+  defp get_mtbf_or_mttr_for_asset_category(asset_category_id, from_dt, to_dt, label, query_func, prefix) do
+    mtbf =
+      AssetConfig.get_assets_by_asset_category_id(asset_category_id, prefix)
+      |> Stream.map(fn asset -> get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix) end)
+      |> Stream.map(fn {_k, v} -> v end)
+      |> Enum.sum()
+
+    %{
+      label: AssetConfig.get_asset_category!(asset_category_id, prefix).name,
+      dataSets: [
+          %{
+              name: label,
+              value: mtbf
+          }
+      ]
+    }
+  end
+
+  defp get_mtbf_or_mttr_for_individual_asset(asset, from_dt, to_dt, label, query_func, prefix) do
+    {asset_name, mtbf} = get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix)
+      %{
+        label: asset_name,
+        dataSets: [
+            %{
+                name: label,
+                value: mtbf
+            }
+        ]
+      }
+
+  end
+
+  defp get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix) do
+    mtbf = apply(NumericalData, query_func, [asset.id, from_dt, to_dt, prefix])
+    {asset.name, mtbf}
+  end
+
 end
