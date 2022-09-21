@@ -990,20 +990,30 @@ defmodule Inconn2Service.Workorder do
 
   defp prefill_status_for_workorder_approval(cs) do
     is_approval_required = get_change(cs, :is_workorder_approval_required, nil)
+    is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
+    is_loto_required = get_change(cs, :is_loto_required, nil)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
+      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
+      is_assigned == "as" -> change(cs, %{status: "exec"})
       true -> cs
     end
   end
 
   defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
     is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
+    is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
+    is_loto_required = get_change(cs, :is_loto_required, nil)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
         change(cs, %{status: "woap"})
+      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
+      is_assigned == "as" -> change(cs, %{status: "exec"})
       true ->
         cs
     end
@@ -1930,38 +1940,11 @@ defmodule Inconn2Service.Workorder do
 
   defp update_status(cs, work_order, user, prefix) do
     case get_change(cs, :status, nil) do
-      "wp" ->
-              update_status_track(work_order, user, prefix, "wp")
-              cs
-      "ltl" ->
-              update_status_track(work_order, user, prefix, "ltl")
-              cs
-      "ip" ->
-              update_status_track(work_order, user, prefix, "ip")
-              cs
-      "cp" ->
-              update_status_track(work_order, user, prefix, "cp")
-              cs
-      "ltr" ->
-              update_status_track(work_order, user, prefix, "ltr")
-              cs
-      "cn" ->
-              update_status_track(work_order, user, prefix, "cn")
-              cs
-      "hl" ->
-              update_status_track(work_order, user, prefix, "wpp")
-              cs
-
-      "ltp" ->
-              update_status_track(work_order, user, prefix, "ltp")
-              cs
-
-      "wpp" ->
-              update_status_track(work_order, user, prefix, "hl")
-              cs
-
-       _ ->
-              cs
+      nil ->
+        cs
+      status ->
+        update_status_track(work_order, user, prefix, status)
+        cs
     end
   end
 
