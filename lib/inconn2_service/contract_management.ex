@@ -85,13 +85,13 @@ defmodule Inconn2Service.ContractManagement do
   end
 
   defp deactive_scope_for_contract(contract_id, prefix) do
-    from(s in Scope, where: s.contract_id == ^contract_id, update: [set: [active: false]])
-    |> Repo.update_all(prefix: prefix)
+    from(s in Scope, where: s.contract_id == ^contract_id)
+    |> Repo.update_all([set: [active: false]], prefix: prefix)
   end
 
   defp deactive_manpower_configuration_for_contract(contract_id, prefix) do
-    from(m in ManpowerConfiguration, where: m.contract_id == ^contract_id, update: [set: [active: false]])
-    |> Repo.update_all(prefix: prefix)
+    from(m in ManpowerConfiguration, where: m.contract_id == ^contract_id)
+    |> Repo.update_all([set: [active: false]], prefix: prefix)
   end
 
 
