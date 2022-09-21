@@ -20,7 +20,12 @@ defmodule Inconn2ServiceWeb.DashboardsController do
   end
 
   def get_high_level_data(conn, %{"site_id" => site_id}) do
-    data = NumericalChart.get_numerical_charts_for_24_hours(site_id, conn.assigns.sub_domain_prefix)
+    data = NumericalChart.get_numerical_charts_for_24_hours(site_id, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "high_level.json", data: data)
+  end
+
+  def get_high_level_data_mobile(conn, %{"site_id" => site_id}) do
+    data = NumericalChart.get_numerical_charts_for_24_hours_mobile(site_id, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "high_level.json", data: data)
   end
 
@@ -101,6 +106,16 @@ defmodule Inconn2ServiceWeb.DashboardsController do
 
   def get_equipment_under_maintenance_chart(conn, params) do
     data = DashboardCharts.get_equipment_under_maintenance_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_equipment_mtbf(conn, params) do
+    data = DashboardCharts.get_mtbf_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_equipment_mttr(conn, params) do
+    data = DashboardCharts.get_mttr_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
 end

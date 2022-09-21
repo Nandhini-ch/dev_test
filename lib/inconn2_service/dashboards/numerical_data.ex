@@ -4,8 +4,9 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Measurements.MeterReading
+  alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.Workorder.WorkorderTemplate
-  alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderSchedule}
   alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
   alias Inconn2Service.Ticket.WorkRequest
 
@@ -235,6 +236,69 @@ defmodule Inconn2Service.Dashboards.NumericalData do
       |> hd()
 
     NaiveDateTime.diff(site_dt, date_time)
+  end
+
+  def get_mtbf_of_equipment(equipment_id, from_dt, to_dt, prefix) do
+    query = asset_status_track_query(equipment_id, "E", ["BRK"], "not", from_dt, to_dt)
+    hours = from(q in query, select: q.hours)
+            |> Repo.all(prefix: prefix)
+            |> Enum.filter(fn hr -> hr != nil end)
+
+    breakdown_times =
+      from(q in asset_status_track_query(equipment_id, "E", ["BRK"], "in", from_dt, to_dt), select: count(q.hours))
+      |> Repo.one(prefix: prefix)
+
+    case breakdown_times do
+      0 ->
+         0
+      _ ->
+          Enum.sum(hours) / length(hours)
+    end
+  end
+
+  def get_mttr_of_equipment(equipment_id, from_dt, to_dt, prefix) do
+    query = asset_status_track_query(equipment_id, "E", ["BRK"], "in", from_dt, to_dt)
+    hours = from(q in query, select: q.hours)
+            |> Repo.all(prefix: prefix)
+            |> Enum.filter(fn hr -> hr != nil end)
+
+    case length(hours) do
+      0 ->
+         0
+      length ->
+          Enum.sum(hours) / length
+    end
+  end
+
+  defp asset_status_track_query(asset_id, asset_type, statuses, inclusion, from_dt, to_dt) do
+    query =
+      from(as in AssetStatusTrack,
+            where: as.asset_id == ^asset_id and
+                   as.asset_type == ^asset_type and
+                   as.changed_date_time >= ^from_dt and
+                   as.changed_date_time <= ^to_dt
+                   )
+
+    case inclusion do
+      "in" -> from q in query, where: q.status_changed in ^statuses
+      "not" -> from q in query, where: q.status_changed not in ^statuses
+      _ -> query
+    end
+  end
+
+  def get_schedules_for_today(site_id, date, prefix) do
+    get_schedule_query_for_equipment(site_id, date) |> Repo.all(prefix: prefix)
+  end
+
+  defp get_schedule_query_for_equipment(site_id, date) do
+    from(wos in WorkorderSchedule, where: wos.next_occurence_date == ^date and wos.repeat_unit not in ["H", "D"],
+         join: e in Equipment, on: e.id == wos.asset_id and wos.asset_type == "E" and e.site_id == ^site_id,
+         join: s in Site, on: s.id == e.site_id,
+         join: wot in Workordertemplate, on: wot.id == wos.workorder_template_id,
+         select: %{
+          schedule: wos,
+          template: wot
+         })
   end
 
 end

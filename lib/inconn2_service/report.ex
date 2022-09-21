@@ -1,5 +1,6 @@
 defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
@@ -10,8 +11,10 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
-  alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit}
+  alias Inconn2Service.Staff.{User, Employee, Designation, OrgUnit, Role, RoleProfile}
   alias Inconn2Service.{Inventory, Staff}
+  alias Inconn2Service.Assignments.{Roster, MasterRoster}
+  alias Inconn2Service.Assignment.Attendance
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
 
@@ -21,6 +24,7 @@ defmodule Inconn2Service.Report do
     result =
       people_report_query(query_params)
       |> Repo.all(prefix: prefix)
+      |> Enum.map(fn x -> load_people_attendance_percent(x, query_params, prefix) end)
 
     case query_params["type"] do
       "pdf" ->
@@ -35,18 +39,60 @@ defmodule Inconn2Service.Report do
   end
 
   defp people_report_query(query_params) do
-    from(e in Employee, where: e.party_id == ^query_params["party_id"],
+    query = people_report_dynamic_query(rectify_query_params(query_params))
+    from(e in query,
           left_join: d in Designation, on: e.designation_id == d.id,
           left_join: o in OrgUnit, on: e.org_unit_id == o.id,
+          join: u in User, on: u.employee_id == e.id,
+          join: r in Role, on: u.role_id == r.id,
+          join: rp in RoleProfile, on: r.role_profile_id == rp.id,
           select: %{
             first_name: e.first_name,
             last_name: e.last_name,
+            employee_id: e.id,
             emp_code: e.employee_id,
             designation: d.name,
             department: o.name,
             attendance_percentage: nil,
             work_done_time: nil
     })
+  end
+
+  defp load_people_attendance_percent(record, query_params, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(query_params["from_date"], query_params["to_date"])
+    {from_datetime, to_datetime} = get_from_and_to_date_time(query_params["from_date"], query_params["to_date"])
+    expected_attendance_count =
+      from(r in Roster, where: r.employee_id == ^record.employee_id and r.date >= ^from_date and r.date <= ^to_date,
+          join: mr in MasterRoster, on: mr.id == r.master_roster_id,
+          select: %{
+            site_id: mr.site_id,
+            shift_id: r.shift_id,
+            date: r.date
+      })
+      |> Repo.all(prefix: prefix)
+      |> Enum.count()
+
+    actual_attendance =
+      from(a in Attendance, where: a.employee_id == ^record.employee_id and a.in_time >= ^from_datetime and a.in_time <= ^to_datetime)
+      |> Repo.all(prefix: prefix)
+
+
+    work_done_time =
+      Stream.map(actual_attendance, fn a -> NaiveDateTime.diff(a.out_time, a.in_time) end)
+      |> Enum.sum()
+
+    Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
+    |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
+
+  end
+
+  defp people_report_dynamic_query(query_params) do
+    query = from(e in Employee)
+    Enum.reduce(query_params, query, fn
+      {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      {"asset_category_id", asset_category_id}, query -> from q in query, where: ^asset_category_id in q.skills
+      _,  query -> query
+    end)
   end
 
   def work_status_report(prefix, query_params) do
@@ -825,6 +871,8 @@ defmodule Inconn2Service.Report do
           asset_code: asset_code,
           template_id: schedule.template_id,
           template_name: schedule.template_name,
+          frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
+          estimated_time: schedule.estimated_time,
           dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, []) |> Enum.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
         }
     end)
@@ -843,6 +891,14 @@ defmodule Inconn2Service.Report do
         %{start: date, name: "#{length(wo)}", work_order: wo}
       end)
      end)
+  end
+
+  def match_repeat_unit(unit) do
+    case unit do
+      "W" -> "Week"
+      "M" -> "Month"
+      "Y" -> "Year"
+    end
   end
 
   def filter_for_assets(list, []), do: list
@@ -941,7 +997,8 @@ defmodule Inconn2Service.Report do
         template_name: st.template.name,
         first_occurrence: st.schedule.first_occurrence_date,
         repeat_unit: st.template.repeat_unit,
-        repeat_every: st.template.repeat_every
+        repeat_every: st.template.repeat_every,
+        estimated_time: st.template.estimated_time
       }
 
     end)

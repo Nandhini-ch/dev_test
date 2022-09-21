@@ -461,6 +461,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
 
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
+    get "/dashboards/mobile/high_level_data", DashboardsController, :get_high_level_data_mobile
 
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
     post "/dashboards/energy_cost", DashboardsController, :get_energy_cost
@@ -478,6 +479,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/service_workorder_status", DashboardsController, :get_ticket_workorder_status_chart
     post "/dashboards/breakdown_workorder_status", DashboardsController, :get_breakdown_workorder_status_chart
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
+    post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
+    post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
