@@ -5,6 +5,27 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   alias Inconn2Service.DashboardConfiguration
   alias Inconn2Service.AssetConfig
 
+  def get_numerical_charts_for_24_hours_mobile(site_id, user, prefix) do
+    config = get_site_config_for_dashboards(site_id, prefix)
+
+    energy_consumption =
+      get_energy_consumption_for_24_hours(site_id, config, prefix)
+      |> change_nil_to_zero()
+
+    water_consumption =
+      get_water_consumption_for_24_hours(site_id, config, prefix)
+      |> change_nil_to_zero()
+
+    fuel_consumption =
+      get_fuel_consumption_for_24_hours(site_id, config, prefix)
+      |> change_nil_to_zero()
+
+    # DashboardConfiguration.list_user_widget_configs_for_user(user.id, "web", prefix)
+    all_widgets()
+    |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) end))
+    |> Enum.map(&Task.await/1)
+  end
+
   def get_numerical_charts_for_24_hours(site_id, user, prefix) do
 
     config = get_site_config_for_dashboards(site_id, prefix)
@@ -413,6 +434,29 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> Stream.map(&Task.async(fn -> NumericalData.get_mttr_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
     |> Enum.sum()
+  end
+
+  defp all_widgets() do
+    [
+      %{widget_code: "ENCON", position: 1 },
+      %{widget_code: "ENCOS", position: 2 },
+      %{widget_code: "ENPEI", position: 3 },
+      %{widget_code: "ENTOP", position: 4 },
+      %{widget_code: "WACON", position: 5 },
+      %{widget_code: "WACOS", position: 6 },
+      %{widget_code: "FUCON", position: 7 },
+      %{widget_code: "FUCOS", position: 8 },
+      %{widget_code: "ENSUB", position: 9 },
+      %{widget_code: "SEGRE", position: 10 },
+      %{widget_code: "PPMCW", position: 11 },
+      %{widget_code: "OPWOR", position: 12 },
+      %{widget_code: "OPTIC", position: 13 },
+      %{widget_code: "SEWOR", position: 14 },
+      %{widget_code: "BRWOR", position: 15 },
+      %{widget_code: "EQUMN", position: 16 },
+      %{widget_code: "MTBFA", position: 17 },
+      %{widget_code: "MTTRA", position: 18 }
+      ]
   end
 
 end
