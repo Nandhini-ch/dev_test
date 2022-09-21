@@ -24,6 +24,11 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "high_level.json", data: data)
   end
 
+  def get_high_level_data_mobile(conn, %{"site_id" => site_id}) do
+    data = NumericalChart.get_numerical_charts_for_24_hours_mobile(site_id, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "high_level.json", data: data)
+  end
+
   def get_energy_consumption(conn, params) do
     data = DashboardCharts.get_energy_consumption(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
