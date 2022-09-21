@@ -871,6 +871,8 @@ defmodule Inconn2Service.Report do
           asset_code: asset_code,
           template_id: schedule.template_id,
           template_name: schedule.template_name,
+          frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
+          estimated_time: schedule.estimated_time,
           dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, []) |> Enum.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
         }
     end)
@@ -889,6 +891,14 @@ defmodule Inconn2Service.Report do
         %{start: date, name: "#{length(wo)}", work_order: wo}
       end)
      end)
+  end
+
+  def match_repeat_unit(unit) do
+    case unit do
+      "W" -> "Week"
+      "M" -> "Month"
+      "Y" -> "Year"
+    end
   end
 
   def filter_for_assets(list, []), do: list
@@ -987,7 +997,8 @@ defmodule Inconn2Service.Report do
         template_name: st.template.name,
         first_occurrence: st.schedule.first_occurrence_date,
         repeat_unit: st.template.repeat_unit,
-        repeat_every: st.template.repeat_every
+        repeat_every: st.template.repeat_every,
+        estimated_time: st.template.estimated_time
       }
 
     end)

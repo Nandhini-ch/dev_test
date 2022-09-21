@@ -436,6 +436,13 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> Enum.sum()
   end
 
+  def get_ppm_plan(site_id, prefix) do
+    date = get_site_date_now(site_id, prefix)
+    NumericalData.get_schedules_for_today(site_id, date, prefix)
+    |> Inconn2Service.Report.get_calculated_dates_for_schedules(date, date, [], prefix)
+    |> Enum.map(fn {_k, v} -> length(v) end)
+  end
+
   defp all_widgets() do
     [
       %{widget_code: "ENCON", position: 1 },
