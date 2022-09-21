@@ -992,9 +992,11 @@ defmodule Inconn2Service.Workorder do
     is_approval_required = get_change(cs, :is_workorder_approval_required, nil)
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
+    pre_check_required = get_change(cs, :pre_check_required)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
       !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
       is_assigned == "as" -> change(cs, %{status: "exec"})
@@ -1006,11 +1008,13 @@ defmodule Inconn2Service.Workorder do
     is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
+    pre_check_required = get_change(cs, :pre_check_required)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
         change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
       !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
       is_assigned == "as" -> change(cs, %{status: "exec"})
@@ -1863,6 +1867,8 @@ defmodule Inconn2Service.Workorder do
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+      _ ->
+        IO.inspect("No Track")
     end
     {:ok, work_order}
   end
