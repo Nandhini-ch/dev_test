@@ -420,6 +420,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/approve_transactions", TransactionController, :approve_transaction
     post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
 
+    resources "/site_stocks", SiteStockController, except: [:new, :edit]
+
 
     get "/stocks_for_storekeeper", StockController, :index_for_storekeeper
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
