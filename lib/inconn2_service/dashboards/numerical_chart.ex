@@ -441,6 +441,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     NumericalData.get_schedules_for_today(site_id, date, prefix)
     |> Inconn2Service.Report.get_calculated_dates_for_schedules(date, date, [], prefix)
     |> Enum.map(fn {_k, v} -> length(v) end)
+    |> List.first()
+    |> change_nil_to_zero()
   end
 
   defp all_widgets() do
