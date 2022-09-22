@@ -291,10 +291,10 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   end
 
   defp get_schedule_query_for_equipment(site_id, date) do
-    from(wos in WorkorderSchedule, where: wos.next_occurence_date == ^date and wos.repeat_unit not in ["H", "D"],
+    from(wos in WorkorderSchedule, where: wos.next_occurrence_date == ^date,
          join: e in Equipment, on: e.id == wos.asset_id and wos.asset_type == "E" and e.site_id == ^site_id,
          join: s in Site, on: s.id == e.site_id,
-         join: wot in Workordertemplate, on: wot.id == wos.workorder_template_id,
+         join: wot in Workordertemplate, on: wot.id == wos.workorder_template_id and wos.repeat_unit not in ["H", "D"],
          select: %{
           schedule: wos,
           template: wot
