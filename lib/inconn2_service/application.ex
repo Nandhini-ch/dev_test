@@ -18,7 +18,7 @@ defmodule Inconn2Service.Application do
       #Start the alert and notification GenServer
       Inconn2Service.Batch.AlertNotificationGenServer,
       #Start the escalation GenServer
-      # Inconn2Service.Batch.AlertEscalationGenServer,
+      Inconn2Service.Batch.AlertEscalationGenServer,
       # Start the Endpoint (http/https)
       Inconn2ServiceWeb.Endpoint
       # Start a worker by calling: Inconn2Service.Worker.start_link(arg)
