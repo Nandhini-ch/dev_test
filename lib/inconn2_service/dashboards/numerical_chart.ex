@@ -5,28 +5,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   alias Inconn2Service.DashboardConfiguration
   alias Inconn2Service.AssetConfig
 
-  def get_numerical_charts_for_24_hours_mobile(site_id, user, prefix) do
-    config = get_site_config_for_dashboards(site_id, prefix)
-
-    energy_consumption =
-      get_energy_consumption_for_24_hours(site_id, config, prefix)
-      |> change_nil_to_zero()
-
-    water_consumption =
-      get_water_consumption_for_24_hours(site_id, config, prefix)
-      |> change_nil_to_zero()
-
-    fuel_consumption =
-      get_fuel_consumption_for_24_hours(site_id, config, prefix)
-      |> change_nil_to_zero()
-
-    # DashboardConfiguration.list_user_widget_configs_for_user(user.id, "web", prefix)
-    all_widgets()
-    |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) end))
-    |> Enum.map(&Task.await/1)
-  end
-
-  def get_numerical_charts_for_24_hours(site_id, user, prefix) do
+  def get_numerical_charts_for_24_hours(site_id, device, user, prefix) do
 
     config = get_site_config_for_dashboards(site_id, prefix)
 
@@ -42,7 +21,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       get_fuel_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
 
-    DashboardConfiguration.list_user_widget_configs_for_user(user.id, "web", prefix)
+    DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
     |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) end))
     |> Enum.map(&Task.await/1)
 
