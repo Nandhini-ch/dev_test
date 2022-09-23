@@ -129,10 +129,6 @@ defmodule Inconn2Service.Reapportion do
       !is_nil(user) and !is_nil(employee) and !is_nil(employee.reports_to) ->
         # reports_to_user = Staff.get_user_from_employee(employee.id, prefix)
         change(cs, %{reports_to_user_id: employee.reports_to})
-      !is_nil(user) and !is_nil(employee) ->
-        add_error(cs, :reports_to_user_id, "The employee has no reports to")
-      !is_nil(user) ->
-        add_error(cs, :reports_to_user_id, "The User is not registered as an employee")
       true ->
         cs
     end
