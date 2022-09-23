@@ -270,7 +270,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     %{
       id: 18,
       key: "MTTRA",
-      name: "Mean time between failures",
+      name: "Mean time to recovery",
       unit: "YTD",
       type: 1,
       displayTxt: get_mttr(site_id, prefix)
