@@ -42,7 +42,7 @@ defmodule Inconn2ServiceWeb.ZoneController do
   def delete(conn, %{"id" => id}) do
     zone = AssetConfig.get_zone!(id, conn.assigns.sub_domain_prefix)
 
-    with {_, nil} <-
+    with {:deleted, _} <-
        AssetConfig.delete_zone(zone, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end

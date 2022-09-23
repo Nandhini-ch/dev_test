@@ -41,7 +41,7 @@ defmodule Inconn2ServiceWeb.UnitOfMeasurementController do
   def delete(conn, %{"id" => id}) do
     unit_of_measurement = InventoryManagement.get_unit_of_measurement!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %UnitOfMeasurement{}} <- InventoryManagement.delete_unit_of_measurement(unit_of_measurement, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- InventoryManagement.delete_unit_of_measurement(unit_of_measurement, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

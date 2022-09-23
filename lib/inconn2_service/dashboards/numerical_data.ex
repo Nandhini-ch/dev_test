@@ -4,8 +4,9 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Measurements.MeterReading
+  alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.Workorder.WorkorderTemplate
-  alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderSchedule}
   alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
   alias Inconn2Service.Ticket.WorkRequest
 
@@ -284,4 +285,20 @@ defmodule Inconn2Service.Dashboards.NumericalData do
       _ -> query
     end
   end
+
+  def get_schedules_for_today(site_id, date, prefix) do
+    get_schedule_query_for_equipment(site_id, date) |> Repo.all(prefix: prefix)
+  end
+
+  defp get_schedule_query_for_equipment(site_id, date) do
+    from(wos in WorkorderSchedule, where: wos.next_occurrence_date == ^date,
+         join: e in Equipment, on: e.id == wos.asset_id and wos.asset_type == "E" and e.site_id == ^site_id,
+         join: s in Site, on: s.id == e.site_id,
+         join: wot in Workordertemplate, on: wot.id == wos.workorder_template_id and wos.repeat_unit not in ["H", "D"],
+         select: %{
+          schedule: wos,
+          template: wot
+         })
+  end
+
 end

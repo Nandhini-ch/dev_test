@@ -356,6 +356,11 @@ defmodule Inconn2Service.Assignment do
     |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
   end
 
+  def list_attendances_for_team(team_id, prefix) do
+    employee_ids = Staff.get_employee_ids_of_team(team_id, prefix)
+    list_attendances(%{"employee_ids" => employee_ids}, prefix)
+  end
+
   def list_attendances_for_user(_query_params, user, _prefix) when is_nil(user.employee_id), do: []
   def list_attendances_for_user(query_params, user, prefix) when not is_nil(user.employee_id) do
     Map.put(query_params, "employee_id", user.employee_id)
@@ -373,17 +378,18 @@ defmodule Inconn2Service.Assignment do
     Map.put(attendance, :shift, shift)
   end
 
-  defp get_date_time_for_query(query_params, prefix) do
+  defp get_date_time_for_query(query_params, _prefix) do
     if query_params["from_date"] != nil and query_params["to_date"] != nil do
       {from_date, to_date} = {NaiveDateTime.from_iso8601!(query_params["from_date"] <> " 00:00:00"), NaiveDateTime.from_iso8601!(query_params["to_date"] <> " 23:59:59")}
       Map.put(query_params, "from_date", from_date)
       |> Map.put("to_date", to_date)
     else
-      site = AssetConfig.get_site!(query_params["site_id"], prefix)
-      date = DateTime.now!(site.time_zone) |> DateTime.to_date()
-      {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
-      Map.put(query_params, "from_date", from_date)
-      |> Map.put("to_date", to_date)
+      # site = AssetConfig.get_site!(query_params["site_id"], prefix)
+      # date = DateTime.now!(site.time_zone) |> DateTime.to_date()
+      # {from_date, to_date} = {NaiveDateTime.new!(date, Time.new!(0, 0, 0)), NaiveDateTime.new!(date, Time.new!(23, 59, 59))}
+      # Map.put(query_params, "from_date", from_date)
+      # |> Map.put("to_date", to_date)
+      query_params
     end
   end
 

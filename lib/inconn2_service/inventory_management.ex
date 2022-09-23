@@ -2,13 +2,14 @@ defmodule Inconn2Service.InventoryManagement do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
   alias Inconn2Service.{AssetConfig, Staff}
   alias Inconn2Service.InventoryManagement.{Conversion, InventorySupplier, InventorySupplierItem, InventoryItem, Store}
-  alias Inconn2Service.InventoryManagement.{Stock, Transaction, UomCategory, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{Stock, SiteStock, Transaction, UomCategory, UnitOfMeasurement}
 
   def list_uom_categories(prefix) do
     from(uc in UomCategory, where: uc.active)
@@ -138,6 +139,9 @@ defmodule Inconn2Service.InventoryManagement do
 
       {"storekeeper_user_id", storekeeper_user_id}, query ->
         from q in query, where: q.storekeeper_user_id == ^storekeeper_user_id
+
+      {"storekeeper_user_ids", storekeeper_user_ids}, query ->
+        from q in query, where: q.storekeeper_user_id in ^storekeeper_user_ids
 
      _ , query ->
         query
@@ -412,8 +416,11 @@ defmodule Inconn2Service.InventoryManagement do
     |> put_approval_status_for_transactions()
   end
 
-  def list_transactions_submitted_for_approved_grouped(user, prefix) do
-    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
+  def list_transactions_for_team(user, prefix) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    store_ids = list_stores(%{"storekeeper_user_ids" => team_user_ids}, prefix) |> Enum.map(fn s -> s.id end)
+    from(t in Transaction, where: t.store_id in ^store_ids)
     |> Repo.all(prefix: prefix)
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
@@ -421,6 +428,14 @@ defmodule Inconn2Service.InventoryManagement do
     |> Enum.group_by(&(&1.transaction_reference))
     |> rearrange_transaction_info()
     |> put_approval_status_for_transactions()
+  end
+
+  def list_transactions_submitted_for_approved_grouped(user, prefix) do
+    from(t in Transaction, where: t.transaction_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
   end
 
 
@@ -520,6 +535,11 @@ defmodule Inconn2Service.InventoryManagement do
     stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:inventory_item, :store])
   end
 
+  def list_stocks_for_storekeeper(user, prefix) do
+    store_ids = list_stores(%{"storekeeper_user_id" => user.id}, prefix) |> Enum.map(fn s -> s.id end)
+    list_stocks(%{"store_ids" => store_ids}, prefix)
+  end
+
   def get_stock!(id, prefix), do: Repo.get!(Stock, id, prefix: prefix)
 
   def create_stock(attrs \\ %{}, prefix) do
@@ -600,6 +620,33 @@ defmodule Inconn2Service.InventoryManagement do
     InventorySupplierItem.changeset(inventory_supplier_item, attrs)
   end
 
+  #Context functions for site stocks
+  def list_site_stocks(prefix) do
+    Repo.all(SiteStock, prefix: prefix)
+  end
+
+  def get_site_stock!(id, prefix), do: Repo.get!(SiteStock, id, prefix: prefix)
+
+  def create_site_stock(attrs \\ %{}, prefix) do
+    %SiteStock{}
+    |> SiteStock.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_site_stock(%SiteStock{} = site_stock, attrs, prefix) do
+    site_stock
+    |> SiteStock.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_site_stock(%SiteStock{} = site_stock, prefix) do
+    Repo.delete(site_stock, prefix: prefix)
+  end
+
+  def change_site_stock(%SiteStock{} = site_stock, attrs \\ %{}) do
+    SiteStock.changeset(site_stock, attrs)
+  end
+
   #All private functions related to the context
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "store_image")
@@ -620,6 +667,7 @@ defmodule Inconn2Service.InventoryManagement do
     Enum.reduce(query_params, query, fn
       {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
       {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
+      {"store_ids", store_ids}, query -> from q in query, where: q.store_id in ^store_ids
       _, query -> query
     end)
   end
@@ -703,6 +751,7 @@ defmodule Inconn2Service.InventoryManagement do
       |> put_inward_status()
       |> Repo.insert(prefix: prefix)
       |> create_supplier_item_record(prefix)
+      |> update_site_level_stock(prefix)
     end
   end
 
@@ -756,6 +805,7 @@ defmodule Inconn2Service.InventoryManagement do
       |> check_stock_upto_bin(prefix)
       |> check_for_approval_flow(prefix)
       |> Repo.insert(prefix: prefix)
+      |> update_site_level_stock(prefix)
     end
   end
 
@@ -955,6 +1005,66 @@ defmodule Inconn2Service.InventoryManagement do
       0 -> false
       _ -> true
     end
+  end
+
+  defp update_site_level_stock({:error, changeset}, _prefix), do: {:error, changeset}
+
+  defp update_site_level_stock({:ok, transaction}, prefix) do
+     Elixir.Task.start(fn ->
+      create_or_update_site_stock(transaction, prefix)
+    end)
+    {:ok, transaction}
+  end
+
+  defp create_or_update_site_stock(transaction, prefix) do
+    site_id = get_store!(transaction.store_id, prefix).site_id
+    item = get_inventory_item!(transaction.inventory_item_id, prefix)
+    query = get_site_stock_check_query(transaction, site_id)
+    quantity = get_stock_for_site(site_id, transaction.inventory_item_id, prefix)
+    {is_msl_breached, date_time} = check_msl_breach(site_id, item, quantity, prefix)
+    case Repo.one(query, prefix: prefix) do
+      nil ->
+        create_site_stock(%{
+          "inventory_item_id" => transaction.inventory_item_id,
+          "site_id" => site_id,
+          "quantity" => quantity,
+          "unit_of_measurement_id" => item.inventory_unit_of_measurement_id,
+          "is_msl_breached" => is_msl_breached,
+          "breached_date_time" => date_time
+        }, prefix)
+      entry ->
+        update_store(
+          entry,
+          %{
+            "is_msl_breached" => is_msl_breached,
+            "breached_date_time" => date_time
+          },
+          prefix
+        )
+    end
+  end
+
+  defp check_msl_breach(site_id, item, quantity, prefix) do
+    cond do
+      quantity < item.minimum_stock_level -> {"YES", get_site_date_time_now(site_id, prefix)}
+      true -> {"NO", nil}
+    end
+  end
+
+  defp get_stock_for_site(site_id, item_id, prefix) do
+    from(s in Store, where: s.site_id == ^site_id,
+         join: st in Stock, on: st.inventory_item_id == ^item_id and st.store_id == s.id,
+         select: st
+    )
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn st -> st.quantity end)
+    |> Enum.sum()
+  end
+
+  def get_site_stock_check_query(transaction, site_id) do
+    from(ss in SiteStock, where:
+         ss.inventory_item_id == ^transaction.inventory_item_id and
+         ss.site_id == ^site_id)
   end
 
   defp preload_uoms_for_items({:ok, inventory_item}), do: {:ok, inventory_item |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement, :consume_unit_of_measurement])}

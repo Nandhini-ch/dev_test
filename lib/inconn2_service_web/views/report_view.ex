@@ -9,9 +9,14 @@ defmodule Inconn2ServiceWeb.ReportView do
   end
 
   def render("inventory_report.json", %{inventory_info: inventory_info}) do
-    IO.inspect(inventory_info)
     %{
       data: render_many(inventory_info, ReportView, "inventory_report_item.json")
+    }
+  end
+
+  def render("people_report.json", %{people_info: people_info}) do
+    %{
+      data: render_many(people_info, ReportView, "people_report_item.json")
     }
   end
 
@@ -36,6 +41,17 @@ defmodule Inconn2ServiceWeb.ReportView do
       cost: item.cost,
       reorder_level: item.reorder_level,
       supplier: item.supplier
+    }
+  end
+
+  def render("people_report_item.json", %{report: item}) do
+    %{
+      first_name: item.first_name,
+      last_name: item.last_name,
+      designation: item.designation,
+      emp_code: item.emp_code,
+      attendance_percentage: item.attendance_percentage,
+      work_done_time: item.work_done_time
     }
   end
 end

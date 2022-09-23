@@ -1,6 +1,6 @@
 defmodule Inconn2Service.ContractManagement do
   # import Ecto.Changeset
-  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.DeleteManager
   # import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
@@ -56,23 +56,44 @@ defmodule Inconn2Service.ContractManagement do
   #   Repo.delete(contract, prefix: prefix)
   # end
 
+  # def delete_contract(%Contract{} = contract, prefix) do
+  #   cond do
+  #     has_scope?(contract, prefix) ->
+  #       {:could_not_delete,
+  #         "Cannot be deleted as there are Scopes associated with it"
+  #       }
+  #     has_manpower_configuration?(contract, prefix) ->
+  #       {:could_not_delete,
+  #         "Cannot be deleted as there are Manpower conigurations associated with it"
+  #       }
+  #     true ->
+  #      update_contract(contract, %{"active" => false}, prefix)
+  #        {:deleted,
+  #           "The contract was disabled"
+  #        }
+  #   end
+  # end
+
+
   def delete_contract(%Contract{} = contract, prefix) do
-    cond do
-      has_scope?(contract, prefix) ->
-        {:could_not_delete,
-          "Cannot be deleted as there are Scopes associated with it"
-        }
-      has_manpower_configuration?(contract, prefix) ->
-        {:could_not_delete,
-          "Cannot be deleted as there are Manpower conigurations associated with it"
-        }
-      true ->
-       update_contract(contract, %{"active" => false}, prefix)
+   deactive_scope_for_contract(contract.id, prefix)
+   deactive_manpower_configuration_for_contract(contract.id, prefix)
+   update_contract(contract, %{"active" => false}, prefix)
          {:deleted,
             "The contract was disabled"
          }
-    end
   end
+
+  defp deactive_scope_for_contract(contract_id, prefix) do
+    from(s in Scope, where: s.contract_id == ^contract_id)
+    |> Repo.update_all([set: [active: false]], prefix: prefix)
+  end
+
+  defp deactive_manpower_configuration_for_contract(contract_id, prefix) do
+    from(m in ManpowerConfiguration, where: m.contract_id == ^contract_id)
+    |> Repo.update_all([set: [active: false]], prefix: prefix)
+  end
+
 
   def change_contract(%Contract{} = contract, attrs \\ %{}) do
     Contract.changeset(contract, attrs)

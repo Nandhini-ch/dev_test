@@ -43,7 +43,7 @@ defmodule Inconn2ServiceWeb.SiteController do
   def delete(conn, %{"id" => id}) do
     site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Site{}} <- AssetConfig.delete_site(site, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- AssetConfig.delete_site(site, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

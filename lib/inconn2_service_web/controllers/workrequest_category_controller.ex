@@ -41,7 +41,7 @@ defmodule Inconn2ServiceWeb.WorkrequestCategoryController do
   def delete(conn, %{"id" => id}) do
     workrequest_category = Ticket.get_workrequest_category!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkrequestCategory{}} <- Ticket.delete_workrequest_category(workrequest_category, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Ticket.delete_workrequest_category(workrequest_category, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

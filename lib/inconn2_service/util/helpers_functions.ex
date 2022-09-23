@@ -106,6 +106,15 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_from_and_to_date_time(nil, nil), do: {nil, nil}
+  def get_from_and_to_date_time(from_date, to_date) do
+    {from_date_as_date, to_date_as_date} = get_from_date_to_date_from_iso(from_date, to_date)
+    {
+      NaiveDateTime.new!(from_date_as_date, ~T[00:00:00]),
+      NaiveDateTime.new!(to_date_as_date, ~T[00:00:00])
+    }
+  end
+
   def form_date_list_from_iso(nil, nil, site_id, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -30)

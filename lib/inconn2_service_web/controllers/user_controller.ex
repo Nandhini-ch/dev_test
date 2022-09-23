@@ -133,7 +133,7 @@ defmodule Inconn2ServiceWeb.UserController do
   def delete(conn, %{"id" => id}) do
     user = Staff.get_user!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %User{}} <- Staff.delete_user(user, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Staff.delete_user(user, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

@@ -51,6 +51,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
+  def index_for_team(conn, _) do
+    work_requests = Ticket.list_work_requests_for_team(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
   def create(conn, %{"work_request" => work_request_params}) do
     with {:ok, %WorkRequest{} = work_request} <- Ticket.create_work_request(work_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn

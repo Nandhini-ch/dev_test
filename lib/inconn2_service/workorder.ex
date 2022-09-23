@@ -55,7 +55,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        # push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{})
+        Elixir.Task.start(fn -> push_alert_notification_for_workorder_template(updated_template, prefix, "new", %{}) end)
         {:ok, updated_template}
       _ ->
         result
@@ -167,69 +167,6 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  defp validate_tools(cs, prefix) do
-    tools = get_field(cs, :tools)
-    if tools != [] do
-      tool_maps = validate_item_map_keys(tools)
-      if length(tool_maps) == length(tools) do
-        tool_ids = Enum.map(tools, fn x -> x["id"] end)
-        validate_item_ids(cs, tool_ids, prefix)
-      else
-        add_error(cs, :tools, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_spares(cs, prefix) do
-    spares = get_field(cs, :spares)
-    if spares != [] do
-      spare_maps = validate_item_map_keys(spares)
-      if length(spare_maps) == length(spares) do
-        spare_ids = Enum.map(spares, fn x -> x["id"] end)
-        validate_item_ids(cs, spare_ids, prefix)
-      else
-        add_error(cs, :spares, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_consumables(cs, prefix) do
-    consumables = get_field(cs, :consumables)
-    if consumables != [] do
-      consumable_maps = validate_item_map_keys(consumables)
-      if length(consumable_maps) == length(consumables) do
-        consumable_ids = Enum.map(consumables, fn x -> x["id"] end)
-        validate_item_ids(cs, consumable_ids, prefix)
-      else
-        add_error(cs, :consumables, "is invalid")
-      end
-    else
-      cs
-    end
-  end
-
-  defp validate_item_map_keys(items) do
-    Enum.filter(items, fn item ->
-                    Map.keys(item) == ["id", "quantity", "uom_id"]
-                  end)
-  end
-
-  defp validate_item_ids(cs, item_ids, prefix) do
-    if item_ids != [] do
-      items = from(i in Item, where: i.id in ^item_ids)
-              |> Repo.all(prefix: prefix)
-      case length(item_ids) == length(items) do
-        true -> cs
-        false -> add_error(cs, :items, "Item IDs are invalid")
-      end
-    else
-      cs
-    end
-  end
 
   def update_workorder_template(%WorkorderTemplate{} = workorder_template, attrs, prefix, user) do
    result =
@@ -246,7 +183,7 @@ defmodule Inconn2Service.Workorder do
 
     case result do
       {:ok, updated_template} ->
-        # push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user)
+        Elixir.Task.start(fn -> push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user) end)
         {:ok, updated_template}
       _ ->
         result
@@ -286,9 +223,6 @@ defmodule Inconn2Service.Workorder do
           "type" => alert.type,
           "description" => description,
         }
-        # Enum.each(site_ids, fn site_id ->
-
-        # end)
         Enum.map(user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
@@ -551,7 +485,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
-          push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified")
+          Elixir.Task.start(fn -> push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified") end)
           zone = get_time_zone(workorder_schedule, prefix)
           work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
           case work_scheduler do
@@ -849,6 +783,26 @@ defmodule Inconn2Service.Workorder do
      get_work_order_premits_to_be_approved(user, prefix) ++ get_work_orders_to_be_approved(user, prefix) ++ get_work_order_to_be_acknowledged(user, prefix) ++ get_work_order_loto_to_be_checked(user, prefix)
   end
 
+  def get_work_order_in_approval_for_teams(user, prefix) when not is_nil(user.employee_id) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    from(wo in WorkOrder, where: wo.workorder_approval_user_id in ^team_user_ids or
+                                 wo.loto_checker_user_id in ^team_user_ids or
+                                 wo.workorder_acknowledgement_user_id in ^team_user_ids and
+                                 not wo.is_deactivated and
+                                 wo.status not in ["cp", "cs"])
+    |> Repo.all(prefix: prefix)
+    |> filter_for_workpermit_approval_in_team(team_user_ids)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
+  def get_work_order_in_approval_for_teams(_user, _prefix), do: []
+
+  def filter_for_workpermit_approval_in_team(work_orders, team_user_ids) do
+    Enum.filter(work_orders, fn wo -> List.first(wo.workpermit_approval_user_ids) in team_user_ids end)
+  end
+
 
   def list_active_work_orders(prefix) do
     query = from wo in WorkOrder, where: wo.status != "cp"
@@ -912,6 +866,18 @@ defmodule Inconn2Service.Workorder do
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
+
+  def list_work_order_for_team(user, prefix) when not is_nil(user.employee_id) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    from(wo in WorkOrder, where: wo.user_id in ^team_user_ids and not wo.is_deactivated and wo.status not in ["cp", "cn"])
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
+  def list_work_order_for_team(_user, _prefix), do: []
+
 
   def get_work_order!(id, prefix) do
     work_order = Repo.get!(WorkOrder, id, prefix: prefix)
@@ -1024,20 +990,34 @@ defmodule Inconn2Service.Workorder do
 
   defp prefill_status_for_workorder_approval(cs) do
     is_approval_required = get_change(cs, :is_workorder_approval_required, nil)
+    is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
+    is_loto_required = get_change(cs, :is_loto_required, nil)
+    pre_check_required = get_change(cs, :pre_check_required)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
+      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
+      is_assigned == "as" -> change(cs, %{status: "exec"})
       true -> cs
     end
   end
 
   defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
     is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
+    is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
+    is_loto_required = get_change(cs, :is_loto_required, nil)
+    pre_check_required = get_change(cs, :pre_check_required)
     is_assigned = get_change(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
         change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
+      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
+      is_assigned == "as" -> change(cs, %{status: "exec"})
       true ->
         cs
     end
@@ -1386,7 +1366,7 @@ defmodule Inconn2Service.Workorder do
           delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
-          push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix)
+          Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
           {:ok, get_work_order!(updated_work_order.id, prefix)}
       _ ->
         result
@@ -1887,6 +1867,8 @@ defmodule Inconn2Service.Workorder do
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
+      _ ->
+        IO.inspect("No Track")
     end
     {:ok, work_order}
   end
@@ -1964,38 +1946,11 @@ defmodule Inconn2Service.Workorder do
 
   defp update_status(cs, work_order, user, prefix) do
     case get_change(cs, :status, nil) do
-      "wp" ->
-              update_status_track(work_order, user, prefix, "wp")
-              cs
-      "ltl" ->
-              update_status_track(work_order, user, prefix, "ltl")
-              cs
-      "ip" ->
-              update_status_track(work_order, user, prefix, "ip")
-              cs
-      "cp" ->
-              update_status_track(work_order, user, prefix, "cp")
-              cs
-      "ltr" ->
-              update_status_track(work_order, user, prefix, "ltr")
-              cs
-      "cn" ->
-              update_status_track(work_order, user, prefix, "cn")
-              cs
-      "hl" ->
-              update_status_track(work_order, user, prefix, "wpp")
-              cs
-
-      "ltp" ->
-              update_status_track(work_order, user, prefix, "ltp")
-              cs
-
-      "wpp" ->
-              update_status_track(work_order, user, prefix, "hl")
-              cs
-
-       _ ->
-              cs
+      nil ->
+        cs
+      status ->
+        update_status_track(work_order, user, prefix, status)
+        cs
     end
   end
 

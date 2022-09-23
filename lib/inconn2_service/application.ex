@@ -16,7 +16,7 @@ defmodule Inconn2Service.Application do
       #Start the Workorder GenServer
       Inconn2Service.Batch.WorkorderScheduler,
       #Start the alert and notification GenServer
-      Inconn2Service.Batch.AlertNotificationGenServer,
+      # Inconn2Service.Batch.AlertNotificationGenServer,
       #Start the escalation GenServer
       # Inconn2Service.Batch.AlertEscalationGenServer,
       # Start the Endpoint (http/https)

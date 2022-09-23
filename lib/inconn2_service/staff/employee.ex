@@ -55,7 +55,7 @@ defmodule Inconn2Service.Staff.Employee do
     |> validate_required([
       :first_name,
       :last_name,
-      :designation,
+      :designation_id,
       :employee_id,
       :mobile_no,
       :has_login_credentials,

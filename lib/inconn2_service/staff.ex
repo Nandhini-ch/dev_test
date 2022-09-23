@@ -3,8 +3,8 @@ defmodule Inconn2Service.Staff do
   import Ecto.Changeset
   import Comeonin
   import Inconn2Service.Util.DeleteManager
-  # import Inconn2Service.Util.IndexQueries
-  # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -221,6 +221,13 @@ defmodule Inconn2Service.Staff do
   #Context functions for Employees
   def list_employees(prefix) do
     Employee
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_employees_of_party(user, prefix) do
+    Employee
+    |> where([party_id: ^user.party_id])
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
@@ -948,5 +955,112 @@ defmodule Inconn2Service.Staff do
 
   def change_designation(%Designation{} = designation, attrs \\ %{}) do
     Designation.changeset(designation, attrs)
+  end
+
+  alias Inconn2Service.Staff.Team
+
+  def list_teams(prefix) do
+    Repo.all(Team, prefix: prefix)
+  end
+
+  def list_teams_for_user(user, prefix) do
+    get_team_ids_for_user(user, prefix)
+    |> Enum.map(&(&1.team_id))
+    |> get_teams_by_ids(prefix)
+  end
+
+  def get_teams_by_ids(team_ids, prefix) do
+    from(t in Team, where: t.id in ^team_ids)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team!(id, prefix), do: Repo.get!(Team, id, prefix: prefix)
+
+  def create_team(attrs \\ %{}, prefix) do
+    %Team{}
+    |> Team.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_team(%Team{} = team, attrs, prefix) do
+    team
+    |> Team.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_team(%Team{} = team, prefix) do
+    Repo.delete(team, prefix: prefix)
+  end
+
+  def change_team(%Team{} = team, attrs \\ %{}) do
+    Team.changeset(team, attrs)
+  end
+
+  alias Inconn2Service.Staff.TeamMember
+
+  def list_team_members(team_id, prefix) do
+    TeamMember
+    |> where([team_id: ^team_id])
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn team -> preload_employees_team(team, prefix) end)
+  end
+
+  defp preload_employees_team(team, prefix) do
+    employee = Repo.get!(Employee, team.employee_id, prefix: prefix)
+    Map.put(team, :employee, employee)
+  end
+
+  def get_employee_ids_of_team(team_id, prefix) do
+    from(tm in TeamMember, where: tm.team_id == ^team_id, select: tm.employee_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team_member!(id, prefix), do: Repo.get!(TeamMember, id, prefix: prefix)
+
+  def create_team_members(team_id, employee_ids, prefix) do
+    employee_ids
+    |> Enum.map(fn employee_id -> create_team_member(%{"team_id" => team_id, "employee_id" => employee_id}, prefix) end)
+  end
+
+  def create_team_member(attrs \\ %{}, prefix) do
+    %TeamMember{}
+    |> TeamMember.changeset(attrs)
+    |> Repo.insert!(prefix: prefix)
+    |> preload_employees_team(prefix)
+  end
+
+  def delete_team_members(team_id, employee_ids, prefix) do
+    employee_ids = convert_string_list_to_list(employee_ids)
+    TeamMember
+    |> team_member_query(%{"team_id" => team_id, "employee_ids" => employee_ids})
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn team -> delete_team_member(team, prefix) end)
+  end
+
+  def delete_team_member(%TeamMember{} = team_member, prefix) do
+    Repo.delete(team_member, prefix: prefix)
+  end
+
+  def change_team_member(%TeamMember{} = team_member, attrs \\ %{}) do
+    TeamMember.changeset(team_member, attrs)
+  end
+
+  def get_team_ids_for_user(user, prefix) when not is_nil(user.employee_id) do
+    from(tm in TeamMember, where: tm.employee_id == ^user.employee_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team_ids_for_user(_user, _prefix) do
+    []
+  end
+
+
+  def get_team_users(teams, prefix) do
+    team_ids = Enum.map(teams, fn t -> t.team_id end)
+    from(tm in TeamMember, where: tm.team_id in ^team_ids)
+    |> Repo.all(prefix: prefix)
+    |> Enum.uniq()
+    |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
+    |> Enum.filter(fn u -> !is_nil(u) end)
   end
 end

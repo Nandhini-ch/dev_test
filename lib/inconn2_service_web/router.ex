@@ -211,6 +211,7 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/employees_of_party", EmployeeController, :index_of_party
     get "/reportees", EmployeeController, :reportees_for_logged_in_user
     get "/employees/:employee_id/reportees", EmployeeController, :reportees_for_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
@@ -332,7 +333,8 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/:site_id/equipments_ticket_qr_code", ReportController, :get_equipments_ticket_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
     get "/reports/csg_report", ReportController, :get_workorder_status_report
-    get "/reports/calendar/", ReportController, :get_calendar
+    get "/reports/calendar", ReportController, :get_calendar
+    get "/reports/people", ReportController, :get_people_report
 
 
     get "/work_orders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
@@ -418,7 +420,10 @@ defmodule Inconn2ServiceWeb.Router do
     post "/approve_transactions", TransactionController, :approve_transaction
     post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
 
+    resources "/site_stocks", SiteStockController, except: [:new, :edit]
 
+
+    get "/stocks_for_storekeeper", StockController, :index_for_storekeeper
     resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
     resources "/conversions", ConversionController, except: [:new, :edit]
     resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
@@ -449,6 +454,11 @@ defmodule Inconn2ServiceWeb.Router do
     get "/rosters", RosterController, :index
     post "/rosters", RosterController, :create_or_update
 
+    resources "/teams", TeamController, except: [:new, :edit]
+    get "/teams/:team_id/team_members", TeamMemberController, :index
+    post "/teams/:team_id/team_members", TeamMemberController, :create
+    delete "/teams/:team_id/team_members", TeamMemberController, :delete
+
     get "/meter_assets", DashboardsController, :get_assets_for_dashboards
     get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
 
@@ -473,6 +483,15 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
     post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
     post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
+
+    scope "/my_teams" do
+      get "/", TeamController, :index_for_user
+      get "/:team_id/attendances", AttendanceController, :index_for_team
+      get "/work_orders", WorkOrderController, :work_orders_for_teams
+      get "/work_requests", WorkRequestController, :index_for_team
+      get "/pending_approvals", WorkOrderController, :work_orders_with_pending_approval_for_teams
+      get "/transactions", TransactionController, :index_grouped_team
+    end
 
   end
 end

@@ -623,4 +623,67 @@ defmodule Inconn2Service.InventoryManagementTest do
       assert %Ecto.Changeset{} = InventoryManagement.change_inventory_supplier_item(inventory_supplier_item)
     end
   end
+
+  describe "site_stocks" do
+    alias Inconn2Service.InventoryManagement.SiteStock
+
+    @valid_attrs %{breached_date_time: ~N[2010-04-17 14:00:00], is_msl_breached: "some is_msl_breached", quantity: 120.5}
+    @update_attrs %{breached_date_time: ~N[2011-05-18 15:01:01], is_msl_breached: "some updated is_msl_breached", quantity: 456.7}
+    @invalid_attrs %{breached_date_time: nil, is_msl_breached: nil, quantity: nil}
+
+    def site_stock_fixture(attrs \\ %{}) do
+      {:ok, site_stock} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> InventoryManagement.create_site_stock()
+
+      site_stock
+    end
+
+    test "list_site_stocks/0 returns all site_stocks" do
+      site_stock = site_stock_fixture()
+      assert InventoryManagement.list_site_stocks() == [site_stock]
+    end
+
+    test "get_site_stock!/1 returns the site_stock with given id" do
+      site_stock = site_stock_fixture()
+      assert InventoryManagement.get_site_stock!(site_stock.id) == site_stock
+    end
+
+    test "create_site_stock/1 with valid data creates a site_stock" do
+      assert {:ok, %SiteStock{} = site_stock} = InventoryManagement.create_site_stock(@valid_attrs)
+      assert site_stock.breached_date_time == ~N[2010-04-17 14:00:00]
+      assert site_stock.is_msl_breached == "some is_msl_breached"
+      assert site_stock.quantity == 120.5
+    end
+
+    test "create_site_stock/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.create_site_stock(@invalid_attrs)
+    end
+
+    test "update_site_stock/2 with valid data updates the site_stock" do
+      site_stock = site_stock_fixture()
+      assert {:ok, %SiteStock{} = site_stock} = InventoryManagement.update_site_stock(site_stock, @update_attrs)
+      assert site_stock.breached_date_time == ~N[2011-05-18 15:01:01]
+      assert site_stock.is_msl_breached == "some updated is_msl_breached"
+      assert site_stock.quantity == 456.7
+    end
+
+    test "update_site_stock/2 with invalid data returns error changeset" do
+      site_stock = site_stock_fixture()
+      assert {:error, %Ecto.Changeset{}} = InventoryManagement.update_site_stock(site_stock, @invalid_attrs)
+      assert site_stock == InventoryManagement.get_site_stock!(site_stock.id)
+    end
+
+    test "delete_site_stock/1 deletes the site_stock" do
+      site_stock = site_stock_fixture()
+      assert {:ok, %SiteStock{}} = InventoryManagement.delete_site_stock(site_stock)
+      assert_raise Ecto.NoResultsError, fn -> InventoryManagement.get_site_stock!(site_stock.id) end
+    end
+
+    test "change_site_stock/1 returns a site_stock changeset" do
+      site_stock = site_stock_fixture()
+      assert %Ecto.Changeset{} = InventoryManagement.change_site_stock(site_stock)
+    end
+  end
 end
