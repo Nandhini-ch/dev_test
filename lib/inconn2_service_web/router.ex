@@ -462,7 +462,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/meter_assets", DashboardsController, :get_assets_for_dashboards
     get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
 
-    get "/dashboards/high_level_data", DashboardsController, :get_high_level_data
+    get "/dashboards/high_level_data", DashboardsController, :get_high_level_data_web
     get "/dashboards/mobile/high_level_data", DashboardsController, :get_high_level_data_mobile
 
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
