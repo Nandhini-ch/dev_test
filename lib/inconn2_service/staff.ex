@@ -297,6 +297,14 @@ defmodule Inconn2Service.Staff do
     Repo.get(Employee, user.employee_id, prefix: prefix)
   end
 
+  def get_employee_from_user(nil, prefix) do
+    nil
+  end
+
+  def get_employee_from_user(employee_id, prefix) do
+    Repo.get(Employee, employee_id, prefix: prefix)
+  end
+
   def get_reportees_for_logged_in_user(user, prefix) do
     employee = user.employee
     if employee != nil do

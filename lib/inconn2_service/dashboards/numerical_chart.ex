@@ -462,10 +462,15 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     (actual_attendances / expected_rosters) *100
   end
 
-  def get_breached_items(site_id, prefix) do
-    NumericalData.breached_items_count_for_site(site_id, prefix)
+  def get_work_order_cost(site_id, prefix) do
+    NumericalData.get_work_order_numerical_cost(site_id, prefix)
+    |> Stream.map(fn wo -> wo.cost end)
+    |> Enum.sum()
   end
 
+  def get_breached_items(site_id, prefix) do
+    NumericalData.breached_items_conut_for_site(site_id, prefix)
+  end
 
   defp all_widgets() do
     [

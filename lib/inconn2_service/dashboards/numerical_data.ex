@@ -110,6 +110,12 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     Repo.one(query, prefix: prefix)
   end
 
+  def get_work_order_numerical_cost(site_id, prefix) do
+    date = get_site_date_now(site_id, prefix) |> Date.add(-1)
+    from(wo in WorkOrder, where: wo.scheduled_date == ^date and wo.status == "cp")
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_work_order_cost(params, prefix) do
     query = from(wo in WorkOrder, where: wo.site_id == ^params["site_id"] and wo.status == "cp")
     dynamic_query = work_order_cost_query(query, params)
