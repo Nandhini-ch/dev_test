@@ -100,6 +100,11 @@ defmodule Inconn2Service.Settings do
       ** (Ecto.NoResultsError)
 
   """
+  def get_shifts_by_ids(ids, prefix) do
+    from(sh in Shift, where: sh.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_shift!(id, prefix), do: Repo.get!(Shift, id, prefix: prefix)
   def get_shift(id, prefix), do: Repo.get(Shift, id, prefix: prefix)
 

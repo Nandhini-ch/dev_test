@@ -373,7 +373,10 @@ defmodule Inconn2Service.Assignment do
     Map.put(attendance, :employee, employee)
   end
 
-  defp preload_shift(attendance, _prefix) when is_nil(attendance.shift_id), do: nil
+  defp preload_shift(attendance, _prefix) when is_nil(attendance.shift_id) do
+    Map.put(attendance, :shift, nil)
+  end
+
   defp preload_shift(attendance, prefix) when not is_nil(attendance.shift_id) do
     shift = Settings.get_shift!(attendance.shift_id, prefix)
     Map.put(attendance, :shift, shift)

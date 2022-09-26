@@ -10,6 +10,11 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderSchedule}
   alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.Assignment.Attendance
+  alias Inconn2Service.Assignments.{MasterRoster, Roster}
+  alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.Staff.Employee
+  alias Inconn2Service.InventoryManagement.{SiteStock, InventoryItem}
 
 
   def get_energy_consumption_for_assets(nil, _from_dt, _to_dt, _prefix), do: 0
@@ -327,4 +332,46 @@ defmodule Inconn2Service.Dashboards.NumericalData do
          })
   end
 
+  def get_expected_rosters(site_id, org_unit_id, shift_id, from_date, to_date, prefix) do
+    from(mr in MasterRoster, where: mr.site_id == ^site_id,
+      join: r in Roster, on: r.master_roster_id == mr.id, where: r.shift_id == ^shift_id and r.date >= ^from_date and r.date <= ^to_date,
+      join: e in Employee, on: e.id == r.employee_id, where: e.org_unit_id == ^org_unit_id,
+      join: sh in Shift, on: sh.id == r.shift_id,
+      select: %{
+        site_id: mr.site_id,
+        employee_id: r.employee_id,
+        roster_date: r.date,
+        shift_id: r.shift_id,
+        shift_start: sh.start_time
+      }
+    )
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_attendances(site_id, org_unit_id, shift_id, from_dt, to_dt, prefix) do
+    from(a in Attendance, where: a.site_id == ^site_id and a.shift_id == ^shift_id and a.in_time >= ^from_dt and a.in_time <= ^to_dt,
+      join: e in Employee, on: e.id == a.employee_id, where: e.org_unit_id == ^org_unit_id,
+      join: sh in Shift, on: sh.id == a.shift_id,
+      select: %{
+        in_time: a.in_time,
+        out_time: a.out_time,
+        site_id: a.site_id,
+        employee_id: a.employee_id,
+        shift_id: a.shift_id,
+        shift_start: sh.start_time
+      })
+    |> Repo.all(prefix: prefix)
+  end
+
+  def breached_items_conut_for_site(site_id, prefix) do
+    from(s in SiteStock, where: s.is_msl_breached == "YES" and s.site_id == ^site_id)
+    |> Repo.all(prefix: prefix)
+    |> Enum.count()
+  end
+
+  def get_number_of_days_breached(params, prefix) do
+    from(i in InventoryItem, where: ^params["asset_category_id"] in i.asset_category_ids,
+        join: s in SiteStock, on: s.inventory_item_id == i.id and s.site_id == ^params["site_id"], select: s)
+        |> Repo.all(prefix: prefix)
+  end
 end

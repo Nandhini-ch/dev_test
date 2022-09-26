@@ -2,7 +2,7 @@ defmodule Inconn2Service.Dashboards.Helpers do
 
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.NumericalData
-  alias Inconn2Service.AssetConfig
+  alias Inconn2Service.{AssetConfig, Staff, Settings}
 
   def get_assets_for_dashboards(site_id, type, prefix) do
     config = get_site_config_for_dashboards(site_id, prefix)
@@ -59,4 +59,27 @@ defmodule Inconn2Service.Dashboards.Helpers do
       |> change_nil_to_zero()
     }
   end
+
+  def get_org_units_tuple(nil, prefix) do
+    Staff.list_org_units(prefix)
+    |> Enum.map(fn ou -> {ou.name, ou.id} end)
+  end
+
+  def get_org_units_tuple(org_unit_ids, prefix) do
+    org_unit_ids
+    |> Staff.get_org_units_by_ids(prefix)
+    |> Enum.map(fn ou -> {ou.name, ou.id} end)
+  end
+
+  def get_shifts_tuple(nil, site_id, prefix) do
+    Settings.list_shifts(site_id, prefix)
+    |> Enum.map(fn shift -> {shift.name, shift.id} end)
+  end
+
+  def get_shifts_tuple(shift_ids, _site_id, prefix) do
+    shift_ids
+    |> Settings.get_shifts_by_ids(prefix)
+    |> Enum.map(fn shift -> {shift.name, shift.id} end)
+  end
+
 end

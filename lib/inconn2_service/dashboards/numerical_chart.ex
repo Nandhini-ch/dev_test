@@ -4,6 +4,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
   alias Inconn2Service.DashboardConfiguration
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.Dashboards.NumericalData
 
   def get_numerical_charts_for_24_hours(site_id, device, user, prefix) do
 
@@ -434,6 +435,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     NumericalData.get_work_order_numerical_cost(site_id, prefix)
     |> Stream.map(fn wo -> wo.cost end)
     |> Enum.sum()
+  end
+
+  def breached_items(site_id, prefix) do
+    NumericalData.breached_items_conut_for_site(site_id, prefix)
   end
 
   defp all_widgets() do
