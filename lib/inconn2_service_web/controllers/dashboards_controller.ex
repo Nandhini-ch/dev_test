@@ -118,4 +118,14 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_mttr_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_intime_reporting_chart(conn, params) do
+    data = DashboardCharts.get_intime_reporting_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_shift_coverage_chart(conn, params) do
+    data = DashboardCharts.get_shift_coverage_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end
