@@ -163,4 +163,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> Enum.map(&(String.to_integer(&1)))
   end
 
+  def convert_integer_to_non_neg_integer(integer) when integer < 0, do: integer * -1
+  def convert_integer_to_non_neg_integer(integer), do: integer
+
 end
