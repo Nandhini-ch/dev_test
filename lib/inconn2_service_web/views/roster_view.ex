@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.RosterView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.RosterView
+  alias Inconn2ServiceWeb.{RosterView, SiteView}
 
   def render("show.json", %{master_roster: master_roster}) do
     %{data: render_one(master_roster, RosterView, "master_roster.json")}
@@ -26,5 +26,9 @@ defmodule Inconn2ServiceWeb.RosterView do
       employee_first_name: roster.employee_first_name,
       employee_last_name: roster.employee_last_name,
       date: roster.date}
+  end
+
+  def render("site_index.json", %{sites: sites}) do
+    %{data: render_many(sites, SiteView, "site.json")}
   end
 end

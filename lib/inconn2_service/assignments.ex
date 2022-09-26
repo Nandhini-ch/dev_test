@@ -7,6 +7,7 @@ defmodule Inconn2Service.Assignments do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
   alias Inconn2Service.{Staff, Settings}
+  alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignments.{MasterRoster, Roster}
 
   def get_master_roster(params, prefix) do
@@ -168,6 +169,14 @@ defmodule Inconn2Service.Assignments do
     |> Repo.all(prefix: prefix)
   end
 
+  def get_shifts_from_roster_for_attendance(employee_id, site_id, date, prefix) do
+    from(r in Roster, where: r.employee_id == ^ employee_id and r.date == ^date,
+      join: mr in MasterRoster, on: mr.id == r.master_roster_id, where: mr.site_id == ^site_id,
+      join: s in Shift, on: s.id == r.shift_id,
+      select: s)
+    |> Repo.all(prefix: prefix)
+  end
+
   def create_roster(attrs \\ %{}, prefix) do
     %Roster{}
     |> Roster.changeset(attrs)
@@ -176,6 +185,17 @@ defmodule Inconn2Service.Assignments do
 
   def delete_roster(%Roster{} = roster, prefix) do
     Repo.delete(roster, prefix: prefix)
+  end
+
+  def list_sites_for_attendance(user, _prefix) when is_nil(user.employee_id), do: []
+
+  def list_sites_for_attendance(user, prefix) do
+
+    from(r in Roster, where: r.employee_id == ^user.employee_id,
+      join: mr in MasterRoster, on: mr.id == r.master_roster_id,
+      join: s in Site, on: s.id == mr.site_id,
+      select: s)
+   |> Repo.all(prefix: prefix)
   end
 
 end
