@@ -22,8 +22,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       get_fuel_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
 
-      all_widgets()
-    # DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
+    # all_widgets()
+    DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
     |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) end))
     |> Enum.map(&Task.await/1)
 
@@ -62,11 +62,11 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "EQUMN" => :equipment_under_maintenance_data,
       "MTBFA" => :mtbf_data,
       "MTTRA" => :mttr_data,
-      "INTRE" => :get_intime_reporting,
-      "SHFCV" => :get_shift_coverage,
-      "COSMN" => :mttr_data,
-      "MSLBC" => :get_breached_items,
-      "PPMPL" => :get_ppm_plan
+      "INTRE" => :intime_reporting_data,
+      "SHFCV" => :shift_coverage_data,
+      "COSMN" => :cost_maintenance_data,
+      "MSLBC" => :msl_breach_count_data,
+      "PPMPL" => :ppm_plan_data
     }
   end
 
@@ -290,6 +290,61 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
+  def intime_reporting_data(site_id, prefix) do
+    %{
+      id: 19,
+      key: "INTRE",
+      name: "Intime Reporting",
+      displayTxt: get_intime_reporting(site_id, prefix),
+      unit: "%",
+      type: 1
+    }
+  end
+
+  def shift_coverage_data(site_id, prefix) do
+    %{
+      id: 20,
+      key: "SHFCV",
+      name: "Shift Coverage",
+      displayTxt: get_shift_coverage(site_id, prefix),
+      unit: "%",
+      type: 1
+    }
+  end
+
+  def cost_maintenance_data(site_id, prefix) do
+    %{
+      id: 21,
+      key: "COSMN",
+      name: "Cost - Maintenance",
+      displayTxt: get_work_order_cost(site_id, prefix),
+      unit: "INR",
+      type: 1
+    }
+  end
+
+  def msl_breach_count_data(site_id, prefix) do
+    %{
+      id: 22,
+      key: "MSLBC",
+      name: "MSL Breach Count",
+      displayTxt: get_breached_items(site_id, prefix),
+      unit: "",
+      type: 1
+    }
+  end
+
+  def ppm_plan_data(site_id, prefix) do
+    %{
+      id: 23,
+      key: "PPMPL",
+      name: "Planner for PPM - Compliance",
+      displayTxt: get_ppm_plan(site_id, prefix),
+      unit: "",
+      type: 1
+    }
+  end
+
   def get_energy_consumption_for_24_hours(site_id, config, prefix) do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
@@ -428,15 +483,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> Enum.sum()
   end
 
-  def get_ppm_plan(site_id, prefix) do
-    date = get_site_date_now(site_id, prefix)
-    NumericalData.get_schedules_for_today(site_id, date, prefix)
-    |> Inconn2Service.Report.get_calculated_dates_for_schedules(date, date, [], prefix)
-    |> Enum.map(fn {_k, v} -> length(v) end)
-    |> List.first()
-    |> change_nil_to_zero()
-  end
-
   def get_intime_reporting(site_id, prefix) do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
@@ -469,7 +515,16 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   end
 
   def get_breached_items(site_id, prefix) do
-    NumericalData.breached_items_conut_for_site(site_id, prefix)
+    NumericalData.breached_items_count_for_site(site_id, prefix)
+  end
+
+  def get_ppm_plan(site_id, prefix) do
+    date = get_site_date_now(site_id, prefix)
+    NumericalData.get_schedules_for_today(site_id, date, prefix)
+    |> Inconn2Service.Report.get_calculated_dates_for_schedules(date, date, [], prefix)
+    |> Enum.map(fn {_k, v} -> length(v) end)
+    |> List.first()
+    |> change_nil_to_zero()
   end
 
   defp all_widgets() do
