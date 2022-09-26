@@ -430,6 +430,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> change_nil_to_zero()
   end
 
+  def get_work_order_cost(site_id, prefix) do
+    NumericalData.get_work_order_numerical_cost(site_id, prefix)
+    |> Stream.map(fn wo -> wo.cost end)
+    |> Enum.sum()
+  end
+
   defp all_widgets() do
     [
       %{widget_code: "ENCON", position: 1 },
