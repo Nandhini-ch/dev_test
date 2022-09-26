@@ -6,11 +6,12 @@ defmodule Inconn2Service.Assignment do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Staff.Employee
-  alias Inconn2Service.Staff
+  alias Inconn2Service.{Staff, Assignments}
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.{Site, SiteConfig}
   alias Inconn2Service.Settings
@@ -372,7 +373,10 @@ defmodule Inconn2Service.Assignment do
     Map.put(attendance, :employee, employee)
   end
 
-  defp preload_shift(attendance, _prefix) when is_nil(attendance.shift_id), do: nil
+  defp preload_shift(attendance, _prefix) when is_nil(attendance.shift_id) do
+    Map.put(attendance, :shift, nil)
+  end
+
   defp preload_shift(attendance, prefix) when not is_nil(attendance.shift_id) do
     shift = Settings.get_shift!(attendance.shift_id, prefix)
     Map.put(attendance, :shift, shift)
@@ -395,10 +399,44 @@ defmodule Inconn2Service.Assignment do
 
   def get_attendance!(id, prefix), do: Repo.get!(Attendance, id, prefix: prefix) |> preload_employee(prefix)
 
-  def create_attendance(attrs \\ %{}, prefix, user) do
+  defp get_previous_partial_attendance(site_id, employee_id, prefix) do
+    from(a in Attendance,
+          where: a.site_id == ^site_id and
+                a.employee_id == ^employee_id and
+                is_nil(a.out_time))
+    |> Repo.one(prefix: prefix)
+  end
+
+  def mark_facial_attendance(_attrs, _, user, _prefix) when is_nil(user.employee_id) do
+    {:error, "Employee doesnot exist"}
+  end
+
+  def mark_facial_attendance(attrs, "out", user, prefix) do
+    case get_previous_partial_attendance(attrs["site_id"], user.employee_id, prefix) do
+      nil ->
+        {:error, "Intime should be marked first"}
+
+      attendance ->
+        update_attendance(attendance, %{"out_time" => attrs["date_time"]}, prefix)
+    end
+  end
+
+  def mark_facial_attendance(attrs, "in", user, prefix) do
+    case get_previous_partial_attendance(attrs["site_id"], user.employee_id, prefix) do
+      nil ->
+        Map.put(attrs, "employee_id", user.employee_id)
+        |> Map.put("in_time", attrs["date_time"])
+        |> create_attendance(prefix)
+
+      _attendance ->
+        {:error, "Already marked intime"}
+    end
+  end
+
+  def create_attendance(attrs \\ %{}, prefix) do
     result = %Attendance{}
             |> Attendance.changeset(attrs)
-            |> get_employee_current_user(user, prefix)
+            |> match_roster_and_fill_shift_id(prefix)
             |> Repo.insert(prefix: prefix)
     case result do
       {:ok, attendance} ->
@@ -410,6 +448,37 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
+  defp match_roster_and_fill_shift_id(cs, prefix) do
+    employee_id = get_field(cs, :employee_id)
+    site_id = get_field(cs, :site_id)
+    in_dt = get_field(cs, :in_time)
+    cond do
+      employee_id && site_id && in_dt ->
+          shift_id =
+            Assignments.get_shifts_from_roster_for_attendance(employee_id, site_id, NaiveDateTime.to_date(in_dt), prefix)
+            |> get_matching_shift__id_for_attendance(NaiveDateTime.to_time(in_dt))
+
+          put_change(cs, :shift_id, shift_id)
+
+      true ->
+          cs
+    end
+  end
+
+  defp get_matching_shift__id_for_attendance([], _in_time), do: nil
+  defp get_matching_shift__id_for_attendance(matching_shifts, in_time) do
+    {shift_id, _time_diff} =
+      matching_shifts
+      |> Stream.map(fn shift ->
+          {
+            shift.id,
+            Time.diff(in_time, shift.start_time) |> convert_integer_to_non_neg_integer()
+          }
+        end)
+      |> Enum.min_by(fn {_shift_id, time_diff} -> time_diff end)
+    shift_id
+  end
+
   defp get_employee_current_user(cs, user, prefix) do
     employee = Staff.get_employee_email!(user.username, prefix)
     case employee do
@@ -419,9 +488,19 @@ defmodule Inconn2Service.Assignment do
   end
 
   def update_attendance(%Attendance{} = attendance, attrs, prefix) do
-    attendance
-    |> Attendance.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+    result =
+      attendance
+      |> Attendance.changeset(attrs)
+      |> Repo.update(prefix: prefix)
+
+    case result do
+      {:ok, attendance} ->
+              {:ok,
+              preload_employee(attendance, prefix) |> preload_shift(prefix)
+            }
+      _ ->
+          result
+    end
   end
 
   def delete_attendance(%Attendance{} = attendance, prefix) do

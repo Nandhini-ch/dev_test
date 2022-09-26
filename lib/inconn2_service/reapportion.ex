@@ -15,7 +15,15 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def list_reassign_reschedule_requests_to_be_approved(prefix, user, query_params) do
-    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status != "AP")
+    employee = Staff.get_employee_of_user(user, prefix)
+    case employee do
+      nil -> []
+      obj -> get_reassign_reschedule_requests_to_be_approved(obj, query_params, prefix)
+    end
+  end
+
+  defp get_reassign_reschedule_requests_to_be_approved(employee, query_params, prefix) do
+    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^employee.id and rrr.status != "AP")
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
@@ -84,6 +92,8 @@ defmodule Inconn2Service.Reapportion do
         add_error(cs, :reschedule_date, "Date exceeding next occurrence")
       Time.compare(reschedule_time, workorder_schedule.next_occurrence_time) == :lt ->
         add_error(cs, :reschedule_time, "Time exceeding next occurrence")
+      true ->
+        cs
     end
   end
 

@@ -21,8 +21,8 @@ defmodule Inconn2ServiceWeb.AttendanceController do
     render(conn, "index.json", attendances: attendances)
   end
 
-  def create(conn, %{"attendance" => attendance_params}) do
-    with {:ok, %Attendance{} = attendance} <- Assignment.create_attendance(attendance_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+  def create(conn, %{"attendance" => attendance_params, "in_out" => in_out}) do
+    with {:ok, %Attendance{} = attendance} <- Assignment.mark_facial_attendance(attendance_params, in_out, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.attendance_path(conn, :show, attendance))

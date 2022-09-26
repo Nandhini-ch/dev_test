@@ -51,6 +51,13 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render("error_delete.json", msg: msg)
   end
 
+  def call(conn, {:error, msg}) do
+    conn
+    |> put_status(422)
+    |> put_view(Inconn2ServiceWeb.ErrorView)
+    |> render("error.json", msg: msg)
+  end
+
   def call(conn, {:deleted, _msg}), do: send_resp(conn, :no_content, "")
 
 end
