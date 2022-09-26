@@ -119,6 +119,21 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "detailed_charts.json", data: data)
   end
 
+  def get_intime_reporting_chart(conn, params) do
+    data = DashboardCharts.get_intime_reporting_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_shift_coverage_chart(conn, params) do
+    data = DashboardCharts.get_shift_coverage_chart(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
+  def get_inventory_breach_chart(conn, params) do
+    data = DashboardCharts. get_inventory_breach_data(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
+
   def get_work_order_cost(conn, params) do
     data = DashboardCharts.get_work_order_cost_data(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)

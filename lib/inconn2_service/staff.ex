@@ -18,6 +18,7 @@ defmodule Inconn2Service.Staff do
 
   def list_org_units(prefix) do
     OrgUnit
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -40,6 +41,11 @@ defmodule Inconn2Service.Staff do
       |> MapSet.to_list()
 
     from(o in OrgUnit, where: o.id in ^ids) |> Repo.all(prefix: prefix)
+  end
+
+  def get_org_units_by_ids(ids, prefix) do
+    from(o in OrgUnit, where: o.id in ^ids)
+    |> Repo.all(prefix: prefix)
   end
 
   def get_org_unit!(id, prefix), do: Repo.get!(OrgUnit, id, prefix: prefix)
@@ -289,6 +295,14 @@ defmodule Inconn2Service.Staff do
 
   def get_employee_of_user(user, prefix) do
     Repo.get(Employee, user.employee_id, prefix: prefix)
+  end
+
+  def get_employee_from_user(nil, prefix) do
+    nil
+  end
+
+  def get_employee_from_user(employee_id, prefix) do
+    Repo.get(Employee, employee_id, prefix: prefix)
   end
 
   def get_reportees_for_logged_in_user(user, prefix) do
