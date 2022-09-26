@@ -30,8 +30,14 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   defp get_individual_data(widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) do
     func = match_widget_codes()[widget_config.widget_code]
     args = match_arguments(widget_config.widget_code, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix)
-    apply(__MODULE__, func, args)
-    |> Map.put(:position, widget_config.position)
+    case func do
+      nil ->
+        %{}
+      _ ->
+        apply(__MODULE__, func, args)
+        |> Map.put(:position, widget_config.position)
+    end
+
   end
 
   defp match_widget_codes() do
@@ -270,7 +276,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     %{
       id: 18,
       key: "MTTRA",
-      name: "Mean time between failures",
+      name: "Mean time to recovery",
       unit: "YTD",
       type: 1,
       displayTxt: get_mttr(site_id, prefix)
