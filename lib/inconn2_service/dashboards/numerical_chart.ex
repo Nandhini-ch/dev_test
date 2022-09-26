@@ -22,7 +22,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       get_fuel_consumption_for_24_hours(site_id, config, prefix)
       |> change_nil_to_zero()
 
-    DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
+      all_widgets()
+    # DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
     |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, prefix) end))
     |> Enum.map(&Task.await/1)
 
@@ -58,9 +59,14 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "OPTIC" => :ticket_status_data,
       "SEWOR" => :service_workorder_data,
       "BRWOR" => :breakdown_workorder_data,
-      "EQUMN" => :euipment_under_maintenance_data,
+      "EQUMN" => :equipment_under_maintenance_data,
       "MTBFA" => :mtbf_data,
-      "MTTRA" => :mttr_data
+      "MTTRA" => :mttr_data,
+      "INTRE" => :get_intime_reporting,
+      "SHFCV" => :get_shift_coverage,
+      "COSMN" => :mttr_data,
+      "MSLBC" => :get_breached_items,
+      "PPMPL" => :get_ppm_plan
     }
   end
 
@@ -251,7 +257,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  def euipment_under_maintenance_data(site_id, prefix) do
+  def equipment_under_maintenance_data(site_id, prefix) do
     %{
       id: 16,
       key: "EQUMN",
@@ -431,8 +437,33 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> change_nil_to_zero()
   end
 
-  def breached_items(site_id, prefix) do
-    NumericalData.breached_items_conut_for_site(site_id, prefix)
+  def get_intime_reporting(site_id, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+
+    expected_rosters = NumericalData.get_expected_rosters(site_id, NaiveDateTime.to_date(from_dt), NaiveDateTime.to_date(to_dt), prefix) |> Enum.count() |> change_nil_to_one()
+    actual_attendances =
+      NumericalData.get_attendances(site_id, from_dt, to_dt, prefix)
+      |> Stream.filter(fn att ->
+          Time.compare(NaiveDateTime.to_time(att.in_time), att.shift_start) != :gt
+        end)
+      |> Enum.count()
+
+    (actual_attendances / expected_rosters) *100
+  end
+
+  def get_shift_coverage(site_id, prefix) do
+    to_dt = get_site_date_time_now(site_id, prefix)
+    from_dt = NaiveDateTime.add(to_dt, -86400)
+
+    expected_rosters = NumericalData.get_expected_rosters(site_id, NaiveDateTime.to_date(from_dt), NaiveDateTime.to_date(to_dt), prefix) |> Enum.count() |> change_nil_to_one()
+    actual_attendances = NumericalData.get_attendances(site_id, from_dt, to_dt, prefix) |> Enum.count()
+
+    (actual_attendances / expected_rosters) *100
+  end
+
+  def get_breached_items(site_id, prefix) do
+    NumericalData.breached_items_count_for_site(site_id, prefix)
   end
 
 
@@ -455,7 +486,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       %{widget_code: "BRWOR", position: 15 },
       %{widget_code: "EQUMN", position: 16 },
       %{widget_code: "MTBFA", position: 17 },
-      %{widget_code: "MTTRA", position: 18 }
+      %{widget_code: "MTTRA", position: 18 },
+      %{widget_code: "INTRE", position: 19 },
+      %{widget_code: "SHFCV", position: 20 },
+      %{widget_code: "COSMN", position: 21 },
+      %{widget_code: "MSLBC", position: 22 },
+      %{widget_code: "PPMPL", position: 23 }
       ]
   end
 

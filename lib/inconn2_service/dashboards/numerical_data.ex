@@ -326,6 +326,35 @@ defmodule Inconn2Service.Dashboards.NumericalData do
          })
   end
 
+  def get_expected_rosters(site_id, from_date, to_date, prefix) do
+    from(mr in MasterRoster, where: mr.site_id == ^site_id,
+      join: r in Roster, on: r.master_roster_id == mr.id, where: r.date >= ^from_date and r.date <= ^to_date,
+      join: sh in Shift, on: sh.id == r.shift_id,
+      select: %{
+        site_id: mr.site_id,
+        employee_id: r.employee_id,
+        roster_date: r.date,
+        shift_id: r.shift_id,
+        shift_start: sh.start_time
+      }
+    )
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_attendances(site_id, from_dt, to_dt, prefix) do
+    from(a in Attendance, where: a.site_id == ^site_id and a.in_time >= ^from_dt and a.in_time <= ^to_dt,
+      join: sh in Shift, on: sh.id == a.shift_id,
+      select: %{
+        in_time: a.in_time,
+        out_time: a.out_time,
+        site_id: a.site_id,
+        employee_id: a.employee_id,
+        shift_id: a.shift_id,
+        shift_start: sh.start_time
+      })
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_expected_rosters(site_id, org_unit_id, shift_id, from_date, to_date, prefix) do
     from(mr in MasterRoster, where: mr.site_id == ^site_id,
       join: r in Roster, on: r.master_roster_id == mr.id, where: r.shift_id == ^shift_id and r.date >= ^from_date and r.date <= ^to_date,
@@ -357,7 +386,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
-  def breached_items_conut_for_site(site_id, prefix) do
+  def breached_items_count_for_site(site_id, prefix) do
     from(s in SiteStock, where: s.is_msl_breached == "YES" and s.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
     |> Enum.count()
