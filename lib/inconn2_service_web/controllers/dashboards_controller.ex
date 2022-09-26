@@ -128,4 +128,9 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_shift_coverage_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_inventory_breach_chart(conn, params) do
+    data = DashboardCharts. get_inventory_breach_data(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end

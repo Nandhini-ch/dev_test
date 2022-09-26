@@ -485,6 +485,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
     post "/dashboards/intime_reporting", DashboardsController, :get_intime_reporting_chart
     post "/dashboards/shift_coverage", DashboardsController, :get_shift_coverage_chart
+    post "/dashboards/inventory_breach_data", DashboardsController, :get_inventory_breach_chart
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
