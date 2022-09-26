@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Dashboards.NumericalData do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Measurements.MeterReading
@@ -102,6 +103,25 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
     Repo.one(query, prefix: prefix)
+  end
+
+  def get_work_order_cost(params, prefix) do
+    query = from(wo in WorkOrder, where: wo.site_id == ^params["site_id"] and wo.status == "cp")
+    dynamic_query = work_order_cost_query(query, params)
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    from(dq in dynamic_query, where: dq.scheduled_date >= ^from_date and dq.scheduled_date <= ^to_date)
+    |> Repo.all(prefix: prefix)
+  end
+
+  defp work_order_cost_query(query, params) do
+    Enum.reduce(params, query, fn
+      {"asset_ids", asset_ids}, query ->
+        from(q in query, where: q.asset_id in ^asset_ids and q.asset_type == ^params["asset_type"] )
+      {"asset_category_ids", asset_category_ids}, query ->
+        from(q in query, join: wot in WorkorderTemplate, on: q.workorder_template_id == wot.id and wot.asset_category_id in ^asset_category_ids)
+      _, query ->
+        query
+    end)
   end
 
   def get_for_workorder_count(site_id, from_date, to_date, prefix) do

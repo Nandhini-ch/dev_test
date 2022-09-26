@@ -359,7 +359,7 @@ defmodule Inconn2ServiceWeb.Router do
     # get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
-    get "/sites_for_attendance", EmployeeRosterController, :index_sites_for_attendance
+
     get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]
     get "/attendances_for_user", AttendanceController, :index_for_user
@@ -453,6 +453,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/rosters", RosterController, :index
     post "/rosters", RosterController, :create_or_update
+    get "/sites_for_attendance", RosterController, :index_sites_for_attendance
 
     resources "/teams", TeamController, except: [:new, :edit]
     get "/teams/:team_id/team_members", TeamMemberController, :index
@@ -483,6 +484,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
     post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
     post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
+    post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user

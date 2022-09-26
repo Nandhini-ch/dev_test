@@ -118,4 +118,9 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_mttr_chart(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  def get_work_order_cost(conn, params) do
+    data = DashboardCharts.get_work_order_cost_data(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end
