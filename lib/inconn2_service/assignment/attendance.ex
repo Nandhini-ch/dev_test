@@ -1,7 +1,6 @@
 defmodule Inconn2Service.Assignment.Attendance do
   use Ecto.Schema
   import Ecto.Changeset
-  # alias Inconn2Service.Settings.Shift
 
   schema "attendances" do
     field :latitude, :float
@@ -19,7 +18,7 @@ defmodule Inconn2Service.Assignment.Attendance do
   def changeset(attendance, attrs) do
     attendance
     |> cast(attrs, [:in_time, :out_time, :latitude, :longitude, :site_id, :employee_id, :shift_id])
-    |> validate_required([:in_time, :out_time])
+    |> validate_required([:site_id, :employee_id, :in_time])
   end
 
 end
