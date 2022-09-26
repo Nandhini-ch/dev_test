@@ -9,6 +9,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderSchedule}
   alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
   alias Inconn2Service.Ticket.WorkRequest
+  alias Inconn2Service.InventoryManagement.{SiteStock, InventoryItem}
 
 
   def get_energy_consumption_for_assets(nil, _from_dt, _to_dt, _prefix), do: 0
@@ -301,4 +302,15 @@ defmodule Inconn2Service.Dashboards.NumericalData do
          })
   end
 
+  def breached_items_conut_for_site(site_id, prefix) do
+    from(s in SiteStock, where: s.is_msl_breached == "YES" and s.site_id == ^site_id)
+    |> Repo.all(prefix: prefix)
+    |> Enum.count()
+  end
+
+  def get_number_of_days_breached(params, prefix) do
+    from(i in InventoryItem, where: ^params["asset_category_id"] in i.asset_category_ids,
+        join: s in SiteStock, on: s.inventory_item_id == i.id and s.site_id == ^params["site_id"], select: s)
+        |> Repo.all(prefix: prefix)
+  end
 end

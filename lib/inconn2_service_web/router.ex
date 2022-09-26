@@ -483,6 +483,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
     post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
     post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
+    post "/dashboards/inventory_breach_data", DashboardsController, :get_inventory_breach_chart
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user

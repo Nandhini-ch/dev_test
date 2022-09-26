@@ -3,6 +3,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.InventoryManagement
 
   #Energy meters
   def get_energy_consumption(params, prefix) do
@@ -732,6 +733,33 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix) do
     mtbf = apply(NumericalData, query_func, [asset.id, from_dt, to_dt, prefix])
     {asset.name, mtbf}
+  end
+
+  def get_inventory_breach_data(params, prefix) do
+    NumericalData.get_number_of_days_breached(params, prefix)
+   |> Enum.group_by(&(&1.inventory_item_id))
+   |> process_breach_entries(prefix)
+  end
+
+
+  defp process_breach_entries(entries, prefix) do
+    Enum.map(entries, fn {k, v} ->
+      %{
+        label: InventoryManagement.get_inventory_item!(k, prefix).name,
+        dataSets: [
+          %{
+            name: "Days",
+            value: process_breach_date_list(v) |> change_nil_to_zero()
+          }
+        ]
+      }
+    end)
+  end
+
+  defp process_breach_date_list(breach_data) do
+    Enum.sort_by(breach_data, &(&1.breached_date_time), NaiveDateTime)
+    |> Enum.filter(fn x -> x.is_msl_breached == "YES" end)
+    |> List.first()
   end
 
 end
