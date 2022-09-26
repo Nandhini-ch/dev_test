@@ -15,4 +15,11 @@ defmodule Inconn2ServiceWeb.RosterController do
     render(conn, "show.json", master_roster: master_roster)
   end
 
+  def index_sites_for_attendance(conn, _params) do
+    sites = Assignments.list_sites_for_attendance(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "site_index.json", sites: sites)
+  end
+
+
+
 end

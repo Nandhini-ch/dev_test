@@ -178,4 +178,15 @@ defmodule Inconn2Service.Assignments do
     Repo.delete(roster, prefix: prefix)
   end
 
+  def list_sites_for_attendance(user, _prefix) when is_nil(user.employee_id), do: []
+
+  def list_sites_for_attendance(user, prefix) do
+
+    from(r in Roster, where: r.employee_id == ^user.employee_id,
+      join: mr in MasterRoster, on: mr.id == r.master_roster_id,
+      join: s in Site, on: s.id == mr.site_id,
+      select: s)
+   |> Repo.all(prefix: prefix)
+  end
+
 end
