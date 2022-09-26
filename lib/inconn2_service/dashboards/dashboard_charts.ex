@@ -734,4 +734,27 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     {asset.name, mtbf}
   end
 
+  def get_work_order_cost_data(params, prefix) do
+    NumericalData.get_work_order_cost(params, prefix)
+    |> Enum.group_by(&(&1.scheduled_date))
+    |> Enum.map(fn {k, v} ->
+      %{
+        label: k,
+        dataSets: process_wo_for_date(v, params["asset_type"], prefix)
+      }
+    end)
+  end
+
+  defp process_wo_for_date(work_orders, asset_type, prefix) do
+    Enum.group_by(work_orders, &(&1.asset_id))
+    |> Enum.map(fn {k, v} ->
+      %{
+        name: get_asset(k, asset_type, prefix).name,
+        value: Enum.map(v, fn v -> v.cost end) |> Enum.sum()
+      }
+    end)
+  end
+
+  defp get_asset(asset_id, "E", prefix), do: AssetConfig.get_equipment!(asset_id, prefix)
+  defp get_asset(asset_id, "L", prefix), do: AssetConfig.get_location!(asset_id, prefix)
 end
