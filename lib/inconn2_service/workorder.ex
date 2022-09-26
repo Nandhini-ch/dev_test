@@ -1367,6 +1367,7 @@ defmodule Inconn2Service.Workorder do
           record_meter_readings(work_order, updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
+          calculate_work_order_cost(work_order, prefix)
           {:ok, get_work_order!(updated_work_order.id, prefix)}
       _ ->
         result
@@ -3397,5 +3398,29 @@ defmodule Inconn2Service.Workorder do
              Map.put_new(workorder_schedule, :site, site)
              |> Map.put_new(:asset, equipment)
     end
+  end
+
+  defp calculate_work_order_cost(work_order, prefix) do
+    cond do
+      work_order.status == "cp" ->
+        Elixir.Task.start(fn -> calculate_cost(work_order, prefix) end)
+      true ->
+        {:ok, work_order}
+    end
+  end
+
+  defp calculate_cost(work_order, prefix) do
+    workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
+    [workorder_template.tools, workorder_template.spares, workorder_template.consumables, workorder_template.parts, workorder_template.measuring_instruments]
+    |> Enum.map(fn x -> get_prices_as_list(x, prefix) end)
+    |> List.flatten()
+    |> Enum.sum()
+  end
+
+  defp get_prices_as_list(list, prefix) do
+    Enum.map(list, fn l ->
+      item = Inconn2Service.InventoryManagement.get_inventory_item!(list.item_id, prefix)
+      item.unit_price * l.quantity
+    end)
   end
 end
