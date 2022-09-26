@@ -484,6 +484,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
     post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
     post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
+    post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
