@@ -88,6 +88,8 @@ defmodule Inconn2Service.Reapportion do
     cond do
       is_nil(work_order) or is_nil(workorder_schedule) ->
         cs
+      is_nil(workorder_schedule.next_occurrence_date) or is_nil(workorder_schedule.next_occurrence_time) ->
+        cs
       Date.compare(reschedule_date, workorder_schedule.next_occurrence_date) not in [:lt, :eq] ->
         add_error(cs, :reschedule_date, "Date exceeding next occurrence")
       Time.compare(reschedule_time, workorder_schedule.next_occurrence_time) == :lt ->
