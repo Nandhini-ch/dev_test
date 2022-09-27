@@ -2047,6 +2047,7 @@ defmodule Inconn2Service.Workorder do
 
   defp get_skills_with_subtree_asset_category(skills, prefix) do
     Stream.filter(skills, fn x -> x != nil end)
+    |> Stream.map(fn s -> AssetConfig.get_asset_category!(s, prefix) end)
     |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
     |> List.flatten()
     |> Stream.uniq()
