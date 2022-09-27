@@ -40,7 +40,7 @@ defmodule Inconn2Service.Staff.User do
 
   def changeset_update(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
+    |> cast(attrs, [:username, :first_name, :last_name, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :role_id, :party_id])
     |> validate_format(:username, ~r/@/)
     |> unique_constraint(:username)
