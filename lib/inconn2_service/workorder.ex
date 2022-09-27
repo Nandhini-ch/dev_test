@@ -2014,7 +2014,7 @@ defmodule Inconn2Service.Workorder do
             []
 
           _ ->
-            asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+            asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
               from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
@@ -2047,7 +2047,6 @@ defmodule Inconn2Service.Workorder do
 
   defp get_skills_with_subtree_asset_category(skills, prefix) do
     Stream.filter(skills, fn x -> x != nil end)
-    |> Stream.map(fn s -> AssetConfig.get_asset_category!(s, prefix) end)
     |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
     |> List.flatten()
     |> Stream.uniq()
