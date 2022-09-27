@@ -2949,15 +2949,15 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
     tasks = WorkOrderConfig.list_tasks_for_task_lists(workorder_template.task_list_id, prefix)
     Enum.map(tasks, fn task ->
-                          start_dt = calculate_start_of_task(work_order, task.sequence, prefix)
-                          end_dt = calculate_end_of_task(start_dt, task.task_id, prefix)
+                          # start_dt = calculate_start_of_task(work_order, task.sequence, prefix)
+                          # end_dt = calculate_end_of_task(start_dt, task.task_id, prefix)
                           attrs = %{
                             "work_order_id" => work_order.id,
                             "task_id" => task.task_id,
-                            "sequence" => task.sequence,
+                            "sequence" => task.sequence
                             # "response" => %{"answers" => nil},
-                            "expected_start_time" => start_dt,
-                            "expected_end_time" => end_dt
+                            # "expected_start_time" => start_dt,
+                            # "expected_end_time" => end_dt
                           }
                           create_workorder_task(attrs, prefix)
                     end)
