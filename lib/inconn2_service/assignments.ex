@@ -8,6 +8,7 @@ defmodule Inconn2Service.Assignments do
   alias Inconn2Service.Repo
   alias Inconn2Service.{Staff, Settings}
   alias Inconn2Service.Settings.Shift
+  alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.Assignments.{MasterRoster, Roster}
 
   def get_master_roster(params, prefix) do
