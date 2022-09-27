@@ -993,7 +993,7 @@ defmodule Inconn2Service.Workorder do
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
     pre_check_required = get_change(cs, :pre_check_required)
-    is_assigned = get_change(cs, :status, nil)
+    is_assigned = get_field(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
       !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
@@ -1009,7 +1009,7 @@ defmodule Inconn2Service.Workorder do
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
     pre_check_required = get_change(cs, :pre_check_required)
-    is_assigned = get_change(cs, :status, nil)
+    is_assigned = get_field(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
