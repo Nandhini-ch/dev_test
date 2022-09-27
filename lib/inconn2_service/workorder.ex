@@ -999,7 +999,7 @@ defmodule Inconn2Service.Workorder do
       !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
       !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
-      is_assigned == "as" -> change(cs, %{status: "exec"})
+      is_assigned == "as" -> change(cs, %{status: "execwa"})
       true -> cs
     end
   end
@@ -1017,7 +1017,7 @@ defmodule Inconn2Service.Workorder do
       !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
       !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
-      is_assigned == "as" -> change(cs, %{status: "exec"})
+      is_assigned == "as" -> change(cs, %{status: "execwa"})
       true ->
         cs
     end
