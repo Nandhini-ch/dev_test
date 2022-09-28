@@ -28,6 +28,10 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_org_units_for_user(user, prefix) do
+    list_org_units(user.party_id, prefix)
+  end
+
   def list_org_units_tree(party_id, prefix) do
     list_org_units(party_id, prefix)
     |> HierarchyManager.build_tree()

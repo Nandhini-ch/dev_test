@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.OrgUnitController do
     render(conn, "index.json", org_units: org_units)
   end
 
+  def index_current_user_org(conn, _) do
+    org_units = Staff.list_org_units_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", org_units: org_units)
+  end
+
   def tree(conn, %{"party_id" => party_id}) do
     org_units = Staff.list_org_units_tree(party_id, conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", org_units: org_units)
