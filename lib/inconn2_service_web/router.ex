@@ -203,6 +203,7 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
+    get "/org_units_for_user", OrgUnitController, :index_current_user_org
     get "/download_org_units", ReferenceDownloadController, :download_org_units
     post "/upload_org_units", ReferenceUploadController, :upload_org_units
     get "/parties/:party_id/org_units", OrgUnitController, :index

@@ -114,8 +114,8 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   def party_query(query, query_params) do
     Enum.reduce(query_params, query, fn
-      {"type", "sp"}, query -> from q in query, where: q.party_type == ^"SP"
-      {"type", "ao"}, query -> from q in query, where: q.party_type == ^"AO"
+      {"type", "sp"}, query -> from q in query, where: q.party_type == "SP"
+      {"type", "ao"}, query -> from q in query, where: q.party_type == "AO"
       _, query -> from q in query, where: q.active
     end)
   end

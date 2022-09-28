@@ -602,8 +602,9 @@ defmodule Inconn2Service.Report do
                 0.0
               end
             sum =
-              Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
-              |> Enum.map(fn ast -> ast.hours end)
+              Stream.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
+              |> Stream.map(fn ast -> ast.hours end)
+              |> Stream.filter(fn h -> !is_nil(h) end)
               |> Enum.sum()
 
           sum + compensation_hours
