@@ -15,7 +15,7 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def list_reassign_reschedule_requests_to_be_approved(prefix, user, query_params) do
-    employee = Staff.get_employee_of_user(user, prefix)
+    employee = Staff.get_employee_from_user(user.employee_id, prefix)
     case employee do
       nil -> []
       obj -> get_reassign_reschedule_requests_to_be_approved(obj, query_params, prefix)
@@ -88,6 +88,8 @@ defmodule Inconn2Service.Reapportion do
     cond do
       is_nil(work_order) or is_nil(workorder_schedule) ->
         cs
+      is_nil(workorder_schedule.next_occurrence_date) or is_nil(workorder_schedule.next_occurrence_time) ->
+        cs
       Date.compare(reschedule_date, workorder_schedule.next_occurrence_date) not in [:lt, :eq] ->
         add_error(cs, :reschedule_date, "Date exceeding next occurrence")
       Time.compare(reschedule_time, workorder_schedule.next_occurrence_time) == :lt ->
@@ -134,7 +136,7 @@ defmodule Inconn2Service.Reapportion do
 
   defp add_reports_to(cs, prefix) do
     user = get_field(cs, :requester_user_id, nil) |> get_user_from_changeset(prefix)
-    employee = Staff.get_employee_of_user(user, prefix)
+    employee = Staff.get_employee_from_user(user.employee_id, prefix)
     cond do
       !is_nil(user) and !is_nil(employee) and !is_nil(employee.reports_to) ->
         # reports_to_user = Staff.get_user_from_employee(employee.id, prefix)

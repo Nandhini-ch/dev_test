@@ -993,14 +993,14 @@ defmodule Inconn2Service.Workorder do
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
     pre_check_required = get_change(cs, :pre_check_required)
-    is_assigned = get_change(cs, :status, nil)
+    # is_assigned = get_field(cs, :status, nil)
     cond do
-      !is_nil(is_approval_required) and is_assigned == "as" -> change(cs, %{status: "woap"})
-      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
-      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
-      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
-      is_assigned == "as" -> change(cs, %{status: "exec"})
-      true -> cs
+      !is_nil(is_approval_required) -> change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) -> change(cs, %{status: "prep"})
+      !is_nil(is_workpermit_required) -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required)  -> change(cs, %{status: "lpap"})
+      # is_assigned == "as" -> change(cs, %{status: "execwa"})
+      true -> change(cs, %{status: "execwa"})
     end
   end
 
@@ -1009,7 +1009,7 @@ defmodule Inconn2Service.Workorder do
     is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
     is_loto_required = get_change(cs, :is_loto_required, nil)
     pre_check_required = get_change(cs, :pre_check_required)
-    is_assigned = get_change(cs, :status, nil)
+    is_assigned = get_field(cs, :status, nil)
     cond do
       !is_nil(is_approval_required) and is_assigned == "as" ->
         update_status_track(work_order, user, prefix, "woap")
@@ -1017,7 +1017,7 @@ defmodule Inconn2Service.Workorder do
       !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
       !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
-      is_assigned == "as" -> change(cs, %{status: "exec"})
+      is_assigned == "as" -> change(cs, %{status: "execwa"})
       true ->
         cs
     end
@@ -1351,8 +1351,8 @@ defmodule Inconn2Service.Workorder do
             |> self_assign(work_order, user)
             |> validate_user_id(prefix)
             |> status_assigned(work_order, user, prefix)
-            |> prefill_status_for_workorder_approval(work_order, user, prefix)
             |> status_reassigned(work_order, user, prefix)
+            # |> prefill_status_for_workorder_approval(work_order, user, prefix)
             |> status_rescheduled(work_order, user, prefix)
             |> update_status(work_order, user, prefix)
             |> prevent_updating_deactivated_work_order(work_order)
@@ -1730,7 +1730,8 @@ defmodule Inconn2Service.Workorder do
     if length(completed_workorder_checks) != length(workorder_checks) do
       %{result: false, message: "All Workpermit checks not completed"}
     else
-      update_work_order_without_validations(work_order, %{"status" => "wpp"}, prefix, user)
+      attrs = put_user_id_if_not_assigned(%{"status" => "wpp"}, work_order, user)
+      update_work_order_without_validations(work_order, attrs, prefix, user)
       %{result: true, message: "Submitted for approval"}
     end
   end
@@ -1755,7 +1756,8 @@ defmodule Inconn2Service.Workorder do
     if length(completed_workorder_checks) != length(workorder_checks) do
       %{result: false, message: "All #{query_type} checks not completed"}
     else
-      update_work_order_without_validations(work_order, %{"status" => status}, prefix, user)
+      attrs = put_user_id_if_not_assigned(%{"status" => status}, work_order, user)
+      update_work_order_without_validations(work_order, attrs, prefix, user)
       %{result: true, message: "Submitted for approval"}
     end
   end
@@ -1829,9 +1831,10 @@ defmodule Inconn2Service.Workorder do
 
     work_order = get_work_order!(List.first(results).work_order_id, prefix)
     all_pre_checks = WorkorderCheck |> where([work_order_id: ^work_order.id, type: ^"PRE"]) |> Repo.all(prefix: prefix)
-    if length(all_pre_checks) == length(results) do\
+    if length(all_pre_checks) == length(results) do
       status = get_next_status(work_order)
-      update_work_order_without_validations(work_order, %{"precheck_completed" => true, "status" => status}, prefix, user)
+      attrs = put_user_id_if_not_assigned(%{"precheck_completed" => true, "status" => status}, work_order, user)
+      update_work_order_without_validations(work_order, attrs, prefix, user)
     end
     results
   end
@@ -1841,6 +1844,13 @@ defmodule Inconn2Service.Workorder do
       work_order.is_workpermit_required -> "wpap"
       work_order.is_loto_required -> "ltlap"
       true -> "exec"
+    end
+  end
+
+  def put_user_id_if_not_assigned(attrs, work_order, user) do
+    case work_order.user_id do
+      nil -> Map.put(attrs, "user_id", user.id) |> Map.put("is_self_assigned", true)
+      _ -> attrs
     end
   end
 
@@ -1912,12 +1922,12 @@ defmodule Inconn2Service.Workorder do
 
   defp status_assigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil and work_order.user_id == nil do
-      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-      date_time = DateTime.now!(site.time_zone)
-      date = Date.new!(date_time.year, date_time.month, date_time.day)
-      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      # site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      # date_time = DateTime.now!(site.time_zone)
+      # date = Date.new!(date_time.year, date_time.month, date_time.day)
+      # time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "as")
-      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+      # change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
     end
@@ -1925,12 +1935,12 @@ defmodule Inconn2Service.Workorder do
 
   defp status_reassigned(cs, work_order, user, prefix) do
     if get_change(cs, :user_id, nil) != nil and work_order.user_id != nil do
-      site = Repo.get!(Site, work_order.site_id, prefix: prefix)
-      date_time = DateTime.now!(site.time_zone)
-      date = Date.new!(date_time.year, date_time.month, date_time.day)
-      time = Time.new!(date_time.hour, date_time.minute, date_time.second)
+      # site = Repo.get!(Site, work_order.site_id, prefix: prefix)
+      # date_time = DateTime.now!(site.time_zone)
+      # date = Date.new!(date_time.year, date_time.month, date_time.day)
+      # time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "reassigned")
-      change(cs, %{status: "as", assigned_date: date, assigned_time: time})
+      # change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
     end
@@ -2014,7 +2024,7 @@ defmodule Inconn2Service.Workorder do
             []
 
           _ ->
-            asset_category_ids = get_skills_with_subtree_asset_category(employee.skills, prefix)
+            asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
               from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
@@ -2949,15 +2959,15 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template(work_order.workorder_template_id, prefix)
     tasks = WorkOrderConfig.list_tasks_for_task_lists(workorder_template.task_list_id, prefix)
     Enum.map(tasks, fn task ->
-                          start_dt = calculate_start_of_task(work_order, task.sequence, prefix)
-                          end_dt = calculate_end_of_task(start_dt, task.task_id, prefix)
+                          # start_dt = calculate_start_of_task(work_order, task.sequence, prefix)
+                          # end_dt = calculate_end_of_task(start_dt, task.task_id, prefix)
                           attrs = %{
                             "work_order_id" => work_order.id,
                             "task_id" => task.task_id,
-                            "sequence" => task.sequence,
+                            "sequence" => task.sequence
                             # "response" => %{"answers" => nil},
-                            "expected_start_time" => start_dt,
-                            "expected_end_time" => end_dt
+                            # "expected_start_time" => start_dt,
+                            # "expected_end_time" => end_dt
                           }
                           create_workorder_task(attrs, prefix)
                     end)

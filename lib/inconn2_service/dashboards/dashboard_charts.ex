@@ -3,6 +3,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.InventoryManagement
 
   #Energy meters
   def get_energy_consumption(params, prefix) do
@@ -430,6 +431,75 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     end
   end
 
+  def get_intime_reporting_chart(params, prefix) do
+    site_id = params["site_id"]
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], site_id, prefix)
+    shift_tuples = Helpers.get_shifts_tuple(params["shift_ids"], site_id, prefix)
+    Helpers.get_org_units_tuple(params["org_unit_ids"], prefix)
+    |> Enum.map(&Task.async(fn ->
+                              get_intime_reporting_for_org_unit(site_id, &1, shift_tuples,  from_date, to_date, prefix)
+                            end))
+    |> Task.await_many()
+  end
+
+  defp get_intime_reporting_for_org_unit(site_id, {org_unit_name, org_unit_id}, shift_tuples,  from_date, to_date, prefix) do
+    datasets =
+      shift_tuples
+      |> Enum.map(fn {shift_name, shift_id} -> get_intime_reporting_percentage(site_id, org_unit_id, {shift_name, shift_id}, from_date, to_date, prefix) end)
+
+    %{
+      label: org_unit_name,
+      dataSets: datasets
+    }
+  end
+
+  defp get_intime_reporting_percentage(site_id, org_unit_id, {shift_name, shift_id}, from_date, to_date, prefix) do
+    expected_rosters = NumericalData.get_expected_rosters(site_id, org_unit_id, shift_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
+    actual_attendances =
+      NumericalData.get_attendances(site_id, org_unit_id, shift_id, NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59]), prefix)
+      |> Stream.filter(fn att ->
+          Time.compare(NaiveDateTime.to_time(att.in_time), att.shift_start) != :gt
+        end)
+      |> Enum.count()
+
+    %{
+      name: shift_name,
+      value: (actual_attendances / expected_rosters) *100
+    }
+  end
+
+  def get_shift_coverage_chart(params, prefix) do
+    site_id = params["site_id"]
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], site_id, prefix)
+    shift_tuples = Helpers.get_shifts_tuple(params["shift_ids"], site_id, prefix)
+    Helpers.get_org_units_tuple(params["org_unit_ids"], prefix)
+    |> Enum.map(&Task.async(fn ->
+                              get_shift_coverage_for_org_unit(site_id, &1, shift_tuples,  from_date, to_date, prefix)
+                            end))
+    |> Task.await_many()
+  end
+
+  defp get_shift_coverage_for_org_unit(site_id, {org_unit_name, org_unit_id}, shift_tuples,  from_date, to_date, prefix) do
+    datasets =
+      shift_tuples
+      |> Enum.map(fn {shift_name, shift_id} -> get_shift_coverage_percentage(site_id, org_unit_id, {shift_name, shift_id}, from_date, to_date, prefix) end)
+
+    %{
+      label: org_unit_name,
+      dataSets: datasets
+    }
+  end
+
+  defp get_shift_coverage_percentage(site_id, org_unit_id, {shift_name, shift_id}, from_date, to_date, prefix) do
+    expected_rosters = NumericalData.get_expected_rosters(site_id, org_unit_id, shift_id, from_date, to_date, prefix) |> Enum.count() |> change_nil_to_one()
+    actual_attendances = NumericalData.get_attendances(site_id, org_unit_id, shift_id, NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59]), prefix) |> Enum.count()
+
+    %{
+      name: shift_name,
+      value: (actual_attendances / expected_rosters) *100
+    }
+  end
+
   defp get_ppms_using_asset_category_ids(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
       NumericalData.get_workorder_for_chart(
@@ -734,6 +804,27 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     {asset.name, mtbf}
   end
 
+  def get_inventory_breach_data(params, prefix) do
+    NumericalData.get_number_of_days_breached(params, prefix)
+   |> Enum.group_by(&(&1.inventory_item_id))
+   |> process_breach_entries(prefix)
+  end
+
+
+  defp process_breach_entries(entries, prefix) do
+    Enum.map(entries, fn {k, v} ->
+      %{
+        label: InventoryManagement.get_inventory_item!(k, prefix).name,
+        dataSets: [
+          %{
+            name: "Days",
+            value: process_breach_date_list(v) |> change_nil_to_zero()
+          }
+        ]
+      }
+    end)
+  end
+
   def get_work_order_cost_data(params, prefix) do
     NumericalData.get_work_order_cost(params, prefix)
     |> Enum.group_by(&(&1.scheduled_date))
@@ -743,6 +834,12 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: process_wo_for_date(v, params["asset_type"], prefix)
       }
     end)
+  end
+
+  defp process_breach_date_list(breach_data) do
+    Enum.sort_by(breach_data, &(&1.breached_date_time), NaiveDateTime)
+    |> Enum.filter(fn x -> x.is_msl_breached == "YES" end)
+    |> List.first()
   end
 
   defp process_wo_for_date(work_orders, asset_type, prefix) do
@@ -757,4 +854,5 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_asset(asset_id, "E", prefix), do: AssetConfig.get_equipment!(asset_id, prefix)
   defp get_asset(asset_id, "L", prefix), do: AssetConfig.get_location!(asset_id, prefix)
+
 end
