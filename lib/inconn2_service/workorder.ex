@@ -998,7 +998,7 @@ defmodule Inconn2Service.Workorder do
       !is_nil(is_approval_required) and is_approval_required -> change(cs, %{status: "woap"})
       !is_nil(pre_check_required) and pre_check_required -> change(cs, %{status: "prep"})
       !is_nil(is_workpermit_required) and is_workpermit_required -> change(cs, %{status: "wpap"})
-      !is_nil(is_loto_required) and is_loto_required -> change(cs, %{status: "lpap"})
+      !is_nil(is_loto_required) and is_loto_required -> change(cs, %{status: "ltlap"})
       # is_assigned == "as" -> change(cs, %{status: "execwa"})
       true -> change(cs, %{status: "execwa"})
     end
