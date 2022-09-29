@@ -114,7 +114,7 @@ defmodule Inconn2Service.Measurements do
                         recorded_type: t.config["type"],
                         # recorded_date_time: wot.actual_end_time,
                         unit_of_measurement: t.config["UOM"],
-                        meter_type: t.config["meter_type"]
+                        meter_type: t.config["category"]
                         }
 
      workorder_tasks = Repo.all(query, prefix: prefix)
