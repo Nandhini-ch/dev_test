@@ -274,7 +274,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        push_alert_notification_for_ticket(nil, work_request, prefix, user)
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket(nil, work_request, prefix, user) end)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
