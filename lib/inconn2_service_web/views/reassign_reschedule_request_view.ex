@@ -21,6 +21,7 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestView do
       reports_to_user_id: reassign_reschedule_request.reports_to_user_id,
       reschedule_date: reassign_reschedule_request.reschedule_date,
       reschedule_time: reassign_reschedule_request.reschedule_time,
+      requested_datetime: reassign_reschedule_request.requested_datetime,
       request_for: reassign_reschedule_request.request_for,
       work_order_id: reassign_reschedule_request.work_order_id,
       status: reassign_reschedule_request.status}
@@ -33,6 +34,7 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestView do
       reports_to_user_id: reassign_reschedule_request.reports_to_user_id,
       reschedule_date: reassign_reschedule_request.reschedule_date,
       reschedule_time: reassign_reschedule_request.reschedule_time,
+      requested_datetime: reassign_reschedule_request.requested_datetime,
       request_for: reassign_reschedule_request.request_for,
       work_order_id: reassign_reschedule_request.work_order_id,
       asset_name: reassign_reschedule_request.asset_name,

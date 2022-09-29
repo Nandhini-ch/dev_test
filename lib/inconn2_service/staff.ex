@@ -471,6 +471,7 @@ defmodule Inconn2Service.Staff do
     Repo.all(User, prefix: prefix)
     |> Repo.add_active_filter()
     |> Repo.preload(employee: :org_unit)
+    |> sort_users()
   end
 
   def list_users(user, prefix) do
@@ -667,6 +668,7 @@ defmodule Inconn2Service.Staff do
     User.change_password_changeset(user, %{"password" => credentials["password"]}) |> Repo.update(prefix: prefix)
   end
 
+  defp sort_users(users), do: Enum.sort_by(users, &(&1.updated_at), {:desc, NaiveDateTime})
 
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
