@@ -856,7 +856,7 @@ defmodule Inconn2Service.Workorder do
           asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"],
+            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
       end
@@ -2027,7 +2027,7 @@ defmodule Inconn2Service.Workorder do
             asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
-              from q in common_query, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+              from q in common_query, where: is_nil(q.user_id), join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
