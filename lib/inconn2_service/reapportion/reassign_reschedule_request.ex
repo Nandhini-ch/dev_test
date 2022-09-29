@@ -10,6 +10,7 @@ defmodule Inconn2Service.Reapportion.ReassignRescheduleRequest do
     field :requester_user_id, :integer
     field :reschedule_date, :date
     field :reschedule_time, :time
+    field :requested_datetime, :naive_datetime
     field :request_for, :string
     field :status, :string, default: "PD"
     # field :work_order_id, :id
@@ -21,7 +22,7 @@ defmodule Inconn2Service.Reapportion.ReassignRescheduleRequest do
   @doc false
   def changeset(reassign_reschedule_request, attrs) do
     reassign_reschedule_request
-    |> cast(attrs, [:requester_user_id, :reassign_to_user_id, :reports_to_user_id, :reschedule_date, :reschedule_time, :request_for, :work_order_id, :status])
+    |> cast(attrs, [:requester_user_id, :reassign_to_user_id, :requested_datetime, :reports_to_user_id, :reschedule_date, :reschedule_time, :request_for, :work_order_id, :status])
     |> validate_required([:requester_user_id, :work_order_id, :request_for])
     |> validate_inclusion(:request_for, ["REAS", "RESC"])
     |> validate_inclusion(:status, ["PD", "AP", "RJ"])

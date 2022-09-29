@@ -550,6 +550,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> sort_locations()
   end
 
   def search_locations(name_text, site_id, prefix) do
@@ -2111,4 +2112,5 @@ defmodule Inconn2Service.AssetConfig do
 
 
   defp sort_sites(sites), do: Enum.sort_by(sites, &(&1.name))
+  defp sort_locations(locations), do: Enum.sort_by(locations, &(&1.updated_at), {:desc, NaiveDateTime})
 end
