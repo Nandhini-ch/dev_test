@@ -511,6 +511,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_work_order_cost(site_id, prefix) do
     NumericalData.get_work_order_numerical_cost(site_id, prefix)
     |> Stream.map(fn wo -> wo.cost end)
+    |> Stream.filter(fn cost -> not is_nil(cost) end)
     |> Enum.sum()
   end
 
