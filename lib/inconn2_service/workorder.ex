@@ -1927,6 +1927,7 @@ defmodule Inconn2Service.Workorder do
       # date = Date.new!(date_time.year, date_time.month, date_time.day)
       # time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "as")
+      cs
       # change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
@@ -1940,6 +1941,7 @@ defmodule Inconn2Service.Workorder do
       # date = Date.new!(date_time.year, date_time.month, date_time.day)
       # time = Time.new!(date_time.hour, date_time.minute, date_time.second)
       update_status_track(work_order, user, prefix, "reassigned")
+      cs
       # change(cs, %{status: "as", assigned_date: date, assigned_time: time})
     else
       cs
