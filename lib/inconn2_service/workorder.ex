@@ -995,33 +995,33 @@ defmodule Inconn2Service.Workorder do
     pre_check_required = get_change(cs, :pre_check_required)
     # is_assigned = get_field(cs, :status, nil)
     cond do
-      !is_nil(is_approval_required) -> change(cs, %{status: "woap"})
-      !is_nil(pre_check_required) -> change(cs, %{status: "prep"})
-      !is_nil(is_workpermit_required) -> change(cs, %{status: "wpap"})
-      !is_nil(is_loto_required)  -> change(cs, %{status: "lpap"})
+      !is_nil(is_approval_required) and is_approval_required -> change(cs, %{status: "woap"})
+      !is_nil(pre_check_required) and pre_check_required -> change(cs, %{status: "prep"})
+      !is_nil(is_workpermit_required) and is_workpermit_required -> change(cs, %{status: "wpap"})
+      !is_nil(is_loto_required) and is_loto_required -> change(cs, %{status: "lpap"})
       # is_assigned == "as" -> change(cs, %{status: "execwa"})
       true -> change(cs, %{status: "execwa"})
     end
   end
 
-  defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
-    is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
-    is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
-    is_loto_required = get_change(cs, :is_loto_required, nil)
-    pre_check_required = get_change(cs, :pre_check_required)
-    is_assigned = get_field(cs, :status, nil)
-    cond do
-      !is_nil(is_approval_required) and is_assigned == "as" ->
-        update_status_track(work_order, user, prefix, "woap")
-        change(cs, %{status: "woap"})
-      !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
-      !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
-      !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
-      is_assigned == "as" -> change(cs, %{status: "execwa"})
-      true ->
-        cs
-    end
-  end
+  # defp prefill_status_for_workorder_approval(cs, work_order, user, prefix) do
+  #   is_approval_required = get_field(cs, :is_workorder_approval_required, nil)
+  #   is_workpermit_required = get_change(cs, :is_workpermit_required, nil)
+  #   is_loto_required = get_change(cs, :is_loto_required, nil)
+  #   pre_check_required = get_change(cs, :pre_check_required)
+  #   is_assigned = get_field(cs, :status, nil)
+  #   cond do
+  #     !is_nil(is_approval_required) and is_assigned == "as" ->
+  #       update_status_track(work_order, user, prefix, "woap")
+  #       change(cs, %{status: "woap"})
+  #     !is_nil(pre_check_required) and is_assigned == "as" -> change(cs, %{status: "prep"})
+  #     !is_nil(is_workpermit_required) and is_assigned == "as" -> change(cs, %{status: "wpap"})
+  #     !is_nil(is_loto_required) and is_assigned == "as" -> change(cs, %{status: "lpap"})
+  #     is_assigned == "as" -> change(cs, %{status: "execwa"})
+  #     true ->
+  #       cs
+  #   end
+  # end
 
 
   defp prefill_asset_type(cs, prefix) do
