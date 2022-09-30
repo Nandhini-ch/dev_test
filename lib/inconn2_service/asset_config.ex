@@ -139,10 +139,9 @@ defmodule Inconn2Service.AssetConfig do
           site =
             %Site{}
             |> Site.changeset(attrs)
-            |> add_error(
-              :party_id,
-              "Cannot create site, There is no Licensee / Party - Asset owner for this site"
-            )
+            |> add_error(:party_id, "Cannot create site, There is no Licensee / Party - Asset owner for this site")
+            |> Repo.insert(prefix: prefix)
+
 
           IO.inspect(site)
 
