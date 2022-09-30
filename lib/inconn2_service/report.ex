@@ -999,6 +999,7 @@ defmodule Inconn2Service.Report do
 
   def execute_queryand_return_stream(query, prefix) do
     schedule_template_data = Repo.all(query, prefix: prefix)
+    IO.inspect(schedule_template_data)
 
     Stream.map(schedule_template_data, fn st ->
       %{
