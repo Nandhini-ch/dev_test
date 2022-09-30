@@ -181,7 +181,7 @@ defmodule Inconn2Service.Ticket do
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
-    |> Enum.filter(fn wr -> exclude_work_request_approved(wr, current_user, prefix) end)
+    |> Enum.filter(fn wr -> !exclude_work_request_approved(wr, current_user, prefix) end)
   end
 
   defp exclude_work_request_approved(work_request, current_user, prefix) do
@@ -416,7 +416,9 @@ defmodule Inconn2Service.Ticket do
   defp send_completed_email(work_request, updated_work_request, prefix) do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
-          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+          Elixir.Task.start(fn ->
+            Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+          end)
           updated_work_request
       true ->
           updated_work_request
