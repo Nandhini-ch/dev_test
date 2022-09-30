@@ -194,11 +194,11 @@ defmodule Inconn2Service.Report do
               0
 
             is_nil(wo.completed_time) || is_nil(wo.completed_date) ->
-              Time.diff(get_site_date_time(wo.site), NaiveDateTime.new!(wo.start_date, wo.start_time))
+              Time.diff(get_site_date_time(wo.site), NaiveDateTime.new!(wo.start_date, wo.start_time)) |> convert_to_positive()
 
             true ->
               # Time.diff(wo.completed_time, wo.start_time)
-              Time.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.new!(wo.start_date, wo.start_time))
+              Time.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.new!(wo.start_date, wo.start_time)) |> convert_to_positive()
           end
 
         %{
@@ -230,6 +230,13 @@ defmodule Inconn2Service.Report do
 
       _ ->
         result
+    end
+  end
+
+  defp convert_to_positive(number) do
+    cond do
+      number < 0 -> number * -1
+      true -> number
     end
   end
 
@@ -619,7 +626,7 @@ defmodule Inconn2Service.Report do
               # IO.inspect("-----------wqe4342")
               last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
               if last_entry != nil and last_entry.status_changed == "ON" do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
               else
                 0.0
               end
@@ -629,7 +636,7 @@ defmodule Inconn2Service.Report do
               compensation_hours =
                 if last_entry.status_changed in ["ON", "OFF"] do
                   IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
-                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
                 else
                   # IO.inspect("213123")
                   0.0
@@ -637,6 +644,7 @@ defmodule Inconn2Service.Report do
               sum =
                 Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
                 |> Enum.map(fn ast -> ast.hours end)
+                |> Stream.filter(fn h -> !is_nil(h) end)
                 |> Enum.sum()
 
               sum + compensation_hours
@@ -724,7 +732,7 @@ defmodule Inconn2Service.Report do
           0 ->
             last_entry = get_last_entry_previous(l.id, "L", naive_from_date, prefix)
             if last_entry != nil and last_entry.status_changed in ["ON", "OFF"] do
-              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
             else
               0.0
             end
@@ -733,13 +741,14 @@ defmodule Inconn2Service.Report do
             last_entry = List.last(asset_status_tracks)
             compensation_hours =
               if last_entry.status_changed in ["ON", "OFF"] do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
               else
                 0.0
               end
             sum =
               Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
               |> Enum.map(fn ast -> ast.hours end)
+              |> Stream.filter(fn h -> !is_nil(h) end)
               |> Enum.sum()
 
           sum + compensation_hours
@@ -752,7 +761,7 @@ defmodule Inconn2Service.Report do
               IO.inspect("-----------wqe4342")
               last_entry = get_last_entry_previous(l.id, "L", naive_from_date, prefix)
               if last_entry != nil and last_entry.status_changed == "ON" do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
               else
                 0.0
               end
@@ -762,7 +771,7 @@ defmodule Inconn2Service.Report do
               compensation_hours =
                 if last_entry.status_changed in ["ON", "OFF"] do
                   IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
-                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
                 else
                   IO.inspect("213123")
                   0.0
@@ -770,6 +779,7 @@ defmodule Inconn2Service.Report do
               sum =
                 Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
                 |> Enum.map(fn ast -> ast.hours end)
+                |> Stream.filter(fn h -> !is_nil(h) end)
                 |> Enum.sum()
 
               sum + compensation_hours
