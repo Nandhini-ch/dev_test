@@ -3,7 +3,4 @@ defmodule Inconn2ServiceWeb.ReferenceTemplateDownloaderController do
 
   alias Inconn2Service.ReferenceTemplateDownloader
   action_fallback Inconn2ServiceWeb.FallbackController
-
-
-  def
 end
