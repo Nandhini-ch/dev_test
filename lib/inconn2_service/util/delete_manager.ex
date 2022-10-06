@@ -13,19 +13,15 @@ defmodule Inconn2Service.Util.DeleteManager do
   alias Inconn2Service.Workorder.{WorkorderSchedule, WorkorderTemplate}
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.AssetConfig.Party
-  alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role, Designation }
+  alias Inconn2Service.Staff.{OrgUnit, Employee, User, Role, Designation, TeamMember }
   alias Inconn2Service.ContractManagement.{Contract, Scope, ManpowerConfiguration}
   alias Inconn2Service.Settings.Shift
-  # alias Inconn2Service.Ticket
-  # alias Inconn2Service.Prompt.AlertNotificationConfig
-  # alias Inconn2Service.InventoryManagement
   alias Inconn2Service.Assignment.EmployeeRoster
   alias Inconn2Service.Prompt.AlertNotificationConfig
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestSubcategory, CategoryHelpdesk}
   alias Inconn2Service.WorkOrderConfig.MasterTaskType
   alias Inconn2Service.WorkOrderConfig.{Task, TaskTasklist, TaskList}
   alias Inconn2Service.Workorder.WorkorderTemplate
-  # alias Inconn2Service.InventoryManagement.{Stock, Transaction, InventoryItem,}
 
   def has_employee_rosters?(%Site{} = site, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_employee_rosters?(%Shift{} = shift, prefix), do: (employee_rosters_query(Repo.add_active_filter(EmployeeRoster), %{"shift_id" => shift.id}) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -35,7 +31,6 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_store?(%Site{} = site, prefix), do: (store_query(Repo.add_active_filter(Store),%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_store?(%User{} = user, prefix), do: (store_query(Repo.add_active_filter(Store), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  #def has_site?(%Zone{} = zone, prefix), do: (site_query(Site,%{"zone_id" => zone.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_site?(%Zone{} = zone, prefix), do: (site_query(Repo.add_active_filter(Site),%{"zone_id" => zone.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_site?(%Party{} = party, prefix), do: (site_query(Repo.add_active_filter(Site), %{"party_id" => party.id}, prefix) |> Repo.all(prefix: prefix) |> length()) > 0
@@ -104,5 +99,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_task?(%MasterTaskType{} = master_task_type, prefix), do: (task_query(Repo.add_active_filter(Task), %{"master_task_type_id" => master_task_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_task_tasklistt?(%Task{} = task, prefix), do: (task_tasklist_query((Repo.add_active_filter(TaskTasklist)), %{"task_id" => task.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+
+  def has_team_member(%Employee{} = employee, prefix), do: (team_member_query((Repo.add_active_filter(TeamMember)), %{"employee_id" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
 end

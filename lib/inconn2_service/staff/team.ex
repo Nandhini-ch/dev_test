@@ -5,6 +5,7 @@ defmodule Inconn2Service.Staff.Team do
   schema "teams" do
     field :description, :string
     field :name, :string
+    field :active, :boolean, default: false
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule Inconn2Service.Staff.Team do
   @doc false
   def changeset(team, attrs) do
     team
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
   end
 end
