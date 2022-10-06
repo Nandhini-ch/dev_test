@@ -22,7 +22,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "task" -> download_tasks(prefix)
       "check" -> download_checks(prefix)
       "employee" -> download_employees(prefix)
-
+      "roster" -> download_roster(prefix)
     end
   end
 
