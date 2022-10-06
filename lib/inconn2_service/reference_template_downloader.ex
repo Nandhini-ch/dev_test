@@ -9,6 +9,23 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.Settings
   alias Inconn2Service.Inventory
 
+  def download_template(prefix, query_params) do
+    case query_params["table"] do
+      "asset_category" -> download_asset_categories(prefix)
+      "task_list" -> download_task_lists(prefix)
+      "check_list" -> download_check_lists(prefix)
+      "user" -> download_users(prefix)
+      "zone" -> download_zones(prefix)
+      "site" -> download_sites(prefix)
+      "location" -> download_locations(prefix)
+      "equipment" -> download_equipments(prefix)
+      "task" -> download_tasks(prefix)
+      "check" -> download_checks(prefix)
+      "employee" -> download_employees(prefix)
+
+    end
+  end
+
   def download_asset_categories(prefix) do
     asset_categories = AssetConfig.list_asset_categories(prefix)
 
@@ -121,7 +138,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       Enum.map(locations, fn r ->
         [r.id, "", r.name, r.equipment_code, r.site_id, r.location_id, r.asset_category_id, convert_array_of_integers_to_string(r.connections_in),
         convert_array_of_integers_to_string(r.connections_out), r.parent_id, "", r.status, r.criticality, r.tag_name, r.description, r.function,
-        r.asset_owned_by_id, r.is_movable, r.department, r.asset_manager_id,r.maintenance_manager_id, r.asset_class, List.last(r.path), ""]
+        r.asset_owned_by_id, r.is_movable, r.department, r.asset_manager_id,r.maintenance_manager_id, r.asset_class]
       end)
 
     final_report = header ++ body
