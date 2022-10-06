@@ -20,10 +20,17 @@ defmodule Inconn2Service.SeedFeatures do
         end
 
     content
-    |> String.split("\n")
+    |> String.split(split_regex(content))
     |> Enum.filter(fn s -> s != "" end)
     |> Enum.map(fn s -> process_individual(entity, s) end)
 
+  end
+
+  defp split_regex(content) do
+    cond do
+      String.contains?(content, "\r\n") -> "\r\n"
+      true -> "\n"
+    end
   end
 
   defp process_individual(:features, string) do
