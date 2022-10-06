@@ -336,6 +336,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/csg_report", ReportController, :get_workorder_status_report
     get "/reports/calendar", ReportController, :get_calendar
     get "/reports/people", ReportController, :get_people_report
+    get "/reports/workflow_execution", ReportController, :get_workflow_execution_report
 
 
     get "/work_orders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
