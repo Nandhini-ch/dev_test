@@ -6,7 +6,7 @@ defmodule Inconn2Service.Account do
   alias Inconn2Service.Staff
 
   alias Inconn2Service.Account.BusinessType
-  alias Inconn2Service.CreateModuleFeatureRoles
+  alias Inconn2Service.SeedFeatures
 
   def list_business_types do
     Repo.all(BusinessType)
@@ -80,7 +80,12 @@ defmodule Inconn2Service.Account do
 
         IO.inspect(return_party)
         prefix = "inc_" <> attrs["sub_domain"]
-        role_profile = CreateModuleFeatureRoles.seed_features(prefix) |> Staff.filter_permissions()
+
+        #Seed role profiles
+        SeedFeatures.seed_role_profiles(prefix)
+
+        role_profile = Staff.get_role_profile_by_name!("Admin", prefix) |> Staff.filter_permissions()
+
         {:ok, role} = Staff.create_role(%{"name" => "Licensee Admin",
                                           "description" => "Super Admin for licensee. Has access to all features",
                                           "role_profile_id" => role_profile.id,

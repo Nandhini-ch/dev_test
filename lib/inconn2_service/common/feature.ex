@@ -1,7 +1,6 @@
-defmodule Inconn2Service.Staff.Feature do
+defmodule Inconn2Service.Common.Feature do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.Staff.Module
 
   schema "features" do
     field :code, :string
@@ -24,9 +23,9 @@ defmodule Inconn2Service.Staff.Feature do
     code = get_field(cs, :code, nil)
     if code != nil do
       length = String.length(code)
-      case length == 4 and code =~ ~r(^[^a-z]*$) do
+      case length == 5 and code =~ ~r(^[^a-z]*$) do
         true -> cs
-        false -> add_error(cs, :code, "should be 4 uppercase alphabets")
+        false -> add_error(cs, :code, "should be 5 uppercase alphabets")
       end
     else
       cs

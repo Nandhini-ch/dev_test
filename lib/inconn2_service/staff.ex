@@ -859,13 +859,8 @@ defmodule Inconn2Service.Staff do
   end
 
   def filter_permissions(role_profile) do
-    permissions = Enum.map(role_profile.permissions, fn module -> filter_features(module) end)
+    permissions = Enum.filter(role_profile.permissions, fn feature -> feature["access"] == true end)
     Map.put(role_profile, :permissions, permissions)
-  end
-
-  defp filter_features(module) do
-    features = Enum.filter(module["features"], fn feature -> feature["access"] == true end)
-    Map.put(module, "features", features)
   end
 
   # defp inherit_features(role_profile, role_profile_new, prefix) do
