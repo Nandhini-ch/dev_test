@@ -1,10 +1,16 @@
 defmodule Inconn2ServiceWeb.ReportView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.ReportView
+  alias Inconn2ServiceWeb.{ReportView, WorkorderTaskView}
 
   def render("work_order_report.json", %{work_order_info: work_order_info}) do
     %{
       data: work_order_info
+    }
+  end
+
+  def render("work_order_exec.json", %{work_order_exec_info: work_order_exec_info}) do
+    %{
+      data: render_many(work_order_exec_info, ReportView, "exec.json")
     }
   end
 
@@ -23,6 +29,16 @@ defmodule Inconn2ServiceWeb.ReportView do
   def render("calendar.json", %{calendar: calendar}) do
     %{
       data: calendar
+    }
+  end
+
+  def render("exec.json", %{report: wo}) do
+    %{
+      id: wo.id,
+      site: wo.site.name,
+      workorder_template: wo.workorder_template.name,
+      asset: wo.asset.name,
+      tasks: render_many(wo.tasks, WorkorderTaskView, "workorder_task_with_task.json")
     }
   end
 

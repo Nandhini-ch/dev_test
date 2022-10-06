@@ -36,6 +36,27 @@ defmodule Inconn2ServiceWeb.ReportController do
     end
   end
 
+  def get_workflow_execution_report(conn, _params) do
+    result = Report.work_order_execution_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    case conn.query_params["type"] do
+      "pdf" ->
+        conn
+        |> put_resp_content_type("application/pdf")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.pdf\"")
+        |> send_resp(200, result)
+
+      "csv" ->
+        csv = result |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.csv\"")
+        |> send_resp(200, csv)
+
+      _ ->
+        render(conn, "work_order_exec.json", work_order_exec_info: result)
+    end
+  end
+
   def get_calendar(conn, _params) do
     calendar = Report.calendar(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "calendar.json", calendar: calendar)

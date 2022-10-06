@@ -7,6 +7,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.{Equipment, Site}
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
+  alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule}
   alias Inconn2Service.Workorder
   alias Inconn2Service.Ticket
@@ -17,6 +18,83 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.Assignment.Attendance
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
+
+  def work_order_execution_report(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+    filters = filter_data(query_params, prefix)
+    main_query = from(wo in WorkOrder)
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"asset_type", asset_type}, main_query ->
+          from q in main_query, where: q.asset_type == ^asset_type
+
+        {"asset_id", asset_id}, main_query ->
+          from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
+
+        {"status", "incp"}, main_query ->
+          from q in main_query, where: q.status not in ["cp", "cn"]
+
+        {"status", status}, main_query ->
+          from q in main_query, where: q.status == ^status
+
+        {"user_id", user_id}, main_query ->
+          from q in main_query, where: q.user_id == ^user_id
+
+        _, main_query ->
+          main_query
+      end)
+
+      {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+
+      query_with_dates = from(dq in dynamic_query, where: dq.scheduled_date >= ^from_date and dq.scheduled_date <= ^to_date)
+
+      work_orders =
+        Repo.all(query_with_dates, prefix: prefix)
+        |> Stream.map(fn wo -> get_work_order_site(wo, prefix) end)
+        |> Stream.map(fn wo -> get_work_order_asset(wo, prefix) end)
+        |> Stream.map(fn wo -> get_work_order_tasks(wo, prefix) end)
+        |> Enum.map(fn wo -> get_workorder_template_for_work_order(wo, prefix) end)
+        |> filter_by_asset_categories(query_params["asset_category_id"])
+        |> filter_by_task_type(query_params["task_type"])
+
+      case query_params["type"] do
+        "pdf" ->
+          convert_to_pdf("Work Order Execution Report", filters, work_orders, [], "WOE")
+
+        _ ->
+          work_orders
+      end
+  end
+
+  defp filter_by_asset_categories(work_orders, nil), do: work_orders
+  defp filter_by_asset_categories(work_orders, asset_category_id), do: Enum.filter(work_orders, fn wo -> wo.workorder_template.asset_category_id == asset_category_id end)
+
+  defp filter_by_task_type(work_orders, "mt"), do: Stream.map(work_orders, fn wo -> Map.put(wo, :task_types, Enum.map(wo.tasks, fn t -> t.task.task_type end)) end) |> Enum.filter(fn wo -> "MT" in wo.task_types end)
+  defp filter_by_task_type(work_orders, _), do: work_orders
+
+  defp get_work_order_site(wo, prefix) do
+    Map.put(wo, :site, AssetConfig.get_site!(wo.site_id, prefix))
+  end
+
+  defp get_work_order_asset(wo, prefix) do
+    case wo.asset_type do
+      "E" -> Map.put(wo, :asset, AssetConfig.get_equipment!(wo.asset_id, prefix))
+      "L" -> Map.put(wo, :asset, AssetConfig.get_location!(wo.asset_id, prefix))
+    end
+  end
+
+  defp get_workorder_template_for_work_order(wo, prefix) do
+    Map.put(wo, :workorder_template, Workorder.get_workorder_template!(wo.workorder_template_id, prefix))
+  end
+
+  defp get_work_order_tasks(wo, prefix) do
+    work_order_tasks = Workorder.list_workorder_tasks(prefix, wo.id)
+    |> Enum.map(fn wot -> Map.put(wot, :task, WorkOrderConfig.get_task!(wot.task_id, prefix)) end)
+    Map.put(wo, :tasks, work_order_tasks)
+  end
 
   def people_report(prefix, query_params) do
     report_headers = ["First Name", "Last Name", "Employee Code", "Designation", "Department", "Attendance Percentage", "Work Done Time"]
@@ -1050,12 +1128,12 @@ defmodule Inconn2Service.Report do
     Date.new!(year, month, date)
   end
 
-  defp get_site_time(site_id, prefix) do
-    site = Repo.get!(Site, site_id, prefix: prefix)
-    date_time = DateTime.now!(site.time_zone)
-    result = NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
-    NaiveDateTime.to_time(result)
-  end
+  # defp get_site_time(site_id, prefix) do
+  #   site = Repo.get!(Site, site_id, prefix: prefix)
+  #   date_time = DateTime.now!(site.time_zone)
+  #   result = NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
+  #   NaiveDateTime.to_time(result)
+  # end
 
   # def asset_status_reports(query_params, prefix) do
   #   {asset_type, asset_ids} = get_assets_by_asset_category_id(query_params["asset_category_id"], prefix)
@@ -1111,6 +1189,60 @@ defmodule Inconn2Service.Report do
 
   defp convert_to_pdf(report_title, filters, data, report_headers, report_for) do
     create_report_structure(report_title, filters, data, report_headers, report_for)
+  end
+
+  def create_report_structure(report_title, filters, data, report_headers, "WOE") do
+    string =
+      Sneeze.render(
+        [
+          :div,
+          [
+            :h1,
+            %{
+              style: style(%{"text-align" => "center"})
+            },
+            "#{report_title}"
+          ],
+            [
+              :h2,
+              if filters.licensee != nil do
+                "#{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.from_date != nil do
+                "From Date: #{filters.from_date}"
+              end
+            ],
+            [
+              :h2,
+              if filters.site != nil do
+                "Site: #{filters.site.name}"
+              end
+            ],
+            [
+              :span,
+              %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.to_date != nil do
+                "To Date: #{filters.to_date}"
+              end
+            ],
+          [
+            :div,
+            create_table_body(data, "WOE")
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "right", "font-style" => "italic"})},
+            "Powered By Inconn"
+          ]
+        ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
   end
 
   def create_report_structure(report_title, filters, data, report_headers, report_for) do
@@ -1185,6 +1317,70 @@ defmodule Inconn2Service.Report do
       end)
     ]
   end
+
+  defp create_task_table(tasks) do
+    IO.inspect(tasks)
+    Enum.map(tasks, fn t ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          t.task.label
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          t.task.task_type
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          parse_task(t.task.task_type, t.response["answers"])
+        ],
+      ]
+    end)
+  end
+
+  defp parse_task(_, nil), do: nil
+  defp parse_task("IM", answer), do: Enum.join(answer, ",")
+  defp parse_task(_, answer), do: answer
+
+
+  defp create_table_body(report_body_json, "WOE") do
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :div,
+        %{style: style(%{"margin-top" => "100px"})},
+        [
+          [
+            :h1,
+            rbj.workorder_template.name
+          ],
+          [
+            :ul,
+            [
+              :li,
+              "Site: #{rbj.site.name}"
+            ],
+            [
+              :li,
+              "Asset: #{rbj.asset.name}"
+            ]
+          ],
+          [
+            :div,
+            [
+              :table,
+              %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+              create_task_table(rbj.tasks)
+            ]
+          ]
+        ]
+      ]
+    end)
+  end
+
 
   defp create_table_body(report_body_json, "PPL") do
     Enum.map(report_body_json, fn rbj ->
