@@ -11,6 +11,18 @@ defmodule Inconn2Service.Assignments do
   alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.Assignments.{MasterRoster, Roster}
 
+  def list_roster(prefix) do
+    Roster
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload(:master_roster)
+  end
+
+  def list_employee_rosters(prefix) do
+    EmployeeRoster
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
+  end
+
   def get_master_roster(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"])
 

@@ -1,13 +1,13 @@
 defmodule Inconn2Service.ReferenceTemplateDownloader do
 
   alias Inconn2Service.AssetConfig
-  alias Inconn2Service.Workorder
+  # alias Inconn2Service.Workorder
   alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Staff
-  alias Inconn2Service.Assignment
-  alias Inconn2Service.Settings
-  alias Inconn2Service.Inventory
+  alias Inconn2Service.Assignments
+  # alias Inconn2Service.Settings
+  # alias Inconn2Service.Inventory
 
   def download_template(prefix, query_params) do
     case query_params["table"] do
@@ -201,6 +201,20 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
 
       final_report = header ++ body
       final_report
+  end
+
+  def download_roster(prefix) do
+    roster = Assignments.list_roster(prefix)
+
+    header = [["id", "reference", "Designation Id", "Site Id", "Employee Id", "Shift Id", "Date"]]
+
+    body =
+    Enum.map(roster, fn r ->
+      [r.id, "", r.dedignation_id, r.site_id, r.employee_id, r.shift_id, r.date]
+    end)
+
+    final_report = header ++ body
+    final_report
   end
 
 
