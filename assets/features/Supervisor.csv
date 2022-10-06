@@ -1,0 +1,289 @@
+﻿Acknowledge alerts,ACALT,Y
+Acknowledge notifications,ACNOT,Y
+Create alerts,CRALT,Y
+Create notifications,CRNOT,N
+Delete alerts,DEALT,Y
+Delete notifications,DENOT,N
+Disable alerts,DAALT,N
+Disable notifications,DANOT,N
+Edit alerts,EDALT,N
+Edit notofications,EDNOT,N
+import alerts,IMALT,Y
+import notifications,IMNOT,Y
+View alerts,VIALT,Y
+View notifications,VINOT,Y
+Change password self,CHPWS,Y
+Change password others,CHPWO,n
+Search by keyword,SEBKW,Y
+Access getting started wizard,ACGSW,Y
+Access FAQ,ACFAQ,Y
+Configuration button,CNBUT,Y
+Create License,CRLIC,N
+Create party,CRPTY,N
+Delete License,DELIC,N
+Edit License,EDLIC,N
+List view License,LVLIC,N
+List view party,LVPTY,N
+View License,VILIC,N
+Business setup Menu,BSPMN,Y
+Business setup Sub menu,BSPSM,Y
+Add zone/ sub zone,AZSBZ,N
+Edit zone/ sub zone,EZSBZ,N
+delete zone/ sub zone,DZSBZ,N
+Configure site settings,CFESS,N
+edit site settings,EDSST,N
+Delete site settings ,DESST,N
+View site settings,VISST,Y
+Add contract,ADCON,N
+edit contract,EDCON,N
+delete contract ,DECON,N
+View contract,VICON,Y
+Add Scope,ADSCO,N
+Edit scope,EDSCO,N
+Delete scope,DESCO,N
+View Scope,VISCO,Y
+Add manpower plan,ADMPP,Y
+Edit manpower plan,EDMPP,Y
+View manpower plan,VIMPP,Y
+Create Equipment ,CREQU,N
+Create Location,CRLOC,N
+Create parentNchild relationship,CRPCR,N
+Delete Equipment,DEEQU,N
+Delete Location,DELOC,N
+Delete parentNchild relationship,DEPCR,N
+Edit Equipment,EDEQU,N
+Edit Location,EDLOC,N
+Edit parentNchild relationship,EDPCR,N
+Import Equipment,IMEQU,N
+Import location,IMLOC,N
+Import parentNchild relationship,IMPCR,N
+List view Equipment,LVEQU,Y
+List view of location,LVLOC,Y
+View Equipment,VIEQU,Y
+View location,VILOC,Y
+View parentNchild relationship,VIPCR,Y
+Maintenance setup Menu,MSMNU,Y
+Maintenance setup Submenu,MSSMN,Y
+Create check,CRCHK,N
+Create Check list,CRCHL,Y
+Create LOTO,CRLOT,N
+Create task,CRTSK,N
+Create Tasks list,CRTSL,Y
+Create WO Schedule,CRWOS,Y
+create Work order template,CRWOT,N
+Create work permit,CRWPR,Y
+Delete check,DECHK,N
+Delete Check list,DECHL,N
+Delete LOTO,DELOT,N
+Delete task,DETAS,N
+Delete Tasks list,DETSL,N
+Delete WO Schedule,DEWOS,N
+Delete work order,DEWOR,N
+Delete work order template,DEWOT,N
+Delete work permit,DEWPR,N
+Edit check,EDCHK,N
+Edit Check list,EDCHL,Y
+Edit LOTO,EDLOT,Y
+Edit task,EDTSK,N
+Edit Tasks list,EDTSL,Y
+Edit WO Schedule,EDWOS,Y
+Edit work order,EDWOR,Y
+Edit work order template,EDWOT,N
+Edit work permit ,EDWPR,Y
+Import Check list,IMCKL,Y
+Import LOTO,IMLOT,Y
+Import Task list,IMTSL,Y
+Import WO Schedule,IMWOS,Y
+Import work permit,IMWPR,Y
+List view Check list,LVCKL,Y
+List view LOTO,LVILT,Y
+List view tasks list,LVTSL,Y
+List view WO Schedule,LVWOS,Y
+List view work order template,LVWOT,Y
+View check,VICHK,Y
+View Check list,VICHL,Y
+View list of checks,VLCHK,Y
+View list of tasks,VLTAS,Y
+View LOTO,VILOT,Y
+View task,VITAS,Y
+View Tasks list,VITSL,Y
+View WO Schedule,VIWOS,Y
+View work order template,VIWOT,Y
+View work permit,VIWOP,Y
+People Menu,PPLMN,Y
+People Sub menu,PPLSM,Y
+Create employee,CREMP,N
+Create org unit,CRORU,N
+Create shift,CRSHF,N
+Create User group,CRURG,N
+Create Users,CRURS,N
+Create Users profile,CRURP,N
+Create Users roster,CRURR,N
+Delete employee,DEEMP,N
+Delete org unit,DEORU,N
+Delete shift,DESHF,N
+Delete User group,DEURG,N
+Delete Users,DEURS,N
+Delete Users profile,DEURP,N
+Delete Users roster,DEURR,N
+Edit employee,EDEMP,N
+Edit org unit,EDORU,N
+Edit shift,EDSHF,N
+Edit User group,EDURG,N
+Edit Users,EDURS,N
+Edit Users profile,EDURP,N
+Edit Users roster,EDURR,Y
+List view of shifts,LVSHF,Y
+List View User group,LVURG,Y
+List View Users,LVURS,Y
+List View Users profile,LVURP,Y
+List View Users roster,LVURR,Y
+View employee,VIEMP,Y
+View list of employees,VLEMP,Y
+View list of org units,VLORG,Y
+View org unit,VIORU,Y
+View shift,VISHF,Y
+View User group,VIURG,Y
+View Users,VIURS,Y
+View Users profile,VIURP,Y
+Inventory Menu,INVMN,Y
+Inventory Sub Menu,INVSM,Y
+Create inventory location,CRILC,N
+Create part,CRPRT,Y
+Create part details,CRPRD,Y
+Create supplier,CRSPR,Y
+Create supplier item,CRSPI,Y
+Create UOM,CRUOM,Y
+Delete inventory location,DEILC,N
+Delete part,DEPRT,Y
+Delete part details,DEPRD,Y
+Delete supplier,DESPR,N
+Delete supplier item,DESPI,Y
+Delete transaction,IDETR,N
+Delete UOM,DEUOM,Y
+Edit inventory location,EDILC,N
+Edit part,EDPRT,Y
+Edit part details,EDPRD,Y
+Edit supplier,EDSPR,Y
+Edit supplier item,EDSPI,Y
+Edit UOM,EDUOM,Y
+import part,IMPRT,Y
+import part details,IMPRD,Y
+List view of inventory locations,LVILC,Y
+List view of stocks,LCSTK,Y
+List view of supplier items,LVSPI,Y
+List view of suppliers,LVSPR,Y
+List view of transactions,LVITR,Y
+List view of UOM,LVUOM,Y
+View inventory location,VIILC,Y
+View part,VIPTY,Y
+View part details,VIPRD,Y
+View supplier,VISPR,Y
+View supplier item,VISPI,Y
+View transaction,IVITR,Y
+View UOM,VIUOM,Y
+Associte storekeeper ID to store location,ASISL,N
+Ticekts Menu,TCKMN,Y
+Ticekts Sub menu,TCKSM,Y
+Delete tickets,DETCK,N
+Edit ticket status,EDTST,Y
+Edit tickets,TEDTK,Y
+Put tickets on Hold,PTKOH,Y
+Create ticket category,CRTKC,N
+Edit ticket category,EDTKC,N
+Delete ticket category,DETKC,N
+Associate helpdesk with ticket category,AHWTC,N
+Create ticket sub category,CRTKS,N
+Edit ticket sub category,EDTKS,N
+delete ticket sub category,DETKS,N
+Menu,RPTMN,Y
+Sub menu,RPTSM,Y
+Edit filters,EDFIL,Y
+"Save filters as ""my reports",SFAMR,Y
+Dashboard Menu,DSBMN,Y
+Dashboard setup,DSBST,Y
+Choose widget sequence,CWSEQ,Y
+Choose widget for mobile (self),CWMBS,Y
+Choose widget for mobile (reportees),CWMBR,Y
+My Inconn Button,MIBUT,Y
+My actions Menu,MYAMN,Y
+My actions Sub menu,MYASM,Y
+My work orders add,MWOAD,Y
+My work orders view,MWOVI,Y
+My work orders edit,MWOED,Y
+My work orders delete,MWODE,N
+Request reschedule,RERES,N
+Request reassign,REREA,N
+Execute my work order,EXEWO,Y
+List view my work order,LIVWO,Y
+List view my assigned tickets,LIVTK,Y
+View my assigned ticket,VITCK,Y
+Edit my assigned ticket,EDTCK,Y
+Assign ticket,ASTCK,Y
+Request approval for my assigned ticket,RAPTK,Y
+Create my inventory transaction,CRTRS,Y
+Edit my inventory transaction,EDTRS,Y
+View my inventory transaction,VITRS,Y
+List view my inventory transactions,MLVTR,Y
+Delete my inventory transactions,MIDTR,N
+List view my pending approvals,LVAPS,Y
+View my pending approvals,VIAPS,Y
+My pending approvals  Approve/ reject request,ARREQ,Y
+Delete my pending approval,DEAPL,N
+View my task Schedule,MAVSC,Y
+My approvals Menu,MAPMN,Y
+View my approvals WO related approvals,VWORA,Y
+View my tapprovals Ticket approvals,VTKAP,Y
+View my approvals inventory approvals,VINAP,Y
+create request for WO/ WP/ ticket /Inventory issue,CWWTI,Y
+View my request,VIMRQ,Y
+List view my requests,LVMRQ,Y
+Delete my requests,DEMRQ,N
+View my attendance,VMATT,Y
+View my rosters,VMROS,Y
+My teams Menu,MTSMN,Y
+My team tasks Submenu,MTMSM,Y
+My team attendance Submenu,MTASM,Y
+My team roster Submenu,MTRSM,Y
+My team schedule Submenu,MTSSM,Y
+Edit my team tasks,MTTET,Y
+Edit my team task attendance,EDATT,N
+Edit my team  roster,EDROS,Y
+Edit my team Schedule,EDSCH,Y
+View my team tasks,VITSK,Y
+View my team attendance,VIATT,Y
+Viewmy team  roster,VIROS,Y
+View my team Schedule,VISCH,Y
+My reports Menu,MRPMN,Y
+View/print reports,VIPRT,Y
+My stock report Submenu,MSRSM,Y
+View landing page,VILPG,Y
+Edit widget selection,EDWSL,Y
+View level 2 dashboard,VL2DB,Y
+Add new Service Provider,SPRAN,N
+Edit Service Provider,SPRED,N
+Delete Service Provider,SPRVD,N
+View detail Service Provider,SPVDE,Y
+List view Service Provider,SPLIV,Y
+Mark attendance,MKATT,Y
+Dashboard & Reports - View,DSHRP,Y
+Assign tickets,ASSTK,Y
+Close tickets,CLTCK,Y
+Create tickets,CRTCK,Y
+Reassign tickets,REATK,Y
+Reopen ticket,REOTK,Y
+Create work order,CRWKO,Y
+Execute work order,EXCWO,Y
+List view work order,LVIWO,Y
+List view work permit,LVIWP,Y
+Reassign work order,REAWO,Y
+Reschedule work order,RSCWO,Y
+View work order,VIWKO,Y
+Approve work permit,APWPR,N
+Approve LOTO,APLOT,N
+Acknowledge work order,ACWKO,N
+Approve work order,APWKO,N
+View Item,VIITM,Y
+View stock,VISTK,Y
+View reports and dashboards,VIRDB,Y
+Print reports and dashboards,PRADB,Y
