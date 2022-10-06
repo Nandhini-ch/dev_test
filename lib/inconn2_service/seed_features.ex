@@ -10,7 +10,7 @@ defmodule Inconn2Service.SeedFeatures do
   ]
 
   def read_and_insert(file_path, entity) do
-    {:ok, "\uFEFF" <> content} = File.read(file_path)
+    {:ok, content} = File.read(file_path)
 
     content
     |> String.split("\r\n")
