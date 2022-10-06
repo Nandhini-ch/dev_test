@@ -20,7 +20,7 @@ defmodule Inconn2Service.SeedFeatures do
         end
 
     content
-    |> String.split("\r\n")
+    |> String.split("\n")
     |> Enum.filter(fn s -> s != "" end)
     |> Enum.map(fn s -> process_individual(entity, s) end)
 
