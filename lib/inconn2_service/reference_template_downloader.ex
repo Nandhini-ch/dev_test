@@ -43,11 +43,11 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def download_task_lists(prefix) do
     task_lists = WorkOrderConfig.list_task_lists(prefix)
 
-    header = [["id", "reference", "Name", "Task Ids", "Asset Category Id"]]
+    header = [["id", "reference", "Name", "Asset Category Id"]]
 
     body =
       Enum.map(task_lists, fn r ->
-        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids), r.asset_category_id]
+        [r.id, "", r.name, r.asset_category_id]
       end)
 
       final_report = header ++ body
@@ -174,11 +174,11 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def download_checks(prefix) do
     check = CheckListConfig.list_checks(%{}, prefix)
 
-    header = [["id", "reference", "Label", "Check Type"]]
+    header = [["id", "reference", "Label", "Check Type Id"]]
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.label, r.check_type]
+        [r.id, "", r.label, r.check_type_id]
       end)
 
       final_report = header ++ body
@@ -194,7 +194,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.first_name, r.last_name, r.employement_start_date, r.employment_end_date,
+        [r.id, "", r.first_name, r.last_name, r.employment_start_date, r.employment_end_date,
         r.designation, r.designation_id, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
         convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id, r.role_id]
       end)
