@@ -13,8 +13,6 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile, User, Designation}
   alias Inconn2Service.Util.HierarchyManager
-  alias Inconn2Service.ContractManagement.ManpowerConfiguration
-
 
   def list_org_units(prefix) do
     OrgUnit
@@ -449,6 +447,11 @@ defmodule Inconn2Service.Staff do
            "cannot be deleted as there are Reports To associated with it"
         }
 
+      has_team_member(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Team associated with it"
+        }
+
       true ->
         case delete_user_for_employee(employee.user, prefix) do
           {:deleted, _} ->
@@ -856,13 +859,8 @@ defmodule Inconn2Service.Staff do
   end
 
   def filter_permissions(role_profile) do
-    permissions = Enum.map(role_profile.permissions, fn module -> filter_features(module) end)
+    permissions = Enum.filter(role_profile.permissions, fn feature -> feature["access"] == true end)
     Map.put(role_profile, :permissions, permissions)
-  end
-
-  defp filter_features(module) do
-    features = Enum.filter(module["features"], fn feature -> feature["access"] == true end)
-    Map.put(module, "features", features)
   end
 
   # defp inherit_features(role_profile, role_profile_new, prefix) do
@@ -1009,7 +1007,10 @@ defmodule Inconn2Service.Staff do
   end
 
   def delete_team(%Team{} = team, prefix) do
-    Repo.delete(team, prefix: prefix)
+    update_team(team, %{"active" => false}, prefix)
+    {:deleted,
+       "The Team was disabled"
+    }
   end
 
   def change_team(%Team{} = team, attrs \\ %{}) do
@@ -1058,7 +1059,10 @@ defmodule Inconn2Service.Staff do
   end
 
   def delete_team_member(%TeamMember{} = team_member, prefix) do
-    Repo.delete(team_member, prefix: prefix)
+    update_team_member(team_member, %{"active" => false}, prefix)
+    {:deleted,
+       "The Team member was disabled"
+    }
   end
 
   def change_team_member(%TeamMember{} = team_member, attrs \\ %{}) do
@@ -1083,4 +1087,11 @@ defmodule Inconn2Service.Staff do
     |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
     |> Enum.filter(fn u -> !is_nil(u) end)
   end
+
+  def update_team_member(%TeamMember{} = team_member, attrs, prefix) do
+    team_member
+    |> Role.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
 end

@@ -61,6 +61,7 @@ defmodule Inconn2ServiceWeb.Router do
     put "/sites/:id/activate", SiteController, :activate_site
     put "/sites/:id/deactivate", SiteController, :activate_site
     get "/download_sites", ReferenceDownloadController, :download_sites
+    get "/download_template", ReferenceTemplateDownloaderController, :download_template
     post "/upload_sites", ReferenceUploadController, :upload_sites
 
     resources "/parties", PartyController, except: [:new, :edit]
