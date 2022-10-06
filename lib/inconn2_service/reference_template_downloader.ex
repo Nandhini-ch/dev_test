@@ -5,9 +5,11 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Staff
-  # alias Inconn2Service.Assignment
+  alias Inconn2Service.Assignment
   # alias Inconn2Service.Settings
   # alias Inconn2Service.Inventory
+
+
 
 
 
