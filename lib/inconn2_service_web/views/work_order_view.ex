@@ -190,6 +190,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       scheduled_time: work_order.scheduled_time,
       start_date: work_order.start_date,
       start_time: work_order.start_time,
+      created_user_id: work_order.created_user_id,
       completed_date: work_order.completed_date,
       completed_time: work_order.completed_time,
       status: work_order.status,

@@ -833,36 +833,44 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_orders_of_user(prefix, user \\ %{id: nil, employee_id: nil}) do
-    employee =
-      case user.employee_id do
-        nil ->
-          nil
+    # employee =
+    #   case user.employee_id do
+    #     nil ->
+    #       nil
 
-        id ->
-          Staff.get_employee!(id, prefix)
-      end
+    #     id ->
+    #       Staff.get_employee!(id, prefix)
+    #   end
 
 
     query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
-    asset_category_workorders =
+    # asset_category_workorders =
 
-      case employee do
-        nil ->
-          []
+    #   case employee do
+    #     nil ->
+    #       []
 
-        employee ->
-          asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
+    #     employee ->
+    #       asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
-          query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
-          Repo.all(query, prefix: prefix)
-      end
+    #       query =
+    #         from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
+    #           join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
+    #       Repo.all(query, prefix: prefix)
+    #   end
 
-    Enum.uniq(assigned_work_orders ++ asset_category_workorders)
+    Enum.uniq(assigned_work_orders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
+  def list_wo_created_by_user(user, prefix) do
+    from(wo in WorkOrder, where: wo.created_user_id ==^user.id and wo.status not in ["cp", "cn"])
+    |> Repo.all(prefix: prefix)
+    |> Stream.filter(fn wo -> wo.is_deactivated != true end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
@@ -974,6 +982,7 @@ defmodule Inconn2Service.Workorder do
               |> validate_workorder_template_id(prefix)
               |> validate_workorder_schedule_id(prefix)
               |> prefill_asset_type(prefix)
+              |> created_user_id(user)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
@@ -986,6 +995,10 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp created_user_id(cs, user) do
+    change(cs, %{created_user_id: user.id})
   end
 
   defp prefill_status_for_workorder_approval(cs) do
@@ -1379,15 +1392,20 @@ defmodule Inconn2Service.Workorder do
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
     cond do
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        description = ~s(Work Order #{updated_work_order.id} assigned at #{updated_work_order.assigned_time})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
+        description = ~s(Work Order #{updated_work_order.id} assigned at #{date_time})
         create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
-        description = ~s(Work Permit Required for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+        description = ~s(#{check_list.name} by #{employee} requires approval)
         create_work_order_alert_notification("WPAR", existing_work_order, updated_work_order, description, "workpermit_approval_required",prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
-        description = ~s(Work Permit Approved for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id((updated_work_order.workpermit_approval_user_ids -- updated_work_order.workpermit_obtained_from_user_ids) |> List.first(), prefix)
+        description = ~s(#{check_list.name} approved by #{employee})
         create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
@@ -1414,32 +1432,33 @@ defmodule Inconn2Service.Workorder do
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
         employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder for #{asset.name} to be acknowledged by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} completion by #{employee} requires acknowledgement)
         create_work_order_alert_notification("WACR", existing_work_order, updated_work_order, description, "work_order_acknowledge_pending", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
         employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder for #{asset.name} has been acknowledged by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} acknowledged by #{employee})
         create_work_order_alert_notification("WACK", existing_work_order, updated_work_order, description, "work_order_acknowledged", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been put on hold by #{employee})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
+        description = ~s(Workorder for #{asset.name} has been put on hold by #{employee} at #{date_time})
         create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been cancelled by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been cancelled by #{employee})
         create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
       (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been rescheduled by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been rescheduled by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
       existing_work_order.user_id != updated_work_order.user_id ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been re-assigned by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been re-assigned by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
 
       (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
@@ -1767,10 +1786,15 @@ defmodule Inconn2Service.Workorder do
   end
 
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
-    work_order
-    |> WorkOrder.changeset(attrs)
-    |> update_status(work_order, user, prefix)
-    |> Repo.update(prefix: prefix)
+    {:ok, updated_work_order} =
+          work_order
+          |> WorkOrder.changeset(attrs)
+          |> update_status(work_order, user, prefix)
+          |> Repo.update(prefix: prefix)
+    change_ticket_status(work_order, updated_work_order, user, prefix)
+    record_meter_readings(work_order, updated_work_order, prefix)
+    calculate_work_order_cost(updated_work_order, prefix)
+    {:ok, updated_work_order}
   end
 
   def update_work_orders(work_order_changes, prefix, user) do
@@ -1998,14 +2022,14 @@ defmodule Inconn2Service.Workorder do
 
   def workorder_mobile_flutter(user, prefix) do
 
-    employee =
-      case user.employee_id do
-        nil ->
-          nil
+    # employee =
+    #   case user.employee_id do
+    #     nil ->
+    #       nil
 
-        id ->
-          Staff.get_employee!(id, prefix)
-      end
+    #     id ->
+    #       Staff.get_employee!(id, prefix)
+    #   end
 
 
     common_query = flutter_query()
@@ -2018,26 +2042,26 @@ defmodule Inconn2Service.Workorder do
 
       assigned_work_orders = Repo.all(assigned_query, prefix: prefix)
 
-      asset_category_work_orders =
-        case employee do
-          nil ->
-            []
+    #   asset_category_work_orders =
+    #     case employee do
+    #       nil ->
+    #         []
 
-          _ ->
-            asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
+    #       _ ->
+    #         asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
-            asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
-              select_merge: %{
-                workorder_template: wt
-              }
-            Repo.all(asset_category_query, prefix: prefix)
-        end
+    #         asset_category_query =
+    #           from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+    #           select_merge: %{
+    #             workorder_template: wt
+    #           }
+    #         Repo.all(asset_category_query, prefix: prefix)
+    #     end
 
-    work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
+    # work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
 
-    Stream.map(work_orders, fn wo ->
+    Stream.map(assigned_work_orders, fn wo ->
       wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
@@ -2055,13 +2079,13 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
-  defp get_skills_with_subtree_asset_category(skills, prefix) do
-    Stream.filter(skills, fn x -> x != nil end)
-    |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
-    |> List.flatten()
-    |> Stream.uniq()
-    |> Enum.map(fn asset_category -> asset_category.id end)
-  end
+  # defp get_skills_with_subtree_asset_category(skills, prefix) do
+  #   Stream.filter(skills, fn x -> x != nil end)
+  #   |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
+  #   |> List.flatten()
+  #   |> Stream.uniq()
+  #   |> Enum.map(fn asset_category -> asset_category.id end)
+  # end
 
   def flutter_query() do
     from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,

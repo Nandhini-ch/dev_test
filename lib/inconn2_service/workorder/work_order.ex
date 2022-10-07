@@ -16,6 +16,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :scheduled_date, :date
     field :scheduled_time, :time
     field :start_date, :date
+    field :created_user_id, :integer
     field :start_time, :time
     field :completed_date, :date
     field :completed_time, :time
@@ -50,7 +51,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   def changeset(work_order, attrs) do
     work_order
     |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
-                    :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time,
+                    :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time, :created_user_id,
                     :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workorder_approval_user_id,
                     :workpermit_approval_user_ids, :workpermit_obtained_from_user_ids, :is_workorder_approval_required,
                     :is_workpermit_required, :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id,
