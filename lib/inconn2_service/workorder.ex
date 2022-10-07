@@ -833,35 +833,35 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_work_orders_of_user(prefix, user \\ %{id: nil, employee_id: nil}) do
-    employee =
-      case user.employee_id do
-        nil ->
-          nil
+    # employee =
+    #   case user.employee_id do
+    #     nil ->
+    #       nil
 
-        id ->
-          Staff.get_employee!(id, prefix)
-      end
+    #     id ->
+    #       Staff.get_employee!(id, prefix)
+    #   end
 
 
     query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
-    asset_category_workorders =
+    # asset_category_workorders =
 
-      case employee do
-        nil ->
-          []
+    #   case employee do
+    #     nil ->
+    #       []
 
-        employee ->
-          asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
+    #     employee ->
+    #       asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
-          query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
-              join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
-          Repo.all(query, prefix: prefix)
-      end
+    #       query =
+    #         from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
+    #           join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
+    #       Repo.all(query, prefix: prefix)
+    #   end
 
-    Enum.uniq(assigned_work_orders ++ asset_category_workorders)
+    Enum.uniq(assigned_work_orders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -2004,14 +2004,14 @@ defmodule Inconn2Service.Workorder do
 
   def workorder_mobile_flutter(user, prefix) do
 
-    employee =
-      case user.employee_id do
-        nil ->
-          nil
+    # employee =
+    #   case user.employee_id do
+    #     nil ->
+    #       nil
 
-        id ->
-          Staff.get_employee!(id, prefix)
-      end
+    #     id ->
+    #       Staff.get_employee!(id, prefix)
+    #   end
 
 
     common_query = flutter_query()
@@ -2024,26 +2024,26 @@ defmodule Inconn2Service.Workorder do
 
       assigned_work_orders = Repo.all(assigned_query, prefix: prefix)
 
-      asset_category_work_orders =
-        case employee do
-          nil ->
-            []
+    #   asset_category_work_orders =
+    #     case employee do
+    #       nil ->
+    #         []
 
-          _ ->
-            asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
+    #       _ ->
+    #         asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
-            asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
-              select_merge: %{
-                workorder_template: wt
-              }
-            Repo.all(asset_category_query, prefix: prefix)
-        end
+    #         asset_category_query =
+    #           from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+    #           select_merge: %{
+    #             workorder_template: wt
+    #           }
+    #         Repo.all(asset_category_query, prefix: prefix)
+    #     end
 
-    work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
+    # work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
 
 
-    Stream.map(work_orders, fn wo ->
+    Stream.map(assigned_work_orders, fn wo ->
       wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
@@ -2061,13 +2061,13 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
-  defp get_skills_with_subtree_asset_category(skills, prefix) do
-    Stream.filter(skills, fn x -> x != nil end)
-    |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
-    |> List.flatten()
-    |> Stream.uniq()
-    |> Enum.map(fn asset_category -> asset_category.id end)
-  end
+  # defp get_skills_with_subtree_asset_category(skills, prefix) do
+  #   Stream.filter(skills, fn x -> x != nil end)
+  #   |> Enum.map(fn asset_category -> HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix) end)
+  #   |> List.flatten()
+  #   |> Stream.uniq()
+  #   |> Enum.map(fn asset_category -> asset_category.id end)
+  # end
 
   def flutter_query() do
     from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,

@@ -1319,7 +1319,7 @@ defmodule Inconn2Service.Report do
   end
 
   defp create_task_table(tasks) do
-    IO.inspect(tasks)
+    # IO.inspect(tasks)
     Enum.map(tasks, fn t ->
       [
         :tr,
