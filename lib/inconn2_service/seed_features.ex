@@ -12,11 +12,25 @@ defmodule Inconn2Service.SeedFeatures do
   def read_and_insert(file_path, entity) do
     {:ok, "\uFEFF" <> content} = File.read(file_path)
 
+    ["", content] =
+        if String.starts_with?(content, "\uFEFF") do
+          String.split(content, "\uFEFF")
+        else
+          ["", content]
+        end
+
     content
-    |> String.split("\r\n")
+    |> String.split(split_regex(content))
     |> Enum.filter(fn s -> s != "" end)
     |> Enum.map(fn s -> process_individual(entity, s) end)
 
+  end
+
+  defp split_regex(content) do
+    cond do
+      String.contains?(content, "\r\n") -> "\r\n"
+      true -> "\n"
+    end
   end
 
   defp process_individual(:features, string) do
