@@ -75,7 +75,7 @@ defmodule Inconn2ServiceWeb.SessionController do
   defp get_employee_current_user(username, prefix) do
     employee = Staff.get_employee_email!(username, prefix)
     case employee do
-      nil -> %{first_name: nil, last_name: nil}
+      nil -> %{first_name: nil, last_name: nil, designation: nil}
       _ -> preload_designation(employee, prefix)
     end
 
