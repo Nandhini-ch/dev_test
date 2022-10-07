@@ -471,8 +471,9 @@ defmodule Inconn2Service.Staff do
 
 #Context functions for User
   def list_users(prefix) do
-    Repo.all(User, prefix: prefix)
+    User
     |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
     |> sort_users()
   end

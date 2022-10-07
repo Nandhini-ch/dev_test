@@ -867,6 +867,14 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_wo_created_by_user(user, prefix) do
+    from(wo in WorkOrder, where: wo.created_user_id ==^user.id and wo.status not in ["cp", "cn"])
+    |> Repo.all(prefix: prefix)
+    |> Stream.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
   def list_work_order_for_team(user, prefix) when not is_nil(user.employee_id) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
@@ -974,6 +982,7 @@ defmodule Inconn2Service.Workorder do
               |> validate_workorder_template_id(prefix)
               |> validate_workorder_schedule_id(prefix)
               |> prefill_asset_type(prefix)
+              |> created_user_id(user)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
@@ -986,6 +995,10 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp created_user_id(cs, user) do
+    change(cs, %{created_user_id: user.id})
   end
 
   defp prefill_status_for_workorder_approval(cs) do
@@ -1379,15 +1392,20 @@ defmodule Inconn2Service.Workorder do
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
     cond do
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        description = ~s(Work Order #{updated_work_order.id} assigned at #{updated_work_order.assigned_time})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
+        description = ~s(Work Order #{updated_work_order.id} assigned at #{date_time})
         create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
-        description = ~s(Work Permit Required for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+        description = ~s(#{check_list.name} by #{employee} requires approval)
         create_work_order_alert_notification("WPAR", existing_work_order, updated_work_order, description, "workpermit_approval_required",prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
-        description = ~s(Work Permit Approved for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id((updated_work_order.workpermit_approval_user_ids -- updated_work_order.workpermit_obtained_from_user_ids) |> List.first(), prefix)
+        description = ~s(#{check_list.name} approved by #{employee})
         create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
@@ -1425,6 +1443,7 @@ defmodule Inconn2Service.Workorder do
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
         employee = get_employee_name_from_current_user(current_user)
         description = ~s(Workorder #{updated_work_order.id} has been put on hold by #{employee})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
         create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
@@ -1767,10 +1786,15 @@ defmodule Inconn2Service.Workorder do
   end
 
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
-    work_order
-    |> WorkOrder.changeset(attrs)
-    |> update_status(work_order, user, prefix)
-    |> Repo.update(prefix: prefix)
+    {:ok, updated_work_order} =
+          work_order
+          |> WorkOrder.changeset(attrs)
+          |> update_status(work_order, user, prefix)
+          |> Repo.update(prefix: prefix)
+    change_ticket_status(work_order, updated_work_order, user, prefix)
+    record_meter_readings(work_order, updated_work_order, prefix)
+    calculate_work_order_cost(updated_work_order, prefix)
+    {:ok, updated_work_order}
   end
 
   def update_work_orders(work_order_changes, prefix, user) do

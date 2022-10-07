@@ -1193,7 +1193,7 @@ defmodule Inconn2Service.Report do
     create_report_structure(report_title, filters, data, report_headers, report_for)
   end
 
-  def create_report_structure(report_title, filters, data, report_headers, "WOE") do
+  def create_report_structure(report_title, filters, data, _report_headers, "WOE") do
     string =
       Sneeze.render(
         [
@@ -1340,6 +1340,11 @@ defmodule Inconn2Service.Report do
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           parse_task(t.task.task_type, t.response["answers"])
         ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          t.remarks
+        ]
       ]
     end)
   end
@@ -1357,24 +1362,36 @@ defmodule Inconn2Service.Report do
         [
           [
             :h1,
-            rbj.workorder_template.name
-          ],
-          [
-            :ul,
-            [
-              :li,
-              "Site: #{rbj.site.name}"
-            ],
-            [
-              :li,
-              "Asset: #{rbj.asset.name}"
-            ]
+            "##{rbj.id} - #{rbj.asset.name} - #{rbj.workorder_template.name}"
           ],
           [
             :div,
             [
               :table,
               %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+              [
+                :tr,
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  "Task Name"
+                ],
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  "Task Type"
+                ],
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  "Response"
+                ],
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  "Remarks"
+                ]
+              ],
               create_task_table(rbj.tasks)
             ]
           ]

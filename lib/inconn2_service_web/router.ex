@@ -168,6 +168,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     get "/work_orders/enable_start/:id", WorkOrderController, :enable_start
     get "/work_orders/:id/next_step", WorkOrderController, :next_step
+    get "/work_orders/created", WorkOrderController, :index_for_created_by_current_user
     put "/work_orders/:id/send_for_workflow_approvals/:type", WorkOrderController, :send_for_workflow_approvals
     # put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
     # put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval

@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def index_for_created_by_current_user(conn, _params) do
+    work_orders = Workorder.list_wo_created_by_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def index_for_user_by_qr(conn, %{"qr_string" => qr_string}) do
     work_orders = Workorder.list_work_orders_for_user_by_qr(qr_string, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
