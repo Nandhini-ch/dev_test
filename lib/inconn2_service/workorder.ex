@@ -867,6 +867,14 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_wo_created_by_user(user, prefix) do
+    from(wo in WorkOrder, where: wo.created_user_id ==^user.id)
+    |> Repo.all(prefix: prefix)
+    |> Stream.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+  end
+
   def list_work_order_for_team(user, prefix) when not is_nil(user.employee_id) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
@@ -974,6 +982,7 @@ defmodule Inconn2Service.Workorder do
               |> validate_workorder_template_id(prefix)
               |> validate_workorder_schedule_id(prefix)
               |> prefill_asset_type(prefix)
+              |> created_user_id(user)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
@@ -986,6 +995,10 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp created_user_id(cs, user) do
+    change(cs, %{created_user_id: user.id})
   end
 
   defp prefill_status_for_workorder_approval(cs) do
