@@ -76,7 +76,13 @@ defmodule Inconn2ServiceWeb.SessionController do
     employee = Staff.get_employee_email!(username, prefix)
     case employee do
       nil -> %{first_name: nil, last_name: nil}
-      _ -> employee
+      _ -> preload_designation(employee, prefix)
     end
+
+  end
+
+  defp preload_designation(employee, prefix) do
+    designation = Staff.get_designation!(employee.designation_id, prefix)
+    Map.put(employee, :designation, designation)
   end
 end
