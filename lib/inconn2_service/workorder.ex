@@ -868,7 +868,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def list_wo_created_by_user(user, prefix) do
-    from(wo in WorkOrder, where: wo.created_user_id ==^user.id)
+    from(wo in WorkOrder, where: wo.created_user_id ==^user.id and wo.status not in ["cp", "cn"])
     |> Repo.all(prefix: prefix)
     |> Stream.filter(fn wo -> wo.is_deactivated != true end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
