@@ -1414,32 +1414,33 @@ defmodule Inconn2Service.Workorder do
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
         employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder for #{asset.name} to be acknowledged by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} completion by #{employee} requires acknowledgement)
         create_work_order_alert_notification("WACR", existing_work_order, updated_work_order, description, "work_order_acknowledge_pending", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
         employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder for #{asset.name} has been acknowledged by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} acknowledged by #{employee})
         create_work_order_alert_notification("WACK", existing_work_order, updated_work_order, description, "work_order_acknowledged", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been put on hold by #{employee})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
+        description = ~s(Workorder for #{asset.name} has been put on hold by #{employee} at #{date_time})
         create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been cancelled by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been cancelled by #{employee})
         create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
 
       (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been rescheduled by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been rescheduled by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
       existing_work_order.user_id != updated_work_order.user_id ->
         employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder for #{asset.name} has been re-assigned by #{employee})
+        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} has been re-assigned by #{employee})
         create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
 
       (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
