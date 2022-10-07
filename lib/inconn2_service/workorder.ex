@@ -1786,10 +1786,15 @@ defmodule Inconn2Service.Workorder do
   end
 
   def update_work_order_status(%WorkOrder{} = work_order, attrs, prefix, user) do
-    work_order
-    |> WorkOrder.changeset(attrs)
-    |> update_status(work_order, user, prefix)
-    |> Repo.update(prefix: prefix)
+    {:ok, updated_work_order} =
+          work_order
+          |> WorkOrder.changeset(attrs)
+          |> update_status(work_order, user, prefix)
+          |> Repo.update(prefix: prefix)
+    change_ticket_status(work_order, updated_work_order, user, prefix)
+    record_meter_readings(work_order, updated_work_order, prefix)
+    calculate_work_order_cost(updated_work_order, prefix)
+    {:ok, updated_work_order}
   end
 
   def update_work_orders(work_order_changes, prefix, user) do
