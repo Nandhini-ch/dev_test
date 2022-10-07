@@ -1392,15 +1392,20 @@ defmodule Inconn2Service.Workorder do
     {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
     cond do
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        description = ~s(Work Order #{updated_work_order.id} assigned at #{updated_work_order.assigned_time})
+        date_time = get_site_date_now(updated_work_order.site_id, prefix)
+        description = ~s(Work Order #{updated_work_order.id} assigned at #{date_time})
         create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
-        description = ~s(Work Permit Required for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+        description = ~s(#{check_list.name} by #{employee} requires approval)
         create_work_order_alert_notification("WPAR", existing_work_order, updated_work_order, description, "workpermit_approval_required",prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
-        description = ~s(Work Permit Approved for template #{workorder_template.name} on #{asset.name})
+        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
+        employee = get_employee_from_user_id((updated_work_order.workpermit_approval_user_ids -- updated_work_order.workpermit_obtained_from_user_ids) |> List.first(), prefix)
+        description = ~s(#{check_list.name} approved by #{employee})
         create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
 
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
