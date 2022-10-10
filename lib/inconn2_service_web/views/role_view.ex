@@ -14,7 +14,8 @@ defmodule Inconn2ServiceWeb.RoleView do
     %{id: role.id,
       name: role.name,
       description: role.description,
-      permissions: role.permissions
+      permissions: role.permissions,
+      role_profile_id: role.role_profile_id
       # role_profile: render_one(role.role_profile, RoleProfileView, "role_profile.json")
     }
   end
