@@ -7,7 +7,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.Staff
   alias Inconn2Service.Assignments
   # alias Inconn2Service.Settings
-  # alias Inconn2Service.Inventory
+  alias Inconn2Service.InventoryManagement
 
   def download_template(prefix, query_params) do
     case query_params["table"] do
@@ -23,6 +23,11 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "check" -> download_checks(prefix)
       "employee" -> download_employees(prefix)
       "roster" -> download_roster(prefix)
+      "inventory_item" -> download_inventory_item(prefix)
+      "inventory_supplier" -> donwload_inventory_supplier(prefix)
+      "uom_category" -> download_uom_category(prefix)
+      "unit_of_measurement" -> download_unit_of_measurement(prefix)
+      "conversion" -> download_conversion(prefix)
     end
   end
 
@@ -156,7 +161,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
         fixed_attributes = [r.id, "", r.label, r.task_type, r.estimated_time, r.master_task_type_id]
         cond do
           r.task_type in ["IO", "IM"] ->
-            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}" end)
+            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}:#{x["raise_ticket"]}" end)
             fixed_attributes ++ variable_attributes
           r.task_type == "MT" ->
             variable_attributes = ["#{r.config["type"]}: #{r.config["UOM"]}"]
@@ -189,7 +194,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
     check = Staff.list_employees(prefix)
 
     header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
-    "Designation", "Designation Id", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
+    "Designation", "Designation Id", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User", "Reports To",
     "Skills", "Org Unit Id", "Party Id", "Role Id"]]
 
     body =
@@ -215,6 +220,88 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
 
     final_report = header ++ body
     final_report
+  end
+
+  def download_inventory_item(prefix) do
+    inventory_item = InventoryManagement.list_inventory_items(prefix)
+
+    header = [["id", "reference", "Approval User Id", "Asset Category Ids", "Is Approval Required",
+                "Item Type", "Minimum Stock Level", "Name", "Part No", "Remarks", "Unit Price", "Uom Category Id",
+                "Consume Unit Of Measurement", "Inventory Unit Of Measurement", "Purchase Unit Of Measurement"]]
+
+    body =
+      Enum.map(inventory_item, fn r ->
+        [r.id, "", r.approval_user_id, r.asset_category_ids, r.is_approval_required, r.item_type,
+         r.minimum_stock_level, r.name, r.part_no, r.remarks, r.unit_price, r.consume_unit_of_measurement_id,
+         r.inventory_unit_of_measurement_id, r.purchase_unit_of_measurement_id
+        ]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+
+  def donwload_inventory_supplier(prefix) do
+    inventory_supplier = InventoryManagement.list_inventory_suppliers(prefix)
+
+    header = [["id", "reference", "Business Type", "Contact No", "Contact Person", "Description",
+                "Escalation1 Contact Name", "Escalation1 Contact No", "Escalation2 Contact Name", "Escalation2 Contact No",
+                "Gst No", "Supplier Code", "Name", "Reference No", "Website"]]
+
+    body =
+      Enum.map(inventory_supplier, fn r ->
+        [r.id, "", r.business_type, r.contact_no, r.contact_person, r.description, r.escalation1_contact_name,
+         r.escalation1_contact_no, r.escalation2_contact_name, r.escalation2_contact_no, r.gst_no, r.supplier_code,
+         r.name, r.reference_no, r.website
+        ]
+      end)
+
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_uom_category(prefix) do
+    uom_category = InventoryManagement.list_uom_categories(prefix)
+
+    header = [["id", "reference", "Description", "name"]]
+
+    body =
+      Enum.map(uom_category, fn r ->
+        [r.id, "", r.description, r.name]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_unit_of_measurement(prefix) do
+    unit_of_measurement = InventoryManagement.list_unit_of_measurements(%{}, prefix)
+
+    header = [["id", "reference", "Name", "unit", "Uom Category Id"]]
+
+    body =
+      Enum.map(unit_of_measurement, fn r ->
+        [r.id, "", r.name, r.unit, r.uom_category_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_conversion(prefix) do
+    conversion = InventoryManagement.list_conversions(prefix)
+
+    header = [["id", "reference", "Multiplication Factor", "From Unit Of Measurement Id", "To Unit Of Measurement Id", "Uom Category Id"]]
+
+    body =
+      Enum.map(conversion, fn r ->
+        [r.id, "", r.multiplication_factor, r.from_unit_of_measurement_id, r.to_unit_of_measurement_id, r.uom_category_id]
+      end)
+
+      final_report = header ++ body
+      final_report
   end
 
 
