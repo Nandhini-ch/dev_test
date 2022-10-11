@@ -2065,6 +2065,8 @@ defmodule Inconn2Service.Workorder do
       wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
+    |> Stream.map(fn wo -> add_remarks_to_work_order(wo) end)
     |> Enum.map(fn wo ->
       {asset, code} =
         case wo.workorder_template.asset_type do
@@ -2116,6 +2118,43 @@ defmodule Inconn2Service.Workorder do
         pause_resume_times: wo.pause_resume_times,
         is_paused: wo.is_paused
       }
+  end
+
+  def put_approval_user(work_order, "woap",prefix) do
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workorder_approval_user_id, prefix))
+  end
+
+  def put_approval_user(work_order, "prep", _prefix) do
+    Map.put_new(work_order, :approver, "Self Approval")
+  end
+
+  def put_approval_user(work_order, "wpp", prefix) do
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
+  end
+
+  def put_approval_user(work_order, "ltlap", prefix) do
+    Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
+  end
+
+  def put_approval_user(work_order, "ltrap", prefix) do
+    Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
+  end
+
+  def put_approval_user(work_order, "ackp", prefix) do
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workorder_acknowledgement_user_id, prefix))
+  end
+
+  def put_approval_user(work_order, _status, _prefix) do
+    Map.put_new(work_order, :approver, nil)
+  end
+
+  defp get_approval_user(user_id, prefix) do
+    approval_user = Staff.get_user!(user_id, prefix)
+    "#{approval_user.first_name}  #{approval_user.last_name}"
+  end
+
+  def add_remarks_to_work_order(work_order) do
+    Map.put_new(work_order, :remarks, nil)
   end
 
   def list_work_order_mobile_optimized(user, prefix) do

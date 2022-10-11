@@ -164,7 +164,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
         fixed_attributes = [r.id, "", r.label, r.task_type, r.estimated_time, r.master_task_type_id]
         cond do
           r.task_type in ["IO", "IM"] ->
-            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}" end)
+            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}:#{x["raise_ticket"]}" end)
             fixed_attributes ++ variable_attributes
           r.task_type == "MT" ->
             variable_attributes = ["#{r.config["type"]}: #{r.config["UOM"]}"]
