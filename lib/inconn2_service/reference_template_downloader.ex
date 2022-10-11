@@ -1,13 +1,12 @@
 defmodule Inconn2Service.ReferenceTemplateDownloader do
 
   alias Inconn2Service.AssetConfig
-  # alias Inconn2Service.Workorder
   alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Staff
   alias Inconn2Service.Assignments
-  # alias Inconn2Service.Settings
   alias Inconn2Service.InventoryManagement
+  alias Inconn2Service.ContractManagement
 
   def download_template(prefix, query_params) do
     case query_params["table"] do
@@ -28,6 +27,10 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "uom_category" -> download_uom_category(prefix)
       "unit_of_measurement" -> download_unit_of_measurement(prefix)
       "conversion" -> download_conversion(prefix)
+      "contract" -> download_contract(prefix)
+      "scope" -> download_scope(prefix)
+      "manpower_configuration" -> download_manpower_configuration(prefix, query_params)
+
     end
   end
 
@@ -298,6 +301,50 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
     body =
       Enum.map(conversion, fn r ->
         [r.id, "", r.multiplication_factor, r.from_unit_of_measurement_id, r.to_unit_of_measurement_id, r.uom_category_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_contract(prefix) do
+    contract = ContractManagement.list_contracts(%{}, prefix)
+
+    header = [["id", "reference", "Name",  "Description",  "Start Date", "End Date", "Contract Type", "Is Effective Status", "Party Id"]]
+
+    body =
+      Enum.map(contract, fn r ->
+        [r.id, "", r.name, r.description,  r.start_date, r.end_date, r.contract_type, r.is_effective_status, r.party_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_scope(prefix) do
+    scope = ContractManagement.list_scopes(%{}, prefix)
+
+    header = [["id", "reference", "Name", "Contract Id", "Site Id", "Location Ids", "Asset Category Ids",
+               "Is Apllicable To All Asset Category", "Is Applicable To All Location"]]
+
+    body =
+      Enum.map(scope, fn r ->
+        [r.id, "", r.description, r.is_applicable_to_all_asset_category, r.is_applicable_to_all_location,
+        r.asset_category_ids, r.location_ids, r.name, r.site_id, r.contract_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_manpower_configuration(prefix, query_params) do
+    manpower_configuration = ContractManagement.list_manpower_configurations(prefix, query_params)
+
+    header = [["id", "reference", "Site Id", "Contract Id", "Designation Id", "Shift Id", "Quantity"]]
+
+    body =
+      Enum.map(manpower_configuration, fn r ->
+        [r.id, "", r.designation_id, r.quantity, r.shift_id, r.site_id, r.contract_id]
       end)
 
       final_report = header ++ body
