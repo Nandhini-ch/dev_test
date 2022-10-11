@@ -313,7 +313,7 @@ defmodule Inconn2Service.Report do
 
   defp convert_to_positive(number) do
     cond do
-      number < 0 -> number * -1
+      number < 0 -> number * -1.0
       true -> number
     end
   end
