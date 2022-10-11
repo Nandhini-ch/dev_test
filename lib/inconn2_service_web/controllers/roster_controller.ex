@@ -10,6 +10,11 @@ defmodule Inconn2ServiceWeb.RosterController do
     render(conn, "show.json", master_roster: master_roster)
   end
 
+  def index_for_user(conn, %{"date" => date}) do
+    rosters = Assignments.list_rosters_for_user(conn.assigns.current_user, date, conn.assigns.sub_domain_prefix)
+    render(conn, "my_rosters.json", rosters: rosters)
+  end
+
   def create_or_update(conn, %{"roster" => roster_params}) do
     master_roster = Assignments.create_or_update_master_rosters(roster_params, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", master_roster: master_roster)

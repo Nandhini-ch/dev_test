@@ -456,6 +456,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
 
     get "/rosters", RosterController, :index
+    get "/my_rosters", RosterController, :index_for_user
     post "/rosters", RosterController, :create_or_update
     get "/sites_for_attendance", RosterController, :index_sites_for_attendance
 
