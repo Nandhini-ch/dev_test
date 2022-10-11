@@ -2121,31 +2121,31 @@ defmodule Inconn2Service.Workorder do
   end
 
   def put_approval_user(work_order, "woap",prefix) do
-    Map.put(work_order, :approver, get_approval_user(work_order.workorder_approval_user_id, prefix))
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workorder_approval_user_id, prefix))
   end
 
   def put_approval_user(work_order, "prep", _prefix) do
-    Map.put(work_order, :approver, "Self Approval")
+    Map.put_new(work_order, :approver, "Self Approval")
   end
 
   def put_approval_user(work_order, "wpp", prefix) do
-    Map.put(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
   end
 
   def put_approval_user(work_order, "ltlap", prefix) do
-    Map.put(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
+    Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
   def put_approval_user(work_order, "ltrap", prefix) do
-    Map.put(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
+    Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
   def put_approval_user(work_order, "ackp", prefix) do
-    Map.put(work_order, :approver, get_approval_user(work_order.workorder_acknowledgement_user_id, prefix))
+    Map.put_new(work_order, :approver, get_approval_user(work_order.workorder_acknowledgement_user_id, prefix))
   end
 
   def put_approval_user(work_order, _status, _prefix) do
-    Map.put(work_order, :approver, nil)
+    Map.put_new(work_order, :approver, nil)
   end
 
   defp get_approval_user(user_id, prefix) do
@@ -2154,7 +2154,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def add_remarks_to_work_order(work_order) do
-    Map.put(work_order, :remarks, nil)
+    Map.put_new(work_order, :remarks, nil)
   end
 
   def list_work_order_mobile_optimized(user, prefix) do
