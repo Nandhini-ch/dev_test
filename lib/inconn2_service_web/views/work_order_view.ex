@@ -55,6 +55,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_workorder_acknowledgement_required: work_order.is_workorder_acknowledgement_required,
       is_workpermit_required: work_order.is_workpermit_required,
       pause_resume_times: work_order.pause_resume_times,
+      remarks: work_order.remarks,
+      approver: work_order.approver,
       is_paused: work_order.is_paused
     }
   end
