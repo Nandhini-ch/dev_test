@@ -2114,8 +2114,13 @@ defmodule Inconn2Service.Workorder do
         completed_time: wo.completed_time,
         status: wo.status,
         is_workorder_approval_required: wo.is_workorder_approval_required,
+        workorder_approval_user_id: wo.workorder_approval_user_id,
         is_loto_required: wo.is_loto_required,
+        loto_checker_user_id: wo.loto_checker_user_id,
         is_workorder_acknowledgement_required: wo.is_workorder_acknowledgement_required,
+        workorder_acknowledgement_user_id: wo.workorder_acknowledgement_user_id,
+        workpermit_approval_user_ids: wo.workpermit_approval_user_ids,
+        workpermit_obtained_from_user_ids: wo.workpermit_obtained_from_user_ids,
         is_workpermit_required: wo.is_workpermit_required,
         pause_resume_times: wo.pause_resume_times,
         is_paused: wo.is_paused
