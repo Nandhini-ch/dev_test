@@ -324,8 +324,8 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def download_scope(prefix) do
     scope = ContractManagement.list_scopes(%{}, prefix)
 
-    header = [["id", "reference", "Name", "Is Apllicable To All Asset Category", "Is Applicable To All Location",
-    "Asset Category Ids", "Location Ids",  "Site Id", "Contract Id"]]
+    header = [["id", "reference", "Name", "Contract Id", "Site Id", "Location Ids", "Asset Category Ids",
+               "Is Apllicable To All Asset Category", "Is Applicable To All Location"]]
 
     body =
       Enum.map(scope, fn r ->
@@ -340,7 +340,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def download_manpower_configuration(prefix, query_params) do
     manpower_configuration = ContractManagement.list_manpower_configurations(prefix, query_params)
 
-    header = [["id", "reference", "Designation Id", "Quantity", "Shift Id", "Site Id", "Contract Id"]]
+    header = [["id", "reference", "Site Id", "Contract Id", "Designation Id", "Shift Id", "Quantity"]]
 
     body =
       Enum.map(manpower_configuration, fn r ->
