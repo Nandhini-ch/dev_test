@@ -2156,6 +2156,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def add_remarks_to_work_order(work_order) do
+    IO.inspect("Inside Add Remark function")
     Map.put(work_order, :remarks, nil)
   end
 
