@@ -158,6 +158,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def convert_nil_to_list(list), do: list
 
   def convert_string_list_to_list(nil), do: []
+  # def convert_string_list_to_list(string) when String.length(string)==0, do: [String.to_integer(string)]
   def convert_string_list_to_list(string) do
     String.split(string, ",")
     |> Enum.map(&(String.to_integer(&1)))
