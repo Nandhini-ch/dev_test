@@ -37,7 +37,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_workflow_execution_report(conn, _params) do
-    result = Report.work_order_execution_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    result = Report.execution_data(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -52,8 +52,13 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.csv\"")
         |> send_resp(200, csv)
 
-      _ ->
-        render(conn, "work_order_exec.json", work_order_exec_info: result)
+       _ ->
+        case conn.query_params["task_type"] do
+          "mt" ->
+            render(conn, "work_order_exec_meter.json", work_order_exec_info: result)
+          _ ->
+            render(conn, "work_order_exec.json", work_order_exec_info: result)
+        end
     end
   end
 
