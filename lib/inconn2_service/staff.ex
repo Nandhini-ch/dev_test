@@ -1003,7 +1003,7 @@ defmodule Inconn2Service.Staff do
 
   def update_team(%Team{} = team, attrs, prefix) do
     team
-    |> Team.changeset(attrs)
+    |> Role.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
@@ -1051,6 +1051,12 @@ defmodule Inconn2Service.Staff do
     |> preload_employees_team(prefix)
   end
 
+  def update_team_member(%TeamMember{} = team_member, attrs, prefix) do
+    team_member
+    |> Role.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
   def delete_team_members(team_id, employee_ids, prefix) do
     employee_ids = convert_string_list_to_list(employee_ids)
     TeamMember
@@ -1088,11 +1094,4 @@ defmodule Inconn2Service.Staff do
     |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
     |> Enum.filter(fn u -> !is_nil(u) end)
   end
-
-  def update_team_member(%TeamMember{} = team_member, attrs, prefix) do
-    team_member
-    |> Role.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
 end

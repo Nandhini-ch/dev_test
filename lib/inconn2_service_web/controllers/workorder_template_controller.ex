@@ -41,7 +41,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
   def delete(conn, %{"id" => id}) do
     workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
 
-    with {:deleted, _} <- Workorder.delete_workorder_template(workorder_template, conn.assigns.sub_domain_prefix, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Workorder.delete_workorder_template(workorder_template, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       send_resp(conn, :no_content, "")
     end
   end
