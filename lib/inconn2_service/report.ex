@@ -16,8 +16,16 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Assignments.{Roster, MasterRoster}
   alias Inconn2Service.Assignment.Attendance
+  alias Inconn2Service.Measurements.MeterReading
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
+
+  def execution_data(prefix, query_params) do
+    case query_params["task_type"] do
+      "mt" -> work_order_execution_report_metering(prefix, query_params)
+      _ -> work_order_execution_report(prefix, query_params)
+    end
+  end
 
   def work_order_execution_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
@@ -58,7 +66,7 @@ defmodule Inconn2Service.Report do
         |> Stream.map(fn wo -> get_work_order_tasks(wo, prefix) end)
         |> Enum.map(fn wo -> get_workorder_template_for_work_order(wo, prefix) end)
         |> filter_by_asset_categories(query_params["asset_category_id"])
-        |> filter_by_task_type(query_params["task_type"])
+        # |> filter_by_task_type(query_params["task_type"])
 
       case query_params["type"] do
         "pdf" ->
@@ -69,14 +77,62 @@ defmodule Inconn2Service.Report do
       end
   end
 
+  def work_order_execution_report_metering(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+    filters = filter_data(query_params, prefix)
+    {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
+    {from_date_time, to_date_time} = get_from_and_to_date_time_in_report(from_date, to_date)
+    report_headers = ["Date", "Asset", "Asset Code", "Value", "Unit of measurement", "Done by", "Within Range"]
+    main_query = from(mr in MeterReading)
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"asset_type", asset_type}, main_query ->
+          from q in main_query, where: q.asset_type == ^asset_type
+
+        {"asset_id", asset_id}, main_query ->
+          from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
+
+        _, query ->
+          query
+      end)
+
+    query_with_date = from(dq in dynamic_query, where: dq.recorded_date_time >= ^from_date_time and dq.recorded_date_time <= ^to_date_time)
+
+    readings =
+      Repo.all(query_with_date, prefix: prefix)
+      |> Stream.map(fn wo -> get_work_order_site(wo, prefix) end)
+      |> Stream.map(fn wo -> put_asset_for_metering(wo, prefix) end)
+      |> Enum.map(fn wo -> put_done_by_in_readings(wo, prefix) end)
+
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Work Order Execution Report for metering", filters, readings, report_headers, "WOEM")
+
+      _ ->
+        readings
+    end
+
+  end
+
+  defp get_from_and_to_date_time_in_report(from_date, to_date), do: {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}
+
   defp filter_by_asset_categories(work_orders, nil), do: work_orders
   defp filter_by_asset_categories(work_orders, asset_category_id), do: Enum.filter(work_orders, fn wo -> wo.workorder_template.asset_category_id == asset_category_id end)
 
-  defp filter_by_task_type(work_orders, "mt"), do: Stream.map(work_orders, fn wo -> Map.put(wo, :task_types, Enum.map(wo.tasks, fn t -> t.task.task_type end)) end) |> Enum.filter(fn wo -> "MT" in wo.task_types end)
-  defp filter_by_task_type(work_orders, _), do: work_orders
+  # defp filter_by_task_type(work_orders, "mt"), do: Stream.map(work_orders, fn wo -> Map.put(wo, :task_types, Enum.map(wo.tasks, fn t -> t.task.task_type end)) end) |> Enum.filter(fn wo -> "MT" in wo.task_types end)
+  # defp filter_by_task_type(work_orders, _), do: work_orders
 
   defp get_work_order_site(wo, prefix) do
     Map.put(wo, :site, AssetConfig.get_site!(wo.site_id, prefix))
+  end
+
+  def put_done_by_in_readings(reading, prefix) do
+    work_order = Workorder.get_work_order!(reading.work_order_id, prefix)
+    user = Staff.get_user!(work_order.user_id, prefix)
+    Map.put(reading, :done_by, "#{user.first_name} #{user.last_name}")
   end
 
   defp get_work_order_asset(wo, prefix) do
@@ -85,6 +141,19 @@ defmodule Inconn2Service.Report do
       "L" -> Map.put(wo, :asset, AssetConfig.get_location!(wo.asset_id, prefix))
     end
   end
+
+
+  def put_asset_for_metering(wo, prefix) do
+    case wo.asset_type do
+      "E" ->
+        equipment = AssetConfig.get_equipment!(wo.asset_id, prefix)
+        Map.put(wo, :asset, equipment.name) |> Map.put(:code, equipment.equipment_code)
+      "L" ->
+        location = AssetConfig.get_location!(wo.asset_id, prefix)
+        Map.put(wo, :asset, location.name) |> Map.put(:code, location.location_code)
+    end
+  end
+
 
   defp get_workorder_template_for_work_order(wo, prefix) do
     Map.put(wo, :workorder_template, Workorder.get_workorder_template!(wo.workorder_template_id, prefix))
@@ -1395,6 +1464,54 @@ defmodule Inconn2Service.Report do
               create_task_table(rbj.tasks)
             ]
           ]
+        ]
+      ]
+    end)
+  end
+
+  defp create_table_body(report_body_json, "WOEM") do
+    Enum.map(report_body_json, fn rbj ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.reorded_date_time
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_code
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.abslolute_value
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.unit_of_measurement
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.done_by
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          nil
         ]
       ]
     end)

@@ -14,6 +14,12 @@ defmodule Inconn2ServiceWeb.ReportView do
     }
   end
 
+  def render("work_order_exec_meter.json", %{work_order_exec_info: work_order_exec_info}) do
+    %{
+      data: render_many(work_order_exec_info, ReportView, "exec_meter.json")
+    }
+  end
+
   def render("inventory_report.json", %{inventory_info: inventory_info}) do
     %{
       data: render_many(inventory_info, ReportView, "inventory_report_item.json")
@@ -39,6 +45,17 @@ defmodule Inconn2ServiceWeb.ReportView do
       workorder_template: wo.workorder_template.name,
       asset: wo.asset.name,
       tasks: render_many(wo.tasks, WorkorderTaskView, "workorder_task_with_task.json")
+    }
+  end
+
+  def render("exec_meter.json", %{report: wo}) do
+    %{
+      date: wo.recorded_date_time,
+      site: wo.site.name,
+      asset: wo.asset,
+      asset_code: wo.asset_code,
+      done_by: wo.done_by,
+      within_range: nil
     }
   end
 
