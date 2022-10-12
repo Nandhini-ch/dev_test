@@ -252,6 +252,7 @@ defmodule Inconn2Service.Report do
       left_join: e in Employee, on: u.employee_id == e.id,
       left_join: s in Site, on: wo.site_id == s.id,
       select: %{
+        id: wo.id,
         site_id: wo.site_id,
         site: s,
         asset_id: wo.asset_id,
@@ -347,6 +348,7 @@ defmodule Inconn2Service.Report do
           end
 
         %{
+          id: wo.id,
           asset_name: asset_name,
           asset_code: asset_code,
           type: match_workorder_type(wo.type),
@@ -362,7 +364,7 @@ defmodule Inconn2Service.Report do
         }
       end)
 
-    report_headers = ["Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled Date", "Scheduled Time", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
+    report_headers = ["Id", "Asset Name", "Asset Code", "Type", "Status", "Assigned To", "Scheduled Date", "Scheduled Time", "Start Date", "Start Time", "Completed Date", "Completed Time", "Manhours Consumed"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1750,6 +1752,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.id
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.asset_name
         ],
         [
@@ -1814,7 +1821,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_time, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
+        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_time, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
     [report_headers] ++ body

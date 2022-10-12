@@ -7,6 +7,9 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.Assignments
   alias Inconn2Service.InventoryManagement
   alias Inconn2Service.ContractManagement
+  alias Inconn2Service.Workorder
+  alias Inconn2Service.Ticket
+  alias Inconn2Service.Settings
 
   def download_template(prefix, query_params) do
     case query_params["table"] do
@@ -30,7 +33,13 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "contract" -> download_contract(prefix)
       "scope" -> download_scope(prefix)
       "manpower_configuration" -> download_manpower_configuration(prefix, query_params)
-
+      "workorder_template" -> download_workorder_template(prefix)
+      "workorder_schedule" -> download_workorder_schedule(prefix)
+      "workrequest_category" -> download_workrequest_category(prefix)
+      "workrequest_subcategory" -> download_workrequest_subcategory(prefix)
+      "category_helpdesk" -> download_category_helpdesk(prefix)
+      "designation" -> download_designation(prefix)
+      "shift" -> download_shifts(prefix)
     end
   end
 
@@ -351,6 +360,126 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       final_report
   end
 
+  def download_workorder_template(prefix) do
+    workorder_template = Workorder.list_workorder_templates(prefix)
+
+    header = [["id", "reference", "Name", "Description", "Asset Type", "Task List Id", "Estimated Time", "Scheduled", "Breakdown", "Audit", "Adhoc",
+    "Amc", "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End", "Time Start", "Time End", "Create New", "Max Times", "Tools", "Spares", "Consumables", "Parts",
+    "Measuring Instruments", "Workorder Prior Time", "Is Precheck Required", "Precheck List Id", "Is Workpermit Required", "Is Workorder Approval Required",
+    "Is Workorder Acknowledgement Required", "Workpermit Check List Id", "Is Loto Required", "Loto Lock Check List Id", "Loto Release Check List Id", "Is Materials Required",
+    "Materials", "Is Manpower Required", "Manpower"]]
+
+    body =
+      Enum.map(workorder_template, fn r ->
+        [r.id, "", r.name, r.description, r.asset_type, r.task_list_id, r.estimated_time, r.scheduled, r.breakdown, r.audit, r.adhoc,
+         r.amc, r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times, convert_array_of_map_to_string(r.tools), convert_array_of_map_to_string(r.spares), convert_array_of_map_to_string(r.consumables), convert_array_of_map_to_string(r.parts),
+         convert_array_of_map_to_string(r.measuring_instruments), r.workorder_prior_time, r.is_precheck_required, r.precheck_list_id, r.is_workpermit_required, r.is_workorder_approval_required,
+         r.is_workorder_acknowledgement_required, r.workpermit_check_list_id, r.is_loto_required, r.loto_lock_check_list_id, r.loto_release_check_list_id, r.is_materials_required,
+          r.materials, r.is_manpower_required, r.manpower]
+      end)
+
+      final_report = header ++ body
+      final_report
+   end
+
+   def download_workorder_schedule(prefix) do
+     workorder_schedule = Workorder.list_workorder_schedules(prefix)
+
+     header = [["id", "reference", "Asset Id", "Asset Type", "First Occurrence Date", "Next Occurrence Date", "First Occurrence Time", "Next Ocuurence Time", "Holidays",
+                 "Workorder Approval User Id", "Workorder Acknowledgement User Id", "Workpermit Approval User Ids", "Loto Checker User Id"]]
+
+     body =
+        Enum.map(workorder_schedule, fn r ->
+          [r.id, "", r.asset_id, r.asset_type, r.first_occurrence_date, r.next_occurrence_date, r.first_occurrence_time, r.next_occurrence_time,
+           r.holidays, r.workorder_approval_user_id, r.workorder_acknowledgement_user_id, r.workpermit_approval_user_ids, r.loto_checker_user_id]
+        end)
+
+        final_report = header ++ body
+        final_report
+   end
+
+   def download_workrequest_category(prefix) do
+     workrequest_category = Ticket.list_workrequest_categories(prefix)
+
+     header = [["id", "reference", "Name", "Description"]]
+
+     body =
+      Enum.map(workrequest_category, fn r ->
+       [r.id, "", r.name, r.description]
+     end)
+
+     final_report = header ++ body
+     final_report
+   end
+
+   def download_workrequest_subcategory(prefix) do
+     workrequest_subcategory = Ticket.list_workrequest_subcategories_for_category(1, prefix)
+
+     header = [["id", "reference", "Name", "Description", "Resolution Tat", "Response Tat", "Workrequest Category Id"]]
+
+     body =
+      Enum.map(workrequest_subcategory, fn r ->
+        [r.id, "", r.name, r.description, r.resolution_tat, r.response_tat, r.workrequest_category_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+   end
+
+   def download_category_helpdesk(prefix) do
+     category_helpdesk = Ticket.list_category_helpdesks(%{}, prefix)
+
+     header = [["id", "reference", "User Id", "Site Id", "Workrequest Category Id"]]
+
+     body =
+      Enum.map(category_helpdesk, fn r ->
+        [r.id, "", r.user_id, r.site_id, r.workrequest_category_id]
+      end)
+
+
+      final_report = header ++ body
+      final_report
+   end
+
+   def download_shifts(prefix) do
+    shifts = Settings.list_shifts(prefix)
+
+    header = [["id", "reference", "Name", "Start Time", "End Time", "Applicable Days",
+              "Start Date", "End Date", "Site Id", "Code"]]
+
+    body =
+      Enum.map(shifts, fn r ->
+        [r.id, "", r.name, r.start_time, r.end_time, convert_array_of_integers_to_string(r.applicable_days),
+        r.start_date, r.end_date, r.site_id, r.code]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_designation(prefix) do
+    designation = Staff.list_designations(prefix)
+
+    header = [["id", "reference", "Name", "Description"]]
+
+    body =
+      Enum.map(designation, fn r ->
+        [r.id, "", r.name, r.description]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  defp convert_array_of_map_to_string(array_of_maps) do
+    if array_of_maps != nil do
+      array_of_maps
+      |> Enum.map(fn x -> "#{x["item_id"]}:#{x["quantity"]}" end)
+      |> Enum.join(",")
+    else
+      ""
+    end
+  end
 
   defp convert_array_of_integers_to_string(array_of_ids) do
     if array_of_ids != nil do
