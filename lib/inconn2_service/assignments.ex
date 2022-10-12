@@ -23,6 +23,29 @@ defmodule Inconn2Service.Assignments do
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
   end
 
+  def list_rosters_for_user(user, date, prefix) do
+    from_date = Date.from_iso8601!(date)
+    to_date = Date.add(from_date, 15)
+
+    from(r in Roster, where: r.employee_id == ^user.employee_id and r.date >= ^from_date and r.date <= ^to_date,
+      join: sh in Shift, on: sh.id == r.shift_id,
+      select: %{
+        shift_code: sh.code,
+        date: r.date
+      })
+    |> Repo.all(prefix: prefix)
+    |> group_rosters_by_date()
+  end
+
+  defp group_rosters_by_date(rosters) do
+    rosters
+    |> Enum.group_by(&(&1.date))
+    |> Stream.map(fn {k, v} ->
+        Enum.reduce(v, %{shift_code: [], date: k}, fn m, acc -> Map.put(acc, :shift_code, [m.shift_code | acc.shift_code]) end)
+      end)
+    |> Enum.map(fn m -> Map.put(m, :shift_code, Enum.join(m.shift_code, ", ")) end)
+  end
+
   def get_master_roster(params, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"])
 
