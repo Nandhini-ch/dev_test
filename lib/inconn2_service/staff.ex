@@ -482,6 +482,7 @@ defmodule Inconn2Service.Staff do
     filters = filter_by_user_is_licensee(user, prefix)
     User
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
   end
@@ -979,7 +980,9 @@ defmodule Inconn2Service.Staff do
   alias Inconn2Service.Staff.Team
 
   def list_teams(prefix) do
-    Repo.all(Team, prefix: prefix)
+    Team
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def list_teams_for_user(user, prefix) do
@@ -990,6 +993,7 @@ defmodule Inconn2Service.Staff do
 
   def get_teams_by_ids(team_ids, prefix) do
     from(t in Team, where: t.id in ^team_ids)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -1003,7 +1007,7 @@ defmodule Inconn2Service.Staff do
 
   def update_team(%Team{} = team, attrs, prefix) do
     team
-    |> Role.changeset(attrs)
+    |> Team.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
@@ -1023,6 +1027,7 @@ defmodule Inconn2Service.Staff do
   def list_team_members(team_id, prefix) do
     TeamMember
     |> where([team_id: ^team_id])
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn team -> preload_employees_team(team, prefix) end)
   end
@@ -1053,7 +1058,7 @@ defmodule Inconn2Service.Staff do
 
   def update_team_member(%TeamMember{} = team_member, attrs, prefix) do
     team_member
-    |> Role.changeset(attrs)
+    |> TeamMember.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 

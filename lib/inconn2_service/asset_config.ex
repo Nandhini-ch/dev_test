@@ -1078,7 +1078,7 @@ defmodule Inconn2Service.AssetConfig do
   defp style(style_map) do
     style_map
     |> Enum.map(fn {key, value} ->
-      "key}: #{value}"
+      "#{key}: #{value}"
     end)
     |> Enum.join(";")
   end
