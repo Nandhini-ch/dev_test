@@ -2182,10 +2182,15 @@ defmodule Inconn2Service.Workorder do
     Map.put_new(work_order, :approver, nil)
   end
 
+  defp get_approval_user(nil, _prefix) do
+    nil
+  end
+
   defp get_approval_user(user_id, prefix) do
     approval_user = Staff.get_user!(user_id, prefix)
     "#{approval_user.first_name}  #{approval_user.last_name}"
   end
+
 
   def add_remarks_to_work_order(work_order) do
     Map.put_new(work_order, :remarks, nil)
