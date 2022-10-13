@@ -2020,6 +2020,33 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderTask, prefix: prefix)
   end
 
+  def get_work_order_with_preloaded_data(id, prefix) do
+    common_query = flutter_query()
+    work_order =
+      from(q in common_query, where: q.id == ^id, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
+      select_merge: %{
+        workorder_template: wt
+      })
+      |> Repo.one(prefix: prefix)
+    wo = Map.put(work_order, :workorder_tasks, list_workorder_tasks(prefix, (work_order.id)) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end))
+    put_approval_user(wo, wo.status, prefix)
+    |> add_remarks_to_work_order()
+    |> put_asset_for_flutter_template(prefix)
+  end
+
+  def put_asset_for_flutter_template(wo, prefix) do
+    {asset, code} =
+      case wo.workorder_template.asset_type do
+        "L" ->
+          asset = AssetConfig.get_location!(wo.asset_id, prefix)
+          {asset, asset.location_code}
+        "E" ->
+          asset = AssetConfig.get_equipment!(wo.asset_id, prefix)
+          {asset, asset.equipment_code}
+      end
+    Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
+  end
+
   def workorder_mobile_flutter(user, prefix) do
 
     # employee =
