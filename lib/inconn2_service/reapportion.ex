@@ -11,7 +11,10 @@ defmodule Inconn2Service.Reapportion do
   # @spec list_reassign_reschedule_requests(any) :: any
   def list_reassign_reschedule_requests(prefix) do
     Repo.all(ReassignRescheduleRequest, prefix: prefix)
-    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_requester_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_reports_name(rrr, prefix) end)
+    |> Enum.map(fn rrr -> get_reassign_name(rrr, prefix) end)
   end
 
   def list_reassign_reschedule_requests_to_be_approved(prefix, user, query_params) do
@@ -26,14 +29,20 @@ defmodule Inconn2Service.Reapportion do
     from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^employee.id and rrr.status != "AP")
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
-    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_requester_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_reports_name(rrr, prefix) end)
+    |> Enum.map(fn rrr -> get_reassign_name(rrr, prefix) end)
   end
 
   def list_reassign_reschedule_requests_pending(prefix, user, query_params) do
     from(rrr in ReassignRescheduleRequest, where: rrr.requester_user_id == ^user.id)
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
-    |> Enum.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> set_asset_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_requester_name(rrr, prefix) end)
+    |> Stream.map(fn rrr -> get_reports_name(rrr, prefix) end)
+    |> Enum.map(fn rrr -> get_reassign_name(rrr, prefix) end)
   end
 
   defp set_asset_name(request, prefix) do
@@ -43,8 +52,29 @@ defmodule Inconn2Service.Reapportion do
     |> Map.put(:frequency, work_order.frequency)
   end
 
-  def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix) |> set_asset_name(prefix)
+  defp get_requester_name(request, prefix) do
+    Map.put(request, :requester, Staff.get_user!(request.requester_user_id, prefix))
+  end
 
+  defp get_reports_name(request, prefix) do
+    case request.reports_to_user_id do
+      nil ->
+        Map.put(request, :reports_to, nil)
+      id ->
+        Map.put(request, :reports_to, Staff.get_user!(id, prefix))
+    end
+  end
+
+  defp get_reassign_name(request, prefix) do
+    case request.reassign_to_user_id do
+      nil ->
+        Map.put(request, :reassigned_user, nil)
+      id ->
+        Map.put(request, :reassigned_user, Staff.get_user!(id, prefix))
+    end
+  end
+
+  def get_reassign_reschedule_request!(id, prefix), do: Repo.get!(ReassignRescheduleRequest, id, prefix: prefix) |> set_asset_name(prefix)
 
   def create_reassign_reschedule_requests(reassign_attrs, prefix, user) do
     result =
