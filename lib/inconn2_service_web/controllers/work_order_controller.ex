@@ -101,6 +101,12 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "show.json", work_order: work_order)
   end
 
+  def show_with_data(conn, %{"id" => id}) do
+    work_order = Workorder.get_work_order_with_preloaded_data(id, conn.assigns.sub_domain_prefix)
+
+    render(conn, "flutter.json", work_order: work_order)
+  end
+
   def next_step(conn, %{"id" => id}) do
     next_step = Workorder.get_next_steps(id, conn.assigns.sub_domain_prefix)
 

@@ -16,7 +16,7 @@ defmodule Inconn2Service.Staff.User do
     field :password_hash, :string
     belongs_to :employee, Employee
     belongs_to :party, Party
-    field :active, :boolean, default: false
+    field :active, :boolean, default: true
     timestamps()
   end
 

@@ -6,7 +6,7 @@ defmodule Inconn2Service.Staff.TeamMember do
   schema "team_members" do
     field :employee_id, :integer
     belongs_to :team, Team
-    field :active, :boolean, default: false
+    field :active, :boolean, default: true
 
     timestamps()
   end
