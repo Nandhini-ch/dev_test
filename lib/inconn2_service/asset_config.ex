@@ -569,6 +569,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_active_locations(prefix) do
