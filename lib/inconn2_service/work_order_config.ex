@@ -17,6 +17,7 @@ defmodule Inconn2Service.WorkOrderConfig do
   def list_tasks(prefix) do
     Repo.add_active_filter(Task)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_tasks(query_params, prefix) do
@@ -27,6 +28,7 @@ defmodule Inconn2Service.WorkOrderConfig do
     end)
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def search_tasks(label, prefix) do
@@ -93,12 +95,14 @@ defmodule Inconn2Service.WorkOrderConfig do
     Repo.add_active_filter(TaskList)
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn tl -> preload_tasks(tl, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   def list_tasks_for_task_lists(task_list_id, prefix) do
     from(ttl in TaskTasklist, where: ttl.task_list_id == ^task_list_id)
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:task)
+    |> Repo.sort_by_id()
   end
 
   def get_task_list!(id, prefix), do: Repo.get!(TaskList, id, prefix: prefix) |> preload_tasks(prefix)
@@ -288,6 +292,7 @@ defmodule Inconn2Service.WorkOrderConfig do
     MasterTaskType
     |>Repo.add_active_filter
     |>Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_master_task_type!(id, prefix), do: Repo.get!(MasterTaskType, id, prefix: prefix)

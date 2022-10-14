@@ -231,6 +231,7 @@ defmodule Inconn2Service.Staff do
     Employee
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_employees_of_party(user, prefix) do
@@ -238,6 +239,7 @@ defmodule Inconn2Service.Staff do
     |> where([party_id: ^user.party_id])
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_employees(%{"designation_id" => designation_id}, user, prefix) do
@@ -249,6 +251,7 @@ defmodule Inconn2Service.Staff do
       |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
       |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
       |> Repo.preload(:org_unit)
+      |> Repo.sort_by_id()
     end
 
   def list_employees(_, user, prefix) do
@@ -261,7 +264,7 @@ defmodule Inconn2Service.Staff do
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
-    |> IO.inspect
+    |> Repo.sort_by_id()
   end
 
   defp filter_by_user_is_licensee(user, prefix) do
@@ -475,7 +478,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
-    |> sort_users()
+    |> Repo.sort_by_id()
   end
 
   def list_users(user, prefix) do
@@ -485,6 +488,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
+    |> Repo.sort_by_id()
   end
 
   def get_reportee_users(user, _prefix) when is_nil(user.employee_id), do: []
@@ -685,6 +689,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:role_profile)
+    |> Repo.sort_by_id()
   end
 
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
@@ -695,6 +700,7 @@ defmodule Inconn2Service.Staff do
     |> where(role_profile_id: ^role_profile_id)
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:role_profile)
+    |> Repo.sort_by_id()
   end
 
   def create_role(attrs \\ %{}, prefix) do

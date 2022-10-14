@@ -11,6 +11,7 @@ defmodule Inconn2Service.CheckListConfig do
   #Context functions for CheckType
   def list_check_types(prefix) do
     Repo.all(Repo.add_active_filter(CheckType), prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_check_type!(id, prefix), do: Repo.get!(CheckType, id, prefix: prefix)
@@ -20,6 +21,7 @@ defmodule Inconn2Service.CheckListConfig do
     %CheckType{}
     |> CheckType.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def update_check_type(%CheckType{} = check_type, attrs, prefix) do
@@ -47,6 +49,7 @@ defmodule Inconn2Service.CheckListConfig do
   #Context function for Check
   def list_checks(query_params, prefix) do
     check_query(Check, query_params) |> Repo.add_active_filter()  |> Repo.all(prefix: prefix) |> Repo.preload(:check_type)
+    |> Repo.sort_by_id()
   end
 
   def get_check!(id, prefix), do: Repo.get!(Check, id, prefix: prefix) |> Repo.preload(:check_type)
@@ -92,6 +95,7 @@ defmodule Inconn2Service.CheckListConfig do
   #Context functions for CheckList
   def list_check_lists(prefix, query_params) do
     Repo.all(Repo.add_active_filter(CheckList) |> checklist_query(query_params), prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_check_list!(id, prefix), do: Repo.get!(CheckList, id, prefix: prefix) |> preload_checks(prefix)
