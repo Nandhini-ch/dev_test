@@ -549,7 +549,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
-    |> sort_locations()
+    |> Repo.sort_by_id()
   end
 
   def search_locations(name_text, site_id, prefix) do
@@ -569,6 +569,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_active_locations(prefix) do
@@ -1078,7 +1079,7 @@ defmodule Inconn2Service.AssetConfig do
   defp style(style_map) do
     style_map
     |> Enum.map(fn {key, value} ->
-      "key}: #{value}"
+      "#{key}: #{value}"
     end)
     |> Enum.join(";")
   end

@@ -14,15 +14,6 @@ defmodule Inconn2Service.WorkOrderConfig do
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
 
-  @doc """
-  Returns the list of tasks.
-
-  ## Examples
-
-      iex> list_tasks()
-      [%Task{}, ...]
-
-  """
   def list_tasks(prefix) do
     Repo.add_active_filter(Task)
     |> Repo.all(prefix: prefix)
@@ -49,35 +40,10 @@ defmodule Inconn2Service.WorkOrderConfig do
       |> Repo.all(prefix: prefix)
     end
   end
-  @doc """
-  Gets a single task.
 
-  Raises `Ecto.NoResultsError` if the Business type does not exist.
-
-  ## Examples
-
-      iex> get_task!(123)
-      %Task{}
-
-      iex> get_task!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_task!(id, prefix), do: Repo.get!(Task, id, prefix: prefix)
   def get_task(id, prefix), do: Repo.get(Task, id, prefix: prefix)
 
-  @doc """
-  Creates a task.
-
-  ## Examples
-
-      iex> create_task(%{field: value})
-      {:ok, %Task{}}
-
-      iex> create_task(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_task(attrs \\ %{}, prefix) do
     %Task{}
     |> Task.changeset(attrs)
@@ -90,36 +56,12 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a task.
-
-  ## Examples
-
-      iex> update_task(task, %{field: new_value})
-      {:ok, %Task{}}
-
-      iex> update_task(task, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_task(%Task{} = task, attrs, prefix) do
     task
     |> Task.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a task.
-
-  ## Examples
-
-      iex> delete_task(task)
-      {:ok, %Task{}}
-
-      iex> delete_task(task)
-      {:error, %Ecto.Changeset{}}
-
-  """
   # def delete_task(%Task{} = task, prefix) do
   #   task
   #   |> Task.changeset(%{"active" => false})
@@ -139,16 +81,6 @@ defmodule Inconn2Service.WorkOrderConfig do
     end
   end
 
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking task changes.
-
-  ## Examples
-
-      iex> change_task(task)
-      %Ecto.Changeset{data: %Task{}}
-
-  """
   def change_task(%Task{} = task, attrs \\ %{}) do
     Task.changeset(task, attrs)
   end
@@ -156,15 +88,7 @@ defmodule Inconn2Service.WorkOrderConfig do
 
   alias Inconn2Service.WorkOrderConfig.TaskList
   alias Inconn2Service.AssetConfig.AssetCategory
-  @doc """
-  Returns the list of task_lists.
 
-  ## Examples
-
-      iex> list_task_lists()
-      [%TaskList{}, ...]
-
-  """
   def list_task_lists(prefix) do
     Repo.add_active_filter(TaskList)
     |> Repo.all(prefix: prefix)
@@ -177,34 +101,8 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> Repo.preload(:task)
   end
 
-  @doc """
-  Gets a single task_list.
-
-  Raises `Ecto.NoResultsError` if the Business type does not exist.
-
-  ## Examples
-
-      iex> get_task_list!(123)
-      %TaskList{}
-
-      iex> get_task_list!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_task_list!(id, prefix), do: Repo.get!(TaskList, id, prefix: prefix) |> preload_tasks(prefix)
 
-  @doc """
-  Creates a task_list.
-
-  ## Examples
-
-      iex> create_task_list(%{field: value})
-      {:ok, %TaskList{}}
-
-      iex> create_task_list(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_task_list(attrs \\ %{}, prefix) do
     result = %TaskList{}
               |> TaskList.changeset(attrs)
@@ -303,18 +201,6 @@ defmodule Inconn2Service.WorkOrderConfig do
     end
   end
 
-    @doc """
-  Updates a task_list.
-
-  ## Examples
-
-      iex> update_task_list(task_list, %{field: new_value})
-      {:ok, %TaskList{}}
-
-      iex> update_task_list(task_list, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
 
   def update_task_list(%TaskList{} = task_list, attrs, prefix) do
     task_list
@@ -370,18 +256,7 @@ defmodule Inconn2Service.WorkOrderConfig do
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a task_list.
 
-  ## Examples
-
-      iex> delete_task_list(task_list)
-      {:ok, %TaskList{}}
-
-      iex> delete_task_list(task_list)
-      {:error, %Ecto.Changeset{}}
-
-  """
   # def delete_task_list(%TaskList{} = task_list, prefix) do
   #   task_list
   #     |> TaskList.changeset(%{"active" => false})
@@ -403,102 +278,31 @@ defmodule Inconn2Service.WorkOrderConfig do
     end
   end
 
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking task_list changes.
-
-  ## Examples
-
-      iex> change_task_list(task_list)
-      %Ecto.Changeset{data: %TaskList{}}
-
-  """
   def change_task_list(%TaskList{} = task_list, attrs \\ %{}) do
     TaskList.changeset(task_list, attrs)
   end
 
   alias Inconn2Service.WorkOrderConfig.MasterTaskType
 
-  @doc """
-  Returns the list of master_task_types.
-
-  ## Examples
-
-      iex> list_master_task_types()
-      [%MasterTaskType{}, ...]
-
-  """
   def list_master_task_types(prefix) do
-    Repo.all(MasterTaskType, prefix: prefix)
+    MasterTaskType
+    |>Repo.add_active_filter
+    |>Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single master_task_type.
-
-  Raises `Ecto.NoResultsError` if the Master task type does not exist.
-
-  ## Examples
-
-      iex> get_master_task_type!(123)
-      %MasterTaskType{}
-
-      iex> get_master_task_type!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_master_task_type!(id, prefix), do: Repo.get!(MasterTaskType, id, prefix: prefix)
 
-  @doc """
-  Creates a master_task_type.
-
-  ## Examples
-
-      iex> create_master_task_type(%{field: value})
-      {:ok, %MasterTaskType{}}
-
-      iex> create_master_task_type(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_master_task_type(attrs \\ %{}, prefix) do
     %MasterTaskType{}
     |> MasterTaskType.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a master_task_type.
-
-  ## Examples
-
-      iex> update_master_task_type(master_task_type, %{field: new_value})
-      {:ok, %MasterTaskType{}}
-
-      iex> update_master_task_type(master_task_type, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_master_task_type(%MasterTaskType{} = master_task_type, attrs, prefix) do
     master_task_type
     |> MasterTaskType.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
-
-  @doc """
-  Deletes a master_task_type.
-
-  ## Examples
-
-      iex> delete_master_task_type(master_task_type)
-      {:ok, %MasterTaskType{}}
-
-      iex> delete_master_task_type(master_task_type)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  # def delete_master_task_type(%MasterTaskType{} = master_task_type, prefix) do
-  #   Repo.delete(master_task_type, prefix: prefix)
-  # end
 
   def delete_master_task_type(%MasterTaskType{} = master_task_type, prefix) do
     cond do
@@ -512,121 +316,37 @@ defmodule Inconn2Service.WorkOrderConfig do
     end
   end
 
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking master_task_type changes.
-
-  ## Examples
-
-      iex> change_master_task_type(master_task_type)
-      %Ecto.Changeset{data: %MasterTaskType{}}
-
-  """
   def change_master_task_type(%MasterTaskType{} = master_task_type, attrs \\ %{}) do
     MasterTaskType.changeset(master_task_type, attrs)
   end
 
   alias Inconn2Service.WorkOrderConfig.TaskTasklist
 
-  @doc """
-  Returns the list of task_tasklists.
-
-  ## Examples
-
-      iex> list_task_tasklists()
-      [%TaskTasklist{}, ...]
-
-  """
   def list_task_tasklists(prefix) do
     Repo.all(TaskTasklist, prefix: prefix)
   end
 
-  @doc """
-  Gets a single task_tasklist.
-
-  Raises `Ecto.NoResultsError` if the Task tasklist does not exist.
-
-  ## Examples
-
-      iex> get_task_tasklist!(123)
-      %TaskTasklist{}
-
-      iex> get_task_tasklist!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_task_tasklist!(id, prefix), do: Repo.get!(TaskTasklist, id, prefix: prefix)
 
-  @doc """
-  Creates a task_tasklist.
-
-  ## Examples
-
-      iex> create_task_tasklist(%{field: value})
-      {:ok, %TaskTasklist{}}
-
-      iex> create_task_tasklist(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_task_tasklist(attrs \\ %{}, prefix) do
     %TaskTasklist{}
     |> TaskTasklist.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a task_tasklist.
-
-  ## Examples
-
-      iex> update_task_tasklist(task_tasklist, %{field: new_value})
-      {:ok, %TaskTasklist{}}
-
-      iex> update_task_tasklist(task_tasklist, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_task_tasklist(%TaskTasklist{} = task_tasklist, attrs, prefix) do
     task_tasklist
     |> TaskTasklist.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a task_tasklist.
-
-  ## Examples
-
-      iex> delete_task_tasklist(task_tasklist)
-      {:ok, %TaskTasklist{}}
-
-      iex> delete_task_tasklist(task_tasklist)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_task_tasklist(%TaskTasklist{} = task_tasklist, prefix) do
     Repo.delete(task_tasklist, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking task_tasklist changes.
-
-  ## Examples
-
-      iex> change_task_tasklist(task_tasklist)
-      %Ecto.Changeset{data: %TaskTasklist{}}
-
-  """
   def change_task_tasklist(%TaskTasklist{} = task_tasklist, attrs \\ %{}) do
     TaskTasklist.changeset(task_tasklist, attrs)
   end
-
-  # def task_count(task_list, prefix) do
-  #  _query = from(t in TaskTasklist, where: t.task_list_id ==  ^task_list, select: count(t.id))
-  #  |> Repo.one(prefix: prefix)
-  # #  |> Map.put(task_list, )
-  # end
 
   defp preload_tasks({:ok, task_list}, prefix), do: {:ok, preload_tasks(task_list, prefix)}
   defp preload_tasks({:error, reason}, _prefix), do: {:error, reason}

@@ -187,6 +187,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_orders/submitted_for_approval", WorkOrderController, :work_orders_submitted_for_approval
     put "/pause_work_order/:id", WorkOrderController, :pause_work_order
     put "/resume_work_order/:id", WorkOrderController, :resume_work_order
+    get "/work_orders/:id/show_with_data", WorkOrderController, :show_with_data
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr

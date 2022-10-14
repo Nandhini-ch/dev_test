@@ -924,7 +924,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def get_work_orders_submitted_for_approval(user, prefix) do
-    (from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"])
+    (from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"] and not wo.is_deactivated)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -932,7 +932,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_work_orders_to_be_approved(user, prefix) do
     WorkOrder
-    |> where([status: "woap", workorder_approval_user_id: ^user.id])
+    |> where([status: "woap", workorder_approval_user_id: ^user.id, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -940,7 +940,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_work_order_to_be_acknowledged(user, prefix) do
     WorkOrder
-    |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id])
+    |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -957,7 +957,7 @@ defmodule Inconn2Service.Workorder do
       end
 
     WorkOrder
-    |> where([loto_checker_user_id: ^user.id, status: ^status])
+    |> where([loto_checker_user_id: ^user.id, status: ^status, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -2020,6 +2020,33 @@ defmodule Inconn2Service.Workorder do
     Repo.all(WorkorderTask, prefix: prefix)
   end
 
+  def get_work_order_with_preloaded_data(id, prefix) do
+    common_query = flutter_query()
+    work_order =
+      from(q in common_query, where: q.id == ^id, left_join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id,
+      select_merge: %{
+        workorder_template: wt
+      })
+      |> Repo.one(prefix: prefix)
+    wo = Map.put(work_order, :workorder_tasks, list_workorder_tasks(prefix, (work_order.id)) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end))
+    put_approval_user(wo, wo.status, prefix)
+    |> add_remarks_to_work_order()
+    |> put_asset_for_flutter_template(prefix)
+  end
+
+  def put_asset_for_flutter_template(wo, prefix) do
+    {asset, code} =
+      case wo.workorder_template.asset_type do
+        "L" ->
+          asset = AssetConfig.get_location!(wo.asset_id, prefix)
+          {asset, asset.location_code}
+        "E" ->
+          asset = AssetConfig.get_equipment!(wo.asset_id, prefix)
+          {asset, asset.equipment_code}
+      end
+    Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
+  end
+
   def workorder_mobile_flutter(user, prefix) do
 
     # employee =
@@ -2153,10 +2180,15 @@ defmodule Inconn2Service.Workorder do
     Map.put_new(work_order, :approver, nil)
   end
 
+  defp get_approval_user(nil, _prefix) do
+    nil
+  end
+
   defp get_approval_user(user_id, prefix) do
     approval_user = Staff.get_user!(user_id, prefix)
     "#{approval_user.first_name}  #{approval_user.last_name}"
   end
+
 
   def add_remarks_to_work_order(work_order) do
     Map.put_new(work_order, :remarks, nil)

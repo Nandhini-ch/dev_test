@@ -5,7 +5,7 @@ defmodule Inconn2Service.Staff.Team do
   schema "teams" do
     field :description, :string
     field :name, :string
-    field :active, :boolean, default: false
+    field :active, :boolean, default: true
 
     timestamps()
   end
