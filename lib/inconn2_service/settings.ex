@@ -24,6 +24,7 @@ defmodule Inconn2Service.Settings do
     Shift
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_shifts(site_id, prefix) do
@@ -31,6 +32,7 @@ defmodule Inconn2Service.Settings do
     |> where(site_id: ^site_id)
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_shifts(site_id, _query_params, prefix) do
@@ -38,6 +40,7 @@ defmodule Inconn2Service.Settings do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_shifts_for_a_day(site_id, shiftdate, prefix) do
@@ -84,6 +87,7 @@ defmodule Inconn2Service.Settings do
     IO.inspect(query)
     Repo.add_active_filter(query)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   @doc """

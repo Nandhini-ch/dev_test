@@ -171,6 +171,7 @@ defmodule Inconn2Service.Report do
     result =
       people_report_query(query_params)
       |> Repo.all(prefix: prefix)
+      |> Stream.filter(fn x -> x.org_unit_id == query_params["org_unit_id"] end)
       |> Enum.map(fn x -> load_people_attendance_percent(x, query_params, prefix) end)
 
     case query_params["type"] do
@@ -200,6 +201,7 @@ defmodule Inconn2Service.Report do
             emp_code: e.employee_id,
             designation: d.name,
             department: o.name,
+            org_unit_id: o.id,
             attendance_percentage: nil,
             work_done_time: nil
     })
