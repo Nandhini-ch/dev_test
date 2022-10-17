@@ -18,6 +18,7 @@ defmodule Inconn2Service.Staff do
     OrgUnit
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_org_units(party_id, prefix) do
@@ -25,10 +26,12 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> where(party_id: ^party_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_org_units_for_user(user, prefix) do
     list_org_units(user.party_id, prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_org_units_tree(party_id, prefix) do
@@ -935,6 +938,7 @@ defmodule Inconn2Service.Staff do
     Designation
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
@@ -989,6 +993,7 @@ defmodule Inconn2Service.Staff do
     Team
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_teams_for_user(user, prefix) do
@@ -1036,6 +1041,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn team -> preload_employees_team(team, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   defp preload_employees_team(team, prefix) do
