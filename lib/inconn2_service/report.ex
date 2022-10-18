@@ -359,10 +359,10 @@ defmodule Inconn2Service.Report do
           manhours_consumed: convert_man_hours_consumed(manhours_consumed),
           scheduled_date: wo.scheduled_date,
           scheduled_time: wo.scheduled_time,
-          start_date: wo.start_date,
-          start_time: wo.start_time,
-          completed_date: wo.completed_date,
-          completed_time: wo.completed_time
+          start_date: convert_date_format(wo.start_date),
+          start_time: convert_time_format(wo.start_time),
+          completed_date: convert_date_format(wo.completed_date),
+          completed_time: convert_time_format(wo.completed_time)
         }
       end)
 
