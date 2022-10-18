@@ -39,7 +39,7 @@ defmodule Inconn2Service.Confirmation do
   def confirm_otp(user_id, otp, prefix) do
     otp_entry = get_forgot_password_otp_by_user_id(user_id, prefix)
     cond do
-      otp_entry && !otp_entry.validated && otp_entry.otp == otp ->
+      otp_entry && !otp_entry.validated && to_string(otp_entry.otp) == otp ->
         update_forgot_password_otp(otp_entry, %{"validated" => true}, prefix)
         {:ok, Staff.get_user!(user_id, prefix)}
 
