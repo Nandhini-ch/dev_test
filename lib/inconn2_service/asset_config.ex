@@ -23,8 +23,10 @@ defmodule Inconn2Service.AssetConfig do
     Zone
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
-    def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
+
+  def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
 
   def create_zone(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
@@ -90,7 +92,7 @@ defmodule Inconn2Service.AssetConfig do
    |> site_query(query_params, prefix)
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
-   |> sort_sites()
+   |> Repo.sort_by_id()
   end
 
   def list_sites_for_user(user, prefix) do
@@ -108,6 +110,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.uniq()
+    |> Repo.sort_by_id()
   end
 
   def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
@@ -576,6 +579,7 @@ defmodule Inconn2Service.AssetConfig do
     Location
     |> where(active: true)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_locations_tree(site_id, prefix) do
@@ -935,6 +939,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def search_equipments(name_text, site_id, prefix) do
@@ -953,11 +958,14 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+
   end
 
   def list_equipments(prefix) do
     Equipment
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_equipments_tree(site_id, prefix) do
@@ -1002,11 +1010,13 @@ defmodule Inconn2Service.AssetConfig do
   def list_equipments_by_location_ids(location_ids, prefix) do
     from(e in Equipment, where: e.location_id in ^location_ids)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_equipments_by_ids(ids, prefix) do
     from(e in Equipment, where: e.id in ^ids)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_equipments_of_asset_category_and_not_in_given_ids(nil, _ids, _prefix), do: []
@@ -1567,6 +1577,7 @@ defmodule Inconn2Service.AssetConfig do
     party_query(Party, query_params)
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_SP(prefix) do
@@ -1578,6 +1589,7 @@ defmodule Inconn2Service.AssetConfig do
       )
 
     Repo.all(query, prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_AO(prefix) do
@@ -1589,6 +1601,7 @@ defmodule Inconn2Service.AssetConfig do
       )
 
     Repo.all(query, prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_party!(id, prefix), do: Repo.get!(Party, id, prefix: prefix)

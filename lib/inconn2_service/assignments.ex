@@ -15,12 +15,14 @@ defmodule Inconn2Service.Assignments do
     Roster
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:master_roster)
+    |> Repo.sort_by_id()
   end
 
   def list_employee_rosters(prefix) do
     EmployeeRoster
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
+    |> Repo.sort_by_id()
   end
 
   def list_rosters_for_user(user, date, prefix) do
@@ -136,6 +138,7 @@ defmodule Inconn2Service.Assignments do
     %MasterRoster{}
     |> MasterRoster.changeset(attrs)
     |> Repo.insert(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_rosters(master_roster_id, nil, nil, prefix) do
