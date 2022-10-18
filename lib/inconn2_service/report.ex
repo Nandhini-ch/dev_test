@@ -611,9 +611,6 @@ defmodule Inconn2Service.Report do
             {nil, nil}
           end
 
-        IO.inspect({ticket_response_tat, ticket_resolution_tat})
-        IO.inspect({wr.response_tat, wr.resolution_tat})
-
         {response_tat_met, resolution_tat_met} =
           if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
             cond do
@@ -655,9 +652,9 @@ defmodule Inconn2Service.Report do
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
           status: match_work_request_status(wr.status),
-          time_taken_to_close: time_taken_to_close,
-          date: "#{wr.raised_date_time.year}-#{wr.raised_date_time.month}-#{wr.raised_date_time.day}",
-          time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}:#{wr.raised_date_time.second}"
+          time_taken_to_close: convert_man_hours_consumed(time_taken_to_close),
+          date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
+          time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}"
         }
       end)
 
