@@ -625,6 +625,11 @@ defmodule Inconn2Service.Staff do
          "Cannot be deleted as there are Store associated with it"
        }
 
+      has_workorder_schedule?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as the user's permission might be required in workflow"
+        }
+
       true ->
        update_user(user, %{"active" => false}, prefix)
        {:deleted,

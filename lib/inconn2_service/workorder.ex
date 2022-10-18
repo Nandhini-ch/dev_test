@@ -14,7 +14,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Staff.{Employee, User}
   # alias Inconn2Service.Settings.Shift
   # alias Inconn2Service.Assignment.EmployeeRoster
-  alias Inconn2Service.Inventory.Item
+  # alias Inconn2Service.Inventory.Item
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
@@ -25,7 +25,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.WorkRequest
-  alias Inconn2Service.Util.HierarchyManager
+  # alias Inconn2Service.Util.HierarchyManager
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions

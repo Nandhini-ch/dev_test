@@ -57,6 +57,7 @@ defmodule Inconn2Service.Util.DeleteManager do
   def has_workorder_schedule?(%Location{} = location, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%WorkorderTemplate{} = workorder_template, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"workorder_template_id" => workorder_template.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_schedule?(%User{} = user, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"workorder_approval_user_id" => user.id, "workorder_acknowledgement_user_id" => user.id, "workpermit_approval_user_id" => user.id, "loto_checker_user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_task_list?(%AssetCategory{} = asset_category, prefix), do: (task_list_query(Repo.add_active_filter(TaskList), %{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
