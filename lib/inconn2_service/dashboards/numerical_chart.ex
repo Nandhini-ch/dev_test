@@ -1,5 +1,8 @@
 defmodule Inconn2Service.Dashboards.NumericalChart do
 
+  @completed_workorders ["cp"]
+  @open_workorders ["cr", "as", "execwa"]
+
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
   alias Inconn2Service.DashboardConfiguration
@@ -407,8 +410,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_ppm_compliance(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    scheduled_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "PRV", prefix) |> Enum.count() |> change_nil_to_one()
-    completed_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp"], "in", "PRV", prefix) |> Enum.count()
+    workorders = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "PRV", prefix)
+
+    scheduled_wo = workorders |> Enum.count() |> change_nil_to_one()
+    completed_wo = workorders |> Enum.count(fn wo -> wo.status in @completed_workorders end)
 
     calculate_percentage(completed_wo, scheduled_wo)
   end
@@ -416,8 +421,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_open_workorder_status(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    open_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cp", "cn"], "not", nil, prefix) |> Enum.count() |> change_nil_to_one()
-    inprogress_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, ["cr", "as", "cp", "cn"], "not", nil, prefix) |> Enum.count()
+    workorders = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, nil, prefix) |> Enum.filter(fn wo -> wo.status not in @completed_workorders end)
+
+    open_wo = workorders |> Enum.count() |> change_nil_to_one()
+    inprogress_wo = workorders |> Enum.count(fn wo -> wo.status not in @open_workorders end)
 
     calculate_percentage(inprogress_wo, open_wo)
   end
@@ -431,11 +438,11 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_ticket_workorder_status_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    total_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "TKT", prefix)
+    total_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "TKT", prefix)
     total_count = total_wo |> length() |> change_nil_to_one()
-    open_count = Enum.count(total_wo, fn wo -> wo.status in ["cr", "as"] end)
-    completed_count = Enum.count(total_wo, fn wo -> wo.status == "cp" end)
-    inprogress_count = Enum.count(total_wo, fn wo -> wo.status not in ["cr", "as", "cp",] end)
+    open_count = Enum.count(total_wo, fn wo -> wo.status in @open_workorders end)
+    completed_count = Enum.count(total_wo, fn wo -> wo.status in @completed_workorders end)
+    inprogress_count = Enum.count(total_wo, fn wo -> wo.status not in @open_workorders ++ @completed_workorders end)
 
     [
       %{
@@ -458,7 +465,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def get_breakdown_workorder_status_shcart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.get_workorder_for_chart(site_id, from_date, to_date, [], nil, "BRK", prefix)
+    NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "BRK", prefix)
     |> length()
   end
 
