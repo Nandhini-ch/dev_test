@@ -718,7 +718,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
           %{
               name: label,
-              value: mtbf
+              value: mtbf |> convert_to_hours_and_minutes()
           }
       ]
     }
@@ -731,7 +731,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: [
             %{
                 name: label,
-                value: mtbf
+                value: mtbf |> convert_to_hours_and_minutes()
             }
         ]
       }

@@ -183,4 +183,24 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def convert_integer_to_non_neg_integer(integer) when integer < 0, do: integer * -1
   def convert_integer_to_non_neg_integer(integer), do: integer
 
+  def convert_to_hours_and_minutes(float_value) do
+    [hours, decimal] = Float.to_string(float_value) |> String.split(".")
+
+   hours = String.to_integer(hours)
+   hours = if hours < 10 do
+             "#{"0" <> Integer.to_string(hours)}"
+           else
+             "#{Integer.to_string(hours)}"
+           end
+
+   minutes = String.to_float("0." <> decimal)
+   minutes = minutes * 60 |> trunc()
+   minutes = if minutes < 10 do
+               "#{"0" <> Integer.to_string(minutes)}"
+             else
+               "#{Integer.to_string(minutes)}"
+             end
+
+  "#{hours} : #{minutes}"
+  end
 end
