@@ -690,6 +690,7 @@ defmodule Inconn2Service.Workorder do
 
   def check_for_holidays(cs, workorder_template) do
     IO.inspect(workorder_template)
+    IO.inspect(cs)
     IO.puts("holidaaaa")
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     holidays = get_field(cs, :holidays)
