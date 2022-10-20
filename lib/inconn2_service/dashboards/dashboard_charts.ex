@@ -633,8 +633,9 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp calculate_datasets(work_orders, "scheduled/completed") do
     completed_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @completed_workorders end)
-    incomplete_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status not in @completed_workorders end)
+    # incomplete_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status not in @completed_workorders end)
     total_count = Enum.count(work_orders) |> change_nil_to_one()
+    incomplete_count = total_count - completed_count
 
     [
       %{
