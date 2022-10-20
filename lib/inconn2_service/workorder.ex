@@ -1006,7 +1006,8 @@ defmodule Inconn2Service.Workorder do
         create_status_track(work_order, user, prefix)
         auto_create_workorder_tasks_checks(work_order, prefix)
         Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
-        {:ok, get_work_order!(work_order.id, prefix)}
+        wo = get_work_order!(work_order.id, prefix)
+        {:ok, put_approval_user(wo, wo.status, prefix)}
 
       _ ->
         result
@@ -1426,7 +1427,8 @@ defmodule Inconn2Service.Workorder do
           change_ticket_status(work_order, updated_work_order, user, prefix)
           Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
           calculate_work_order_cost(work_order, prefix)
-          {:ok, get_work_order!(updated_work_order.id, prefix)}
+          wo = get_work_order!(updated_work_order.id, prefix)
+          {:ok, put_approval_user(wo, wo.status, prefix)}
       _ ->
         result
     end
