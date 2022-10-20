@@ -612,14 +612,14 @@ defmodule Inconn2Service.Workorder do
             if date_new == date do
               change(cs, %{next_occurrence_date: date, next_occurrence_time: time_new})
               |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-              |> check_for_holidays()
+              |> check_for_holidays(workorder_template)
               |> check_before_applicable_date(applicable_end)
             else
               time = first_occurrence_time
               date = Date.add(next_occurrence_date, 1)
               change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
               |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-              |> check_for_holidays()
+              |> check_for_holidays(workorder_template)
               |> check_before_applicable_date(applicable_end)
             end
           else
@@ -627,7 +627,7 @@ defmodule Inconn2Service.Workorder do
             date = Date.add(next_occurrence_date, 1)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
             |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-            |> check_for_holidays()
+            |> check_for_holidays(workorder_template)
             |> check_before_applicable_date(applicable_end)
           end
         "D" ->
@@ -635,7 +635,7 @@ defmodule Inconn2Service.Workorder do
           date = Date.add(next_occurrence_date, repeat_every)
           change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
           |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-          |> check_for_holidays()
+          |> check_for_holidays(workorder_template)
           |> check_before_applicable_date(applicable_end)
         "W" ->
           time = first_occurrence_time
@@ -650,13 +650,13 @@ defmodule Inconn2Service.Workorder do
             date = Date.new!(next_occurrence_date.year + 1, month - 12, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
             |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-            |> check_for_holidays()
+            |> check_for_holidays(workorder_template)
             |> check_before_applicable_date(applicable_end)
           else
             date = date_valid_in_every_month(next_occurrence_date.year, month, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
             |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-            |> check_for_holidays()
+            |> check_for_holidays(workorder_template)
             |> check_before_applicable_date(applicable_end)
           end
         "Y" ->
@@ -664,7 +664,7 @@ defmodule Inconn2Service.Workorder do
             date = Date.new!(next_occurrence_date.year + repeat_every, first_occurrence_date.month, first_occurrence_date.day)
             change(cs, %{next_occurrence_date: date, next_occurrence_time: time})
             |> check_for_bank_holidays(site_id, applicable_start, applicable_end, prefix)
-            |> check_for_holidays()
+            |> check_for_holidays(workorder_template)
             |> check_before_applicable_date(applicable_end)
       end
     else
@@ -688,15 +688,15 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def check_for_holidays(cs) do
-    IO.inspect(cs)
+  def check_for_holidays(cs, workorder_template) do
+    IO.inspect(workorder_template)
     IO.puts("holidaaaa")
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     holidays = get_field(cs, :holidays)
     case Date.day_of_week(next_occurrence_date) in holidays do
       true -> next_occurrence_date = Date.add(next_occurrence_date, 1)
               cs = change(cs, next_occurrence_date: next_occurrence_date)
-              check_for_holidays(cs)
+              check_for_holidays(cs, workorder_template)
       false -> cs
     end
   end
