@@ -357,8 +357,8 @@ defmodule Inconn2Service.Report do
           status: wo.status,
           assigned_to: name,
           manhours_consumed: convert_man_hours_consumed(manhours_consumed),
-          scheduled_date: wo.scheduled_date,
-          scheduled_time: wo.scheduled_time,
+          scheduled_date: convert_date_format(wo.scheduled_date),
+          scheduled_time: convert_date_format(wo.scheduled_time),
           start_date: convert_date_format(wo.start_date),
           start_time: convert_time_format(wo.start_time),
           completed_date: convert_date_format(wo.completed_date),
@@ -1884,6 +1884,19 @@ defmodule Inconn2Service.Report do
       "cp" -> "Complete"
       "cn" -> "Canceled"
       "ht" -> "Hold"
+      "exec" -> "Ready for execution"
+      "woap" -> "Work order approvl pending"
+      "wpap" -> "Work permit approval Application pending"
+      "wpp" -> "Work permit pending"
+      "wpa" -> "Work permit approved"
+      "wpr" -> "Work permit rejected"
+      "ltlap" -> "LOTO Lock application pending"
+      "ltlp" -> "LOTO lock Pending"
+      "prep" -> "Pre pending"
+      "ltrap" -> "LOTO Release application pending"
+      "ltrp" -> "LOTO release pending"
+      "ackp" -> "Acknowledgement pending"
+      "execwa" -> "Ready for execution"
       _ -> status
     end
   end
