@@ -767,6 +767,8 @@ defmodule Inconn2Service.Report do
               |> Enum.sum()
 
           sum + compensation_hours * 1.0
+          |> Float.ceil(2)
+          |> convert_man_hours_consumed()
         end
 
 
@@ -835,7 +837,7 @@ defmodule Inconn2Service.Report do
         asset_category: AssetConfig.get_asset_category!(e.asset_category_id, prefix).name,
         status: e.status,
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
-        up_time: Float.ceil(up_time, 2),
+        up_time: up_time,
         utilized_time: utilized_time,
         ppm_completion_percentage: Float.ceil(completion_percentage, 2)
       }
@@ -883,7 +885,7 @@ defmodule Inconn2Service.Report do
           0 ->
             last_entry = get_last_entry_previous(l.id, "L", naive_from_date, prefix)
             if last_entry != nil and last_entry.status_changed in ["ON", "OFF"] do
-              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
+              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time)  |> convert_to_positive()
             else
               0.0
             end
@@ -892,7 +894,7 @@ defmodule Inconn2Service.Report do
             last_entry = List.last(asset_status_tracks)
             compensation_hours =
               if last_entry.status_changed in ["ON", "OFF"] do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_man_hours_consumed() |> convert_to_positive()
+                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_to_positive()
               else
                 0.0
               end
@@ -902,7 +904,9 @@ defmodule Inconn2Service.Report do
               |> Stream.filter(fn h -> !is_nil(h) end)
               |> Enum.sum()
 
-          sum + compensation_hours
+          sum + compensation_hours * 1.0
+          |> Float.ceil(2)
+          |> convert_man_hours_consumed()
         end
 
 
@@ -968,7 +972,7 @@ defmodule Inconn2Service.Report do
         asset_category: AssetConfig.get_asset_category!(l.asset_category_id, prefix).name,
         status: l.status,
         criticality: (if l.criticality <= 2, do: "Critical", else: "Not Critical"),
-        up_time: Float.ceil(up_time, 2),
+        up_time: up_time,
         utilized_time: utilized_time,
         ppm_completion_percentage: Float.ceil(completion_percentage, 2)
       }
