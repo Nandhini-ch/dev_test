@@ -360,10 +360,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
 
       not is_nil(params["asset_ids"]) ->
-        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
+        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
+        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
     end
   end
 
