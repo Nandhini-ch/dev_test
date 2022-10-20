@@ -901,8 +901,9 @@ defmodule Inconn2Service.Workorder do
       true ->
         get_work_order_with_asset(work_order, prefix)
         |> preload_work_order_template_repeat_unit(prefix)
+        |> put_approval_user(work_order.status, prefix)
       false ->
-        work_order |> preload_work_order_template_repeat_unit(prefix)
+        work_order |> preload_work_order_template_repeat_unit(prefix) |>put_approval_user(work_order.status, prefix)
     end
   end
 
