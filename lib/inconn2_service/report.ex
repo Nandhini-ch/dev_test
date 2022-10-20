@@ -839,7 +839,7 @@ defmodule Inconn2Service.Report do
         status: e.status,
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: Float.ceil(up_time, 2),
-        utilized_time: Float.ceil(utilized_time, 2),
+        utilized_time: utilized_time,
         ppm_completion_percentage: Float.ceil(completion_percentage, 2)
       }
     end)
