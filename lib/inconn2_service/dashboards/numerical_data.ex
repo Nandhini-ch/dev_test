@@ -5,7 +5,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Measurements.MeterReading
-  alias Inconn2Service.AssetConfig.{Equipment, Site}
+  alias Inconn2Service.AssetConfig.{Location, Equipment, Site}
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.Workorder.{WorkOrder, WorkorderSchedule}
   alias Inconn2Service.AssetConfig.{AssetCategory, Equipment, AssetStatusTrack}
@@ -139,28 +139,45 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     get_workorder_general_query(site_id, from_date, to_date) |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, asset_category_ids, nil, _asset_type, statuses, inclusion, type, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion) |> add_workorder_type_filter_to_query(type)
-    from(q in query, join: wot in WorkorderTemplate, on: q.workorder_template_id == wot.id,
-                     join: ac in AssetCategory, on: ac.id == wot.asset_category_id and wot.asset_category_id in ^asset_category_ids,
-                     select: %{
-                      asset_category_id: ac.id,
-                      asset_category_name: ac.name,
-                      work_order: q
-                     })
+  def get_workorder_chart_data_for_site(site_id, from_date, to_date, type, prefix) do
+    from(ac in AssetCategory,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.type in ^type and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
     |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, nil, asset_ids, asset_type, statuses, inclusion, type, prefix) do
-    query = get_workorder_general_query(site_id, from_date, to_date) |> add_status_filter_to_query(statuses, inclusion) |> add_workorder_type_filter_to_query(type)
-    from(q in query, where: q.asset_id in ^asset_ids and q.asset_type == ^asset_type)
-
+  def get_workorder_chart_data_for_asset_categories(site_id, from_date, to_date, asset_category_ids, type, prefix) do
+    from(ac in AssetCategory, where: ac.id in ^asset_category_ids,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.type in ^type and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
     |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_for_chart(site_id, from_date, to_date, statuses, inclusion, type, prefix) do
+  def get_workorder_chart_data_for_assets(site_id, from_date, to_date, asset_ids, asset_type, type, prefix) do
+    asset_query = get_asset_query(asset_ids, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.type in ^type and wo.status != "cn",
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            work_order: wo
+          })
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_for_chart(site_id, from_date, to_date, type, prefix) do
     get_workorder_general_query(site_id, from_date, to_date)
-    |> add_status_filter_to_query(statuses, inclusion)
+    |> add_status_filter_to_query(["cn"], "not")
     |> add_workorder_type_filter_to_query(type)
     |> Repo.all(prefix: prefix)
   end
@@ -244,6 +261,9 @@ defmodule Inconn2Service.Dashboards.NumericalData do
       _ -> query
     end
   end
+
+  defp get_asset_query(asset_ids, "L"), do: from l in Location, where: l.id in ^asset_ids
+  defp get_asset_query(asset_ids, "E"), do: from e in Equipment, where: e.id in ^asset_ids
 
   defp add_workorder_type_filter_to_query(query, nil), do: query
   defp add_workorder_type_filter_to_query(query, type) do
