@@ -557,8 +557,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_workorder_status_for_assets(params, types, organize_for, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
-    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
-    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
     location_workorders =
       NumericalData.get_workorder_chart_data_for_assets(
         params["site_id"],
