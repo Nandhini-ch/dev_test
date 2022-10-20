@@ -357,13 +357,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_ppm_chart(params, prefix) do
     cond do
       not is_nil(params["asset_category_ids"]) ->
-        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix)
+        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
       not is_nil(params["asset_ids"]) ->
-        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix)
+        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix)
+        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
     end
   end
 
@@ -371,13 +371,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_open_workorder_chart(params, prefix) do
     cond do
       not is_nil(params["asset_category_ids"]) ->
-        get_workorder_status_for_asset_categories(params, ["PRV", "BRK", "TKT"], "open/ip", prefix)
+        get_workorder_status_for_asset_categories(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
       not is_nil(params["asset_ids"]) ->
-        get_workorder_status_for_assets(params, ["PRV", "BRK", "TKT"], "open/ip", prefix)
+        get_workorder_status_for_assets(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["PRV", "BRK", "TKT"], "open/ip", prefix)
+        get_workorder_status_for_site(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
     end
   end
@@ -388,20 +388,20 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         get_site_date_time(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     NumericalData.get_work_requests(params["site_id"], params, from_date_time, to_date_time, ["CL"], "not", prefix)
-    |> group_by_ticket_category("open/ip/ticket")
+    |> group_by_ticket_category("open/ip/ticket") |> Enum.take(10)
   end
 
   #Chart no 14
   def get_ticket_workorder_status_chart(params, prefix) do
     cond do
       not is_nil(params["asset_category_ids"]) ->
-        get_workorder_status_for_asset_categories(params, ["TKT"], "workorder_status", prefix)
+        get_workorder_status_for_asset_categories(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
       not is_nil(params["asset_ids"]) ->
-        get_workorder_status_for_assets(params, ["TKT"], "workorder_status", prefix)
+        get_workorder_status_for_assets(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["TKT"], "workorder_status", prefix)
+        get_workorder_status_for_site(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
     end
   end
@@ -410,13 +410,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_breakdown_workorder_status_chart(params, prefix) do
     cond do
       not is_nil(params["asset_category_ids"]) ->
-        get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix)
+        get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
       not is_nil(params["asset_ids"]) ->
-        get_workorder_status_for_assets(params, ["BRK"], "workorder_status", prefix)
+        get_workorder_status_for_assets(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["BRK"], "workorder_status", prefix)
+        get_workorder_status_for_site(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
     end
   end
