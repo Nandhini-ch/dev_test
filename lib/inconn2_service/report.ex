@@ -827,6 +827,10 @@ defmodule Inconn2Service.Report do
           0.0
         end
 
+      IO.inspect("-----------------------------------")
+      IO.inspect(utilized_time)
+      IO.inspect("-----------------------------------")
+
       %{
         asset_name: e.name,
         asset_code: e.equipment_code,
