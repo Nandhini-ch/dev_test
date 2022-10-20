@@ -357,13 +357,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_ppm_chart(params, prefix) do
     cond do
       not is_nil(params["asset_category_ids"]) ->
-        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
+        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
       not is_nil(params["assets"]) ->
-        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
+        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
       true ->
-        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
+        get_workorder_status_for_site(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
     end
   end
 
