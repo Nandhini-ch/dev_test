@@ -359,7 +359,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) #|> Enum.take(10)
 
       true ->
@@ -373,7 +373,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
       true ->
@@ -397,7 +397,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
@@ -412,7 +412,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
