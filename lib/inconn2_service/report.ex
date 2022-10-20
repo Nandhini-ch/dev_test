@@ -394,10 +394,10 @@ defmodule Inconn2Service.Report do
   end
 
   def convert_man_hours_consumed(manhours_consumed) do
-    time = to_string(manhours_consumed/3600) |> String.split(".")
+    time = to_string(manhours_consumed/3600 |> Float.ceil(2)) |> String.split(".")
     hour = List.first(time)
     float_string = "0." <> List.last(time)
-    minute = String.to_float(float_string) *60 |> Float.ceil()  |> Kernel.trunc()  |> Integer.to_string()
+    minute = String.to_float(float_string) *60 |> Float.ceil() |> Kernel.trunc()  |> Integer.to_string()
     hour_and_minute(hour) <> ":" <> hour_and_minute(minute)
   end
 
