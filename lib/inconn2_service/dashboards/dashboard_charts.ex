@@ -639,11 +639,11 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Scheduled",
-        value: (incomplete_count/total_count) * 100
+        value: calculate_percentage(incomplete_count, total_count)
       },
       %{
         name: "Completed",
-        value: (completed_count/total_count) * 100
+        value: calculate_percentage(completed_count, total_count)
       }
     ]
   end
@@ -655,7 +655,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Workorders",
-        value: (inprogress_count/total_count) * 100
+        value: calculate_percentage(inprogress_count, total_count)
       }
     ]
   end
