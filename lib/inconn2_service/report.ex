@@ -389,6 +389,10 @@ defmodule Inconn2Service.Report do
     end
   end
 
+  def convert_man_hours_consumed(nil) do
+    nil
+  end
+
   def convert_man_hours_consumed(manhours_consumed) do
     time = to_string(manhours_consumed/3600) |> String.split(".")
     hour = List.first(time)

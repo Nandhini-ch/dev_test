@@ -11,8 +11,16 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
+  def convert_date_format(nil) do
+    nil
+  end
+
   def convert_date_format(date) do
     "#{date.day}-#{date.month}-#{date.year}"
+  end
+
+  def convert_time_format(nil) do
+    nil
   end
 
   def convert_time_format(time) do
