@@ -689,6 +689,8 @@ defmodule Inconn2Service.Workorder do
   end
 
   def check_for_holidays(cs) do
+    IO.inspect(cs)
+    IO.puts("holidaaaa")
     next_occurrence_date = get_field(cs, :next_occurrence_date)
     holidays = get_field(cs, :holidays)
     case Date.day_of_week(next_occurrence_date) in holidays do
