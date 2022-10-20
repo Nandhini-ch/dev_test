@@ -778,6 +778,7 @@ defmodule Inconn2Service.Workorder do
     from(wo in WorkOrder, where: wo.scheduled_date >= ^limit)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -796,6 +797,7 @@ defmodule Inconn2Service.Workorder do
     |> Repo.all(prefix: prefix)
     |> filter_for_workpermit_approval_in_team(team_user_ids)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -810,6 +812,7 @@ defmodule Inconn2Service.Workorder do
     query = from wo in WorkOrder, where: wo.status != "cp"
     Repo.all(query, prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -866,6 +869,7 @@ defmodule Inconn2Service.Workorder do
     Enum.uniq(assigned_work_orders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -874,6 +878,7 @@ defmodule Inconn2Service.Workorder do
     |> Repo.all(prefix: prefix)
     |> Stream.filter(fn wo -> wo.is_deactivated != true end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -883,6 +888,7 @@ defmodule Inconn2Service.Workorder do
     from(wo in WorkOrder, where: wo.user_id in ^team_user_ids and not wo.is_deactivated and wo.status not in ["cp", "cn"])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -921,7 +927,9 @@ defmodule Inconn2Service.Workorder do
 
     end)
     |> Enum.filter(fn x -> x != "not_required" end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -929,6 +937,7 @@ defmodule Inconn2Service.Workorder do
     (from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"] and not wo.is_deactivated)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -937,6 +946,7 @@ defmodule Inconn2Service.Workorder do
     |> where([status: "woap", workorder_approval_user_id: ^user.id, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -945,6 +955,7 @@ defmodule Inconn2Service.Workorder do
     |> where([status: "ackp", workorder_acknowledgement_user_id: ^user.id, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -962,6 +973,7 @@ defmodule Inconn2Service.Workorder do
     |> where([loto_checker_user_id: ^user.id, status: ^status, is_deactivated: false])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
@@ -969,6 +981,7 @@ defmodule Inconn2Service.Workorder do
     from(wo in WorkOrder, where: wo.loto_checker_user_id == ^user.id and wo.status in ["ltlp", "ltrp"])
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
