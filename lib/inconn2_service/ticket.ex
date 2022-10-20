@@ -407,6 +407,7 @@ defmodule Inconn2Service.Ticket do
               |> is_approvals_required(user, prefix)
               |> validate_approvals_required_ids(prefix)
               |> calculate_tat(work_request, prefix)
+              |> update_workorder_generated_status()
               |> Repo.update(prefix: prefix)
 
 
@@ -422,6 +423,13 @@ defmodule Inconn2Service.Ticket do
 
     end
 
+  end
+
+  def update_workorder_generated_status(cs) do
+    case get_field(cs, :status) do
+      "ROP" -> change(cs, %{is_workorder_generated: false})
+      _ -> cs
+    end
   end
 
   defp send_completed_email(work_request, updated_work_request, prefix) do

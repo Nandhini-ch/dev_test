@@ -363,7 +363,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def download_workorder_template(prefix) do
     workorder_template = Workorder.list_workorder_templates(prefix)
 
-    header = [["id", "reference", "Name", "Description", "Asset Type", "Task List Id", "Estimated Time", "Scheduled", "Breakdown", "Audit", "Adhoc",
+    header = [["id", "reference", "Name", "Description", "Asset Category Id" ,"Asset Type", "Task List Id", "Estimated Time", "Scheduled", "Breakdown", "Audit", "Adhoc",
     "Amc", "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End", "Time Start", "Time End", "Create New", "Max Times", "Tools", "Spares", "Consumables", "Parts",
     "Measuring Instruments", "Workorder Prior Time", "Is Precheck Required", "Precheck List Id", "Is Workpermit Required", "Is Workorder Approval Required",
     "Is Workorder Acknowledgement Required", "Workpermit Check List Id", "Is Loto Required", "Loto Lock Check List Id", "Loto Release Check List Id", "Is Materials Required",
@@ -371,7 +371,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
 
     body =
       Enum.map(workorder_template, fn r ->
-        [r.id, "", r.name, r.description, r.asset_type, r.task_list_id, r.estimated_time, r.scheduled, r.breakdown, r.audit, r.adhoc,
+        [r.id, "", r.name, r.description, r.asset_category_id, r.asset_type, r.task_list_id, r.estimated_time, r.scheduled, r.breakdown, r.audit, r.adhoc,
          r.amc, r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times, convert_array_of_map_to_string(r.tools), convert_array_of_map_to_string(r.spares), convert_array_of_map_to_string(r.consumables), convert_array_of_map_to_string(r.parts),
          convert_array_of_map_to_string(r.measuring_instruments), r.workorder_prior_time, r.is_precheck_required, r.precheck_list_id, r.is_workpermit_required, r.is_workorder_approval_required,
          r.is_workorder_acknowledgement_required, r.workpermit_check_list_id, r.is_loto_required, r.loto_lock_check_list_id, r.loto_release_check_list_id, r.is_materials_required,

@@ -11,6 +11,14 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
+  def convert_date_format(date) do
+    "#{date.day}-#{date.month}-#{date.year}"
+  end
+
+  def convert_time_format(time) do
+    "#{time.hour}:#{time.minute}"
+  end
+
   def update_custom_fields(resource, attrs) do
     Map.put(attrs, "custom", merge_custom_values(resource.custom, attrs["custom"]))
   end

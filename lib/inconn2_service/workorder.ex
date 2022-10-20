@@ -14,7 +14,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Staff.{Employee, User}
   # alias Inconn2Service.Settings.Shift
   # alias Inconn2Service.Assignment.EmployeeRoster
-  alias Inconn2Service.Inventory.Item
+  # alias Inconn2Service.Inventory.Item
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Workorder.WorkorderCheck
   alias Inconn2Service.Staff
@@ -25,7 +25,7 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.WorkRequest
-  alias Inconn2Service.Util.HierarchyManager
+  # alias Inconn2Service.Util.HierarchyManager
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
@@ -983,18 +983,48 @@ defmodule Inconn2Service.Workorder do
               |> validate_workorder_schedule_id(prefix)
               |> prefill_asset_type(prefix)
               |> created_user_id(user)
+              |> check_work_order_for_ticket_status(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
         create_workorder_in_alert_notification_generator(work_order, prefix)
-          create_status_track(work_order, user, prefix)
-
-          auto_create_workorder_tasks_checks(work_order, prefix)
-          {:ok, get_work_order!(work_order.id, prefix)}
+        create_status_track(work_order, user, prefix)
+        auto_create_workorder_tasks_checks(work_order, prefix)
+        Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
+        {:ok, get_work_order!(work_order.id, prefix)}
 
       _ ->
         result
     end
+  end
+
+  def check_work_order_for_ticket_status(cs, prefix) do
+    type = get_field(cs, :type)
+    case type do
+      "TKT" ->
+        work_request_id = get_field(cs, :work_request_id)
+        work_orders =
+          from(wo in WorkOrder, where: wo.work_request_id == ^work_request_id and wo.status not in ["cp", "cn"])
+          |> Repo.all(prefix: prefix)
+        if length(work_orders) > 0 do
+          first_work_order = List.first(work_orders)
+          add_error(cs, :work_request_id, "Workorder already generated, has the id #{first_work_order.id}")
+        else
+          cs
+        end
+      _ ->
+        cs
+    end
+  end
+
+  defp update_ticket(work_order, "TKT", prefix, user) do
+    work_request = Ticket.get_work_request!(work_order.work_request_id, prefix)
+    Ticket.update_work_request(work_request, %{"is_workorder_generated" => true}, prefix, user)
+    work_order
+  end
+
+  defp update_ticket(work_order, _, _prefix, _user) do
+    work_order
   end
 
   defp created_user_id(cs, user) do
