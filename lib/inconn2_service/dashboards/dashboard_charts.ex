@@ -588,7 +588,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           wo_list = Enum.map(info, fn i -> i.work_order end)
           %{
             label: List.first(info).asset_name,
-            datasets: calculate_datasets(wo_list, organize_for)
+            dataSets: calculate_datasets(wo_list, organize_for)
           }
       end)
   end
@@ -599,7 +599,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           wo_list = Enum.map(info, fn i -> i.work_order end)
           %{
             label: List.first(info).asset_category_name,
-            datasets: calculate_datasets(wo_list, organize_for)
+            dataSets: calculate_datasets(wo_list, organize_for)
           }
       end)
   end
@@ -609,7 +609,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(fn { _asset_category_id, tickets } ->
         %{
           label: List.first(tickets).workrequest_category.name,
-          datasets: calculate_datasets(work_requests, organize_for)
+          dataSets: calculate_datasets(work_requests, organize_for)
         }
     end)
   end
