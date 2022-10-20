@@ -21,7 +21,6 @@ defmodule Inconn2Service.CheckListConfig do
     %CheckType{}
     |> CheckType.changeset(attrs)
     |> Repo.insert(prefix: prefix)
-    |> Repo.sort_by_id()
   end
 
   def update_check_type(%CheckType{} = check_type, attrs, prefix) do

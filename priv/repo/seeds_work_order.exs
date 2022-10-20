@@ -239,14 +239,14 @@ wk_ord4 = %{
   "scheduled_date" => "2021-09-15",
   "scheduled_time" => "09:00:00",
   "workorder_template_id" => 2,
-  "work_request_id" => 1,
+    "work_request_id" => 1,
   "workorder_schedule_id" => 1
 }
 
 {:ok, wk_ord1c} = Workorder.create_work_order(wk_ord1, "inc_bata", %{id: 1})
 {:ok, wk_ord2c} = Workorder.create_work_order(wk_ord2, "inc_bata", %{id: 1})
 {:ok, wk_ord3c} = Workorder.create_work_order(wk_ord3, "inc_bata", %{id: 1})
-{:ok, wk_ord4c} = Workorder.create_work_order(wk_ord4, "inc_bata", %{id: 1})
+# {:ok, wk_ord4c} = Workorder.create_work_order(wk_ord4, "inc_bata", %{id: 1})
 
 
 

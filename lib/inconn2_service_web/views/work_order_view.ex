@@ -219,7 +219,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       overdue: work_order.overdue,
       pause_resume_times: work_order.pause_resume_times,
       frequency: work_order.frequency,
-      is_paused: work_order.is_paused}
+      is_paused: work_order.is_paused,
+      approver: work_order.approver}
   end
 
   def render("asset.json", %{asset: asset, asset_type: asset_type}) do

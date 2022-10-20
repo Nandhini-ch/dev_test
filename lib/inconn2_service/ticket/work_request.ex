@@ -44,7 +44,7 @@ defmodule Inconn2Service.Ticket.WorkRequest do
     |> cast(attrs, [:site_id, :workrequest_category_id, :workrequest_subcategory_id, :location_id, :asset_id, :asset_type, :description, :priority, :request_type,
                     :time_of_requirement, :requested_user_id, :assigned_user_id, :approvals_required,
                     :attachment, :attachment_type, :is_approvals_required, :status, :work_order_id, :raised_date_time,
-                    :response_tat, :resolution_tat, :is_external_ticket, :remarks, :is_workorder_generate])
+                    :response_tat, :resolution_tat, :is_external_ticket, :remarks, :is_workorder_generated])
     |> validate_required([:site_id, :location_id, :workrequest_subcategory_id, :request_type])
     |> validate_inclusion(:asset_type, ["L", "E"])
     |> validate_inclusion(:priority, ["LW", "MD", "HI", "CR"])
