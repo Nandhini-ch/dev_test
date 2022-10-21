@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.ReferenceUpdateController do
 
   def update_table(conn, params) do
     content = params["csv_file"]
-    ReferenceDataUpdater.update_checks(content, conn.assigns.sub_domain_prefix)
+    ReferenceDataUpdater.update_table(content, params["table"], conn.assigns.sub_domain_prefix)
     render(conn, "message.json", %{success: true})
   end
 

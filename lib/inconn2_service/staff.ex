@@ -410,6 +410,13 @@ defmodule Inconn2Service.Staff do
     end
   end
 
+  def update_employee_for_upload(%Employee{} = employee, attrs, prefix) do
+    employee
+    |> Employee.changeset(attrs)
+    |> validate_skill_ids(prefix)
+    |> Repo.update(prefix: prefix)
+  end
+
   def update_employee(%Employee{} = employee, attrs, prefix) do
     has_login_credentials = Map.get(attrs, "has_login_credentials", false)
 
