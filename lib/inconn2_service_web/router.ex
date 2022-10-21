@@ -495,6 +495,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/inventory_breach_data", DashboardsController, :get_inventory_breach_chart
     post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
 
+    post "/update_entries", ReferenceUpdateController, :update_table
+
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
       get "/:team_id/attendances", AttendanceController, :index_for_team
