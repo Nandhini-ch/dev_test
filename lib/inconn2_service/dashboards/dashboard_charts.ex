@@ -119,7 +119,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Energy Consumption",
@@ -150,7 +150,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -171,7 +171,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       epi = energy_consumption / area_in_sqft
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "EPI",
@@ -193,7 +193,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Water Consumption",
@@ -224,7 +224,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -242,7 +242,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Fuel Consumption",
@@ -273,7 +273,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -311,7 +311,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
   end
@@ -329,7 +329,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -718,7 +718,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
           %{
               name: label,
-              value: mtbf,
+              value: Float.ceil(mtbf, 2),
               displayValue: convert_to_hours_and_minutes(mtbf)
           }
       ]
@@ -732,7 +732,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: [
             %{
                 name: label,
-                value: mtbf,
+                value: Float.ceil(mtbf, 2),
                 displayValue: convert_to_hours_and_minutes(mtbf)
             }
         ]
