@@ -303,9 +303,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
       0 ->
          0
       _ ->
-        IO.inspect(hours)
-        IO.puts("11111111111")
-          Enum.sum(hours) / length(hours)
+          Enum.sum(hours) / breakdown_times
     end
   end
 
