@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    category_helpdesks = Ticket.list_category_helpdesks(conn.assigns.sub_domain_prefix)
+    category_helpdesks = Ticket.list_category_helpdesks(conn.query_params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", category_helpdesks: category_helpdesks)
   end
 
@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.CategoryHelpdeskController do
   def delete(conn, %{"id" => id}) do
     category_helpdesk = Ticket.get_category_helpdesk!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %CategoryHelpdesk{}} <- Ticket.delete_category_helpdesk(category_helpdesk, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Ticket.delete_category_helpdesk(category_helpdesk, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

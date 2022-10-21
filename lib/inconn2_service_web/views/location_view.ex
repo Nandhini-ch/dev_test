@@ -33,6 +33,13 @@ defmodule Inconn2ServiceWeb.LocationView do
     }
   end
 
+  def render("location_only_name.json", %{location: location}) do
+    %{
+      id: location.id,
+      name: location.name
+    }
+  end
+
   def render("group_update.json", %{update_info: update_info}) do
     update_info
   end
@@ -46,6 +53,8 @@ defmodule Inconn2ServiceWeb.LocationView do
       asset_qr_ul: location.asset_qr_url
     }
   end
+
+  #arunvr@ardhika.com
 
   def render("location.json", %{location: location}) do
     %{
@@ -75,6 +84,29 @@ defmodule Inconn2ServiceWeb.LocationView do
       qr_code: location.qr_code,
       parent_id: List.last(location.path),
       children: render_many(location.children, LocationView, "location_node.json")
+    }
+  end
+
+  def render("assets.json", %{locations: locations, equipments: equipments}) do
+    %{data:
+        render_many(locations, LocationView, "location_asset_node.json") ++
+        render_many(equipments, LocationView, "equipment_asset_node.json")
+      }
+  end
+
+  def render("location_asset_node.json", %{location: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      type: "L"
+    }
+  end
+
+  def render("equipment_asset_node.json", %{location: asset}) do
+    %{
+      id: asset.id,
+      name: asset.name,
+      type: "E"
     }
   end
 end

@@ -7,6 +7,8 @@ defmodule Inconn2Service.Staff.User do
 
   schema "users" do
     field :username, :string
+    field :first_name, :string
+    field :last_name, :string
     field :password, :string, virtual: true
     field :role_id, :integer
     field :email, :string
@@ -14,7 +16,7 @@ defmodule Inconn2Service.Staff.User do
     field :password_hash, :string
     belongs_to :employee, Employee
     belongs_to :party, Party
-    field :active, :boolean, default: false
+    field :active, :boolean, default: true
     timestamps()
   end
 
@@ -22,7 +24,7 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
+    |> cast(attrs, [:username, :first_name, :last_name, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :password, :email, :mobile_no, :role_id, :party_id])
     |> validate_format(:email, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
@@ -38,11 +40,17 @@ defmodule Inconn2Service.Staff.User do
 
   def changeset_update(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
+    |> cast(attrs, [:username, :first_name, :last_name, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :role_id, :party_id])
     |> validate_format(:username, ~r/@/)
     |> unique_constraint(:username)
     |> assoc_constraint(:party)
+  end
+
+  def change_password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> hash_password()
   end
 
   def hash_password(changeset) do

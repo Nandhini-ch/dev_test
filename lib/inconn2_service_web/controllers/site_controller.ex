@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.SiteController do
     render(conn, "index.json", sites: sites)
   end
 
+  def index_for_user(conn, _params) do
+    sites = AssetConfig.list_sites_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", sites: sites)
+  end
+
   def create(conn, %{"site" => site_params}) do
     with {:ok, %Site{} = site} <-
            AssetConfig.create_site(site_params, conn.assigns.sub_domain_prefix) do
@@ -38,7 +43,7 @@ defmodule Inconn2ServiceWeb.SiteController do
   def delete(conn, %{"id" => id}) do
     site = AssetConfig.get_site!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Site{}} <- AssetConfig.delete_site(site, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- AssetConfig.delete_site(site, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

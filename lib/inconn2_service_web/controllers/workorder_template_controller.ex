@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
     render(conn, "index.json", workorder_templates: workorder_templates)
   end
 
+  def index_assets_and_schedules(conn, %{"site_id" => site_id, "workorder_template_id" => workorder_template_id}) do
+    {assets, workorder_schedules} = Workorder.list_assets_and_schedules(site_id, workorder_template_id, conn.assigns.sub_domain_prefix)
+    render(conn, "assets_and_schedules.json", assets: assets, workorder_schedules: workorder_schedules)
+  end
+
   def create(conn, %{"workorder_template" => workorder_template_params}) do
     with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.create_workorder_template(workorder_template_params, conn.assigns.sub_domain_prefix) do
       conn
@@ -28,7 +33,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
   def update(conn, %{"id" => id, "workorder_template" => workorder_template_params}) do
     workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.update_workorder_template(workorder_template, workorder_template_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkorderTemplate{} = workorder_template} <- Workorder.update_workorder_template(workorder_template, workorder_template_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       render(conn, "show.json", workorder_template: workorder_template)
     end
   end
@@ -36,7 +41,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
   def delete(conn, %{"id" => id}) do
     workorder_template = Workorder.get_workorder_template!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderTemplate{}} <- Workorder.delete_workorder_template(workorder_template, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Workorder.delete_workorder_template(workorder_template, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       send_resp(conn, :no_content, "")
     end
   end

@@ -17,6 +17,11 @@ defmodule Inconn2ServiceWeb.LocationController do
     end
   end
 
+  def get_assets_for_location(conn, %{"location_id" => location_id}) do
+    {locations, equipments} = AssetConfig.get_assets_for_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "assets.json", locations: locations, equipments: equipments)
+  end
+
   def display_qr_code(conn, %{"id" => id}) do
     {png, _location} = AssetConfig.get_location_qr_code(id, conn.assigns.sub_domain_prefix)
     conn
@@ -85,18 +90,18 @@ defmodule Inconn2ServiceWeb.LocationController do
     location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
 
     # <<<<<<< Updated upstream
-    with {_, nil} <-
+    with {:deleted, _} <-
            AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
       # =======
-      case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
-        {:ok, %Location{}} ->
-          send_resp(conn, :no_content, "")
+      # case IO.inspect(AssetConfig.delete_location(location, conn.assigns.sub_domain_prefix)) do
+      #   {:ok, %Location{}} ->
+      #     send_resp(conn, :no_content, "")
 
-        {_, nil} ->
-          send_resp(conn, :no_content, "")
-          # >>>>>>> Stashed changes
-      end
+      #   {_, nil} ->
+      #     send_resp(conn, :no_content, "")
+      #     # >>>>>>> Stashed changes
+      # end
     end
   end
 

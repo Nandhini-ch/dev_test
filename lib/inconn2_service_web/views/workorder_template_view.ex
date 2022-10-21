@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.WorkorderTemplateView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.WorkorderTemplateView
+  alias Inconn2ServiceWeb.{AssetCategoryView, WorkorderTemplateView, WorkorderScheduleView}
 
   def render("index.json", %{workorder_templates: workorder_templates}) do
     %{data: render_many(workorder_templates, WorkorderTemplateView, "workorder_template.json")}
@@ -16,8 +16,8 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       asset_category_id: workorder_template.asset_category_id,
       asset_type: workorder_template.asset_type,
       name: workorder_template.name,
+      description: workorder_template.description,
       task_list_id: workorder_template.task_list_id,
-      tasks: workorder_template.tasks,
       estimated_time: workorder_template.estimated_time,
       scheduled: workorder_template.scheduled,
       repeat_every: workorder_template.repeat_every,
@@ -38,7 +38,29 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateView do
       workpermit_check_list_id: workorder_template.workpermit_check_list_id,
       is_loto_required: workorder_template.is_loto_required,
       loto_lock_check_list_id: workorder_template.loto_lock_check_list_id,
-      loto_release_check_list_id: workorder_template.loto_release_check_list_id
+      loto_release_check_list_id: workorder_template.loto_release_check_list_id,
+      breakdown: workorder_template.breakdown,
+      audit: workorder_template.audit,
+      adhoc: workorder_template.adhoc,
+      amc: workorder_template.amc,
+      is_precheck_required: workorder_template.is_precheck_required,
+      precheck_list_id: workorder_template.precheck_list_id,
+      is_materials_required: workorder_template.is_materials_required,
+      is_manpower_required: workorder_template.is_manpower_required,
+      materials: workorder_template.materials,
+      manpower: workorder_template.manpower,
+      parts: workorder_template.parts,
+      measuring_instruments: workorder_template.measuring_instruments
     }
   end
+
+  def render("assets_and_schedules.json", %{assets: assets, workorder_schedules: workorder_schedules}) do
+    %{
+      data: %{
+        new: render_many(assets, AssetCategoryView, "asset_node.json"),
+        existing: render_many(workorder_schedules, WorkorderScheduleView, "workorder_schedule.json")
+      }
+    }
+  end
+
 end

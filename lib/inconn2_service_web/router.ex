@@ -36,6 +36,10 @@ defmodule Inconn2ServiceWeb.Router do
     get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
     get "/populate_alerts", AlertNotificationReserveController, :populate_alerts
 
+    post "/users/forgot_password", UserController, :forgot_password
+    post "/users/confirm_otp", UserController, :confirm_otp
+    post "/users/reset_password", UserController, :reset_password
+
     scope "/external_ticket" do
 
       get "/workrequest_categories", ExternalTicketController, :index_categories
@@ -50,20 +54,30 @@ defmodule Inconn2ServiceWeb.Router do
     pipe_through [:api, :authenticate]
 
     resources "/sites", SiteController, except: [:new, :edit]
+    get "/sites_for_user", SiteController, :index_for_user
     resources "/site_config", SiteConfigController, except: [:new, :edit]
     get "/sites?active=true", SiteController, :index
     get "/sites?active=false", SiteController, :index
     put "/sites/:id/activate", SiteController, :activate_site
     put "/sites/:id/deactivate", SiteController, :activate_site
     get "/download_sites", ReferenceDownloadController, :download_sites
+    get "/download_template", ReferenceTemplateDownloaderController, :download_template
     post "/upload_sites", ReferenceUploadController, :upload_sites
 
+    resources "/parties", PartyController, except: [:new, :edit]
+    resources "/contracts", ContractController, except: [:new, :edit, :index]
+    get "/contracts/:contract_id/scopes", ScopeController, :index
+    resources "/scopes", ScopeController, except: [:index, :new, :edit]
+    get "/parties/:party_id/contracts", ContractController, :index
+
+
     resources "/asset_categories", AssetCategoryController, except: [:new, :edit]
+    get "/asset_categories_for_location/:location_id", AssetCategoryController, :index_for_location
     get "/asset_categories_tree", AssetCategoryController, :tree
     get "/asset_categories/nodes/leaves", AssetCategoryController, :leaves
     get "/asset_categories/:id/assets", AssetCategoryController, :assets
-    put "/asset_categories/:id/deactivate", AssetCategoryController, :deactivate_asset_category
-    put "/asset_categories/:id/activate", AssetCategoryController, :activate_asset_category
+    get "/sites/:site_id/asset_categories/:asset_category_id/assets", AssetCategoryController, :assets_for_site
+    get "/sites/:site_id/workorder_templates/:workorder_template_id/assets", WorkorderTemplateController, :index_assets_and_schedules
     get "/download_asset_categories", ReferenceDownloadController, :download_asset_categories
     post "/upload_asset_categories", ReferenceUploadController, :upload_asset_categories
 
@@ -85,6 +99,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/sites/:site_id/locations", LocationController, :index
     get "/sites/:site_id/locations_tree", LocationController, :tree
     get "/sites/:site_id/locations/leaves", LocationController, :leaves
+    get "/assets_for_location/:location_id", LocationController, :get_assets_for_location
     get "/download_locations", ReferenceDownloadController, :download_locations
     post "/upload_locations", ReferenceUploadController, :upload_locations
 
@@ -112,28 +127,26 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/asset_status_tracks", AssetStatusTrackController, except: [:new, :edit]
 
     resources "/shifts", ShiftController, except: [:new, :edit]
-    put "/shifts/:id/activate", ShiftController, :activate_shift
-    put "/shifts/:id/deactivate", ShiftController, :deactivate_shift
     get "/download_shifts", ReferenceDownloadController, :download_shifts
     post "/upload_shifts", ReferenceUploadController, :upload_shifts
     resources "/bankholidays", HolidayController, except: [:new, :edit]
-    put "/bankholidays/:id/activate", HolidayController, :activate_holiday
-    put "/bankholidays/:id/deactivate", HolidayController, :deactivate_holiday
     get "/download_bankholidays", ReferenceDownloadController, :download_bankholidays
     post "/upload_bankholidays", ReferenceUploadController, :upload_bankholidays
-    resources "/parties", PartyController, except: [:new, :edit]
 
     resources "/tasks", TaskController, except: [:new, :edit]
+    resources "/master_task_types", MasterTaskTypeController, except: [:new, :edit]
     put "/tasks/:id/activate", TaskController, :activate_task
     put "/tasks/:id/deactivate", TaskController, :deactivate_task
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     post "/upload_tasks", ReferenceUploadController, :upload_tasks
     resources "/task_lists", TaskListController, except: [:new, :edit]
+    get "/task_lists/:id/tasks", TaskListController, :index_tasks_for_task_list
     put "/task_lists/:id/activate", TaskListController, :activate_task_list
     put "/task_lists/:id/deactivate", TaskListController, :activate_task_list
     get "/download_task_lists", ReferenceDownloadController, :download_task_lists
     post "/upload_task_lists", ReferenceUploadController, :upload_task_lists
 
+    resources "/check_types", CheckTypeController, except: [:new, :edit]
     resources "/checks", CheckController, except: [:new, :edit]
     put "/checks/:id/activate", CheckController, :activate_check
     put "/checks/:id/deactivate", CheckController, :deactivate_check
@@ -147,9 +160,15 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/workorder_templates", WorkorderTemplateController, except: [:new, :edit]
     resources "/workorder_schedules", WorkorderScheduleController, except: [:new, :edit]
+    post "/create_workorder_schedules", WorkorderScheduleController, :create_multiple
+    put "/update_workorder_schedules", WorkorderScheduleController, :update_multiple
+    put "/workorder_schedule/:id/pause", WorkorderScheduleController, :pause_schedule
+    put "/workorder_schedule/:id/resume", WorkorderScheduleController, :resume_schedule
+
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     get "/work_orders/enable_start/:id", WorkOrderController, :enable_start
     get "/work_orders/:id/next_step", WorkOrderController, :next_step
+    get "/work_orders/created", WorkOrderController, :index_for_created_by_current_user
     put "/work_orders/:id/send_for_workflow_approvals/:type", WorkOrderController, :send_for_workflow_approvals
     # put "/work_orders/:id/send_for_workpermit_approval", WorkOrderController, :send_for_workpermit_approval
     # put "/work_orders/:id/send_for_work_order_approval", WorkOrderController, :send_for_work_order_approval
@@ -163,9 +182,12 @@ defmodule Inconn2ServiceWeb.Router do
     post "/work_orders/approve_loto_release/:id", WorkOrderController, :approve_loto_release
     get "/work_orders/loto_lock_pending", WorkOrderController, :work_order_loto_lock_to_be_checked
     get "/work_orders/loto_release_pending", WorkOrderController, :work_order_loto_release_to_be_checked
+    put "/self_approve_pre_checks", WorkorderCheckController, :self_update_pre
+    get "/work_orders/my_approvals", WorkOrderController, :workorder_in_my_approvals
+    get "/work_orders/submitted_for_approval", WorkOrderController, :work_orders_submitted_for_approval
     put "/pause_work_order/:id", WorkOrderController, :pause_work_order
     put "/resume_work_order/:id", WorkOrderController, :resume_work_order
-    post "/work_orders/approve_pre_checks", WorkorderCheckController, :self_update_pre
+    get "/work_orders/:id/show_with_data", WorkOrderController, :show_with_data
     resources "/work_orders", WorkOrderController, except: [:new, :edit]
     get "/assets/:qr_string/get_work_orders_for_user", WorkOrderController, :index_for_user_by_qr
     get "/assets/:qr_string/get_work_requests_for_user", WorkRequestController, :index_for_user_by_qr
@@ -184,45 +206,39 @@ defmodule Inconn2ServiceWeb.Router do
 
 
     resources "/org_units", OrgUnitController, except: [:new, :edit, :index]
+    get "/org_units_for_user", OrgUnitController, :index_current_user_org
     get "/download_org_units", ReferenceDownloadController, :download_org_units
     post "/upload_org_units", ReferenceUploadController, :upload_org_units
     get "/parties/:party_id/org_units", OrgUnitController, :index
     get "/parties/:party_id/org_units_tree", OrgUnitController, :tree
     get "/parties/:party_id/org_units/leaves", OrgUnitController, :leaves
-    put "/org_units/:id/activate", OrgUnitController, :activate_org_unit
-    put "/org_units/:id/deactivate", OrgUnitController, :deactivate_org_unit
 
 
     resources "/employees", EmployeeController, except: [:new, :edit]
+    get "/employees_of_party", EmployeeController, :index_of_party
     get "/reportees", EmployeeController, :reportees_for_logged_in_user
     get "/employees/:employee_id/reportees", EmployeeController, :reportees_for_employee
-    put "/employees/:id/activate", EmployeeController, :activate_employee
-    put "/employees/:id/deactivate", EmployeeController, :deactivate_employee
     get "/download_employees", ReferenceDownloadController, :download_employees
     post "/upload_employees", ReferenceUploadController, :upload_employees
     resources "/users", UserController, except: [:new, :edit]
-    put "/users/change_password", UserController, :change_password
-    put "/users/:id/activate", UserController, :activate_user
-    put "/users/:id/deactivate", UserController, :deactivate_user
+    get "/reportee_users", UserController, :reportee_users
+    put "/users/:id/change_password", UserController, :change_password
     get "/download_users", ReferenceDownloadController, :download_users
     resources "/modules", ModuleController, only: [:index, :show]
     get "/modules/:module_id/features", FeatureController, :index
     resources "/role_profiles", RoleProfileController, only: [:index, :show]
     resources "/roles", RoleController, except: [:new, :edit]
     get "/download_roles", ReferenceDownloadController, :download_roles
-    put "/roles/:id/activate", RoleController, :active_role
-    put "/roles/:id/deactivate", RoleController, :deactivate_role
 
     resources "/employee_rosters", EmployeeRosterController, except: [:new, :edit]
     get "/download_employee_rosters", ReferenceDownloadController, :download_employee_rosters
     post "/upload_employee_rosters", ReferenceUploadController, :upload_employee_rosters
 
     get "/sessions/current_user", SessionController, :current_user
+    get "/sessions/my_profile", SessionController, :my_profile
 
     resources "/workrequest_categories", WorkrequestCategoryController, except: [:new, :edit]
     get "/workrequest_categories_with_helpdesk_user", WorkrequestCategoryController, :index_with_helpdesk_user
-    put "/workrequest_categories/:id/activate", WorkrequestCategoryController, :activate_workrequest_category
-    put "/workrequest_categories/:id/deactivate", WorkrequestCategoryController, :deactivate_workrequest_category
 
     get "/workrequest_categories/:workrequest_category_id/workrequest_subcategories", WorkrequestSubcategoryController, :index_for_category
     resources "/workrequest_subcategories", WorkrequestSubcategoryController, except: [:index, :new, :edit]
@@ -235,6 +251,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/work_requests/approvals", WorkRequestController, :index_approval_required
     get "/work_requests/category_helpdesk", WorkRequestController, :index_tickets_of_helpdesk_user
     get "/work_requests/acknowledge", WorkRequestController, :index_for_acknowledgement
+    get "/work_requests/approval_pending", WorkRequestController, :index_for_approval_pending
 
     resources "/work_requests", WorkRequestController, except: [:new, :edit]
     put "/update_work_requests", WorkRequestController, :update_multiple
@@ -273,7 +290,6 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/items", ItemController, except: [:new, :edit]
     get "/download_items", ReferenceDownloadController, :download_items
     post "/upload_items", ReferenceUploadController, :upload_items
-
 
     resources "/inventory_locations", InventoryLocationController, except: [:new, :edit, :index]
     get "/download_inventory_locations/", ReferenceDownloadController, :download_inventory_locations
@@ -321,7 +337,9 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reports/:site_id/equipments_ticket_qr_code", ReportController, :get_equipments_ticket_qr
     get "/reports/download_asset_qrs", ReferenceDownloadController, :download_asset_qrs
     get "/reports/csg_report", ReportController, :get_workorder_status_report
-    get "/reports/calendar/", ReportController, :get_calendar
+    get "/reports/calendar", ReportController, :get_calendar
+    get "/reports/people", ReportController, :get_people_report
+    get "/reports/workflow_execution", ReportController, :get_workflow_execution_report
 
 
     get "/work_orders/:work_order_id/workorder_checks/type/:check_type/", WorkorderCheckController, :index_workorder_check_by_type
@@ -335,20 +353,21 @@ defmodule Inconn2ServiceWeb.Router do
 
     # get "/mobile/work_orders_test", WorkOrderController, :get_work_order_for_mobile_test
 
-    get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
-    get "/dashboards/workflow_ticket_pie_chart", DashboardController, :get_workflow_ticket_pie_chart
-    get "/dashboards/workflow_workorder_pie_chart", DashboardController, :get_workflow_workorder_pie_chart
-    get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
-    get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
-    get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
+    # get "/dashboards/work_order_pie_chart", DashboardController, :get_work_order_pie_chart
+    # get "/dashboards/workflow_ticket_pie_chart", DashboardController, :get_workflow_ticket_pie_chart
+    # get "/dashboards/workflow_workorder_pie_chart", DashboardController, :get_workflow_workorder_pie_chart
+    # get "/dashboards/work_order_bar_chart", DashboardController, :get_work_order_bar_chart
+    # get "/dashboards/asset_status_pie_chart", DashboardController, :get_asset_status_pie_chart
+    # get "/dashboards/metering_chart", DashboardController, :get_metering_linear_chart
 
-    get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
-    get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
+    # get "/dashboards/energy_meter_linear_chart", DashboardController, :get_energy_meter_linear_chart
+    # get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
-    get "/sites_for_attendance", EmployeeRosterController, :index_sites_for_attendance
+
     get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]
+    get "/attendances_for_user", AttendanceController, :index_for_user
     resources "/attendance_references", AttendanceReferenceController, except: [:new, :edit]
     get "/attendance_reference_for_employee", AttendanceReferenceController, :get_attendance_reference_for_employee
     resources "/attendance_failure_logs", AttendanceFailureLogController, except: [:new, :edit]
@@ -392,6 +411,98 @@ defmodule Inconn2ServiceWeb.Router do
 
     resources "/inventory_suppliers", InventorySupplierController, except: [:new, :edit]
 
+    put "/inventory_items/update_multiple", InventoryItemController, :update_multiple
     resources "/inventory_items", InventoryItemController, except: [:new, :edit]
+
+    resources "/transactions", TransactionController, except: [:new, :edit]
+    post "/create_transactions", TransactionController, :create_multiple
+    get "/transactions_grouped", TransactionController, :index_grouped
+    get "/transaction_to_be_approved", TransactionController, :index_to_be_approved
+    get "/transaction_to_be_approved_grouped", TransactionController, :index_to_be_approved_grouped
+    get "/transaction_sent_for_approval", TransactionController, :index_submitted_for_approval_grouped
+    get "/transaction_to_be_acknowledged", TransactionController, :index_to_be_acknowledged
+    get "/pending_transaction_approval", TransactionController, :index_pending_to_be_approved
+    post "/approve_transactions", TransactionController, :approve_transaction
+    post "/issue_approve_transactions", TransactionController, :issue_approved_transaction
+
+    resources "/site_stocks", SiteStockController, except: [:new, :edit]
+
+
+    get "/stocks_for_storekeeper", StockController, :index_for_storekeeper
+    resources "/stocks", StockController, except: [:new, :edit, :create, :update, :delete]
+    resources "/conversions", ConversionController, except: [:new, :edit]
+    resources "/inventory_supplier_items", InventorySupplierItemController, except: [:new, :edit]
+
+    get "/custom_fields/entity/:entity_name", CustomFieldsController, :get_by_entity
+    resources "/custom_fields", CustomFieldsController, except: [:new, :edit]
+    resources "/zones", ZoneController, except: [:new, :edit]
+    get "/zones_tree", ZoneController, :tree
+    resources "/my_reports", MyReportController, except: [:edit]
+
+    get "/reassign_reschedule_requests/to_be_approved", ReassignRescheduleRequestController, :index_to_be_approved
+    get "/reassign_reschedule_requests/pending_approvals", ReassignRescheduleRequestController, :index_pending_approvals
+    resources "/reassign_reschedule_requests", ReassignRescheduleRequestController, except: [:new, :edit]
+    post "/reassign_requests/:id/respond", ReassignRescheduleRequestController, :reassign_response_for_work_order
+    post "/reschedule_requests/:id/respond", ReassignRescheduleRequestController, :reschedule_response_for_work_order
+    post "/reassign_reschedule_requests/create_multiple", ReassignRescheduleRequestController, :create_multiple
+    resources "/designations", DesignationController, except: [:new, :edit]
+
+    resources "/manpower_configurations", ManpowerConfigurationController, except: [:new, :edit, :update]
+    post "/create_manpower_configurations", ManpowerConfigurationController, :create
+    put "/update_manpower_configurations", ManpowerConfigurationController, :update
+    get "/contracts/:contract_id/sites", ScopeController, :index_site_for_scope
+
+    resources "/widgets", WidgetController, except: [:new, :edit]
+    get "/user_widget_configs", UserWidgetConfigController, :index
+    post "/user_widget_configs", UserWidgetConfigController, :create_or_update
+
+    get "/rosters", RosterController, :index
+    get "/my_rosters", RosterController, :index_for_user
+    post "/rosters", RosterController, :create_or_update
+    get "/sites_for_attendance", RosterController, :index_sites_for_attendance
+
+    resources "/teams", TeamController, except: [:new, :edit]
+    get "/teams/:team_id/team_members", TeamMemberController, :index
+    post "/teams/:team_id/team_members", TeamMemberController, :create
+    delete "/teams/:team_id/team_members", TeamMemberController, :delete
+
+    get "/meter_assets", DashboardsController, :get_assets_for_dashboards
+    get "/assets_asset_categories_for_location/:location_id", DashboardsController, :get_asset_categories_and_assets
+
+    get "/dashboards/high_level_data", DashboardsController, :get_high_level_data_web
+    get "/dashboards/mobile/high_level_data", DashboardsController, :get_high_level_data_mobile
+
+    post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
+    post "/dashboards/energy_cost", DashboardsController, :get_energy_cost
+    post "/dashboards/epi", DashboardsController, :get_energy_performance_indicator
+    post "/dashboards/top_three", DashboardsController, :get_top_three_consumers
+    post "/dashboards/water_consumption", DashboardsController, :get_water_consumption
+    post "/dashboards/water_cost", DashboardsController, :get_water_cost
+    post "/dashboards/fuel_consumption", DashboardsController, :get_fuel_consumption
+    post "/dashboards/fuel_cost", DashboardsController, :get_fuel_cost
+    post "/dashboards/submeters_consumption", DashboardsController, :get_submeters_consumption
+    post "/dashboards/segr", DashboardsController, :get_segr
+    post "/dashboards/ppm_compliance", DashboardsController, :get_ppm_compliance_chart
+    post "/dashboards/open_work_orders", DashboardsController, :get_open_inprogress_wo_chart
+    post "/dashboards/ticket_status", DashboardsController, :get_open_ticket_status_chart
+    post "/dashboards/service_workorder_status", DashboardsController, :get_ticket_workorder_status_chart
+    post "/dashboards/breakdown_workorder_status", DashboardsController, :get_breakdown_workorder_status_chart
+    post "/dashboards/equipment_under_maintenance", DashboardsController, :get_equipment_under_maintenance_chart
+    post "/dashboards/mtbf", DashboardsController, :get_equipment_mtbf
+    post "/dashboards/mttr", DashboardsController, :get_equipment_mttr
+    post "/dashboards/intime_reporting", DashboardsController, :get_intime_reporting_chart
+    post "/dashboards/shift_coverage", DashboardsController, :get_shift_coverage_chart
+    post "/dashboards/inventory_breach_data", DashboardsController, :get_inventory_breach_chart
+    post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
+
+    scope "/my_teams" do
+      get "/", TeamController, :index_for_user
+      get "/:team_id/attendances", AttendanceController, :index_for_team
+      get "/work_orders", WorkOrderController, :work_orders_for_teams
+      get "/work_requests", WorkRequestController, :index_for_team
+      get "/pending_approvals", WorkOrderController, :work_orders_with_pending_approval_for_teams
+      get "/transactions", TransactionController, :index_grouped_team
+    end
+
   end
 end

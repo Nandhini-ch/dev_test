@@ -46,7 +46,7 @@ defmodule Inconn2ServiceWeb.StoreController do
   def delete(conn, %{"id" => id}) do
     store = InventoryManagement.get_store!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Store{}} <- InventoryManagement.delete_store(store, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- InventoryManagement.delete_store(store, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

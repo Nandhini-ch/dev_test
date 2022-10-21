@@ -15,6 +15,7 @@ defmodule Inconn2ServiceWeb.TaskView do
       label: task.label,
       config: task.config,
       task_type: task.task_type,
+      master_task_type_id: task.master_task_type_id,
       estimated_time: task.estimated_time}
   end
 end

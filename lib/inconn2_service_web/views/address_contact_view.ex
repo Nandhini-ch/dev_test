@@ -1,8 +1,6 @@
 defmodule Inconn2ServiceWeb.AddressContactView do
   use Inconn2ServiceWeb, :view
 
-
-
   def render("address.json", %{address_contact: address_contact}) do
     %{
       address_line1: address_contact.address_line1,
@@ -24,5 +22,4 @@ defmodule Inconn2ServiceWeb.AddressContactView do
       mobile: address_contact.mobile
     }
   end
-
 end

@@ -1,7 +1,7 @@
 defmodule Inconn2Service.InventoryManagement.InventoryItem do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.InventoryManagement.{UomCategory, UnitOfMeasurement}
+  alias Inconn2Service.InventoryManagement.{Stock, UomCategory, UnitOfMeasurement, InventorySupplierItem}
 
   schema "inventory_items" do
     field :approval_user_id, :integer
@@ -14,12 +14,15 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
     field :part_no, :string
     field :remarks, :string
     field :unit_price, :float
+    field :active, :boolean, default: true
+
     belongs_to  :uom_category, UomCategory
     belongs_to :consume_unit_of_measurement, UnitOfMeasurement, foreign_key: :consume_unit_of_measurement_id
     belongs_to :inventory_unit_of_measurement, UnitOfMeasurement, foreign_key: :inventory_unit_of_measurement_id
     belongs_to :purchase_unit_of_measurement, UnitOfMeasurement, foreign_key: :purchase_unit_of_measurement_id
-    field :active, :boolean, default: true
 
+    has_many :stocks, Stock
+    has_many :inventory_supplier_items, InventorySupplierItem
     timestamps()
   end
 
@@ -30,7 +33,7 @@ defmodule Inconn2Service.InventoryManagement.InventoryItem do
                               :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id, :active])
     |> validate_required([:name, :part_no, :item_type, :minimum_stock_level, :remarks,  :uom_category_id, :unit_price, :is_approval_required, :asset_category_ids,
                                             :consume_unit_of_measurement_id, :inventory_unit_of_measurement_id, :purchase_unit_of_measurement_id])
-    |> validate_inclusion(:item_type, ["Spare", "Part", "Tool", "Consumable"])
+    |> validate_inclusion(:item_type, ["Spare", "Part", "Tool", "Consumable", "Measuring Instrument"])
     |> foreign_key_constraint(:consume_unit_of_measurement_id)
     |> foreign_key_constraint(:inventory_unit_of_measurement_id)
     |> foreign_key_constraint(:purchase_unit_of_measurement_id)

@@ -55,11 +55,21 @@ pc =
     nil -> IO.puts("null value returned")
   end
 
-site = %{
+zone_1 = %{"name" => "zone 1"}
+{:ok, zn1_c} = AssetConfig.create_zone(zone_1, "inc_bata")
+
+zone_2 = %{"name" => "zone 2", "parent_id" => zn1_c.id}
+{:ok, zn2_c} = AssetConfig.create_zone(zone_2, "inc_bata")
+
+zone_3 = %{"name" => "zone 3", "parent_id" => zn2_c.id}
+{:ok, zn3_c} = AssetConfig.create_zone(zone_3, "inc_bata")
+
+site_1 = %{
   "name" => "Mountroad",
   "description" => "Main branch at Mount road",
   "site_code" => "BRCHN_MNTRD",
   "party_id" => 1,
+  "zone_id" => zn2_c.id,
   "time_zone" => "Europe/Berlin",
   "address" => %{
     "address_line1" => "18, First Street",
@@ -76,6 +86,31 @@ site = %{
     "land_line" => "+91-44-2457727",
     "mobile" => "+91-9840022485",
     "email" => "balac@bata.co.in"
+  }
+}
+
+site_2 = %{
+  "name" => "Test",
+  "description" => "Main branch at Mount road",
+  "site_code" => "TEST",
+  "party_id" => 1,
+  "zone_id" => zn2_c.id,
+  "time_zone" => "Europe/Berlin",
+  "address" => %{
+    "address_line1" => "18, First Street",
+    "address_line2" => "Mountroad",
+    "city" => "Chennai",
+    "state" => "Tamilnadu",
+    "country" => "India",
+    "postcode" => "600040"
+  },
+  "contact" => %{
+    "first_name" => "Bala",
+    "last_name" => "Chandar",
+    "designation" => "Sales Head",
+    "land_line" => "+91-44-2457727",
+    "mobile" => "+91-9840022485",
+    "email" => "ba@bata.co.in"
   }
 }
 
@@ -107,7 +142,8 @@ site = %{
 #   }
 # }
 
-{:ok, sc} = AssetConfig.create_site(site, "inc_bata")
+{:ok, sc} = AssetConfig.create_site(site_1, "inc_bata")
+{:ok, sc_2} = AssetConfig.create_site(site_2, "inc_bata")
 
 si_cf1 = %{
   "site_id" => sc.id,
@@ -126,6 +162,26 @@ si_cf1 = %{
 #     {:error, cs} -> IO.inspect(cs)
 #     nil -> IO.puts("null value returned")
 #   end
+
+
+alias Inconn2Service.Common
+alias Inconn2Service.Prompt
+
+alerts = Common.list_alert_notification_reserves()
+
+Enum.map(alerts, fn alert ->
+Prompt.create_alert_notification_config(
+  %{
+      "addressed_to_user_ids" => [1,2],
+      "alert_notification_reserve_id" => alert.id,
+      "is_escalation_required" => true,
+      "escalated_to_user_ids" => [4, 5],
+      "escalation_time_in_minutes" => 1,
+      "site_id" => 1
+    },
+    "inc_bata"
+  )
+end)
 
 
 a1 = %{"name" => "Open floor", "asset_type" => "L"}
@@ -306,37 +362,54 @@ dg2 = %{
   }
   |> AssetConfig.create_equipment("inc_bata")
 
+mas_tsk_type1 = %{
+  "name" => "Task type 1",
+  "description" => "description 1"
+}
+
+mas_tsk_type2 = %{
+  "name" => "Task type 2",
+  "description" => "description 2"
+}
+
+{:ok, mas_tsk_type1c} = WorkOrderConfig.create_master_task_type(mas_tsk_type1, "inc_bata")
+{:ok, mas_tsk_type2c} = WorkOrderConfig.create_master_task_type(mas_tsk_type2, "inc_bata")
+
 tsk1 = %{
   "label" => "Task 1",
   "task_type" => "IO",
+  "master_task_type_id" => mas_tsk_type1c.id,
   "estimated_time" => 60,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "P"},
-                           %{"label" => "xyz", "value" => "F"} ]
+            "options" => [ %{"label" => "abc", "value" => "P", "raise_ticket" => false},
+                           %{"label" => "xyz", "value" => "F", "raise_ticket" => true} ]
             }
 }
 
 tsk2 = %{
   "label" => "Task 2",
   "task_type" => "IM",
+  "master_task_type_id" => mas_tsk_type1c.id,
   "estimated_time" => 120,
   "config" => %{
-            "options" => [ %{"label" => "abc", "value" => "P"},
-                           %{"label" => "xyz", "value" => "F"},
-                           %{"label" => "qwe", "value" => "F"} ]
+            "options" => [ %{"label" => "abc", "value" => "P", "raise_ticket" => false},
+                           %{"label" => "xyz", "value" => "F", "raise_ticket" => true},
+                           %{"label" => "qwe", "value" => "A", "raise_ticket" => false} ]
             }
 }
 
 tsk3 = %{
   "label" => "Task 3",
   "task_type" => "MT",
+  "master_task_type_id" => mas_tsk_type2c.id,
   "estimated_time" => 15,
-  "config" => %{"UOM" => "ampere", "type" => "A", "min_value" => 10, "max_value" => 1000, "threshold_value" => 700}
+  "config" => %{"meter_type" => "E", "UOM" => "ampere", "type" => "A", "min_value" => 10, "max_value" => 1000, "threshold_value" => 700}
 }
 
 tsk4 = %{
   "label" => "Task 4",
   "task_type" => "OB",
+  "master_task_type_id" => mas_tsk_type2c.id,
   "estimated_time" => 90,
   "config" => %{"min_length" => 10, "max_length" => 100}
 }
@@ -346,9 +419,9 @@ tsk4 = %{
 {:ok, tsk3c} = WorkOrderConfig.create_task(tsk3, "inc_bata")
 {:ok, tsk4c} = WorkOrderConfig.create_task(tsk4, "inc_bata")
 
-tsk_lst1 = %{"name" => "Daily maintenance", "task_ids" => [1, 2], "asset_category_id" => 2}
-tsk_lst2 = %{"name" => "Weakly maintenance", "task_ids" => [1, 2, 3], "asset_category_id" => 2}
-tsk_lst3 = %{"name" => "Monthly maintenance", "task_ids" => [1, 3, 4], "asset_category_id" => 2}
+tsk_lst1 = %{"name" => "Daily maintenance", "tasks" => [%{"task_id" => 1, "sequence" => 1}, %{"task_id" => 2, "sequence" => 2}], "asset_category_id" => 2}
+tsk_lst2 = %{"name" => "Weakly maintenance", "tasks" => [%{"task_id" => 1, "sequence" => 1}, %{"task_id" => 2, "sequence" => 2}, %{"task_id" => 3, "sequence" => 3}], "asset_category_id" => 2}
+tsk_lst3 = %{"name" => "Monthly maintenance", "tasks" => [%{"task_id" => 1, "sequence" => 1}, %{"task_id" => 3, "sequence" => 2}, %{"task_id" => 4, "sequence" => 3}], "asset_category_id" => 2}
 {:ok, tsk_lst1c} = WorkOrderConfig.create_task_list(tsk_lst1, "inc_bata")
 {:ok, tsk_lst2c} = WorkOrderConfig.create_task_list(tsk_lst2, "inc_bata")
 {:ok, tsk_lst3c} = WorkOrderConfig.create_task_list(tsk_lst3, "inc_bata")

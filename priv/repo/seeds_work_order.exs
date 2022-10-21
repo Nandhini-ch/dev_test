@@ -1,11 +1,15 @@
 alias Inconn2Service.{CheckListConfig, Workorder, Ticket}
 
-chk1 = %{"label" => "check 1", "type" => "WP"}
-chk2 = %{"label" => "check 2", "type" => "WP"}
-chk3 = %{"label" => "check 3", "type" => "LOTO"}
-chk4 = %{"label" => "check 4", "type" => "LOTO"}
-chk5 = %{"label" => "check 5", "type" => "PRE"}
-chk6 = %{"label" => "check 6", "type" => "PRE"}
+chk_typ1 = %{"name" => "Housekeeping", "description" => "Housekeeping check type"}
+
+{:ok, chk_typ1} = CheckListConfig.create_check_type(chk_typ1, "inc_bata")
+
+chk1 = %{"label" => "check 1", "check_type_id" => chk_typ1.id}
+chk2 = %{"label" => "check 2", "check_type_id" => chk_typ1.id}
+chk3 = %{"label" => "check 3", "check_type_id" => chk_typ1.id}
+chk4 = %{"label" => "check 4", "check_type_id" => chk_typ1.id}
+chk5 = %{"label" => "check 5","check_type_id" => chk_typ1.id}
+chk6 = %{"label" => "check 6","check_type_id" => chk_typ1.id}
 
 {:ok, chk1c} = CheckListConfig.create_check(chk1, "inc_bata")
 {:ok, chk2c} = CheckListConfig.create_check(chk2, "inc_bata")
@@ -16,15 +20,16 @@ chk6 = %{"label" => "check 6", "type" => "PRE"}
 
 chk_lst1 = %{"name" => "check list 1", "type" => "WP", "check_ids" => [1, 2]}
 chk_lst2 = %{"name" => "check list 2", "type" => "LOTO", "check_ids" => [3, 4]}
+chk_lst3 = %{"name" => "check list 2", "type" => "PRE", "check_ids" => [5, 6]}
 
 {:ok, chk_lst1c} = CheckListConfig.create_check_list(chk_lst1, "inc_bata")
 {:ok, chk_lst2c} = CheckListConfig.create_check_list(chk_lst2, "inc_bata")
+{:ok, chk_lst3c} = CheckListConfig.create_check_list(chk_lst3, "inc_bata")
 
 wkord_tp1 = %{
   "asset_category_id" => 2,
   "name" => "Hourly maintenance",
   "task_list_id" => 1,
-  "tasks" => [%{"id" => 3, "order" => 1}, %{"id" => 2, "order" => 2}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 4,
@@ -35,9 +40,9 @@ wkord_tp1 = %{
   "time_end" => "17:00:00",
   "create_new" => "at",
   "max_times" => 5,
-  "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
-  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
-  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
+  "consumables" => [%{"item_id" => 1, "quantity" => 10}, %{"item_id" => 1, "quantity" => 10}],
+  "spares" => [%{"item_id" => 1, "quantity" => 10}, %{"item_id" => 1, "quantity" => 10}],
+  "tools" => [%{"item_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
   "is_loto_required" => false
@@ -47,7 +52,6 @@ wkord_tp2 = %{
   "asset_category_id" => 2,
   "name" => "Daily maintenance",
   "task_list_id" => 2,
-  "tasks" => [%{"id" => 1, "order" => 1}, %{"id" => 2, "order" => 2}, %{"id" => 3, "order" => 3}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 2,
@@ -61,15 +65,19 @@ wkord_tp2 = %{
   "workorder_prior_time" => 180,
   "is_workorder_approval_required" => true,
   "is_workorder_acknowledgement_required" => true,
-  "is_workpermit_required" => false,
-  "is_loto_required" => false,
+  "is_workpermit_required" => true,
+  "is_precheck_required" => true,
+  "precheck_list_id" => chk_lst3c.id,
+  "workpermit_check_list_id" => chk_lst1c.id,
+  "is_loto_required" => true,
+  "loto_lock_check_list_id" => chk_lst2c.id,
+  "loto_release_check_list_id" => chk_lst2c.id,
 }
 
 wkord_tp3 = %{
   "asset_category_id" => 2,
   "name" => "Weekly maintenance",
   "task_list_id" => 3,
-  "tasks" => [%{"id" => 1, "order" => 1}, %{"id" => 3, "order" => 2}, %{"id" => 4, "order" => 3}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 2,
@@ -91,7 +99,6 @@ wkord_tp4 = %{
   "asset_category_id" => 2,
   "name" => "Monthly maintenance",
   "task_list_id" => 1,
-  "tasks" => [%{"id" => 1, "order" => 1}, %{"id" => 2, "order" => 2}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 2,
@@ -114,7 +121,6 @@ wkord_tp5 = %{
   "asset_category_id" => 2,
   "name" => "Yearly maintenance",
   "task_list_id" => 1,
-  "tasks" => [%{"id" => 1, "order" => 1}, %{"id" => 2, "order" => 2}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 2,
@@ -137,7 +143,6 @@ wkord_tp6 = %{
   "asset_category_id" => 1,
   "name" => "Hourly maintenance",
   "task_list_id" => 2,
-  "tasks" => [%{"id" => 1, "order" => 1}, %{"id" => 2, "order" => 2}, %{"id" => 3, "order" => 3}],
   "estimated_time" => 286,
   "scheduled" => true,
   "repeat_every" => 4,
@@ -148,9 +153,6 @@ wkord_tp6 = %{
   "time_end" => "23:59:59",
   "create_new" => "at",
   "max_times" => 5,
-  "consumables" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 2, "uom_id" => 1, "quantity" => 10}],
-  "spares" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}, %{"id" => 5, "uom_id" => 1, "quantity" => 10}],
-  "tools" => [%{"id" => 1, "uom_id" => 1, "quantity" => 10}],
   "workorder_prior_time" => 180,
   "is_workpermit_required" => false,
   "is_loto_required" => false
@@ -164,7 +166,7 @@ wkord_tp6 = %{
 {:ok, wkord_tp6c} = Workorder.create_workorder_template(wkord_tp6, "inc_bata")
 
 wkord_sc1 = %{"workorder_template_id" => 1, "asset_id" => 1, "holidays" => [7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
-wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2}
+wkord_sc2 = %{"workorder_template_id" => 2, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workorder_approval_user_id" => 2, "workorder_acknowledgement_user_id" => 2, "workpermit_approval_user_ids" => [2], "loto_checker_user_id" => 2}
 wkord_sc3 = %{"workorder_template_id" => 3, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [2, 4] }
 wkord_sc4 = %{"workorder_template_id" => 4, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00"}
 wkord_sc5 = %{"workorder_template_id" => 5, "asset_id" => 1, "holidays" => [6,7], "first_occurrence_date" => "2021-10-21", "first_occurrence_time" => "09:00:00", "workpermit_approval_user_ids" => [1, 2, 4] }
@@ -237,14 +239,14 @@ wk_ord4 = %{
   "scheduled_date" => "2021-09-15",
   "scheduled_time" => "09:00:00",
   "workorder_template_id" => 2,
-  "work_request_id" => 1,
+    "work_request_id" => 1,
   "workorder_schedule_id" => 1
 }
 
 {:ok, wk_ord1c} = Workorder.create_work_order(wk_ord1, "inc_bata", %{id: 1})
 {:ok, wk_ord2c} = Workorder.create_work_order(wk_ord2, "inc_bata", %{id: 1})
 {:ok, wk_ord3c} = Workorder.create_work_order(wk_ord3, "inc_bata", %{id: 1})
-{:ok, wk_ord4c} = Workorder.create_work_order(wk_ord4, "inc_bata", %{id: 1})
+# {:ok, wk_ord4c} = Workorder.create_work_order(wk_ord4, "inc_bata", %{id: 1})
 
 
 

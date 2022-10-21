@@ -22,6 +22,13 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render("error.json", triplex: err_msg)
   end
 
+  def call(conn, {:multiple_error, changeset_array}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(Inconn2ServiceWeb.ChangesetView)
+    |> render("errors.json", changesets: changeset_array)
+  end
+
   # This clause is an example of how to handle resources that cannot be found.
   def call(conn, {:error, :not_found}) do
     conn
@@ -30,11 +37,25 @@ defmodule Inconn2ServiceWeb.FallbackController do
     |> render(:"404")
   end
 
+  def call(conn, {:could_not_create, msg}) do
+    conn
+    |> put_status(422)
+    |> put_view(Inconn2ServiceWeb.ErrorView)
+    |> render("error_create.json", msg: msg)
+  end
+
   def call(conn, {:could_not_delete, msg}) do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(Inconn2ServiceWeb.ErrorView)
     |> render("error_delete.json", msg: msg)
+  end
+
+  def call(conn, {:error, msg}) do
+    conn
+    |> put_status(422)
+    |> put_view(Inconn2ServiceWeb.ErrorView)
+    |> render("error.json", msg: msg)
   end
 
   def call(conn, {:deleted, _msg}), do: send_resp(conn, :no_content, "")

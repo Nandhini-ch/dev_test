@@ -5,18 +5,7 @@ defmodule Inconn2Service.Repo do
 
   import Ecto.Query, warn: false
 
-  def add_active_filter(query, query_params) do
-    filter =
-      case query_params do
-        %{"active" => "true"} -> %{"active" => true}
-        %{"active" => "false"} -> %{"active" => false}
-        _ -> %{}
-      end
+  def add_active_filter(query), do: from q in query, where: q.active
 
-    case Map.get(filter, "active") do
-       true -> where(query, active: true)
-       false -> where(query, active: false)
-       _ -> query
-    end
-  end
+  def sort_by_id(list), do: Enum.sort_by(list, &(&1.id), :asc)
 end

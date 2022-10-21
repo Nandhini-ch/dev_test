@@ -1,81 +1,58 @@
 defmodule Inconn2Service.Staff do
-  @moduledoc """
-  The Staff context.
-  """
-
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Comeonin
+  import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
+
   alias Ecto.Multi
   alias Inconn2Service.Repo
-
-  alias Inconn2Service.Staff.OrgUnit
-  alias Inconn2Service.Util.HierarchyManager
-  import Comeonin
-  alias Inconn2Service.Staff.Role
+  alias Inconn2Service.Account.Auth
   alias Inconn2Service.AssetConfig
-  alias Inconn2Service.Staff
+  alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.Staff.{Employee, Feature, Module, OrgUnit, Role, RoleProfile, User, Designation}
+  alias Inconn2Service.Util.HierarchyManager
 
-  @doc """
-  Returns the list of org_units.
-
-  ## Examples
-
-      iex> list_org_units()
-      [%OrgUnit{}, ...]
-
-  """
   def list_org_units(prefix) do
     OrgUnit
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
-  end
-
-  def list_org_units(%{"active" => active}, prefix) do
-    OrgUnit
-    |> Repo.add_active_filter(%{"active" => active})
-    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_org_units(party_id, prefix) do
     OrgUnit
+    |> Repo.add_active_filter()
     |> where(party_id: ^party_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
-  def list_org_units(party_id, query_params, prefix) do
-    OrgUnit
-    |> Repo.add_active_filter(query_params)
-    |> where(party_id: ^party_id)
-    |> Repo.all(prefix: prefix)
+  def list_org_units_for_user(user, prefix) do
+    list_org_units(user.party_id, prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_org_units_tree(party_id, prefix) do
-    list_org_units(party_id, %{"active" => "true"}, prefix)
+    list_org_units(party_id, prefix)
     |> HierarchyManager.build_tree()
   end
 
   def list_org_units_leaves(party_id, prefix) do
     ids =
-      list_org_units(party_id, %{"active" => "true"},prefix)
+      list_org_units(party_id, prefix)
       |> HierarchyManager.leaf_nodes()
       |> MapSet.to_list()
 
     from(o in OrgUnit, where: o.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single org_unit.
+  def get_org_units_by_ids(ids, prefix) do
+    from(o in OrgUnit, where: o.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
 
-  Raises `Ecto.NoResultsError` if the Org unit does not exist.
-
-  ## Examples
-
-      iex> get_org_unit!(123)
-      %OrgUnit{}
-
-      iex> get_org_unit!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_org_unit!(id, prefix), do: Repo.get!(OrgUnit, id, prefix: prefix)
 
   def get_root_org_units(party_id, prefix) do
@@ -94,18 +71,6 @@ defmodule Inconn2Service.Staff do
     HierarchyManager.parent(ou) |> Repo.one(prefix: prefix)
   end
 
-  @doc """
-  Creates a org_unit.
-
-  ## Examples
-
-      iex> create_org_unit(%{field: value})
-      {:ok, %OrgUnit{}}
-
-      iex> create_org_unit(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_org_unit(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
@@ -173,18 +138,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  @doc """
-  Updates a org_unit.
-
-  ## Examples
-
-      iex> update_org_unit(org_unit, %{field: new_value})
-      {:ok, %OrgUnit{}}
-
-      iex> update_org_unit(org_unit, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_org_unit(%OrgUnit{} = org_unit, attrs, prefix) do
     existing_parent_id = HierarchyManager.parent_id(org_unit)
 
@@ -252,75 +205,69 @@ defmodule Inconn2Service.Staff do
     |> OrgUnit.changeset(attrs)
   end
 
-  def update_active_status_for_org_unit(%OrgUnit{} = org_unit, org_unit_params, prefix) do
-    case org_unit_params do
-      %{"active" => false} ->
-        deactivate_children(org_unit, org_unit_params, OrgUnit, prefix)
+  def delete_org_unit(%OrgUnit{} = org_unit, prefix) do
+    cond do
+      has_descendants?(org_unit, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Descendants associated with it"
+        }
 
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(org_unit)
-        handle_hierarchical_activation(org_unit, org_unit_params, OrgUnit, prefix, parent_id)
+      has_employee?(org_unit, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Employee associated with it"
+        }
+
+      true ->
+        update_org_unit(org_unit, %{"active" => false}, prefix)
+          {:deleted,
+             "The org unit was disabled"
+         }
     end
   end
 
-  @doc """
-  Deletes a org_unit.
-
-  ## Examples
-
-      iex> delete_org_unit(org_unit)
-      {:ok, %OrgUnit{}}
-
-      iex> delete_org_unit(org_unit)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_org_unit(%OrgUnit{} = org_unit, prefix) do
-    # Deletes the org_unit and children forcibly
-    # TBD: do not allow delete if this org_unit is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(org_unit)
-    Repo.delete_all(subtree, prefix: prefix)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking org_unit changes.
-
-  ## Examples
-
-      iex> change_org_unit(org_unit)
-      %Ecto.Changeset{data: %OrgUnit{}}
-
-  """
   def change_org_unit(%OrgUnit{} = org_unit, attrs \\ %{}) do
     OrgUnit.changeset(org_unit, attrs)
   end
 
-  alias Inconn2Service.Staff.Employee
-  alias Inconn2Service.AssetConfig.AssetCategory
-
-  @doc """
-  Returns the list of employees.
-
-  ## Examples
-
-      iex> list_employees()
-      [%Employee{}, ...]
-
-  """
+  #Context functions for Employees
   def list_employees(prefix) do
     Employee
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
-  def list_employees(user, prefix) do
+  def list_employees_of_party(user, prefix) do
+    Employee
+    |> where([party_id: ^user.party_id])
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def list_employees(%{"designation_id" => designation_id}, user, prefix) do
+      filters = filter_by_user_is_licensee(user, prefix)
+      Employee
+      |> where(^filters)
+      |> where([designation_id: ^designation_id, active: true])
+      |> Repo.all(prefix: prefix)
+      |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+      |> Repo.preload(:org_unit)
+      |> Repo.sort_by_id()
+    end
+
+  def list_employees(_, user, prefix) do
+    IO.puts("!!!!!!!!!!!!!!!!!!!")
     filters = filter_by_user_is_licensee(user, prefix)
     Employee
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
+    |> Repo.sort_by_id()
   end
 
   defp filter_by_user_is_licensee(user, prefix) do
@@ -330,22 +277,15 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def list_employees(party_id, query_params, prefix) do
-    Employee
-    |> where(party_id: ^party_id)
-    |> Repo.add_active_filter(query_params)
-    |> Repo.all(prefix: prefix)
-  end
-
   defp preload_employee({:ok, employee}, prefix) do
     {:ok, employee |> preload_employee(prefix)}
   end
 
-  defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: employee
+  defp preload_employee(employee, _prefix) when is_nil(employee.reports_to), do: Map.put(employee, :reports_to_employee, nil)
 
   defp preload_employee(employee, prefix) when not is_nil(employee.reports_to) do
-    employee = Repo.get!(Employee, employee.reports_to, prefix: prefix)
-    Map.put(employee, :reports_to, employee)
+    reports_to_employee = Repo.get!(Employee, employee.reports_to, prefix: prefix)
+    Map.put(employee, :reports_to_employee, reports_to_employee)
   end
 
   defp preload_skills({:ok, employee}, prefix) do
@@ -353,12 +293,24 @@ defmodule Inconn2Service.Staff do
   end
 
   defp preload_skills(employee, prefix) when not is_nil(employee.skills) do
-    asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end)
-    Map.put(employee, :skills, asset_categories)
+    asset_categories = Enum.map(employee.skills, fn s -> AssetConfig.get_asset_category(s, prefix) end) |> Enum.filter(fn x -> not is_nil(x) end)
+    Map.put(employee, :preloaded_skills, asset_categories)
   end
 
-  defp preload_skills(employee, prefix) when is_nil(employee.skills) do
-    Map.put(employee, :skills, [])
+  defp preload_skills(employee, _prefix) when is_nil(employee.skills) do
+    Map.put(employee, :preloaded_skills, [])
+  end
+
+  def get_employee_of_user(user, prefix) do
+    Repo.get(Employee, user.employee_id, prefix: prefix)
+  end
+
+  def get_employee_from_user(nil, prefix) do
+    nil
+  end
+
+  def get_employee_from_user(employee_id, prefix) do
+    Repo.get(Employee, employee_id, prefix: prefix)
   end
 
   def get_reportees_for_logged_in_user(user, prefix) do
@@ -383,25 +335,17 @@ defmodule Inconn2Service.Staff do
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
   end
-  @doc """
-  Gets a single employee.
 
-  Raises `Ecto.NoResultsError` if the Employee does not exist.
+  def get_employee_without_preloads!(id, prefix) do
+    Repo.get!(Employee, id, prefix: prefix)
+  end
 
-  ## Examples
-
-      iex> get_employee!(123)
-      %Employee{}
-
-      iex> get_employee!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_employee!(id, prefix) do
     Repo.get!(Employee, id, prefix: prefix)
     |> preload_employee(prefix)
     |> preload_skills(prefix)
     |> Repo.preload(:org_unit)
+    |> Repo.preload(:user)
   end
 
   def get_employee_email!(email, prefix) do
@@ -414,18 +358,6 @@ defmodule Inconn2Service.Staff do
     |> Repo.preload(:org_unit)
   end
 
-  @doc """
-  Creates a employee.
-
-  ## Examples
-
-      iex> create_employee(%{field: value})
-      {:ok, %Employee{}}
-
-      iex> create_employee(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_employee(attrs \\ %{}, prefix) do
     has_login_credentials = Map.get(attrs, "has_login_credentials", false)
 
@@ -478,19 +410,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-
-  @doc """
-  Updates a employee.
-
-  ## Examples
-
-      iex> update_employee(employee, %{field: new_value})
-      {:ok, %Employee{}}
-
-      iex> update_employee(employee, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_employee(%Employee{} = employee, attrs, prefix) do
     has_login_credentials = Map.get(attrs, "has_login_credentials", false)
 
@@ -522,89 +441,77 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_employee(%Employee{} = employee, attrs, prefix) do
-    employee
-    |> Employee.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
-  @doc """
-  Deletes a employee.
-
-  ## Examples
-
-      iex> delete_employee(employee)
-      {:ok, %Employee{}}
-
-      iex> delete_employee(employee)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_employee(%Employee{} = employee, prefix) do
-    Repo.delete(employee, prefix: prefix)
+    cond  do
+      has_employee_rosters?(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Employee Roster associated with it"
+        }
+
+      has_reports_to?(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Reports To associated with it"
+        }
+
+      has_team_member(employee, prefix) ->
+        {:could_not_delete,
+           "cannot be deleted as there are Team associated with it"
+        }
+
+      true ->
+        case delete_user_for_employee(employee.user, prefix) do
+          {:deleted, _} ->
+              update_employee(employee, %{"active" => false}, prefix)
+              {:deleted, "The employee was disabled"}
+
+          user_delete_result ->
+            user_delete_result
+
+        end
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking employee changes.
-
-  ## Examples
-
-      iex> change_employee(employee)
-      %Ecto.Changeset{data: %Employee{}}
-
-  """
   def change_employee(%Employee{} = employee, attrs \\ %{}) do
     Employee.changeset(employee, attrs)
   end
 
-  alias Inconn2Service.Staff.User
-  alias Inconn2Service.Staff.Role
-  alias Inconn2Service.Account.Auth
-
-  @doc """
-  Returns the list of users.
-
-  ## Examples
-
-      iex> list_users()
-      [%User{}, ...]
-
-  """
+#Context functions for User
   def list_users(prefix) do
-    Repo.all(User, prefix: prefix)
+    User
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
+    |> Repo.sort_by_id()
   end
 
   def list_users(user, prefix) do
     filters = filter_by_user_is_licensee(user, prefix)
     User
     |> where(^filters)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(employee: :org_unit)
+    |> Repo.sort_by_id()
   end
 
-  # def list_users(query_params, prefix) do
-  #   User
-  #   |> Repo.add_active_filter(query_params)
-  #   |> Repo.all(prefix: prefix)
-  # end
+  def get_reportee_users(user, _prefix) when is_nil(user.employee_id), do: []
+  def get_reportee_users(user, prefix) when not is_nil(user.employee_id) do
+    from(e in Employee, where: e.reports_to == ^user.employee_id and e.active,
+      join: u in User, on: u.employee_id == e.id,
+      select: u)
+    |> Repo.all(prefix: prefix)
+  end
 
-  @doc """
-  Gets a single user.
-
-  Raises `Ecto.NoResultsError` if the User does not exist.
-
-  ## Examples
-
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_user!(id, prefix), do: Repo.get!(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
+  def get_user(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
+
+  def get_user_from_employee(emp_id, prefix) do
+    Repo.get_by(User, [employee_id: emp_id], prefix: prefix)
+  end
+
   def get_user_without_org_unit!(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(:employee)
+
+  def get_user_without_org_unit(nil,_prefix), do: nil
 
   def get_user_without_org_unit(id,prefix) do
     user = Repo.get(User, id, prefix: prefix)
@@ -613,6 +520,17 @@ defmodule Inconn2Service.Staff do
       _ -> user |> Repo.preload(:employee)
     end
   end
+
+  def get_user_by_username_for_otp(username, prefix) do
+    user = get_user_by_username(username, prefix)
+    IO.inspect("1323424")
+    IO.inspect(user)
+    case user do
+      nil ->  {:error, "Username not found"}
+      _ -> {:ok, user}
+    end
+  end
+
   def get_user_by_username(username, prefix) do
     query =
       from(u in User,
@@ -632,18 +550,7 @@ defmodule Inconn2Service.Staff do
       Repo.one(query, prefix: prefix)
       |> Repo.preload(employee: :org_unit)
     end
-  @doc """
-  Creates a user.
 
-  ## Examples
-
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_user(attrs \\ %{}, prefix) do
     result = %User{}
               |> User.changeset(attrs)
@@ -658,6 +565,8 @@ defmodule Inconn2Service.Staff do
   def create_employee_user(employee, attrs \\ %{}, prefix) do
       user_map = %{
         "username" => employee.email,
+        "first_name" => employee.first_name,
+        "last_name" => employee.last_name,
         "email" => employee.email,
         "mobile_no" => employee.mobile_no,
         "password" => employee.mobile_no,
@@ -690,19 +599,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_user(%User{} = user, attrs, prefix) do
     result = user
               |> User.changeset_update(attrs)
@@ -714,119 +610,107 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def update_active_status_for_user(%User{} = user, attrs, prefix) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update(prefix: prefix)
+  def delete_user(%User{} = user, prefix) do
+    cond do
+      has_alert_configuration?(user, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Alert Configuration associated with it"
+        }
+
+      has_employee?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Employee associated with it"
+        }
+
+      has_category_helpdesk?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Category Helpdesk associated with it"
+        }
+
+      has_store?(user, prefix) ->
+       {:could_not_delete,
+         "Cannot be deleted as there are Store associated with it"
+       }
+
+      has_workorder_schedule?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as the user's permission might be required in workflow"
+        }
+
+      true ->
+       update_user(user, %{"active" => false}, prefix)
+       {:deleted,
+         "The user was disabled"
+       }
+    end
   end
 
-  @doc """
-  Deletes a user.
+  def delete_user_for_employee(nil , _prefix), do: {:deleted, nil}
+  def delete_user_for_employee(%User{} = user, prefix) do
+    cond do
+      has_alert_configuration?(user, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Alert Configuration associated with it"
+        }
 
-  ## Examples
+      has_category_helpdesk?(user, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Category Helpdesk associated with it"
+        }
 
-      iex> delete_user(user)
-      {:ok, %User{}}
+      has_store?(user, prefix) ->
+       {:could_not_delete,
+         "Cannot be deleted as there are Store associated with it"
+       }
 
-      iex> delete_user(user)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_user(%User{} = user, prefix) do
-    Repo.delete(user, prefix: prefix)
+      true ->
+       update_user(user, %{"active" => false}, prefix)
+       {:deleted,
+         "The user was disabled"
+       }
+    end
   end
 
 
   def change_user_password(user, credentials, prefix) do
-    old_password = credentials["old_password"]
-    attrs = %{
-      "password" => credentials["new_password"],
-      "password_confirmation" => credentials["new_password_confirmation"]
-    }
-    case Auth.check_password(old_password, user) do
+    case Auth.check_password(credentials["old_password"], user) do
       {:ok, user} ->
-              update_user(user, attrs, prefix)
+              User.change_password_changeset(user, %{"password" => credentials["new_password"]}) |> Repo.update(prefix: prefix)
       {:error, msg} ->
               {:error, msg}
     end
-
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
+  def reset_user_password(user, credentials, prefix) do
+    User.change_password_changeset(user, %{"password" => credentials["password"]}) |> Repo.update(prefix: prefix)
+  end
 
-  ## Examples
+  defp sort_users(users), do: Enum.sort_by(users, &(&1.updated_at), {:desc, NaiveDateTime})
 
-      iex> change_user(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
   end
 
-  # defp check_password(user, password) do
-  # Argon2.check_pass(password, user.password_hash)
-  # end
-
-
-  alias Inconn2Service.Staff.Feature
-
-  @doc """
-  Returns the list of roles.
-
-  ## Examples
-
-      iex> list_roles()
-      [%Role{}, ...]
-
-  """
+  #Context function for Role
   def list_roles(prefix) do
-    Repo.all(Role, prefix: prefix) |> Repo.preload(:role_profile)
-  end
-
-  def list_roles(query_params, prefix) do
     Role
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:role_profile)
+    |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single role.
-
-  Raises `Ecto.NoResultsError` if the Role does not exist.
-
-  ## Examples
-
-      iex> get_role!(123)
-      %Role{}
-
-      iex> get_role!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
   def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
+  def get_role_without_preload(id, prefix), do: Repo.get(Role, id, prefix: prefix)
   def get_role_by_role_profile(role_profile_id, prefix) do
     Role
     |> where(role_profile_id: ^role_profile_id)
     |> Repo.all(prefix: prefix)
     |> Repo.preload(:role_profile)
+    |> Repo.sort_by_id()
   end
 
-  @doc """
-  Creates a role.
-
-  ## Examples
-
-      iex> create_role(%{field: value})
-      {:ok, %Role{}}
-
-      iex> create_role(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_role(attrs \\ %{}, prefix) do
     result = %Role{}
               |> Role.changeset(attrs)
@@ -838,56 +722,29 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  @doc """
-  Updates a role.
-
-  ## Examples
-
-      iex> update_role(role, %{field: new_value})
-      {:ok, %Role{}}
-
-      iex> update_role(role, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  def update_active_status_for_role(%Role{} = role, attrs, prefix) do
-    role
-    |> Role.changeset(attrs)
-    |> Repo.update(prefix: prefix)
-  end
-
-  @doc """
-  Deletes a role.
-
-  ## Examples
-
-      iex> delete_role(role)
-      {:ok, %Role{}}
-
-      iex> delete_role(role)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_role(%Role{} = role, prefix) do
-    Repo.delete(role, prefix: prefix)
+    cond do
+      has_user?(role, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are User associated with it"
+        }
+
+      true ->
+         update_role(role, %{"active" => false}, prefix)
+          {:deleted,
+             "The Role was disabled"
+          }
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking role changes.
 
-  ## Examples
 
-      iex> change_role(role)
-      %Ecto.Changeset{data: %Role{}}
-
-  """
   def change_role(%Role{} = role, attrs \\ %{}) do
     Role.changeset(role, attrs)
   end
@@ -932,15 +789,6 @@ defmodule Inconn2Service.Staff do
 
   defp update_children({:error, cs}, _prefix), do: {:error, cs}
 
-  @doc """
-  Returns the list of features.
-
-  ## Examples
-
-      iex> list_features()
-      [%Feature{}, ...]
-
-  """
   def list_features(prefix) do
     Repo.all(Feature, prefix: prefix)
   end
@@ -961,228 +809,65 @@ defmodule Inconn2Service.Staff do
       |> Repo.all(prefix: prefix)
     end
   end
-  @doc """
-  Gets a single feature.
 
-  Raises `Ecto.NoResultsError` if the Feature does not exist.
-
-  ## Examples
-
-      iex> get_feature!(123)
-      %Feature{}
-
-      iex> get_feature!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_feature!(id, prefix), do: Repo.get!(Feature, id, prefix: prefix)
 
-  @doc """
-  Creates a feature.
-
-  ## Examples
-
-      iex> create_feature(%{field: value})
-      {:ok, %Feature{}}
-
-      iex> create_feature(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_feature(attrs \\ %{}, prefix) do
     %Feature{}
     |> Feature.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a feature.
-
-  ## Examples
-
-      iex> update_feature(feature, %{field: new_value})
-      {:ok, %Feature{}}
-
-      iex> update_feature(feature, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_feature(%Feature{} = feature, attrs, prefix) do
     feature
     |> Feature.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a feature.
-
-  ## Examples
-
-      iex> delete_feature(feature)
-      {:ok, %Feature{}}
-
-      iex> delete_feature(feature)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_feature(%Feature{} = feature, prefix) do
     Repo.delete(feature, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking feature changes.
-
-  ## Examples
-
-      iex> change_feature(feature)
-      %Ecto.Changeset{data: %Feature{}}
-
-  """
   def change_feature(%Feature{} = feature, attrs \\ %{}) do
     Feature.changeset(feature, attrs)
   end
 
-  alias Inconn2Service.Staff.Module
-
-  @doc """
-  Returns the list of modules.
-
-  ## Examples
-
-      iex> list_modules()
-      [%Module{}, ...]
-
-  """
+  #Context functions for module
   def list_modules(prefix) do
     Repo.all(Module, prefix: prefix) |> Repo.preload(:features)
   end
 
-  @doc """
-  Gets a single module.
-
-  Raises `Ecto.NoResultsError` if the Module does not exist.
-
-  ## Examples
-
-      iex> get_module!(123)
-      %Module{}
-
-      iex> get_module!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_module!(id, prefix), do: Repo.get!(Module, id, prefix: prefix) |> Repo.preload(:features)
 
-  @doc """
-  Creates a module.
-
-  ## Examples
-
-      iex> create_module(%{field: value})
-      {:ok, %Module{}}
-
-      iex> create_module(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_module(attrs \\ %{}, prefix) do
     %Module{}
     |> Module.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a module.
-
-  ## Examples
-
-      iex> update_module(module, %{field: new_value})
-      {:ok, %Module{}}
-
-      iex> update_module(module, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_module(%Module{} = module, attrs, prefix) do
     module
     |> Module.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a module.
-
-  ## Examples
-
-      iex> delete_module(module)
-      {:ok, %Module{}}
-
-      iex> delete_module(module)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_module(%Module{} = module, prefix) do
     Repo.delete(module, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking module changes.
-
-  ## Examples
-
-      iex> change_module(module)
-      %Ecto.Changeset{data: %Module{}}
-
-  """
   def change_module(%Module{} = module, attrs \\ %{}) do
     Module.changeset(module, attrs)
   end
 
-  alias Inconn2Service.Staff.RoleProfile
-
-  @doc """
-  Returns the list of role_profiles.
-
-  ## Examples
-
-      iex> list_role_profiles()
-      [%RoleProfile{}, ...]
-
-  """
+  #Context functions for role profile
   def list_role_profiles(prefix) do
     Repo.all(RoleProfile, prefix: prefix)
   end
 
-  @doc """
-  Gets a single role_profile.
-
-  Raises `Ecto.NoResultsError` if the Role profile does not exist.
-
-  ## Examples
-
-      iex> get_role_profile!(123)
-      %RoleProfile{}
-
-      iex> get_role_profile!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_role_profile!(id, prefix), do: Repo.get!(RoleProfile, id, prefix: prefix)
   def get_role_profile(id, prefix), do: Repo.get(RoleProfile, id, prefix: prefix)
   def get_role_profile_by_name!(name, prefix), do: Repo.get_by!(RoleProfile, [name: name], prefix: prefix)
 
-  @doc """
-  Creates a role_profile.
-
-  ## Examples
-
-      iex> create_role_profile(%{field: value})
-      {:ok, %RoleProfile{}}
-
-      iex> create_role_profile(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_role_profile(attrs \\ %{}, prefix) do
     %RoleProfile{}
     |> RoleProfile.changeset(attrs)
@@ -1190,13 +875,8 @@ defmodule Inconn2Service.Staff do
   end
 
   def filter_permissions(role_profile) do
-    permissions = Enum.map(role_profile.permissions, fn module -> filter_features(module) end)
+    permissions = Enum.filter(role_profile.permissions, fn feature -> feature["access"] == true end)
     Map.put(role_profile, :permissions, permissions)
-  end
-
-  defp filter_features(module) do
-    features = Enum.filter(module["features"], fn feature -> feature["access"] == true end)
-    Map.put(module, "features", features)
   end
 
   # defp inherit_features(role_profile, role_profile_new, prefix) do
@@ -1234,18 +914,7 @@ defmodule Inconn2Service.Staff do
   #   end
   # end
 
-  @doc """
-  Updates a role_profile.
 
-  ## Examples
-
-      iex> update_role_profile(role_profile, %{field: new_value})
-      {:ok, %RoleProfile{}}
-
-      iex> update_role_profile(role_profile, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_role_profile(%RoleProfile{} = role_profile, attrs, prefix) do
     result = role_profile
             |> RoleProfile.changeset(attrs)
@@ -1259,32 +928,192 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  @doc """
-  Deletes a role_profile.
-
-  ## Examples
-
-      iex> delete_role_profile(role_profile)
-      {:ok, %RoleProfile{}}
-
-      iex> delete_role_profile(role_profile)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_role_profile(%RoleProfile{} = role_profile, prefix) do
     Repo.delete(role_profile, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking role_profile changes.
-
-  ## Examples
-
-      iex> change_role_profile(role_profile)
-      %Ecto.Changeset{data: %RoleProfile{}}
-
-  """
   def change_role_profile(%RoleProfile{} = role_profile, attrs \\ %{}) do
     RoleProfile.changeset(role_profile, attrs)
+  end
+
+  alias Inconn2Service.Staff.Designation
+
+
+  def list_designations(prefix) do
+    Designation
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
+
+  def create_designation(attrs \\ %{}, prefix) do
+    %Designation{}
+    |> Designation.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+
+  def update_designation(%Designation{} = designation, attrs, prefix) do
+    designation
+    |> Designation.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+
+  # def delete_designation(%Designation{} = designation, prefix) do
+  #   Repo.delete(designation, prefix: prefix)
+  # end
+
+
+  def delete_designation(%Designation{} = designation, prefix) do
+    cond do
+      has_employee?(designation, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Employee associated with it"
+        }
+
+        has_manpower_configuration?(designation, prefix) ->
+          {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+          }
+
+      true ->
+         update_designation(designation, %{"active" => false}, prefix)
+          {:deleted,
+             "The designation was disabled"
+          }
+    end
+  end
+
+
+  def change_designation(%Designation{} = designation, attrs \\ %{}) do
+    Designation.changeset(designation, attrs)
+  end
+
+  alias Inconn2Service.Staff.Team
+
+  def list_teams(prefix) do
+    Team
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def list_teams_for_user(user, prefix) do
+    get_team_ids_for_user(user, prefix)
+    |> Enum.map(&(&1.team_id))
+    |> get_teams_by_ids(prefix)
+  end
+
+  def get_teams_by_ids(team_ids, prefix) do
+    from(t in Team, where: t.id in ^team_ids)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team!(id, prefix), do: Repo.get!(Team, id, prefix: prefix)
+
+  def create_team(attrs \\ %{}, prefix) do
+    %Team{}
+    |> Team.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  def update_team(%Team{} = team, attrs, prefix) do
+    team
+    |> Team.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_team(%Team{} = team, prefix) do
+    update_team(team, %{"active" => false}, prefix)
+    {:deleted,
+       "The Team was disabled"
+    }
+  end
+
+  def change_team(%Team{} = team, attrs \\ %{}) do
+    Team.changeset(team, attrs)
+  end
+
+  alias Inconn2Service.Staff.TeamMember
+
+  def list_team_members(team_id, prefix) do
+    TeamMember
+    |> where([team_id: ^team_id])
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn team -> preload_employees_team(team, prefix) end)
+    |> Repo.sort_by_id()
+  end
+
+  defp preload_employees_team(team, prefix) do
+    employee = Repo.get!(Employee, team.employee_id, prefix: prefix)
+    Map.put(team, :employee, employee)
+  end
+
+  def get_employee_ids_of_team(team_id, prefix) do
+    from(tm in TeamMember, where: tm.team_id == ^team_id, select: tm.employee_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team_member!(id, prefix), do: Repo.get!(TeamMember, id, prefix: prefix)
+
+  def create_team_members(team_id, employee_ids, prefix) do
+    employee_ids
+    |> Enum.map(fn employee_id -> create_team_member(%{"team_id" => team_id, "employee_id" => employee_id}, prefix) end)
+  end
+
+  def create_team_member(attrs \\ %{}, prefix) do
+    %TeamMember{}
+    |> TeamMember.changeset(attrs)
+    |> Repo.insert!(prefix: prefix)
+    |> preload_employees_team(prefix)
+  end
+
+  def update_team_member(%TeamMember{} = team_member, attrs, prefix) do
+    team_member
+    |> TeamMember.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_team_members(team_id, employee_ids, prefix) do
+    employee_ids = convert_string_list_to_list(employee_ids)
+    TeamMember
+    |> team_member_query(%{"team_id" => team_id, "employee_ids" => employee_ids})
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn team -> delete_team_member(team, prefix) end)
+  end
+
+  def delete_team_member(%TeamMember{} = team_member, prefix) do
+    update_team_member(team_member, %{"active" => false}, prefix)
+    {:deleted,
+       "The Team member was disabled"
+    }
+  end
+
+  def change_team_member(%TeamMember{} = team_member, attrs \\ %{}) do
+    TeamMember.changeset(team_member, attrs)
+  end
+
+  def get_team_ids_for_user(user, prefix) when not is_nil(user.employee_id) do
+    from(tm in TeamMember, where: tm.employee_id == ^user.employee_id)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_team_ids_for_user(_user, _prefix) do
+    []
+  end
+
+
+  def get_team_users(teams, prefix) do
+    team_ids = Enum.map(teams, fn t -> t.team_id end)
+    from(tm in TeamMember, where: tm.team_id in ^team_ids)
+    |> Repo.all(prefix: prefix)
+    |> Enum.uniq()
+    |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
+    |> Enum.filter(fn u -> !is_nil(u) end)
   end
 end

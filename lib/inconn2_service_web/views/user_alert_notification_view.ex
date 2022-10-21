@@ -13,12 +13,13 @@ defmodule Inconn2ServiceWeb.UserAlertNotificationView do
   def render("user_alert_notification.json", %{user_alert_notification: user_alert_notification}) do
     %{id: user_alert_notification.id,
       alert_notification_id: user_alert_notification.alert_notification_id,
-      alert_notification: render_one(user_alert_notification.alert_notification, AlertNotificationReserveView, "alert_notification_reserve.json"),
+      # alert_notification: render_one(user_alert_notification.alert_notification, AlertNotificationReserveView, "alert_notification_reserve.json"),
       type: user_alert_notification.type,
       user_id: user_alert_notification.user_id,
       description: user_alert_notification.description,
       acknowledged_date_time: user_alert_notification.acknowledged_date_time,
-      action_taken: user_alert_notification.action_taken}
+      action_taken: user_alert_notification.action_taken,
+      escalation: user_alert_notification.escalation}
   end
 
   def render("success.json", %{success: success}) do

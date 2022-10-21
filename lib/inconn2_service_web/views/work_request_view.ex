@@ -46,6 +46,10 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       approvals_required: work_request.approvals_required,
       approvals_required_user: render_many(work_request.approvals_required_user, UserView, "user_without_org_unit.json"),
       response_tat: work_request.response_tat,
+      is_external_ticket: work_request.is_external_ticket,
+      external_name: work_request.external_name,
+      external_email: work_request.external_email,
+      external_mobile_no: work_request.external_mobile_no,
       resolution_tat: work_request.resolution_tat,
       work_order_id: work_request.work_order_id}
   end
@@ -86,6 +90,10 @@ defmodule Inconn2ServiceWeb.WorkRequestView do
       # assigned_user: render_one(work_request.assigned_user, UserView, "user_without_org_unit.json"),
       attachment_type: work_request.attachment_type,
       status: work_request.status,
+      is_external_ticket: work_request.is_external_ticket,
+      external_name: work_request.external_name,
+      external_email: work_request.external_email,
+      external_mobile_no: work_request.external_mobile_no,
       is_approvals_required: work_request.is_approvals_required,
       approvals_required: work_request.approvals_required,
       work_order_id: work_request.work_order_id}

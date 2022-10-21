@@ -1,11 +1,10 @@
 defmodule Inconn2Service.Ticket do
-  @moduledoc """
-  The Ticket context.
-  """
-
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
+  # import Inconn2Service.Util.IndexQueries
+  # import Inconn2Service.Util.HelpersFunctions
 
   alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
@@ -16,29 +15,27 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
 
-  @doc """
-  Returns the list of workrequest_categories.
+  alias Inconn2Service.Ticket.CategoryHelpdesk
+  alias Inconn2Service.Ticket.WorkRequest
 
-  ## Examples
-
-      iex> list_workrequest_categories()
-      [%WorkrequestCategory{}, ...]
-
-  """
   def list_workrequest_categories(prefix) do
     Repo.all(WorkrequestCategory, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
+    |> Repo.sort_by_id()
   end
 
-  def list_workrequest_categories(query_params, prefix) do
+  def list_workrequest_categories(_query_params, prefix) do
     WorkrequestCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Enum.map(fn wc -> preload_workrequest_subcategories(wc, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   def list_workrequest_categories_with_helpdesk_user(prefix) do
     WorkrequestCategory
     |> Repo.all(prefix: prefix)
     |> get_helpdesk_user_for_categories(prefix)
+    |> Repo.sort_by_id()
   end
 
   def get_helpdesk_user_for_categories(categories, prefix) do
@@ -49,124 +46,49 @@ defmodule Inconn2Service.Ticket do
     end)
   end
 
-  @doc """
-  Gets a single workrequest_category.
-
-  Raises `Ecto.NoResultsError` if the Workrequest category does not exist.
-
-  ## Examples
-
-      iex> get_workrequest_category!(123)
-      %WorkrequestCategory{}
-
-      iex> get_workrequest_category!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workrequest_category!(id, prefix), do: Repo.get!(WorkrequestCategory, id, prefix: prefix) |> Repo.preload(:workrequest_subcategories)
 
-  @doc """
-  Creates a workrequest_category.
-
-  ## Examples
-
-      iex> create_workrequest_category(%{field: value})
-      {:ok, %WorkrequestCategory{}}
-
-      iex> create_workrequest_category(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workrequest_category(attrs \\ %{}, prefix) do
-    result = %WorkrequestCategory{}
-              |> WorkrequestCategory.changeset(attrs)
-              |> Repo.insert(prefix: prefix)
-
-    case result do
-      {:ok, workrequest_category} ->
-        push_alert_notification_for_ticket_category(workrequest_category, prefix)
-        {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories)}
-      _ -> result
-    end
+    %WorkrequestCategory{}
+    |> WorkrequestCategory.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+    |> preload_workrequest_subcategories(prefix)
 
   end
 
-  @doc """
-  Updates a workrequest_category.
-
-  ## Examples
-
-      iex> update_workrequest_category(workrequest_category, %{field: new_value})
-      {:ok, %WorkrequestCategory{}}
-
-      iex> update_workrequest_category(workrequest_category, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
-    result = workrequest_category
-             |> WorkrequestCategory.changeset(attrs)
-             |> Repo.update(prefix: prefix)
-    case result do
-      {:ok, workrequest_category} -> {:ok, workrequest_category |> Repo.preload(:workrequest_subcategories, force: true)}
-      _ -> result
-    end
-  end
-
-  def update_active_status_for_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs, prefix) do
     workrequest_category
     |> WorkrequestCategory.changeset(attrs)
     |> Repo.update(prefix: prefix)
+    |> preload_workrequest_subcategories(prefix)
+
   end
 
-  @doc """
-  Deletes a workrequest_category.
-
-  ## Examples
-
-      iex> delete_workrequest_category(workrequest_category)
-      {:ok, %WorkrequestCategory{}}
-
-      iex> delete_workrequest_category(workrequest_category)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workrequest_category(%WorkrequestCategory{} = workrequest_category, prefix) do
-    Repo.delete(workrequest_category, prefix: prefix)
+    cond do
+      has_workrequest_subcategory?(workrequest_category, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Workrequest Subcategory associated with it"
+         }
+       true ->
+          update_workrequest_category(workrequest_category, %{"active" => false}, prefix)
+            {:deleted,
+               "The Workrequest Category was disabled"
+             }
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workrequest_category changes.
-
-  ## Examples
-
-      iex> change_workrequest_category(workrequest_category)
-      %Ecto.Changeset{data: %WorkrequestCategory{}}
-
-  """
   def change_workrequest_category(%WorkrequestCategory{} = workrequest_category, attrs \\ %{}) do
     WorkrequestCategory.changeset(workrequest_category, attrs)
   end
 
-  alias Inconn2Service.Ticket.CategoryHelpdesk
-  alias Inconn2Service.Ticket.WorkRequest
-
-
-  @doc """
-  Returns the list of work_requests.
-
-  ## Examples
-
-      iex> list_work_requests()
-      [%WorkRequest{}, ...]
-
-  """
   def list_work_requests(prefix) do
     Repo.all(WorkRequest, prefix: prefix)
     |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr -> preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
+    |> Repo.sort_by_id()
   end
 
   def preload_to_approve_users(work_request, prefix) do
@@ -200,7 +122,21 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Repo.sort_by_id()
   end
+
+  def list_work_requests_for_team(user, prefix) when not is_nil(user.employee_id) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    |> IO.inspect()
+    from(w in WorkRequest, where: w.assigned_user_id in ^team_user_ids and w.status not in ["CS", "CL"])
+    |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Repo.sort_by_id()
+  end
+
+  def list_work_requests_for_team(_user, _prefix), do: []
 
   def list_work_requests_for_assigned_user(user, prefix) do
     from(w in WorkRequest, where: w.assigned_user_id == ^user.id and w.status not in ["CS", "CL"])
@@ -209,6 +145,7 @@ defmodule Inconn2Service.Ticket do
     |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   def list_work_requests_acknowledgement(user, prefix) do
@@ -217,6 +154,7 @@ defmodule Inconn2Service.Ticket do
     |> Repo.all(prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   def list_work_requests_for_user_by_qr(qr_string, user, prefix) do
@@ -246,11 +184,27 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP"]
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP", "ROP", "CS"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
     |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Enum.filter(fn wr -> !exclude_work_request_approved(wr, current_user, prefix) end)
+    |> Repo.sort_by_id()
+  end
+
+  defp exclude_work_request_approved(work_request, current_user, prefix) do
+    from(a in Inconn2Service.Ticket.Approval, where: a.work_request_id == ^work_request.id and a.user_id == ^current_user.id)
+    |> Repo.exists?(prefix: prefix)
+  end
+
+  def list_work_requests_sent_for_approval(current_user, prefix) do
+    query = from w in WorkRequest, where: w.assigned_user_id == ^current_user.id and w.is_approvals_required and w.status in ["RS", "AS"]
+    Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Repo.sort_by_id()
   end
 
   def list_work_requests_for_helpdesk_user(current_user, prefix) do
@@ -264,6 +218,7 @@ defmodule Inconn2Service.Ticket do
       |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
       |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
       |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+      |> Repo.sort_by_id()
     else
       []
     end
@@ -330,7 +285,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        push_alert_notification_for_ticket(nil, work_request, prefix, user)
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket(nil, work_request, prefix, user) end)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -452,6 +407,7 @@ defmodule Inconn2Service.Ticket do
               |> is_approvals_required(user, prefix)
               |> validate_approvals_required_ids(prefix)
               |> calculate_tat(work_request, prefix)
+              |> update_workorder_generated_status()
               |> Repo.update(prefix: prefix)
 
 
@@ -459,20 +415,29 @@ defmodule Inconn2Service.Ticket do
       {:ok, updated_work_request} ->
         {:ok, status_track} = update_status_track(updated_work_request, prefix)
         push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
-        send_completed_email(work_request, updated_work_request, status_track, prefix)
+        update_status_track(updated_work_request, prefix)
+        # push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
+        send_completed_email(work_request, updated_work_request, prefix)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
         result
-
     end
-
   end
 
-  defp send_completed_email(work_request, updated_work_request, status_track, prefix) do
+  def update_workorder_generated_status(cs) do
+    case get_field(cs, :status) do
+      "ROP" -> change(cs, %{is_workorder_generated: false})
+      _ -> cs
+    end
+  end
+
+  defp send_completed_email(work_request, updated_work_request, prefix) do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
-          Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, updated_work_request.remarks, "#{status_track.status_update_date} #{status_track.status_update_time}" ,prefix)
+          Elixir.Task.start(fn ->
+            Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+          end)
           updated_work_request
       true ->
           updated_work_request
@@ -655,55 +620,29 @@ defmodule Inconn2Service.Ticket do
   end
 
 
-  @doc """
-  Returns the list of category_helpdesks.
-
-  ## Examples
-
-      iex> list_category_helpdesks()
-      [%CategoryHelpdesk{}, ...]
-
-  """
-  def list_category_helpdesks(prefix) do
-    Repo.all(CategoryHelpdesk, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+  def list_category_helpdesks(_query_params, prefix) do
+    CategoryHelpdesk
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+    |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single category_helpdesk.
-
-  Raises `Ecto.NoResultsError` if the Category helpdesk does not exist.
-
-  ## Examples
-
-      iex> get_category_helpdesk!(123)
-      %CategoryHelpdesk{}
-
-      iex> get_category_helpdesk!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_category_helpdesk!(id, prefix), do: Repo.get!(CategoryHelpdesk, id, prefix: prefix) |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+
   def get_category_helpdesk_by_user(user_id, prefix) do
     CategoryHelpdesk
     |> where(user_id: ^user_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
+
   def get_category_helpdesk_by_workrequest_category(workrequest_catgoery_id, site_id, prefix) do
     from(ch in CategoryHelpdesk, where: ch.workrequest_category_id == ^workrequest_catgoery_id and ch.site_id == ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
-  @doc """
-  Creates a category_helpdesk.
 
-  ## Examples
-
-      iex> create_category_helpdesk(%{field: value})
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> create_category_helpdesk(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_category_helpdesk(attrs \\ %{}, prefix) do
     result = %CategoryHelpdesk{}
               |> CategoryHelpdesk.changeset(attrs)
@@ -730,18 +669,6 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Updates a category_helpdesk.
-
-  ## Examples
-
-      iex> update_category_helpdesk(category_helpdesk, %{field: new_value})
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> update_category_helpdesk(category_helpdesk, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs, prefix) do
     result = category_helpdesk
               |> CategoryHelpdesk.changeset(attrs)
@@ -753,31 +680,14 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Deletes a category_helpdesk.
 
-  ## Examples
-
-      iex> delete_category_helpdesk(category_helpdesk)
-      {:ok, %CategoryHelpdesk{}}
-
-      iex> delete_category_helpdesk(category_helpdesk)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, prefix) do
-    Repo.delete(category_helpdesk, prefix: prefix)
+        update_category_helpdesk(category_helpdesk, %{"active" => false}, prefix)
+          {:deleted,
+             "The Category Helpdesk was disabled"
+           }
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking category_helpdesk changes.
-
-  ## Examples
-
-      iex> change_category_helpdesk(category_helpdesk)
-      %Ecto.Changeset{data: %CategoryHelpdesk{}}
-
-  """
   def change_category_helpdesk(%CategoryHelpdesk{} = category_helpdesk, attrs \\ %{}) do
     CategoryHelpdesk.changeset(category_helpdesk, attrs)
   end
@@ -795,12 +705,14 @@ defmodule Inconn2Service.Ticket do
   """
   def list_workrequest_status_track(prefix) do
     Repo.all(WorkrequestStatusTrack, prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_workrequest_status_track_for_work_request(work_request_id, prefix) do
     WorkrequestStatusTrack
     |> where(work_request_id: ^work_request_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   @doc """
@@ -904,6 +816,7 @@ defmodule Inconn2Service.Ticket do
     |> where(work_request_id: ^work_request_id)
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:work_request, :user])
+    |> Repo.sort_by_id()
   end
 
   @doc """
@@ -934,11 +847,11 @@ defmodule Inconn2Service.Ticket do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_approval(attrs \\ %{}, prefix, _user) do
+  def create_approval(attrs \\ %{}, prefix, user) do
     # IO.inspect(attrs)
     result = %Approval{}
               |> Approval.changeset(attrs)
-              # |> set_approver_user_id(user)
+              |> set_approver_user_id(user)
               |> Repo.insert(prefix: prefix)
 
     update_status_for_work_request(result, prefix)
@@ -963,7 +876,10 @@ defmodule Inconn2Service.Ticket do
   end
 
   defp set_approver_user_id(cs, user) do
-    change(cs, %{user_id: user.id})
+    case get_change(cs, :user_id, nil) do
+      nil -> change(cs, %{user_id: user.id})
+      _ -> cs
+    end
   end
 
   def update_status_for_work_request({:error, reason}, _),  do: {:error, reason}
@@ -1058,6 +974,7 @@ defmodule Inconn2Service.Ticket do
   def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
     WorkrequestSubcategory
     |> where(workrequest_category_id: ^workrequest_category_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
 
   end
@@ -1096,7 +1013,7 @@ defmodule Inconn2Service.Ticket do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workrequest_subcategory} ->
-        push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
         {:ok, workrequest_subcategory }
       _ -> result
     end
@@ -1137,7 +1054,10 @@ defmodule Inconn2Service.Ticket do
 
   """
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
-    Repo.delete(workrequest_subcategory, prefix: prefix)
+        update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
+          {:deleted,
+             "The Workrequest Subcategory was disabled"
+           }
   end
 
   @doc """
@@ -1253,11 +1173,14 @@ defmodule Inconn2Service.Ticket do
 
   defp create_ticket_alert_notification(alert_code, description, updated_work_request, action_for, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_work_request.site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     attrs = %{
       "alert_notification_id" => alert.id,
       "type" => alert.type,
-      "description" => description
+      "description" => description,
+      "site_id" => alert_config.site_id,
+      "alert_identifier_date_time" => alert_identifier_date_time
     }
 
     config_user_ids =
@@ -1271,6 +1194,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "new ticket raised" ->
         helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
@@ -1278,11 +1202,13 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "new ticket assigned" ->
         Enum.map(config_user_ids ++ [updated_work_request.assigned_user_id], fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket approved/rejected" ->
         helpdesk_users = get_category_helpdesk_by_workrequest_category(updated_work_request.workrequest_category_id, updated_work_request.site_id, prefix)
@@ -1290,6 +1216,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket completed" ->
         assigned_user_id =
@@ -1300,6 +1227,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket reassigned" ->
         assigned_user_id =
@@ -1310,6 +1238,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket cancelled" ->
         assigned_user_id =
@@ -1320,6 +1249,7 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
 
       "ticket reopened" ->
         assigned_user_id =
@@ -1332,7 +1262,28 @@ defmodule Inconn2Service.Ticket do
         Enum.map(config_user_ids ++ assigned_user_id ++ helpdesk_users, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+        create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix)
     end
 
   end
+
+  defp create_escalation_entry(_alert, nil, _alert_identifier_date_time, _prefix), do: nil
+
+  defp create_escalation_entry(alert, alert_config, alert_identifier_date_time, prefix) do
+    if alert.type == "al" and alert_config.is_escalation_required do
+      Common.create_alert_notification_scheduler(%{
+        "alert_code" => alert.code,
+        "site_id" => alert_config.site_id,
+        "alert_identifier_date_time" => alert_identifier_date_time,
+        "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+        "prefix" => prefix
+      })
+    end
+  end
+
+
+  defp preload_workrequest_subcategories({:error, changeset}, _prefix), do: {:error, changeset}
+  defp preload_workrequest_subcategories({:ok, category}, prefix), do: {:ok, preload_workrequest_subcategories(category, prefix)}
+  defp preload_workrequest_subcategories(category, prefix), do: Map.put(category, :workrequest_subcategories, list_workrequest_subcategories_for_category(category.id, prefix))
 end

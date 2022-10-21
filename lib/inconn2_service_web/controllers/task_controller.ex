@@ -9,7 +9,7 @@ defmodule Inconn2ServiceWeb.TaskController do
   def index(conn, _params) do
     case Map.get(conn.query_params, "label", nil) do
       nil ->
-        tasks = WorkOrderConfig.list_tasks(conn.assigns.sub_domain_prefix)
+        tasks = WorkOrderConfig.list_tasks(conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", tasks: tasks)
       label ->
         tasks = WorkOrderConfig.search_tasks(label, conn.assigns.sub_domain_prefix)
@@ -42,24 +42,24 @@ defmodule Inconn2ServiceWeb.TaskController do
   def delete(conn, %{"id" => id}) do
     task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Task{}} <- WorkOrderConfig.delete_task(task, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- WorkOrderConfig.delete_task(task, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
 
-  def activate_task(conn, %{"id" => id}) do
-    task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
+  # def activate_task(conn, %{"id" => id}) do
+  #   task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", task: task)
-    end
-  end
+  #   with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => true}, conn.assigns.sub_domain_prefix) do
+  #     render(conn, "show.json", task: task)
+  #   end
+  # end
 
-  def deactivate_task(conn, %{"id" => id}) do
-    task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
+  # def deactivate_task(conn, %{"id" => id}) do
+  #   task = WorkOrderConfig.get_task!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", task: task)
-    end
-  end
+  #   with {:ok, %Task{} = task} <- WorkOrderConfig.update_active_status_for_task(task, %{"active" => false}, conn.assigns.sub_domain_prefix) do
+  #     render(conn, "show.json", task: task)
+  #   end
+  # end
 end

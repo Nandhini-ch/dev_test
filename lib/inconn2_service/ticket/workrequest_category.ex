@@ -14,7 +14,7 @@ defmodule Inconn2Service.Ticket.WorkrequestCategory do
   @doc false
   def changeset(workrequest_category, attrs) do
     workrequest_category
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
   end
 end

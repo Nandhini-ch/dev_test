@@ -2,13 +2,16 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   use Ecto.Schema
 
   import Ecto.Changeset
+  alias Inconn2Service.WorkOrderConfig.TaskList
 
   schema "tasks" do
     field :label, :string
     field :task_type, :string
+    field :master_task_type_id, :integer
     field :config, :map
     field :estimated_time, :integer
     field :active, :boolean, default: true
+    many_to_many(:task_lists, TaskList, join_through: "task_tasklists", on_delete: :delete_all)
 
     timestamps()
   end
@@ -16,8 +19,8 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:label, :task_type, :config, :estimated_time])
-    |> validate_required([:label, :task_type, :config, :estimated_time])
+    |> cast(attrs, [:label, :task_type, :master_task_type_id, :config, :estimated_time, :active])
+    |> validate_required([:label, :task_type, :config, :estimated_time, :master_task_type_id, :active])
     |> validate_inclusion(:task_type, ["IO", "IM", "MT", "OB"])
     |> validate_config()
   end
@@ -59,7 +62,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     options = config["options"]
     if Kernel.is_list(options) do
       if (false not in Enum.map(options, fn x -> Kernel.is_map(x) end)) and (false not in Enum.map(options, fn x -> x not in options--[x] end)) do
-        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "value"] end) and false not in validate_values_of_map(options) do
+        case false not in Enum.map(options, fn x -> Map.keys(x) == ["label", "raise_ticket", "value"] end) and validate_unique_labels_and_values(options) and validate_raise_ticket(options) do
           true -> changeset
           false -> add_error(changeset, :config, "config is invalid")
         end
@@ -83,10 +86,25 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     end
   end
 
-  defp validate_values_of_map(options) do
-    list = Enum.map(options, fn map ->
-                        Enum.map(Map.values(map), fn x -> Kernel.is_bitstring(x) end) end)
-    values_list = Enum.map(options, fn map -> map["value"] in ["P", "F"] end)
-    List.flatten(list ++ values_list)
+  defp validate_unique_labels_and_values(options) do
+    validate_unique_labels(options) and validate_unique_values(options)
   end
+
+  defp validate_unique_labels(options) do
+    labels = Enum.map(options, fn %{"label" => label} -> label end)
+    labels == Enum.uniq(labels)
+  end
+
+  defp validate_unique_values(options) do
+    values = Enum.map(options, fn %{"value" => value} -> value end)
+    values == Enum.uniq(values)
+  end
+
+  defp validate_raise_ticket(options) do
+    true_list = Stream.map(options, fn r -> r["raise_ticket"] end)
+                |> Enum.map(fn r -> is_boolean(r) end)
+
+    false not in true_list
+  end
+
 end

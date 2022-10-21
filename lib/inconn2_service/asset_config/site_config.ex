@@ -3,6 +3,13 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
   import Ecto.Changeset
   alias Inconn2Service.AssetConfig.Site
 
+  @dash_config [
+    "energy_asset_category", "water_asset_category", "fuel_asset_category",
+    "energy_main_meters", "water_main_meters", "fuel_main_meters",
+    "energy_cost_per_unit", "water_cost_per_unit", "fuel_cost_per_unit",
+    "generators", "area_in_sqft"
+]
+
   schema "site_config" do
     field :config, :map
     field :type, :string
@@ -26,7 +33,7 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
     type = get_field(changeset, :type)
     case type do
       "DASH" ->
-        if Map.keys(config) == ["area", "energy_cost_per_unit", "main_meters", "standard_value_for_deviation"] do
+        if Map.keys(config) -- @dash_config == [] do
           changeset
         else
           add_error(changeset, :config, "config is invalid")

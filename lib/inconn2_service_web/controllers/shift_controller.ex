@@ -78,26 +78,8 @@ defmodule Inconn2ServiceWeb.ShiftController do
   def delete(conn, %{"id" => id}) do
     shift = Settings.get_shift!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %Shift{}} <- Settings.delete_shift(shift, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- Settings.delete_shift(shift, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
-    end
-  end
-
-  def activate_shift(conn, %{"id" => id}) do
-    shift = Settings.get_shift!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Shift{} = shift} <-
-           Settings.update_active_status_for_shift(shift, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", shift: shift)
-    end
-  end
-
-  def deactivate_shift(conn, %{"id" => id}) do
-    shift = Settings.get_shift!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %Shift{} = shift} <-
-           Settings.update_active_status_for_shift(shift, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", shift: shift)
     end
   end
 

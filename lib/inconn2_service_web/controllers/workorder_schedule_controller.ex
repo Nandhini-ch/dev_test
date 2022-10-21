@@ -25,13 +25,24 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     end
   end
 
+  def create_multiple(conn, %{"workorder_schedules" => workorder_schedule_params}) do
+    with {:ok, workorder_schedules} <- Workorder.create_workorder_schedules(workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+      workorder_schedules = Enum.map(workorder_schedules, fn workorder_schedule ->
+        get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      end)
+      conn
+      |> put_status(:created)
+      |> render("index.json", workorder_schedules: workorder_schedules)
+    end
+  end
+
   def show(conn, %{"id" => id}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
     workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", workorder_schedule: workorder_schedule)
   end
 
-  def update(conn, %{"id" => id, "workorder_schedule" => workorder_schedule_params}) do
+  def update(conn, %{"id" => id, "workorder_schedules" => workorder_schedule_params}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.update_workorder_schedule(workorder_schedule, workorder_schedule_params, conn.assigns.sub_domain_prefix) do
@@ -40,11 +51,40 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     end
   end
 
+  def update_multiple(conn, %{"workorder_schedules" => workorder_schedule_params}) do
+    with {:ok, workorder_schedules} <- Workorder.update_workorder_schedules(workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+      workorder_schedules = Enum.map(workorder_schedules, fn workorder_schedule ->
+        get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      end)
+      conn
+      |> put_status(:ok)
+      |> render("index.json", workorder_schedules: workorder_schedules)
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
     with {:ok, %WorkorderSchedule{}} <- Workorder.deactivate_workorder_schedule(workorder_schedule, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def pause_schedule(conn, %{"id" => id}) do
+    workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.pause_or_resume_workorder_schedule(workorder_schedule, %{"is_paused" => true}, conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", workorder_schedule: workorder_schedule)
+    end
+  end
+
+  def resume_schedule(conn, %{"id" => id, "workorder_schedule" => workorder_schedule_params}) do
+    workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
+
+    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.pause_or_resume_workorder_schedule(workorder_schedule, Map.put(workorder_schedule_params, "is_paused", false), conn.assigns.sub_domain_prefix) do
+      workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      render(conn, "show.json", workorder_schedule: workorder_schedule)
     end
   end
 

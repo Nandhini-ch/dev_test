@@ -17,6 +17,11 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
     end
   end
 
+  def index_for_location(conn, %{"location_id" => location_id}) do
+    asset_categories = AssetConfig.list_asset_categories_for_location(location_id, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", asset_categories: asset_categories)
+  end
+
   def tree(conn, _params) do
     asset_categories = AssetConfig.list_asset_categories_tree(conn.assigns.sub_domain_prefix)
     render(conn, "tree.json", asset_categories: asset_categories)
@@ -29,6 +34,11 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
 
   def assets(conn, %{"id" => id}) do
     assets = AssetConfig.get_assets(id, conn.assigns.sub_domain_prefix)
+    render(conn, "assets.json", assets: assets)
+  end
+
+  def assets_for_site(conn, %{"site_id" => site_id, "asset_category_id" => asset_category_id}) do
+    assets = AssetConfig.get_assets(site_id, asset_category_id, conn.assigns.sub_domain_prefix)
     render(conn, "assets.json", assets: assets)
   end
 
@@ -58,27 +68,9 @@ defmodule Inconn2ServiceWeb.AssetCategoryController do
 
   def delete(conn, %{"id" => id}) do
     asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-    with {_, nil} <-
-           AssetConfig.delete_asset_category(asset_category, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _asset_category} <-
+      AssetConfig.delete_asset_category(asset_category, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
-    end
-  end
-
-  def deactivate_asset_category(conn, %{"id" => id}) do
-    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %AssetCategory{} = asset_category} <-
-           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", asset_category: asset_category)
-    end
-  end
-
-  def activate_asset_category(conn, %{"id" => id}) do
-    asset_category = AssetConfig.get_asset_category!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %AssetCategory{} = asset_category} <-
-           AssetConfig.update_active_status_for_asset_category(asset_category, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", asset_category: asset_category)
     end
   end
 end

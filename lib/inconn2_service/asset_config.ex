@@ -1,75 +1,121 @@
 defmodule Inconn2Service.AssetConfig do
-  @moduledoc """
-  The AssetConfig context.
-  """
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Util.IndexQueries
+  import Inconn2Service.Util.HelpersFunctions
+
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
-  alias Inconn2Service.AssetConfig.Site
-  alias Inconn2Service.AssetConfig.AssetStatusTrack
-  alias Inconn2Service.AssetConfig.{Equipment, Location}
+  alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site, Zone}
+  alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.Custom.CustomFields
+  alias Inconn2Service.{Common, Prompt}
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.Common
   alias Inconn2Service.Prompt
-  # alias Inconn2Service.Account.Licensee
+  alias Inconn2Service.AssetConfig.Party
+  alias Inconn2Service.ContractManagement.{Contract, Scope}
 
-  @doc """
-  Returns the list of sites.
-
-  ## Examples
-
-      iex> list_sites()
-      [%Site{}, ...]
-
-  """
-  def list_sites(prefix) do
-    Repo.all(Site, prefix: prefix)
-    |> sort_sites()
+  def list_zones(prefix) do
+    Zone
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
-  defp sort_sites(sites) do
-    Enum.sort_by(sites, &(&1.name))
+  def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
+
+  def create_zone(attrs \\ %{}, prefix) do
+    parent_id = Map.get(attrs, "parent_id", nil)
+
+    zone_cs =
+    %Zone{}
+    |> Zone.changeset(attrs)
+    create_zone_in_tree(parent_id, zone_cs, prefix)
   end
 
-  def list_sites(query_params, prefix) do
+  def list_zone_tree(prefix) do
+    list_zones(prefix)
+    |> HierarchyManager.build_tree()
+  end
+
+  def update_zone(%Zone{} = zone, attrs, prefix) do
+    existing_parent_id = HierarchyManager.parent_id(zone)
+      cond do
+        Map.has_key?(attrs, "parent_id") and attrs["parent_id"] != existing_parent_id ->
+          new_parent_id = attrs["parent_id"]
+
+          zone_cs = change_zone(zone, attrs)
+          update_zone_in_tree(new_parent_id, zone_cs, zone, prefix)
+        true ->
+          change_zone(zone, attrs)
+          |> Repo.update(prefix: prefix)
+
+      end
+  end
+
+  # def delete_zone(%Zone{} = zone, prefix) do
+  #   # Deletes the zone and children forcibly
+  #   # TBD: do not allow delete if this zone is linked to some other record(s)
+  #   # Add that validation here....
+  #   HierarchyManager.subtree(zone)
+  #   |> Repo.delete_all(prefix: prefix)
+  # end
+
+  def delete_zone(%Zone{} = zone, prefix) do
+    cond do
+      has_descendants?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this zone"
+        }
+      has_site?(zone, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are site associated with thix zone or its descendants"
+        }
+      true ->
+        update_zone(zone, %{"active" => false}, prefix)
+        {:deleted, "Zone was deleted"}
+    end
+  end
+
+  def change_zone(%Zone{} = zone, attrs \\ %{}) do
+    Zone.changeset(zone, attrs)
+  end
+
+  def list_sites(query_params \\ %{}, prefix) do
    Site
-   |> Repo.add_active_filter(query_params)
+   |> site_query(query_params, prefix)
+   |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
-   |> sort_sites()
+   |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single site.
+  def list_sites_for_user(user, prefix) do
+    case get_party!(user.party_id, prefix).party_type do
+      "AO" -> list_sites(%{"party_id" => user.party_id}, prefix)
+      "SP" -> list_sites_by_contract_and_manpower(user.party_id, prefix)
+    end
+  end
 
-  Raises `Ecto.NoResultsError` if the Site does not exist.
+  def list_sites_by_contract_and_manpower(party_id, prefix) do
+    from(c in Contract, where: c.party_id == ^party_id,
+      join: sc in Scope, on: c.id == sc.contract_id,
+      join: s in Site, on: s.id == sc.site_id,
+      select: s)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.uniq()
+    |> Repo.sort_by_id()
+  end
 
-  ## Examples
-
-      iex> get_site!(123)
-      %Site{}
-
-      iex> get_site!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
   def get_site(id, prefix), do: Repo.get(Site, id, prefix: prefix)
 
-  @doc """
-  Creates a site.
-
-  ## Examples
-
-      iex> create_site(%{field: value})
-      {:ok, %Site{}}
-
-      iex> create_site(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_site(attrs \\ %{}, prefix) do
     # When create site is called with a party id then we
     # need to check if the licensee is a Assset Owner with Licensee Y
@@ -96,10 +142,9 @@ defmodule Inconn2Service.AssetConfig do
           site =
             %Site{}
             |> Site.changeset(attrs)
-            |> add_error(
-              :party_id,
-              "Cannot create site, There is no Licensee / Party - Asset owner for this site"
-            )
+            |> add_error(:party_id, "Cannot create site, There is no Licensee / Party - Asset owner for this site")
+            |> Repo.insert(prefix: prefix)
+
 
           IO.inspect(site)
 
@@ -118,18 +163,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Updates a site.
-
-  ## Examples
-
-      iex> update_site(site, %{field: new_value})
-      {:ok, %Site{}}
-
-      iex> update_site(site, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_site(%Site{} = site, attrs, prefix) do
     site
     |> Site.changeset(attrs)
@@ -142,32 +175,51 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
+  # def delete_site(%Site{} = site, prefix) do
+  #   Repo.delete(site, prefix: prefix)
+  # end
 
-  @doc """
-  Deletes a site.
 
-  ## Examples
-
-      iex> delete_site(site)
-      {:ok, %Site{}}
-
-      iex> delete_site(site)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_site(%Site{} = site, prefix) do
-    Repo.delete(site, prefix: prefix)
+    cond do
+      has_equipment?(site, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Equipments associated with it"
+         }
+
+      has_location?(site, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Location associated with it"
+         }
+
+      has_employee_rosters?(site, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Employee Roster associated with it"
+         }
+
+      has_shift?(site, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Shift associated with it"
+        }
+
+      has_store?(site, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Store associated with it"
+        }
+
+      has_manpower_configuration?(site, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Manpower configuration associated with it"
+        }
+
+      true ->
+       update_site(site, %{"active" => false}, prefix)
+         {:deleted,
+            "The site was disabled"
+          }
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking site changes.
-
-  ## Examples
-
-      iex> change_site(site)
-      %Ecto.Changeset{data: %Site{}}
-
-  """
   def change_site(%Site{} = site, attrs \\ %{}) do
     Site.changeset(site, attrs)
   end
@@ -185,23 +237,14 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.AssetCategory
 
-  @doc """
-  Returns the list of asset_categories.
-
-  ## Examples
-
-      iex> list_asset_categories()
-      [%AssetCategory{}, ...]
-
-  """
   def list_asset_categories(prefix) do
     AssetCategory
     |> Repo.all(prefix: prefix)
   end
 
-  def list_asset_categories(query_params, prefix) do
+  def list_asset_categories(_query_params, prefix) do
     AssetCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -211,9 +254,9 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_asset_categories_by_type(type, query_params, prefix) do
+  def list_asset_categories_by_type(type, _query_params, prefix) do
     AssetCategory
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(asset_type: ^type)
     |> Repo.all(prefix: prefix)
   end
@@ -232,22 +275,21 @@ defmodule Inconn2Service.AssetConfig do
     from(a in AssetCategory, where: a.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single asset_category.
+  def list_asset_categories_for_location(location_id, prefix) do
+    {locations, equipments} = get_assets_for_location(location_id, prefix)
 
-  Raises `Ecto.NoResultsError` if the AssetCategory does not exist.
+    locations ++ equipments
+    |> Stream.map(&(&1.asset_category_id))
+    |> Enum.uniq()
+    |> get_asset_category_by_ids(prefix)
+  end
 
-  ## Examples
-
-      iex> get_asset_category!(123)
-      %AssetCategory{}
-
-      iex> get_asset_category!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
   def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
+  def get_asset_category_by_ids(ids, prefix) do
+    from(ac in AssetCategory, where: ac.id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
 
   def get_root_asset_categories(prefix) do
     root_path = []
@@ -265,9 +307,6 @@ defmodule Inconn2Service.AssetConfig do
     HierarchyManager.parent(ac) |> Repo.one(prefix: prefix)
   end
 
-  alias Inconn2Service.AssetConfig.Location
-  alias Inconn2Service.AssetConfig.Equipment
-
   def get_assets(id, prefix) do
     asset_category = get_asset_category!(id, prefix)
     asset_type = asset_category.asset_type
@@ -280,18 +319,18 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Creates a asset_category.
+  def get_assets(site_id, asset_category_id, prefix) do
+    asset_category = get_asset_category!(asset_category_id, prefix)
+    asset_type = asset_category.asset_type
+    subtree = HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix)
+    ids = Enum.map(subtree, fn x -> Map.fetch!(x, :id) end)
 
-  ## Examples
+    case asset_type do
+      "L" -> from(l in Location, where: l.asset_category_id in ^ids and l.site_id == ^site_id) |> Repo.all(prefix: prefix)
+      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids and e.site_id == ^site_id) |> Repo.all(prefix: prefix)
+    end
+  end
 
-      iex> create_asset_category(%{field: value})
-      {:ok, %AssetCategory{}}
-
-      iex> create_asset_category(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_asset_category(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
@@ -328,18 +367,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Updates a asset_category.
-
-  ## Examples
-
-      iex> update_asset_category(asset_category, %{field: new_value})
-      {:ok, %AssetCategory{}}
-
-      iex> update_asset_category(asset_category, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_asset_category(%AssetCategory{} = asset_category, attrs, prefix) do
     existing_parent_id = HierarchyManager.parent_id(asset_category)
 
@@ -358,25 +385,25 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
-    case asset_params do
-      %{"active" => false} ->
-        children = HierarchyManager.children(asset_category)
-        IO.inspect(children)
-        Repo.update_all(children, [set: [active: false]], prefix: prefix)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> Repo.update(prefix: prefix)
+  # def update_active_status_for_asset_category(%AssetCategory{} = asset_category, asset_params, prefix) do
+  #   case asset_params do
+  #     %{"active" => false} ->
+  #       children = HierarchyManager.children(asset_category)
+  #       IO.inspect(children)
+  #       Repo.update_all(children, [set: [active: false]], prefix: prefix)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> Repo.update(prefix: prefix)
 
-      %{"active" => true} ->
-        parent_id = HierarchyManager.parent_id(asset_category)
-        asset_category
-        |> AssetCategory.changeset(asset_params)
-        |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
-        |> Repo.update(prefix: prefix)
-        |> update_children(prefix)
-    end
-  end
+  #     %{"active" => true} ->
+  #       parent_id = HierarchyManager.parent_id(asset_category)
+  #       asset_category
+  #       |> AssetCategory.changeset(asset_params)
+  #       |> validate_parent_for_true_condition(AssetCategory, prefix, parent_id)
+  #       |> Repo.update(prefix: prefix)
+  #       |> update_children(prefix)
+  #   end
+  # end
 
   defp add_or_change_asset_type_new_parent(attrs, new_parent_id, prefix) do
     parent = Repo.get(AssetCategory, new_parent_id, prefix: prefix)
@@ -389,7 +416,13 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp add_or_change_asset_type(attrs, asset_category, prefix) do
-    parent = HierarchyManager.parent(asset_category) |> Repo.one(prefix: prefix)
+    parent_query = HierarchyManager.parent(asset_category)
+
+    parent =
+      case parent_query do
+       nil -> nil
+       query -> query |> Repo.one(prefix: prefix)
+      end
 
     if parent != nil do
       Map.put(attrs, "asset_type", parent.asset_type)
@@ -464,54 +497,62 @@ defmodule Inconn2Service.AssetConfig do
     |> AssetCategory.changeset(attrs)
   end
 
-  @doc """
-  Deletes a asset_category.
+  #FUnction commented because soft delete is implemented
+  # def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
+  #   # Deletes the asset_category and children forcibly
+  #   # TBD: do not allow delete if this asset_category is linked to some other record(s)
+  #   # Add that validation here....
+  #   subtree = HierarchyManager.subtree(asset_category)
+  #   Repo.delete_all(subtree, prefix: prefix)
+  # end
 
-  ## Examples
-
-      iex> delete_asset_category(asset_category)
-      {:ok, %AssetCategory{}}
-
-      iex> delete_asset_category(asset_category)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_asset_category(%AssetCategory{} = asset_category, prefix) do
-    # Deletes the asset_category and children forcibly
-    # TBD: do not allow delete if this asset_category is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(asset_category)
-    Repo.delete_all(subtree, prefix: prefix)
+    cond do
+      has_descendants?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as the location has descendants"}
+
+      has_workorder_template?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Workorder template associated with it"}
+
+      has_equipment?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Equipment associated with it"}
+
+      has_task_list?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Task list associated with it"}
+
+      has_location?(asset_category, prefix) ->
+        {:could_not_delete,
+        "Cannot be deleted as there are Location associated with it"}
+
+      has_descendants?(asset_category, prefix) ->
+        {:could_not_delete,
+        "could not delete has descendants"}
+
+      true ->
+        update_asset_category(asset_category, %{"active" => false}, prefix)
+        # deactivate_children(asset_category, AssetCategory, prefix)
+        {:deleted,
+        "The site was disabled"}
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking asset_category changes.
-
-  ## Examples
-
-      iex> change_asset_category(asset_category)
-      %Ecto.Changeset{data: %AssetCategory{}}
-
-  """
   def change_asset_category(%AssetCategory{} = asset_category, attrs \\ %{}) do
     AssetCategory.changeset(asset_category, attrs)
   end
 
+
   alias Inconn2Service.AssetConfig.Location
 
-  @doc """
-  Returns the list of locations.
-
-  ## Examples
-
-      iex> list_locations()
-      [%Location{}, ...]
-
-  """
   def list_locations(site_id, prefix) do
     Location
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def search_locations(name_text, site_id, prefix) do
@@ -521,21 +562,24 @@ defmodule Inconn2Service.AssetConfig do
       search_text = "%" <> name_text <> "%"
 
       from(l in Location, where: l.site_id == ^site_id and ilike(l.name, ^search_text), order_by: l.name)
+      |> Repo.add_active_filter()
       |> Repo.all(prefix: prefix)
     end
   end
 
-  def list_locations(site_id, query_params, prefix) do
+  def list_locations(site_id, _query_params, prefix) do
     Location
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_active_locations(prefix) do
     Location
     |> where(active: true)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_locations_tree(site_id, prefix) do
@@ -552,20 +596,32 @@ defmodule Inconn2Service.AssetConfig do
     from(l in Location, where: l.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single location.
+  def get_assets_for_location(location_id, prefix) do
+    locations = get_location!(location_id, prefix)
+                |> HierarchyManager.subtree()
+                |> Repo.all(prefix: prefix)
 
-  Raises `Ecto.NoResultsError` if the Location does not exist.
+    equipments = list_equipments_by_location_ids(Enum.map(locations, &(&1.id)), prefix)
 
-  ## Examples
+    {locations, equipments}
+  end
 
-      iex> get_location!(123)
-      %Location{}
+  def get_asset_ids_for_location(location_id, prefix) do
+    location_ids = get_location!(location_id, prefix)
+                    |> HierarchyManager.subtree()
+                    |> get_ids_from_query(prefix)
 
-      iex> get_location!(456)
-      ** (Ecto.NoResultsError)
+    equipment_ids = from(e in Equipment, where: e.location_id in ^location_ids)
+                    |> get_ids_from_query(prefix)
 
-  """
+
+    get_asset_ids_and_type_map(location_ids, "L") ++
+    get_asset_ids_and_type_map(equipment_ids, "E")
+
+  end
+
+  defp get_asset_ids_and_type_map(ids, asset_type), do: Enum.map(ids, fn id -> %{"id" => id, "type" => asset_type} end)
+
   def get_location!(id, prefix), do: Repo.get!(Location, id, prefix: prefix)
   def get_location(id, prefix), do: Repo.get(Location, id, prefix: prefix)
 
@@ -593,18 +649,6 @@ defmodule Inconn2Service.AssetConfig do
     HierarchyManager.parent(loc) |> Repo.one(prefix: prefix)
   end
 
-  @doc """
-  Creates a location.
-
-  ## Examples
-
-      iex> create_location(%{field: value})
-      {:ok, %Location{}}
-
-      iex> create_location(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_location(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
@@ -618,7 +662,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        push_alert_notification_for_asset(nil, location, "L", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, location, "L", prefix) end)
         result
       _ ->
         result
@@ -663,18 +707,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Updates a location.
-
-  ## Examples
-
-      iex> update_location(location, %{field: new_value})
-      {:ok, %Location{}}
-
-      iex> update_location(location, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_location(%Location{} = location, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(location)
 
@@ -702,7 +734,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_location} ->
         update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
-        push_alert_notification_for_asset(location, updated_location, "L", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(location, updated_location, "L", prefix) end)
         result
       _ ->
         result
@@ -835,7 +867,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
     case location_params do
       %{"active" => false} ->
-        deactivate_children(location, location_params, Location, prefix)
+        deactivate_children(location, Location, prefix)
 
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(location)
@@ -859,62 +891,55 @@ defmodule Inconn2Service.AssetConfig do
     }
   end
 
-  @doc """
-  Deletes a location.
-
-  ## Examples
-
-      iex> delete_location(location)
-      {:ok, %Location{}}
-
-      iex> delete_location(location)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_location(%Location{} = location, prefix) do
-    # Deletes the location and children forcibly
-    # TBD: do not allow delete if this location is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(location)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(location, nil, "L", prefix)
-        result
-
-      _ ->
-        result
+    cond do
+      has_descendants?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants to this location"
+        }
+      has_equipment?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are equipments associated with this location"
+        }
+      has_workorder_schedule?(location, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are workorder schedules associated with this location"
+        }
+      true ->
+        {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix) end)
+        {:deleted, "Location was deleted"}
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking location changes.
+  # def delete_location(%Location{} = location, prefix) do
+  #   subtree = HierarchyManager.subtree(location)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       # push_alert_notification_for_asset(location, nil, "L", location.site_id,prefix)
+  #       result
 
-  ## Examples
+  #     _ ->
+  #       result
+  #   end
+  # end
 
-      iex> change_location(location)
-      %Ecto.Changeset{data: %Location{}}
-
-  """
   def change_location(%Location{} = location, attrs \\ %{}) do
     Location.changeset(location, attrs)
   end
 
   alias Inconn2Service.AssetConfig.Equipment
 
-  @doc """
-  Returns the list of equipments.
-
-  ## Examples
-
-      iex> list_equipments()
-      [%Equipment{}, ...]
-
-  """
   def list_equipments(site_id, prefix) do
     Equipment
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def search_equipments(name_text, site_id, prefix) do
@@ -928,16 +953,19 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  def list_equipments(site_id, query_params, prefix) do
+  def list_equipments(site_id, _query_params, prefix) do
     Equipment
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+
   end
 
   def list_equipments(prefix) do
     Equipment
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_equipments_tree(site_id, prefix) do
@@ -960,9 +988,9 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def list_equipments_of_location(location_id, query_params, prefix) do
+  def list_equipments_of_location(location_id, _query_params, prefix) do
     Equipment
-    |> Repo.add_active_filter(query_params)
+    |> Repo.add_active_filter()
     |> where(location_id: ^location_id)
     |> Repo.all(prefix: prefix)
   end
@@ -977,6 +1005,29 @@ defmodule Inconn2Service.AssetConfig do
         asset_qr_url: "/api/equipments/#{e.id}/qr_code"
       }
     end)
+  end
+
+  def list_equipments_by_location_ids(location_ids, prefix) do
+    from(e in Equipment, where: e.location_id in ^location_ids)
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def list_equipments_by_ids(ids, prefix) do
+    from(e in Equipment, where: e.id in ^ids)
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def list_equipments_of_asset_category_and_not_in_given_ids(nil, _ids, _prefix), do: []
+  def list_equipments_of_asset_category_and_not_in_given_ids(ac_id, ids, prefix) do
+    from(e in Equipment, where: e.asset_category_id == ^ac_id and e.id not in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def list_equipments_not_in_given_ids(ids, prefix) do
+    from(e in Equipment, where: e.id not in ^ids)
+    |> Repo.all(prefix: prefix)
   end
 
   def list_equipments_ticket_qr(site_id, prefix) do
@@ -1026,20 +1077,7 @@ defmodule Inconn2Service.AssetConfig do
       [site] ++ [location]
     end
   end
-  @doc """
-  Gets a single equipment.
 
-  Raises `Ecto.NoResultsError` if the Equipment does not exist.
-
-  ## Examples
-
-      iex> get_equipment!(123)
-      %Equipment{}
-
-      iex> get_equipment!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_equipment!(id, prefix), do: Repo.get!(Equipment, id, prefix: prefix)
   def get_equipment(id, prefix), do: Repo.get(Equipment, id, prefix: prefix)
 
@@ -1149,18 +1187,6 @@ defmodule Inconn2Service.AssetConfig do
     HierarchyManager.parent(eq) |> Repo.one(prefix: prefix)
   end
 
-  @doc """
-  Creates a equipment.
-
-  ## Examples
-
-      iex> create_equipment(%{field: value})
-      {:ok, %Equipment{}}
-
-      iex> create_equipment(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_equipment(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
@@ -1169,13 +1195,14 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
+      |>  validate_custom_field_type(prefix, "equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        push_alert_notification_for_asset(nil, equipment, "E", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, equipment, "E", prefix) end)
         result
       _ ->
         result
@@ -1231,18 +1258,7 @@ defmodule Inconn2Service.AssetConfig do
       eq_cs
     end
   end
-  @doc """
-  Updates a equipment.
 
-  ## Examples
-
-      iex> update_equipment(equipment, %{field: new_value})
-      {:ok, %Equipment{}}
-
-      iex> update_equipment(equipment, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_equipment(%Equipment{} = equipment, attrs, prefix, user \\ %{}) do
     existing_parent_id = HierarchyManager.parent_id(equipment)
 
@@ -1255,6 +1271,7 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
+            |> validate_custom_field_type(prefix, "equipment")
 
           update_equipment_in_tree(new_parent_id, eq_cs, equipment, prefix)
 
@@ -1263,6 +1280,8 @@ defmodule Inconn2Service.AssetConfig do
             update_equipment_default_changeset_pipe(equipment, attrs, prefix)
             |> check_asset_category_type_eq(prefix)
             |> check_site_id_of_location(prefix)
+            |> validate_custom_field_type(prefix, "equipment")
+
 
           Repo.update(eq_cs, prefix: prefix)
       end
@@ -1270,7 +1289,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_equipment} ->
         update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
-        push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix) end)
         result
       _ ->
         result
@@ -1282,7 +1301,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_active_status_for_equipment(%Equipment{} = equipment, equipment_params, prefix) do
     case equipment_params do
       %{"active" => false} ->
-        deactivate_children(equipment, equipment_params, Equipment, prefix)
+        deactivate_children(equipment, Equipment, prefix)
       %{"active" => true} ->
         parent_id = HierarchyManager.parent_id(equipment)
         handle_hierarchical_activation(equipment, equipment_params, Equipment, prefix, parent_id)
@@ -1365,36 +1384,42 @@ defmodule Inconn2Service.AssetConfig do
 
   defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, _prefix) do
     equipment
-    |> Equipment.changeset(attrs)
+    |> Equipment.changeset(update_custom_fields(equipment, attrs))
   end
 
-  @doc """
-  Deletes a equipment.
-
-  ## Examples
-
-      iex> delete_equipment(equipment)
-      {:ok, %Equipment{}}
-
-      iex> delete_equipment(equipment)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_equipment(%Equipment{} = equipment, prefix) do
-    # Deletes the equipment and children forcibly
-    # TBD: do not allow delete if this equipment is linked to some other record(s)
-    # Add that validation here....
-    subtree = HierarchyManager.subtree(equipment)
-    result = Repo.delete_all(subtree, prefix: prefix)
-    case result do
-      {_, nil} ->
-        push_alert_notification_for_asset(equipment, nil, "E", prefix)
-        result
+    cond do
+      has_descendants?(equipment, prefix) ->
+        {
+          :could_not_delete,
+          "Cannot be deleted as there are descendants associated with this equipment"
+        }
 
-      _ ->
-        result
+      has_workorder_schedule?(equipment, prefix) ->
+        {
+         :could_not_delete,
+         "Cannot be deleted as there are workorder schedule associated with this equipment"
+        }
+      true ->
+        {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix) end)
+        {:deleted, "Equipment was deleted"}
     end
   end
+
+
+  # def delete_equipment(%Equipment{} = equipment, prefix) do
+  #   subtree = HierarchyManager.subtree(equipment)
+  #   result = Repo.delete_all(subtree, prefix: prefix)
+  #   case result do
+  #     {_, nil} ->
+  #       push_alert_notification_for_asset(equipment, nil, "E", prefix)
+  #       result
+
+  #     _ ->
+  #       result
+  #   end
+  # end
 
   def get_asset_by_type(asset_id, asset_type, prefix) do
     case asset_type do
@@ -1406,52 +1431,40 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking equipment changes.
-
-  ## Examples
-
-      iex> change_equipment(equipment)
-      %Ecto.Changeset{data: %Equipment{}}
-
-  """
   def change_equipment(%Equipment{} = equipment, attrs \\ %{}) do
     Equipment.changeset(equipment, attrs)
   end
 
-
-  #in case of a new assed, existing is nil and new asset is
-  #matched with updated asset
-  def push_alert_notification_for_asset(nil, updated_asset, asset_type, prefix) do
-    description = ~s(New Asset, #{updated_asset.name} has been added)
-    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, prefix)
-    {:ok, updated_asset}
+  def push_alert_notification_for_asset(existing_asset, nil, asset_type, site_id, prefix) do
+    description = ~s(#{existing_asset.name} has been deleted)
+    create_asset_alert_notification("ASRA", description, nil, asset_type, site_id, false, prefix)
+    {:ok, nil}
   end
 
-  def push_alert_notification_for_asset(existing_asset, nil, asset_type, prefix) do
-    description = ~s(#{existing_asset.name} has been deleted)
-    create_asset_alert_notification("ASRA", description, nil, asset_type, prefix)
-    {:ok, nil}
+  def push_alert_notification_for_asset(nil, updated_asset, asset_type, prefix) do
+    description = ~s(New Asset, #{updated_asset.name} has been added)
+    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
+    {:ok, updated_asset}
   end
 
   def push_alert_notification_for_asset(existing_asset, updated_asset, asset_type, prefix) do
     cond do
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
         description = ~s(#{updated_asset.name}'s status has been changed to Breakdown)
-        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
 
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
         description = ~s(#{updated_asset.name}'s status has been changed to #{updated_asset.status})
-        create_asset_alert_notification("ASST", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASST", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
 
       existing_asset.parent_id != updated_asset.parent_id ->
         description = ~s(#{updated_asset.name}'s hierarchy has been changed)
-        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
       existing_asset != updated_asset ->
         description = ~s(#{updated_asset.name} has been modified)
-        create_asset_alert_notification("ASED", description, updated_asset, asset_type, prefix)
+        create_asset_alert_notification("ASED", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
       true ->
         {:ok, updated_asset}
@@ -1460,9 +1473,10 @@ defmodule Inconn2Service.AssetConfig do
     {:ok, updated_asset}
   end
 
-  defp create_asset_alert_notification(alert_code, description, nil, asset_type, prefix) do
+  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
         {:not_found, "Alert Not Configured"}
@@ -1473,19 +1487,37 @@ defmodule Inconn2Service.AssetConfig do
           "asset_id" => nil,
           "asset_type" => asset_type,
           "type" => alert.type,
+          "site_id" => site_id,
+          "alert_identifier_date_time" => alert_identifier_date_time,
           "description" => description
         }
 
-        Enum.map(alert_config.user_ids, fn id ->
+        Enum.map(alert_config.addressed_to_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+          if email_required do
+            user = Inconn2Service.Staff.get_user!(id, prefix)
+            Inconn2Service.Email.send_alert_email(user, description)
+          end
         end)
+
+       if alert.type == "al" and alert_config.is_escalation_required do
+        Common.create_alert_notification_scheduler(%{
+          "alert_code" => alert.code,
+          "alert_identifier_date_time" => alert_identifier_date_time,
+          "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+          "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+          "site_id" => site_id,
+          "prefix" => prefix
+        })
+       end
     end
   end
 
-  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, prefix) do
+  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
     alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id(alert.id, prefix)
-
+    IO.inspect(alert)
+    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     case alert_config do
       nil ->
         {:ok, updated_asset}
@@ -1496,12 +1528,25 @@ defmodule Inconn2Service.AssetConfig do
           "asset_id" => updated_asset.id,
           "asset_type" => asset_type,
           "type" => alert.type,
-          "description" => description
+          "alert_identifier_date_time" => alert_identifier_date_time,
+          "description" => description,
+          "site_id" => site_id
         }
 
         Enum.map(alert_config.addressed_to_user_ids, fn id ->
           Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
         end)
+
+        if alert.type == "al" and alert_config.is_escalation_required do
+          Common.create_alert_notification_scheduler(%{
+            "alert_code" => alert.code,
+            "alert_identifier_date_time" => alert_identifier_date_time,
+            "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+            "site_id" => site_id,
+            "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+            "prefix" => prefix
+          })
+        end
     end
   end
 
@@ -1528,23 +1573,11 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Party
 
-  @doc """
-  Returns the list of parties.
-
-  ## Examples
-
-      iex> list_parties()
-      [%Party{}, ...]
-
-  """
-  def list_parties(prefix) do
-    Repo.all(Party, prefix: prefix)
-  end
-
   def list_parties(query_params, prefix) do
-    Party
-    |> Repo.add_active_filter(query_params)
+    party_query(Party, query_params)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_SP(prefix) do
@@ -1556,6 +1589,7 @@ defmodule Inconn2Service.AssetConfig do
       )
 
     Repo.all(query, prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
   def list_AO(prefix) do
@@ -1567,22 +1601,9 @@ defmodule Inconn2Service.AssetConfig do
       )
 
     Repo.all(query, prefix: prefix)
+    |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single party.
-
-  Raises `Ecto.NoResultsError` if the Party does not exist.
-
-  ## Examples
-
-      iex> get_party!(123)
-      %Party{}
-
-      iex> get_party!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_party!(id, prefix), do: Repo.get!(Party, id, prefix: prefix)
 
   def get_party_AO_self(id, prefix) do
@@ -1647,18 +1668,6 @@ defmodule Inconn2Service.AssetConfig do
     Repo.one(query, prefix: prefix)
   end
 
-  @doc """
-  Creates a party.
-
-  ## Examples
-
-      iex> create_party(%{field: value})
-      {:ok, %Party{}}
-
-      iex> create_party(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_default_party(licensee_set, prefix) do
     company_name = IO.inspect(licensee_set.company_name)
     party_type = IO.inspect(licensee_set.party_type)
@@ -1735,18 +1744,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Updates a party.
-
-  ## Examples
-
-      iex> update_party(party, %{field: new_value})
-      {:ok, %Party{}}
-
-      iex> update_party(party, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_party(%Party{} = party, attrs, prefix) do
     party
     |> Party.changeset(attrs)
@@ -1754,31 +1751,45 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a party.
+  # def (%Party{} = party, prefix) do
+  #   Repo.delete(party, prefix: prefix)
+  # end
 
-  ## Examples
-
-      iex> delete_party(party)
-      {:ok, %Party{}}
-
-      iex> delete_party(party)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_party(%Party{} = party, prefix) do
-    Repo.delete(party, prefix: prefix)
+    cond do
+      has_contract?(party, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Contracts associated with it"
+        }
+
+      has_site?(party, prefix) ->
+        {:could_not_delete,
+          "Cannot be deleted as there are Sites associated with it"
+        }
+
+      has_org_unit?(party, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are Org unit associated with it"
+        }
+
+      has_employee?(party, prefix) ->
+       {:could_not_delete,
+          "Cannot be deleted as there are Employee associated with it"
+       }
+
+      has_user?(party, prefix) ->
+        {:could_not_delete,
+           "Cannot be deleted as there are User associated with it"
+        }
+
+     true ->
+       update_party(party, %{"active" => false}, prefix)
+        {:deleted,
+          "The party was disabled"
+        }
+    end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking party changes.
-
-  ## Examples
-
-      iex> change_party(party)
-      %Ecto.Changeset{data: %Party{}}
-
-  """
   def change_party(%Party{} = party, attrs \\ %{}) do
     Party.changeset(party, attrs)
   end
@@ -1812,12 +1823,6 @@ defmodule Inconn2Service.AssetConfig do
     |> update_children(prefix)
   end
 
-  defp deactivate_children(resource, resource_params, module, prefix) do
-    descendants = HierarchyManager.descendants(resource)
-    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
-    resource |> module.changeset(resource_params) |> Repo.update(prefix: prefix)
-  end
-
   defp validate_parent_for_true_condition(cs, module, prefix, parent_id) do
     # parent_id = get_field(cs, :parent_id, nil)
     IO.inspect("Parent Id is #{parent_id}")
@@ -1847,129 +1852,38 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.AssetStatusTrack
 
-  @doc """
-  Returns the list of asset_status_tracks.
-
-  ## Examples
-
-      iex> list_asset_status_tracks()
-      [%AssetStatusTrack{}, ...]
-
-  """
   def list_asset_status_tracks(prefix) do
     Repo.all(AssetStatusTrack, prefix: prefix)
   end
 
-  @doc """
-  Gets a single asset_status_track.
-
-  Raises `Ecto.NoResultsError` if the Asset status track does not exist.
-
-  ## Examples
-
-      iex> get_asset_status_track!(123)
-      %AssetStatusTrack{}
-
-      iex> get_asset_status_track!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_asset_status_track!(id, prefix), do: Repo.get!(AssetStatusTrack, id, prefix: prefix)
 
-  @doc """
-  Creates a asset_status_track.
-
-  ## Examples
-
-      iex> create_asset_status_track(%{field: value})
-      {:ok, %AssetStatusTrack{}}
-
-      iex> create_asset_status_track(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_asset_status_track(attrs \\ %{}, prefix) do
     %AssetStatusTrack{}
     |> AssetStatusTrack.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a asset_status_track.
-
-  ## Examples
-
-      iex> update_asset_status_track(asset_status_track, %{field: new_value})
-      {:ok, %AssetStatusTrack{}}
-
-      iex> update_asset_status_track(asset_status_track, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs, prefix) do
     asset_status_track
     |> AssetStatusTrack.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a asset_status_track.
-
-  ## Examples
-
-      iex> delete_asset_status_track(asset_status_track)
-      {:ok, %AssetStatusTrack{}}
-
-      iex> delete_asset_status_track(asset_status_track)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_asset_status_track(%AssetStatusTrack{} = asset_status_track, prefix) do
     Repo.delete(asset_status_track, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking asset_status_track changes.
-
-  ## Examples
-
-      iex> change_asset_status_track(asset_status_track)
-      %Ecto.Changeset{data: %AssetStatusTrack{}}
-
-  """
   def change_asset_status_track(%AssetStatusTrack{} = asset_status_track, attrs \\ %{}) do
     AssetStatusTrack.changeset(asset_status_track, attrs)
   end
 
   alias Inconn2Service.AssetConfig.SiteConfig
 
-  @doc """
-  Returns the list of site_config.
-
-  ## Examples
-
-      iex> list_site_config()
-      [%SiteConfig{}, ...]
-
-  """
   def list_site_config(prefix) do
     Repo.all(SiteConfig, prefix: prefix)
   end
 
-  @doc """
-  Gets a single site_config.
-
-  Raises `Ecto.NoResultsError` if the Site config does not exist.
-
-  ## Examples
-
-      iex> get_site_config!(123)
-      %SiteConfig{}
-
-      iex> get_site_config!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_site_config!(id, prefix), do: Repo.get!(SiteConfig, id, prefix: prefix)
 
   def get_site_config_by_site_id(site_id, prefix) do
@@ -1982,18 +1896,6 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.one(prefix: prefix)
   end
 
-  @doc """
-  Creates a site_config.
-
-  ## Examples
-
-      iex> create_site_config(%{field: value})
-      {:ok, %SiteConfig{}}
-
-      iex> create_site_config(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_site_config(attrs \\ %{}, prefix) do
     %SiteConfig{}
     |> SiteConfig.changeset(attrs)
@@ -2016,18 +1918,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  @doc """
-  Updates a site_config.
-
-  ## Examples
-
-      iex> update_site_config(site_config, %{field: new_value})
-      {:ok, %SiteConfig{}}
-
-      iex> update_site_config(site_config, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_site_config(%SiteConfig{} = site_config, attrs, prefix) do
     attrs = append_in_config(attrs, site_config)
     site_config
@@ -2041,31 +1931,12 @@ defmodule Inconn2Service.AssetConfig do
     new_config = Enum.reduce(config, old_config, fn x, acc -> Map.put(acc, elem(x, 0), elem(x, 1)) end)
     Map.put(attrs, "config", new_config)
   end
-  @doc """
-  Deletes a site_config.
 
-  ## Examples
-
-      iex> delete_site_config(site_config)
-      {:ok, %SiteConfig{}}
-
-      iex> delete_site_config(site_config)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_site_config(%SiteConfig{} = site_config, prefix) do
     Repo.delete(site_config, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking site_config changes.
 
-  ## Examples
-
-      iex> change_site_config(site_config)
-      %Ecto.Changeset{data: %SiteConfig{}}
-
-  """
   def change_site_config(%SiteConfig{} = site_config, attrs \\ %{}) do
     SiteConfig.changeset(site_config, attrs)
   end
@@ -2145,4 +2016,114 @@ defmodule Inconn2Service.AssetConfig do
       from(q in common_query, select: count(q.id))
     }
   end
+
+  defp validate_custom_field_type(cs, prefix, entity) do
+    custom_field_values = get_field(cs, :custom, nil)
+    custom_fields_entry = Inconn2Service.Custom.get_custom_fields_by_entity(entity, prefix)
+    cond do
+      !is_nil(custom_field_values) && !is_nil(custom_fields_entry) ->
+        boolean_array =
+          Stream.map(get_and_filter_required_type(custom_field_values, entity, prefix), fn e ->
+            if check_type(custom_field_values[e.field_name], e.field_type) do true else {e.field_name, e.field_type} end
+          end) |> Enum.filter(fn e -> e  != true end)
+
+        case length(boolean_array) do
+          0 -> cs
+          _ ->
+            errors =
+              Enum.map(boolean_array, fn {field_name, field_type} -> "Expected #{field_type} value for #{field_name}"  end)
+              |> Enum.join(",")
+            add_error(cs, :custom, errors)
+        end
+      !is_nil(custom_field_values) ->
+        add_error(cs, :custom, "Custom fields not configured")
+      true -> cs
+    end
+  end
+
+  defp create_zone_in_tree(nil, zone_cs, prefix) do
+    Repo.insert(zone_cs, prefix: prefix)
+  end
+
+  defp create_zone_in_tree(parent_id, zone_cs, prefix) do
+    case Repo.get(Zone, parent_id, prefix: prefix) do
+      nil ->
+        add_error(zone_cs, :parent_id, "Parent object does not exist")
+        |> Repo.insert(prefix: prefix)
+
+      parent ->
+        zone_cs
+        |> HierarchyManager.make_child_of(parent)
+        |> Repo.insert(prefix: prefix)
+    end
+  end
+
+  defp update_zone_in_tree(nil, zone_cs, zone, prefix) do
+    descendents = HierarchyManager.descendants(zone) |> Repo.all(prefix: prefix)
+    # adjust the path (from old path to ne path )for all descendents
+    zone_cs = change(zone_cs, %{path: []})
+    make_zone_changeset_and_update(zone_cs, zone, descendents, [], prefix)
+  end
+
+  defp update_zone_in_tree(new_parent_id, zone_cs, zone, prefix) do
+    # Get the new parent and check
+    case Repo.get(Zone, new_parent_id, prefix: prefix) do
+      nil ->
+        add_error(zone_cs, :parent_id, "New parent object does not exist")
+        |> Repo.insert(prefix: prefix)
+
+      parent ->
+        # Get the descendents
+        descendents = HierarchyManager.descendants(zone) |> Repo.all(prefix: prefix)
+        new_path = parent.path ++ [parent.id]
+        # make this node child of new parent
+        head_cs = HierarchyManager.make_child_of(zone_cs, parent)
+        make_zone_changeset_and_update(head_cs, zone, descendents, new_path, prefix)
+    end
+  end
+
+  defp make_zone_changeset_and_update(head_cs, zone, descendents, new_path, prefix) do
+    # adjust the path (from old path to ne path )for all descendents
+    multi =
+      [
+        {zone.id, head_cs}
+        | Enum.map(descendents, fn d ->
+            {_, rest} = Enum.split_while(d.path, fn e -> e != zone.id end)
+            {d.id, Zone.changeset(d, %{}) |> change(%{path: new_path ++ rest})}
+          end)
+      ]
+      |> Enum.reduce(Multi.new(), fn {indx, cs}, multi ->
+        Multi.update(multi, :"zone#{indx}", cs, prefix: prefix)
+      end)
+
+    case Repo.transaction(multi, prefix: prefix) do
+      {:ok, zn} -> {:ok, Map.get(zn, :"zone#{zone.id}")}
+      _ -> {:error, head_cs}
+    end
+  end
+
+  defp get_and_filter_required_type(custom_field_values, entity, prefix) do
+    entity_record = custom_field_for_entity_query(entity) |> Repo.one(prefix: prefix)
+    Stream.filter(entity_record.fields, fn field ->  field.field_name in Map.keys(custom_field_values) end)
+  end
+
+
+  defp deactivate_children(resource, module, prefix) do
+    descendants = HierarchyManager.descendants(resource)
+    Repo.update_all(descendants, [set: [active: false]], prefix: prefix)
+    resource |> module.changeset(%{"active" => false}) |> Repo.update(prefix: prefix)
+  end
+
+  defp custom_field_for_entity_query(entity), do: from cf in CustomFields, where: cf.entity == ^entity
+
+  defp check_type(value, "integer"), do: is_integer(value)
+  defp check_type(value, "float"), do: is_float(value)
+  defp check_type(value, "string"), do: is_binary(value)
+  defp check_type(value, "text"), do: is_binary(value)
+  defp check_type(value, "date"), do: is_date?(value)
+  defp check_type(value, "list_of_values"), do: is_list(value)
+
+
+  defp sort_sites(sites), do: Enum.sort_by(sites, &(&1.name))
+  defp sort_locations(locations), do: Enum.sort_by(locations, &(&1.updated_at), {:desc, NaiveDateTime})
 end

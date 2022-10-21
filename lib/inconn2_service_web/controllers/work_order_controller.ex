@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def index_for_created_by_current_user(conn, _params) do
+    work_orders = Workorder.list_wo_created_by_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def index_for_user_by_qr(conn, %{"qr_string" => qr_string}) do
     work_orders = Workorder.list_work_orders_for_user_by_qr(qr_string, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
@@ -21,8 +26,28 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "index.json", work_orders: work_orders)
   end
 
+  def work_orders_submitted_for_approval(conn, _) do
+    work_orders = Workorder.get_work_orders_submitted_for_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_orders_for_teams(conn, _) do
+    work_orders = Workorder.list_work_order_for_team(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def work_orders_with_pending_approval_for_teams(conn, _) do
+    work_orders = Workorder.get_work_order_in_approval_for_teams(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
   def work_orders_to_be_approved(conn, _) do
     work_orders = Workorder.get_work_orders_to_be_approved(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_orders: work_orders)
+  end
+
+  def workorder_in_my_approvals(conn, _ ) do
+    work_orders = Workorder.list_work_orders_in_my_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", work_orders: work_orders)
   end
 
@@ -76,6 +101,12 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     render(conn, "show.json", work_order: work_order)
   end
 
+  def show_with_data(conn, %{"id" => id}) do
+    work_order = Workorder.get_work_order_with_preloaded_data(id, conn.assigns.sub_domain_prefix)
+
+    render(conn, "flutter.json", work_order: work_order)
+  end
+
   def next_step(conn, %{"id" => id}) do
     next_step = Workorder.get_next_steps(id, conn.assigns.sub_domain_prefix)
 
@@ -93,11 +124,11 @@ defmodule Inconn2ServiceWeb.WorkOrderController do
     case query_params["type"] do
       "WOA" ->
           send_for_work_order_approval(conn, query_params["id"])
-      "WPA" ->
+      "WP" ->
           send_for_workpermit_approval(conn, query_params["id"])
-      "LLA" ->
+      "LL" ->
           send_for_loto_lock_approval(conn, query_params["id"])
-      "LRA" ->
+      "LR" ->
           send_for_loto_release_approval(conn, query_params["id"])
     end
   end

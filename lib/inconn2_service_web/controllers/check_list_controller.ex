@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.CheckListController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    check_lists = CheckListConfig.list_check_lists(conn.query_params, conn.assigns.sub_domain_prefix)
+    check_lists = CheckListConfig.list_check_lists(conn.assigns.sub_domain_prefix, conn.query_params)
     render(conn, "index.json", check_lists: check_lists)
   end
 
@@ -36,24 +36,8 @@ defmodule Inconn2ServiceWeb.CheckListController do
   def delete(conn, %{"id" => id}) do
     check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %CheckList{}} <- CheckListConfig.delete_check_list(check_list, conn.assigns.sub_domain_prefix) do
+    with {:deleted, _} <- CheckListConfig.delete_check_list(check_list, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
-    end
-  end
-
-  def activate_check_list(conn, %{"id" => id}) do
-    check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %CheckList{} = check_list} <- CheckListConfig.update_check_list_active_status(check_list, %{"active" => true}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", check_list: check_list)
-    end
-  end
-
-  def deactivate_check_list(conn, %{"id" => id}) do
-    check_list = CheckListConfig.get_check_list!(id, conn.assigns.sub_domain_prefix)
-
-    with {:ok, %CheckList{} = check_list} <- CheckListConfig.update_check_list_active_status(check_list, %{"active" => false}, conn.assigns.sub_domain_prefix) do
-      render(conn, "show.json", check_list: check_list)
     end
   end
 end

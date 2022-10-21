@@ -331,4 +331,132 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_alert_notification_generator(alert_notification_generator)
     end
   end
+
+  describe "alert_notification_schedulers" do
+    alias Inconn2Service.Common.AlertNotificationScheduler
+
+    @valid_attrs %{alert_code: "some alert_code", alert_identifier_date_time: ~N[2010-04-17 14:00:00], escalation_at_date_time: ~N[2010-04-17 14:00:00], site_id: 42}
+    @update_attrs %{alert_code: "some updated alert_code", alert_identifier_date_time: ~N[2011-05-18 15:01:01], escalation_at_date_time: ~N[2011-05-18 15:01:01], site_id: 43}
+    @invalid_attrs %{alert_code: nil, alert_identifier_date_time: nil, escalation_at_date_time: nil, site_id: nil}
+
+    def alert_notification_scheduler_fixture(attrs \\ %{}) do
+      {:ok, alert_notification_scheduler} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_alert_notification_scheduler()
+
+      alert_notification_scheduler
+    end
+
+    test "list_alert_notification_schedulers/0 returns all alert_notification_schedulers" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert Common.list_alert_notification_schedulers() == [alert_notification_scheduler]
+    end
+
+    test "get_alert_notification_scheduler!/1 returns the alert_notification_scheduler with given id" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert Common.get_alert_notification_scheduler!(alert_notification_scheduler.id) == alert_notification_scheduler
+    end
+
+    test "create_alert_notification_scheduler/1 with valid data creates a alert_notification_scheduler" do
+      assert {:ok, %AlertNotificationScheduler{} = alert_notification_scheduler} = Common.create_alert_notification_scheduler(@valid_attrs)
+      assert alert_notification_scheduler.alert_code == "some alert_code"
+      assert alert_notification_scheduler.alert_identifier_date_time == ~N[2010-04-17 14:00:00]
+      assert alert_notification_scheduler.escalation_at_date_time == ~N[2010-04-17 14:00:00]
+      assert alert_notification_scheduler.site_id == 42
+    end
+
+    test "create_alert_notification_scheduler/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_alert_notification_scheduler(@invalid_attrs)
+    end
+
+    test "update_alert_notification_scheduler/2 with valid data updates the alert_notification_scheduler" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:ok, %AlertNotificationScheduler{} = alert_notification_scheduler} = Common.update_alert_notification_scheduler(alert_notification_scheduler, @update_attrs)
+      assert alert_notification_scheduler.alert_code == "some updated alert_code"
+      assert alert_notification_scheduler.alert_identifier_date_time == ~N[2011-05-18 15:01:01]
+      assert alert_notification_scheduler.escalation_at_date_time == ~N[2011-05-18 15:01:01]
+      assert alert_notification_scheduler.site_id == 43
+    end
+
+    test "update_alert_notification_scheduler/2 with invalid data returns error changeset" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_alert_notification_scheduler(alert_notification_scheduler, @invalid_attrs)
+      assert alert_notification_scheduler == Common.get_alert_notification_scheduler!(alert_notification_scheduler.id)
+    end
+
+    test "delete_alert_notification_scheduler/1 deletes the alert_notification_scheduler" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert {:ok, %AlertNotificationScheduler{}} = Common.delete_alert_notification_scheduler(alert_notification_scheduler)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_alert_notification_scheduler!(alert_notification_scheduler.id) end
+    end
+
+    test "change_alert_notification_scheduler/1 returns a alert_notification_scheduler changeset" do
+      alert_notification_scheduler = alert_notification_scheduler_fixture()
+      assert %Ecto.Changeset{} = Common.change_alert_notification_scheduler(alert_notification_scheduler)
+    end
+  end
+
+  describe "widgets" do
+    alias Inconn2Service.Common.Widget
+
+    @valid_attrs %{code: "some code", description: "some description", title: "some title"}
+    @update_attrs %{code: "some updated code", description: "some updated description", title: "some updated title"}
+    @invalid_attrs %{code: nil, description: nil, title: nil}
+
+    def widget_fixture(attrs \\ %{}) do
+      {:ok, widget} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_widget()
+
+      widget
+    end
+
+    test "list_widgets/0 returns all widgets" do
+      widget = widget_fixture()
+      assert Common.list_widgets() == [widget]
+    end
+
+    test "get_widget!/1 returns the widget with given id" do
+      widget = widget_fixture()
+      assert Common.get_widget!(widget.id) == widget
+    end
+
+    test "create_widget/1 with valid data creates a widget" do
+      assert {:ok, %Widget{} = widget} = Common.create_widget(@valid_attrs)
+      assert widget.code == "some code"
+      assert widget.description == "some description"
+      assert widget.title == "some title"
+    end
+
+    test "create_widget/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_widget(@invalid_attrs)
+    end
+
+    test "update_widget/2 with valid data updates the widget" do
+      widget = widget_fixture()
+      assert {:ok, %Widget{} = widget} = Common.update_widget(widget, @update_attrs)
+      assert widget.code == "some updated code"
+      assert widget.description == "some updated description"
+      assert widget.title == "some updated title"
+    end
+
+    test "update_widget/2 with invalid data returns error changeset" do
+      widget = widget_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_widget(widget, @invalid_attrs)
+      assert widget == Common.get_widget!(widget.id)
+    end
+
+    test "delete_widget/1 deletes the widget" do
+      widget = widget_fixture()
+      assert {:ok, %Widget{}} = Common.delete_widget(widget)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_widget!(widget.id) end
+    end
+
+    test "change_widget/1 returns a widget changeset" do
+      widget = widget_fixture()
+      assert %Ecto.Changeset{} = Common.change_widget(widget)
+    end
+  end
 end

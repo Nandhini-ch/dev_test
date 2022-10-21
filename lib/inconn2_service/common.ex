@@ -7,6 +7,8 @@ defmodule Inconn2Service.Common do
   import Ecto.Changeset
   alias Inconn2Service.Repo
   alias Inconn2Service.Common.Timezone
+  alias Inconn2Service.Prompt
+  alias Inconn2Service.Prompt.UserAlertNotification
 
   @doc """
   Returns the list of timezones.
@@ -486,6 +488,9 @@ defmodule Inconn2Service.Common do
 
   def get_alert_by_code(code), do: Repo.get_by(AlertNotificationReserve, [code: code])
 
+  def get_alert_by_code_and_site_id(code, site_id), do: Repo.get_by(AlertNotificationReserve, [code: code, site_id: site_id])
+
+
   @doc """
   Creates a alert_notification_reserve.
 
@@ -649,5 +654,289 @@ defmodule Inconn2Service.Common do
   """
   def change_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs \\ %{}) do
     AlertNotificationGenerator.changeset(alert_notification_generator, attrs)
+  end
+
+  alias Inconn2Service.Common.AlertNotificationScheduler
+
+  @doc """
+  Returns the list of alert_notification_schedulers.
+
+  ## Examples
+
+      iex> list_alert_notification_schedulers()
+      [%AlertNotificationScheduler{}, ...]
+
+  """
+  def list_alert_notification_schedulers do
+    Repo.all(AlertNotificationScheduler)
+  end
+
+  @doc """
+  Gets a single alert_notification_scheduler.
+
+  Raises `Ecto.NoResultsError` if the Alert notification scheduler does not exist.
+
+  ## Examples
+
+      iex> get_alert_notification_scheduler!(123)
+      %AlertNotificationScheduler{}
+
+      iex> get_alert_notification_scheduler!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_alert_notification_scheduler!(id), do: Repo.get!(AlertNotificationScheduler, id)
+
+  @doc """
+  Creates a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> create_alert_notification_scheduler(%{field: value})
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> create_alert_notification_scheduler(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_alert_notification_scheduler(attrs \\ %{}) do
+    %AlertNotificationScheduler{}
+    |> AlertNotificationScheduler.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: new_value})
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs) do
+    alert_notification_scheduler
+    |> AlertNotificationScheduler.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a alert_notification_scheduler.
+
+  ## Examples
+
+      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
+      {:ok, %AlertNotificationScheduler{}}
+
+      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler) do
+    Repo.delete(alert_notification_scheduler)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking alert_notification_scheduler changes.
+
+  ## Examples
+
+      iex> change_alert_notification_scheduler(alert_notification_scheduler)
+      %Ecto.Changeset{data: %AlertNotificationScheduler{}}
+
+  """
+  def change_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs \\ %{}) do
+    AlertNotificationScheduler.changeset(alert_notification_scheduler, attrs)
+  end
+
+  def generate_alert_escalations() do
+    dt = DateTime.add(DateTime.utc_now, 60, :second)
+    from(ans in AlertNotificationScheduler, where: ans.escalation_at_date_time <= ^dt)
+    |> Repo.all()
+    |> Enum.map(&Task.async(fn -> check_and_create_alert_escalations(&1) end))
+    |> Enum.map(&Task.await/1)
+  end
+
+  defp check_and_create_alert_escalations(escalation_scheduler) do
+    conditions = conditions_for_escalating_alerts(escalation_scheduler)
+    alerts = UserAlertNotification
+              |> where(^conditions)
+              |> Repo.all(prefix: escalation_scheduler.prefix)
+    case alerts do
+      [] ->
+        delete_escalation_scheduler(escalation_scheduler)
+
+      [alert | _] ->
+        create_alert_escalation(alert, escalation_scheduler)
+        delete_escalation_scheduler(escalation_scheduler)
+
+    end
+  end
+
+  defp conditions_for_escalating_alerts(escalation_scheduler) do
+    [
+      site_id: escalation_scheduler.site_id,
+      alert_identifier_date_time: escalation_scheduler.alert_identifier_date_time,
+      type: "al",
+      escalation: false,
+      acknowledged_date_time: nil
+    ]
+  end
+
+  defp delete_escalation_scheduler(escalation_scheduler) do
+    delete_alert_notification_scheduler(escalation_scheduler)
+  end
+
+  defp create_alert_escalation(alert, escalation_scheduler) do
+    Enum.map(escalation_scheduler.escalated_to_user_ids, fn user_id ->
+      create_individual_escalation(alert, user_id, escalation_scheduler.prefix)
+    end)
+  end
+
+  defp create_individual_escalation(alert, user_id, prefix) do
+    Prompt.create_user_alert_notification(
+      %{
+        "alert_notification_id" => alert.alert_notification_id,
+        "type" => "al",
+        "asset_id" => alert.asset_id,
+        "asset_type" => alert.asset_type,
+        "site_id" => alert.site_id,
+        "user_id" => user_id,
+        "description" => alert.description,
+        "escalation" => true
+      }, prefix
+    )
+  end
+
+  alias Inconn2Service.Common.Widget
+
+  def list_widgets do
+    Repo.all(Widget)
+  end
+
+  def get_widget!(id), do: Repo.get!(Widget, id)
+  def get_widget_by_code(code), do: Repo.get_by(Widget, [code: code])
+
+  def create_widgets(attrs \\ []) do
+    Enum.map(attrs, fn x -> create_widget(x) end)
+  end
+
+  def create_widget(attrs \\ %{}) do
+    %Widget{}
+    |> Widget.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_widget(%Widget{} = widget, attrs) do
+    widget
+    |> Widget.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_widget(%Widget{} = widget) do
+    Repo.delete(widget)
+  end
+
+  def change_widget(%Widget{} = widget, attrs \\ %{}) do
+    Widget.changeset(widget, attrs)
+  end
+
+  alias Inconn2Service.Common.Feature
+
+  @doc """
+  Returns the list of features.
+
+  ## Examples
+
+      iex> list_features()
+      [%Feature{}, ...]
+
+  """
+  def list_features do
+    Repo.all(Feature)
+  end
+
+  @doc """
+  Gets a single feature.
+
+  Raises `Ecto.NoResultsError` if the Feature does not exist.
+
+  ## Examples
+
+      iex> get_feature!(123)
+      %Feature{}
+
+      iex> get_feature!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_feature!(id), do: Repo.get!(Feature, id)
+
+  @doc """
+  Creates a feature.
+
+  ## Examples
+
+      iex> create_feature(%{field: value})
+      {:ok, %Feature{}}
+
+      iex> create_feature(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_feature(attrs \\ %{}) do
+    %Feature{}
+    |> Feature.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a feature.
+
+  ## Examples
+
+      iex> update_feature(feature, %{field: new_value})
+      {:ok, %Feature{}}
+
+      iex> update_feature(feature, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_feature(%Feature{} = feature, attrs) do
+    feature
+    |> Feature.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a feature.
+
+  ## Examples
+
+      iex> delete_feature(feature)
+      {:ok, %Feature{}}
+
+      iex> delete_feature(feature)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_feature(%Feature{} = feature) do
+    Repo.delete(feature)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking feature changes.
+
+  ## Examples
+
+      iex> change_feature(feature)
+      %Ecto.Changeset{data: %Feature{}}
+
+  """
+  def change_feature(%Feature{} = feature, attrs \\ %{}) do
+    Feature.changeset(feature, attrs)
   end
 end

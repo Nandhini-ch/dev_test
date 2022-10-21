@@ -19,6 +19,31 @@ defmodule Inconn2Service.Email do
     |> Inconn2Service.Mailer.deliver!()
   end
 
+
+  def send_alert_email(user, description) do
+    new()
+    |> to({user.employee.first_name, user.email})
+    |> from({"Inconn Support", "info@inconn.com"})
+    |> subject("Inconn Alerts and Notifications")
+    |> text_body(alert_text(user, description))
+    |> Inconn2Service.Mailer.deliver!()
+  end
+
+  def alert_text(user, description) do
+    """
+      Hi #{user.employee.first_name} #{user.employee.last_name}
+
+      #{description}
+
+      Thank You.
+
+      Regards,
+      Inconn Team
+
+      NOTE: This is a system generated email, Please do not reply to this mail
+    """
+  end
+
   def external_ticket_reg_ack(id, _name) do
     """
        Dear Customer,
@@ -30,7 +55,6 @@ defmodule Inconn2Service.Email do
         Thank You,
         Regards
         Inconn Team
-
 
         Kindly note that this is a system generated E-mail and this ID is not monitored, Please do not reply
     """
