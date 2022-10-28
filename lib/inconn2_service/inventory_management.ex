@@ -148,6 +148,7 @@ defmodule Inconn2Service.InventoryManagement do
     end) |> add_active_condition()
     Repo.all(query, prefix: prefix)
       |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+      |> Stream.map(fn store -> preload_storekeeper_user_for_store(store, prefix) end)
       |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
@@ -155,6 +156,7 @@ defmodule Inconn2Service.InventoryManagement do
     from(s in Store, where: s.site_id == ^site_id and s.active)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+    |> Stream.map(fn store -> preload_storekeeper_user_for_store(store, prefix) end)
     |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
@@ -162,6 +164,7 @@ defmodule Inconn2Service.InventoryManagement do
     from(s in Store, where: s.location_id == ^location_id and s.active)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn store -> preload_user_for_store(store, prefix) end)
+    |> Stream.map(fn store -> preload_storekeeper_user_for_store(store, prefix) end)
     |> Enum.map(fn store -> preload_site_and_location_for_store(store, prefix) end)
   end
 
@@ -169,6 +172,7 @@ defmodule Inconn2Service.InventoryManagement do
     Repo.get!(Store, id, prefix: prefix)
     |> preload_site_and_location_for_store(prefix)
     |> preload_user_for_store(prefix)
+    |> preload_storekeeper_user_for_store(prefix)
   end
 
   def create_store(attrs \\ %{}, prefix) do
@@ -177,6 +181,7 @@ defmodule Inconn2Service.InventoryManagement do
       |> Repo.insert(prefix: prefix)
       |> preload_site_and_location_for_store(prefix)
       |> preload_user_for_store(prefix)
+      |> preload_storekeeper_user_for_store(prefix)
   end
 
   def update_store(%Store{} = store, attrs, prefix) do
@@ -185,6 +190,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> Repo.update(prefix: prefix)
     |> preload_site_and_location_for_store(prefix)
     |> preload_user_for_store(prefix)
+    |> preload_storekeeper_user_for_store(prefix)
   end
 
   # Function commented because soft delete was implemented with the same
@@ -1088,6 +1094,11 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
   defp preload_user_for_store(store, _prefix) when is_nil(store.user_id), do: Map.put(store, :user, nil)
   defp preload_user_for_store(store, prefix), do: Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
+
+  defp preload_storekeeper_user_for_store({:error, reason}, _prefix), do: {:error, reason}
+  defp preload_storekeeper_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
+  defp preload_storekeeper_user_for_store(store, _prefix) when is_nil(store.storekeeper_user_id), do: Map.put(store, :user, nil)
+  defp preload_storekeeper_user_for_store(store, prefix), do: Map.put(store, :storekeeper_user, Staff.get_user_without_org_unit(store.storekeeper_user_id, prefix))
 
   defp preload_site_and_location_for_store({:error, reason}, _prefix), do: {:error, reason}
   defp preload_site_and_location_for_store({:ok, store}, prefix), do: {:ok, preload_site_and_location_for_store(store, prefix)}

@@ -270,6 +270,30 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def list_employee_for_workorder_template(workorder_template_id, user, prefix) do
+    workorder_template = Inconn2Service.Workorder.get_workorder_template!(workorder_template_id, prefix)
+    filters = filter_by_user_is_licensee(user, prefix)
+    from(e in Employee, where: ^workorder_template.asset_category_id in e.skills)
+    |> where(^filters)
+    |> where([active: true])
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Repo.preload(:org_unit)
+    |> Repo.sort_by_id()
+  end
+
+  def list_users_for_workorder_template(workorder_template_id, user, prefix) do
+    list_employee_for_workorder_template(workorder_template_id, user, prefix)
+    |> Enum.map(fn e -> e.id end)
+    |> get_user_for_ids(prefix)
+  end
+
+  def get_user_for_ids(ids, prefix) do
+    from(u in User, where: u.employee_id in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   defp filter_by_user_is_licensee(user, prefix) do
     case (AssetConfig.get_party!(user.party_id, prefix)).licensee do
       false -> [party_id: user.party_id]
@@ -305,7 +329,7 @@ defmodule Inconn2Service.Staff do
     Repo.get(Employee, user.employee_id, prefix: prefix)
   end
 
-  def get_employee_from_user(nil, prefix) do
+  def get_employee_from_user(nil,_prefix) do
     nil
   end
 

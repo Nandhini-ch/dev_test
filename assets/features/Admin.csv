@@ -287,3 +287,14 @@ View Item,VIITM,Y
 View stock,VISTK,Y
 View reports and dashboards,VIRDB,Y
 Print reports and dashboards,PRADB,Y
+List view of my approvals related to WO,MAPWO,Y
+List view of my approvals related to Ticketing,MAPTK,Y
+List view of my approvals related to Inventory,MAPIN,Y
+List view of my request related to WO,MRQWO,Y
+list view of my request related to ticketing,MRQTK,Y
+List view of my request related to Inventory,MRQIN,Y
+List view of my team WO,MYTWO,Y
+List view of my team Ticketing,MYTTK,Y
+List view of my team Pending approvals,MYTPA,Y
+List view of my team store transaction,MYTST,Y
+List view of my team attendance,MYTAT,Y

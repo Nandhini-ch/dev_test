@@ -25,6 +25,11 @@ defmodule Inconn2ServiceWeb.UserController do
     end
   end
 
+  def index_for_workorder_template(conn, %{"workorder_template_id" => workorder_template_id}) do
+    users = Staff.list_users_for_workorder_template(workorder_template_id, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index_without_preloads.json", users: users)
+  end
+
   def reportee_users(conn, _params) do
     users = Staff.get_reportee_users(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index_without_preloads.json", users: users)
