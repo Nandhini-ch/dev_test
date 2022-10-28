@@ -75,8 +75,13 @@ defmodule Inconn2Service.SeedFeatures do
       Account.list_licensees()
       |> Enum.map(fn licensee -> "inc_" <> licensee.sub_domain end)
 
-    Enum.map(prefixes, fn prefix -> update_existing_role_profiles(prefix) end)
-    Enum.map(prefixes, fn prefix -> update_existing_roles(prefix) end)
+    prefixes
+    |> Enum.map(&Task.async(fn -> update_existing_role_profiles(&1) end))
+    |> Enum.map(&Task.await/1)
+
+    prefixes
+    |> Enum.map(&Task.async(fn -> update_existing_roles(&1) end))
+    |> Enum.map(&Task.await/1)
   end
 
   def update_existing_role_profiles(prefix) do
