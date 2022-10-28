@@ -1,4 +1,293 @@
-﻿List view of my approvals related to WO,MAPWO
+﻿Acknowledge alerts,ACALT
+Acknowledge notifications,ACNOT
+Create alerts,CRALT
+Create notifications,CRNOT
+Delete alerts,DEALT
+Delete notifications,DENOT
+Disable alerts,DAALT
+Disable notifications,DANOT
+Edit alerts,EDALT
+Edit notofications,EDNOT
+import alerts,IMALT
+import notifications,IMNOT
+View alerts,VIALT
+View notifications,VINOT
+Change password self,CHPWS
+Change password others,CHPWO
+Search by keyword,SEBKW
+Access getting started wizard,ACGSW
+Access FAQ,ACFAQ
+Configuration button,CNBUT
+Create License,CRLIC
+Create party,CRPTY
+Delete License,DELIC
+Edit License,EDLIC
+List view License,LVLIC
+List view party,LVPTY
+View License,VILIC
+Business setup Menu,BSPMN
+Business setup Sub menu,BSPSM
+Add zone/ sub zone,AZSBZ
+Edit zone/ sub zone,EZSBZ
+delete zone/ sub zone,DZSBZ
+Configure site settings,CFESS
+edit site settings,EDSST
+Delete site settings ,DESST
+View site settings,VISST
+Add contract,ADCON
+edit contract,EDCON
+delete contract ,DECON
+View contract,VICON
+Add Scope,ADSCO
+Edit scope,EDSCO
+Delete scope,DESCO
+View Scope,VISCO
+Add manpower plan,ADMPP
+Edit manpower plan,EDMPP
+View manpower plan,VIMPP
+Create Equipment ,CREQU
+Create Location,CRLOC
+Create parentNchild relationship,CRPCR
+Delete Equipment,DEEQU
+Delete Location,DELOC
+Delete parentNchild relationship,DEPCR
+Edit Equipment,EDEQU
+Edit Location,EDLOC
+Edit parentNchild relationship,EDPCR
+Import Equipment,IMEQU
+Import location,IMLOC
+Import parentNchild relationship,IMPCR
+List view Equipment,LVEQU
+List view of location,LVLOC
+View Equipment,VIEQU
+View location,VILOC
+View parentNchild relationship,VIPCR
+Maintenance setup Menu,MSMNU
+Maintenance setup Submenu,MSSMN
+Create check,CRCHK
+Create Check list,CRCHL
+Create LOTO,CRLOT
+Create task,CRTSK
+Create Tasks list,CRTSL
+Create WO Schedule,CRWOS
+create Work order template,CRWOT
+Create work permit,CRWPR
+Delete check,DECHK
+Delete Check list,DECHL
+Delete LOTO,DELOT
+Delete task,DETAS
+Delete Tasks list,DETSL
+Delete WO Schedule,DEWOS
+Delete work order,DEWOR
+Delete work order template,DEWOT
+Delete work permit,DEWPR
+Edit check,EDCHK
+Edit Check list,EDCHL
+Edit LOTO,EDLOT
+Edit task,EDTSK
+Edit Tasks list,EDTSL
+Edit WO Schedule,EDWOS
+Edit work order,EDWOR
+Edit work order template,EDWOT
+Edit work permit ,EDWPR
+Import Check list,IMCKL
+Import LOTO,IMLOT
+Import Task list,IMTSL
+Import WO Schedule,IMWOS
+Import work permit,IMWPR
+List view Check list,LVCKL
+List view LOTO,LVILT
+List view tasks list,LVTSL
+List view WO Schedule,LVWOS
+List view work order template,LVWOT
+View check,VICHK
+View Check list,VICHL
+View list of checks,VLCHK
+View list of tasks,VLTAS
+View LOTO,VILOT
+View task,VITAS
+View Tasks list,VITSL
+View WO Schedule,VIWOS
+View work order template,VIWOT
+View work permit,VIWOP
+People Menu,PPLMN
+People Sub menu,PPLSM
+Create employee,CREMP
+Create org unit,CRORU
+Create shift,CRSHF
+Create User group,CRURG
+Create Users,CRURS
+Create Users profile,CRURP
+Create Users roster,CRURR
+Delete employee,DEEMP
+Delete org unit,DEORU
+Delete shift,DESHF
+Delete User group,DEURG
+Delete Users,DEURS
+Delete Users profile,DEURP
+Delete Users roster,DEURR
+Edit employee,EDEMP
+Edit org unit,EDORU
+Edit shift,EDSHF
+Edit User group,EDURG
+Edit Users,EDURS
+Edit Users profile,EDURP
+Edit Users roster,EDURR
+List view of shifts,LVSHF
+List View User group,LVURG
+List View Users,LVURS
+List View Users profile,LVURP
+List View Users roster,LVURR
+View employee,VIEMP
+View list of employees,VLEMP
+View list of org units,VLORG
+View org unit,VIORU
+View shift,VISHF
+View User group,VIURG
+View Users,VIURS
+View Users profile,VIURP
+Inventory Menu,INVMN
+Inventory Sub Menu,INVSM
+Create inventory location,CRILC
+Create part,CRPRT
+Create part details,CRPRD
+Create supplier,CRSPR
+Create supplier item,CRSPI
+Create UOM,CRUOM
+Delete inventory location,DEILC
+Delete part,DEPRT
+Delete part details,DEPRD
+Delete supplier,DESPR
+Delete supplier item,DESPI
+Delete transaction,IDETR
+Delete UOM,DEUOM
+Edit inventory location,EDILC
+Edit part,EDPRT
+Edit part details,EDPRD
+Edit supplier,EDSPR
+Edit supplier item,EDSPI
+Edit UOM,EDUOM
+import part,IMPRT
+import part details,IMPRD
+List view of inventory locations,LVILC
+List view of stocks,LCSTK
+List view of supplier items,LVSPI
+List view of suppliers,LVSPR
+List view of transactions,LVITR
+List view of UOM,LVUOM
+View inventory location,VIILC
+View part,VIPTY
+View part details,VIPRD
+View supplier,VISPR
+View supplier item,VISPI
+View transaction,IVITR
+View UOM,VIUOM
+Associte storekeeper ID to store location,ASISL
+Ticekts Menu,TCKMN
+Ticekts Sub menu,TCKSM
+Delete tickets,DETCK
+Edit ticket status,EDTST
+Edit tickets,TEDTK
+Put tickets on Hold,PTKOH
+Create ticket category,CRTKC
+Edit ticket category,EDTKC
+Delete ticket category,DETKC
+Associate helpdesk with ticket category,AHWTC
+Create ticket sub category,CRTKS
+Edit ticket sub category,EDTKS
+delete ticket sub category,DETKS
+Menu,RPTMN
+Sub menu,RPTSM
+Edit filters,EDFIL
+"Save filters as ""my reports",SFAMR
+Dashboard Menu,DSBMN
+Dashboard setup,DSBST
+Choose widget sequence,CWSEQ
+Choose widget for mobile (self),CWMBS
+Choose widget for mobile (reportees),CWMBR
+My Inconn Button,MIBUT
+My actions Menu,MYAMN
+My actions Sub menu,MYASM
+My work orders add,MWOAD
+My work orders view,MWOVI
+My work orders edit,MWOED
+My work orders delete,MWODE
+Request reschedule,RERES
+Request reassign,REREA
+Execute my work order,EXEWO
+List view my work order,LIVWO
+List view my assigned tickets,LIVTK
+View my assigned ticket,VITCK
+Edit my assigned ticket,EDTCK
+Assign ticket,ASTCK
+Request approval for my assigned ticket,RAPTK
+Create my inventory transaction,CRTRS
+Edit my inventory transaction,EDTRS
+View my inventory transaction,VITRS
+List view my inventory transactions,MLVTR
+Delete my inventory transactions,MIDTR
+List view my pending approvals,LVAPS
+View my pending approvals,VIAPS
+My pending approvals  Approve/ reject request,ARREQ
+Delete my pending approval,DEAPL
+View my task Schedule,MAVSC
+My approvals Menu,MAPMN
+View my approvals WO related approvals,VWORA
+View my tapprovals Ticket approvals,VTKAP
+View my approvals inventory approvals,VINAP
+create request for WO/ WP/ ticket /Inventory issue,CWWTI
+View my request,VIMRQ
+List view my requests,LVMRQ
+Delete my requests,DEMRQ
+View my attendance,VMATT
+View my rosters,VMROS
+My teams Menu,MTSMN
+My team tasks Submenu,MTMSM
+My team attendance Submenu,MTASM
+My team roster Submenu,MTRSM
+My team schedule Submenu,MTSSM
+Edit my team tasks,MTTET
+Edit my team task attendance,EDATT
+Edit my team  roster,EDROS
+Edit my team Schedule,EDSCH
+View my team tasks,VITSK
+View my team attendance,VIATT
+Viewmy team  roster,VIROS
+View my team Schedule,VISCH
+My reports Menu,MRPMN
+View/print reports,VIPRT
+My stock report Submenu,MSRSM
+View landing page,VILPG
+Edit widget selection,EDWSL
+View level 2 dashboard,VL2DB
+Add new Service Provider,SPRAN
+Edit Service Provider,SPRED
+Delete Service Provider,SPRVD
+View detail Service Provider,SPVDE
+List view Service Provider,SPLIV
+Mark attendance,MKATT
+Dashboard & Reports - View,DSHRP
+Assign tickets,ASSTK
+Close tickets,CLTCK
+Create tickets,CRTCK
+Reassign tickets,REATK
+Reopen ticket,REOTK
+Create work order,CRWKO
+Execute work order,EXCWO
+List view work order,LVIWO
+List view work permit,LVIWP
+Reassign work order,REAWO
+Reschedule work order,RSCWO
+View work order,VIWKO
+Approve work permit,APWPR
+Approve LOTO,APLOT
+Acknowledge work order,ACWKO
+Approve work order,APWKO
+View Item,VIITM
+View stock,VISTK
+View reports and dashboards,VIRDB
+Print reports and dashboards,PRADB
+List view of my approvals related to WO,MAPWO
 List view of my approvals related to Ticketing,MAPTK
 List view of my approvals related to Inventory,MAPIN
 List view of my request related to WO,MRQWO
