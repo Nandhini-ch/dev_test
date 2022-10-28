@@ -14,7 +14,7 @@ defmodule Inconn2Service.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Inconn2Service.PubSub},
       #Start the Workorder GenServer
-      # Inconn2Service.Batch.WorkorderScheduler,
+      Inconn2Service.Batch.WorkorderScheduler,
       #Start the alert and notification GenServer
       # Inconn2Service.Batch.AlertNotificationGenServer,
       #Start the escalation GenServer
