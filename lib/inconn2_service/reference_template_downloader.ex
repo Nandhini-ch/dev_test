@@ -1,5 +1,9 @@
 defmodule Inconn2Service.ReferenceTemplateDownloader do
 
+  import Ecto.Query, warn: false
+  alias Inconn2Service.Repo
+
+  import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.CheckListConfig
@@ -8,6 +12,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.InventoryManagement
   alias Inconn2Service.ContractManagement
   alias Inconn2Service.Workorder
+  alias Inconn2Service.Workorder.WorkorderTask
   alias Inconn2Service.Ticket
   alias Inconn2Service.Settings
 
@@ -40,6 +45,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "category_helpdesk" -> download_category_helpdesk(prefix)
       "designation" -> download_designation(prefix)
       "shift" -> download_shifts(prefix)
+      "workorder_tasks" -> metering_workorder_tasks(convert_string_list_to_list(query_params["task_ids"]), prefix)
     end
   end
 
@@ -489,5 +495,21 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
     else
       ""
     end
+  end
+
+  def metering_workorder_tasks(task_ids, prefix) do
+    workorder_tasks =
+      from(wot in WorkorderTask, where: wot.task_id in ^task_ids)
+      |> Repo.all(prefix: prefix)
+
+    header = [["Task Id", "Work Order Id", "Date Time", "Response"]]
+
+    body =
+      Enum.map(workorder_tasks, fn r ->
+        [r.task_id, r.work_order_id, r.date_time, r.response["answers"]]
+      end)
+
+      final_report = header ++ body
+      final_report
   end
 end
