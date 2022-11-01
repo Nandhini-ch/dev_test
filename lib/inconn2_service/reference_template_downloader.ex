@@ -518,16 +518,41 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       |> Enum.map(fn m ->
             Map.put(m, :scheduled_date_time, NaiveDateTime.new!(m.scheduled_date, m.scheduled_time))
             |> Map.put(:asset, AssetConfig.get_asset_by_asset_id(m.asset_id, m.asset_type, prefix))
+            |> Map.put(:ac_type, change_labels(:ac_type, m.task_config["type"]))
+            |> Map.put(:category, change_labels(:category, m.task_config["category"]))
+            |> Map.put(:asset_type, change_labels(:asset_type, m.asset_type))
           end)
 
     header = [["Task Id", "Task Label", "Absolute/Cumulative", "Unit of measurement", "Category", "Date Time", "Response", "Asset Name", "Asset type", "Work Order Id"]]
 
     body =
       Enum.map(workorder_tasks, fn r ->
-        [r.task_id, r.task_label, r.task_config["type"], r.task_config["UOM"], r.task_config["category"], r.scheduled_date_time, r.response["answers"], r.asset.name, r.asset_type, r.work_order_id]
+        [r.task_id, r.task_label, r.ac_type, r.task_config["UOM"], r.category, r.scheduled_date_time, r.response["answers"], r.asset.name, r.asset_type, r.work_order_id]
       end)
 
       final_report = header ++ body
       final_report
+  end
+
+  defp change_labels(:ac_type, label) do
+    case label do
+      "A" -> "Absolute"
+      "C" -> "Cumulative"
+    end
+  end
+
+  defp change_labels(:category, label) do
+    case label do
+      "E" -> "Energy"
+      "W" -> "Water"
+      "F" -> "Fuel"
+    end
+  end
+
+  defp change_labels(:asset_type, label) do
+    case label do
+      "L" -> "Location"
+      "E" -> "Equipment"
+    end
   end
 end
