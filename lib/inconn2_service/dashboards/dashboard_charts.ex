@@ -119,7 +119,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Energy Consumption",
@@ -150,7 +150,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -171,7 +171,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       epi = energy_consumption / area_in_sqft
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "EPI",
@@ -193,7 +193,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Water Consumption",
@@ -224,7 +224,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -242,7 +242,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> change_nil_to_zero()
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: [
         %{
           name: "Fuel Consumption",
@@ -273,7 +273,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -311,7 +311,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
   end
@@ -329,7 +329,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end)
 
     %{
-      label: date,
+      label: date |> convert_date_format(),
       dataSets: data_sets
     }
 
@@ -359,7 +359,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Enum.take(10)
 
       true ->
@@ -373,7 +373,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["PRV", "BRK", "TKT"], "open/ip", prefix) |> Enum.take(10)
 
       true ->
@@ -397,7 +397,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["TKT"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
@@ -412,7 +412,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       not is_nil(params["asset_category_ids"]) ->
         get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["assets"]) ->
         get_workorder_status_for_assets(params, ["BRK"], "workorder_status", prefix) |> Enum.take(10)
 
       true ->
@@ -557,8 +557,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_workorder_status_for_assets(params, types, organize_for, prefix) do
     {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
-    location_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
-    equipment_ids = Stream.filter(params["asset_ids"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
     location_workorders =
       NumericalData.get_workorder_chart_data_for_assets(
         params["site_id"],
@@ -588,7 +588,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           wo_list = Enum.map(info, fn i -> i.work_order end)
           %{
             label: List.first(info).asset_name,
-            datasets: calculate_datasets(wo_list, organize_for)
+            dataSets: calculate_datasets(wo_list, organize_for)
           }
       end)
   end
@@ -599,7 +599,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           wo_list = Enum.map(info, fn i -> i.work_order end)
           %{
             label: List.first(info).asset_category_name,
-            datasets: calculate_datasets(wo_list, organize_for)
+            dataSets: calculate_datasets(wo_list, organize_for)
           }
       end)
   end
@@ -609,7 +609,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(fn { _asset_category_id, tickets } ->
         %{
           label: List.first(tickets).workrequest_category.name,
-          datasets: calculate_datasets(work_requests, organize_for)
+          dataSets: calculate_datasets(work_requests, organize_for)
         }
     end)
   end
@@ -639,11 +639,11 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Scheduled",
-        value: (incomplete_count/total_count) * 100
+        value: calculate_percentage(incomplete_count, total_count)
       },
       %{
         name: "Completed",
-        value: (completed_count/total_count) * 100
+        value: calculate_percentage(completed_count, total_count)
       }
     ]
   end
@@ -655,7 +655,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Workorders",
-        value: (inprogress_count/total_count) * 100
+        value: calculate_percentage(inprogress_count, total_count)
       }
     ]
   end
@@ -718,7 +718,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
           %{
               name: label,
-              value: mtbf
+              value: Float.ceil(mtbf, 2),
+              displayValue: convert_to_hours_and_minutes(mtbf)
           }
       ]
     }
@@ -731,7 +732,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: [
             %{
                 name: label,
-                value: mtbf
+                value: Float.ceil(mtbf, 2),
+                displayValue: convert_to_hours_and_minutes(mtbf)
             }
         ]
       }

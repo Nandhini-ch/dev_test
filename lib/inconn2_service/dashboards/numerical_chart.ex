@@ -480,6 +480,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> Stream.map(&Task.async(fn -> NumericalData.get_mtbf_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
     |> Enum.sum()
+    |> convert_to_hours_and_minutes()
   end
 
   def get_mttr(site_id, prefix) do
@@ -488,6 +489,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     |> Stream.map(&Task.async(fn -> NumericalData.get_mttr_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
     |> Enum.sum()
+    |> convert_to_hours_and_minutes()
   end
 
   def get_intime_reporting(site_id, prefix) do
