@@ -500,22 +500,30 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   def metering_workorder_tasks(task_ids, prefix) do
     workorder_tasks =
       from(wot in WorkorderTask, where: wot.task_id in ^task_ids,
+        join: t in Task, on: t.id == wot.task_id, where: t.task_type == "MT",
         join: wo in WorkOrder, on: wo.id == wot.work_order_id,
         select: %{
           task_id: wot.task_id,
+          task_label: t.label,
+          task_config: t.config,
           work_order_id: wo.id,
+          asset_id: wo.asset_id,
+          asset_type: wo.asset_type,
           scheduled_date: wo.scheduled_date,
           scheduled_time: wo.scheduled_time,
           response: wot.response
         })
       |> Repo.all(prefix: prefix)
-      |> Enum.map(fn m -> Map.put(m, :scheduled_date_time, NaiveDateTime.new!(m.scheduled_date, m.scheduled_time)) end)
+      |> Enum.map(fn m ->
+            Map.put(m, :scheduled_date_time, NaiveDateTime.new!(m.scheduled_date, m.scheduled_time))
+            |> Map.put(:asset, AssetConfig.get_asset_by_asset_id(m.asset_id, m.asset_type, prefix))
+          end)
 
-    header = [["Task Id", "Work Order Id", "Date Time", "Response"]]
+    header = [["Task Id", "Task Label", "Absolute/Cumulative", "Unit of measurement", "Category", "Date Time", "Response", "Asset Name", "Asset type", "Work Order Id"]]
 
     body =
       Enum.map(workorder_tasks, fn r ->
-        [r.task_id, r.work_order_id, r.scheduled_date_time, r.response["answers"]]
+        [r.task_id, r.task_label, r.task_config["type"], r.task_config["UOM"], r.task_config["category"], r.scheduled_date_time, r.response["answers"], r.asset.name, r.asset_type, r.work_order_id]
       end)
 
       final_report = header ++ body
