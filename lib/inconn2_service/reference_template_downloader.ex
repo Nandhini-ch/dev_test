@@ -12,7 +12,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   alias Inconn2Service.InventoryManagement
   alias Inconn2Service.ContractManagement
   alias Inconn2Service.Workorder
-  alias Inconn2Service.Workorder.WorkorderTask
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTask}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Settings
 
@@ -499,14 +499,23 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
 
   def metering_workorder_tasks(task_ids, prefix) do
     workorder_tasks =
-      from(wot in WorkorderTask, where: wot.task_id in ^task_ids)
+      from(wot in WorkorderTask, where: wot.task_id in ^task_ids,
+        join: wo in WorkOrder, on: wo.id == wot.work_order_id,
+        select: %{
+          task_id: wot.task_id,
+          work_order_id: wo.id,
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          response: wot.response
+        })
       |> Repo.all(prefix: prefix)
+      |> Enum.map(fn m -> Map.put(m, :scheduled_date_time, NaiveDateTime.new!(m.scheduled_date, m.scheduled_time)) end)
 
     header = [["Task Id", "Work Order Id", "Date Time", "Response"]]
 
     body =
       Enum.map(workorder_tasks, fn r ->
-        [r.task_id, r.work_order_id, r.date_time, r.response["answers"]]
+        [r.task_id, r.work_order_id, r.scheduled_date_time, r.response["answers"]]
       end)
 
       final_report = header ++ body
