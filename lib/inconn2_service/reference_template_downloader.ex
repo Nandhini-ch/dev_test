@@ -502,7 +502,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
     workorder_tasks =
       from(wot in WorkorderTask, where: wot.task_id in ^task_ids,
         join: t in Task, on: t.id == wot.task_id, where: t.task_type == "MT",
-        join: wo in WorkOrder, on: wo.id == wot.work_order_id,
+        join: wo in WorkOrder, on: wo.id == wot.work_order_id, where: wo.site_id == 1,
         select: %{
           task_id: wot.task_id,
           task_label: t.label,
