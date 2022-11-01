@@ -6,6 +6,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.WorkOrderConfig
+  alias Inconn2Service.WorkOrderConfig.Task
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Staff
   alias Inconn2Service.Assignments
