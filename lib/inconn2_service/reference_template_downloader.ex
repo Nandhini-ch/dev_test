@@ -1,13 +1,19 @@
 defmodule Inconn2Service.ReferenceTemplateDownloader do
 
+  import Ecto.Query, warn: false
+  alias Inconn2Service.Repo
+
+  import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.WorkOrderConfig
+  alias Inconn2Service.WorkOrderConfig.Task
   alias Inconn2Service.CheckListConfig
   alias Inconn2Service.Staff
   alias Inconn2Service.Assignments
   alias Inconn2Service.InventoryManagement
   alias Inconn2Service.ContractManagement
   alias Inconn2Service.Workorder
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTask}
   alias Inconn2Service.Ticket
   alias Inconn2Service.Settings
 
@@ -40,6 +46,7 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
       "category_helpdesk" -> download_category_helpdesk(prefix)
       "designation" -> download_designation(prefix)
       "shift" -> download_shifts(prefix)
+      "workorder_tasks" -> metering_workorder_tasks(convert_string_list_to_list(query_params["task_ids"]), prefix)
     end
   end
 
@@ -488,6 +495,64 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
         |> Enum.join(",")
     else
       ""
+    end
+  end
+
+  def metering_workorder_tasks(task_ids, prefix) do
+    workorder_tasks =
+      from(wot in WorkorderTask, where: wot.task_id in ^task_ids,
+        join: t in Task, on: t.id == wot.task_id, where: t.task_type == "MT",
+        join: wo in WorkOrder, on: wo.id == wot.work_order_id, where: wo.site_id == 1,
+        select: %{
+          task_id: wot.task_id,
+          task_label: t.label,
+          task_config: t.config,
+          work_order_id: wo.id,
+          asset_id: wo.asset_id,
+          asset_type: wo.asset_type,
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          response: wot.response
+        })
+      |> Repo.all(prefix: prefix)
+      |> Enum.map(fn m ->
+            Map.put(m, :scheduled_date_time, NaiveDateTime.new!(m.scheduled_date, m.scheduled_time))
+            |> Map.put(:asset, AssetConfig.get_asset_by_asset_id(m.asset_id, m.asset_type, prefix))
+            |> Map.put(:ac_type, change_labels(:ac_type, m.task_config["type"]))
+            |> Map.put(:category, change_labels(:category, m.task_config["category"]))
+            |> Map.put(:asset_type, change_labels(:asset_type, m.asset_type))
+          end)
+
+    header = [["Task Id", "Task Label", "Absolute/Cumulative", "Unit of measurement", "Category", "Date Time", "Response", "Asset Name", "Asset type", "Work Order Id"]]
+
+    body =
+      Enum.map(workorder_tasks, fn r ->
+        [r.task_id, r.task_label, r.ac_type, r.task_config["UOM"], r.category, r.scheduled_date_time, r.response["answers"], r.asset.name, r.asset_type, r.work_order_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  defp change_labels(:ac_type, label) do
+    case label do
+      "A" -> "Absolute"
+      "C" -> "Cumulative"
+    end
+  end
+
+  defp change_labels(:category, label) do
+    case label do
+      "E" -> "Energy"
+      "W" -> "Water"
+      "F" -> "Fuel"
+    end
+  end
+
+  defp change_labels(:asset_type, label) do
+    case label do
+      "L" -> "Location"
+      "E" -> "Equipment"
     end
   end
 end

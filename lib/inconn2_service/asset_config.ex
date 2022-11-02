@@ -319,6 +319,13 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  def get_asset_by_asset_id(asset_id, asset_type, prefix) do
+    case asset_type do
+      "L" -> get_location!(asset_id, prefix)
+      "E" -> get_equipment!(asset_id, prefix)
+    end
+  end
+
   def get_assets(site_id, asset_category_id, prefix) do
     asset_category = get_asset_category!(asset_category_id, prefix)
     asset_type = asset_category.asset_type
