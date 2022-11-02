@@ -2668,6 +2668,10 @@ defmodule Inconn2Service.Workorder do
   end
 
   def get_workorder_task!(id, prefix), do: Repo.get!(WorkorderTask, id, prefix: prefix)
+  def get_workorder_task_task_and_workorder!(task_id, work_order_id, prefix) do
+    from(wot in WorkorderTask, where: wot.task_id == ^task_id and wot.work_order_id == ^work_order_id)
+    |> Repo.one!(prefix: prefix)
+  end
 
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}
