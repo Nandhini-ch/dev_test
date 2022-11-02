@@ -1,5 +1,6 @@
 defmodule Inconn2Service.ReferenceDataDownloader do
 
+  alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Workorder
   alias Inconn2Service.WorkOrderConfig
@@ -8,6 +9,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   alias Inconn2Service.Assignment
   alias Inconn2Service.Settings
   alias Inconn2Service.Inventory
+  alias Inconn2Service.WorkOrderConfig.Task
 
   def download_locations(prefix) do
     locations = AssetConfig.list_active_locations(prefix)
@@ -93,7 +95,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(task_lists, fn r ->
-        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids), r.asset_category_id]
+        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids, nil), r.asset_category_id]
       end)
 
       final_report = header ++ body
@@ -384,6 +386,18 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     if array_of_ids != nil do
         array_of_ids
         |> Enum.map(fn id -> to_string(id) end)
+        |> Enum.join(",")
+    else
+      ""
+    end
+  end
+
+
+  defp convert_array_of_integers_to_string(array_of_ids, _) do
+    if array_of_ids != nil do
+        array_of_ids
+        |> Stream.map(fn id -> !is_nil(Repo.get(Task, id)) end)
+        |> Stream.map(fn id -> to_string(id) end)
         |> Enum.join(",")
     else
       ""

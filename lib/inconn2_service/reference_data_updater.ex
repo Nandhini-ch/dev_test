@@ -6,16 +6,16 @@ defmodule Inconn2Service.ReferenceDataUpdater do
   def update_table(content, schema, prefix) do
     case schema do
       "checks" ->
-        Elixir.Task.start(fn -> update_checks(content, prefix) end)
+        update_checks(content, prefix)
 
       "tasks" ->
-        Elixir.Task.start(fn -> update_tasks(content, prefix) end)
+        update_tasks(content, prefix)
 
       "employees" ->
-        Elixir.Task.start(fn -> update_employees(content, prefix) end)
+        update_employees(content, prefix)
 
       "shifts" ->
-        Elixir.Task.start(fn -> update_shift(content, prefix) end)
+        update_shift(content, prefix)
       _  ->
       nil
     end
