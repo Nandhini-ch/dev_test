@@ -213,4 +213,17 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   "#{hours} : #{minutes}"
   end
+
+  def string_to_float(""), do: 0.0
+  def string_to_float(nil), do: 0.0
+  def string_to_float(number) when is_float(number), do: number
+  def string_to_float(number) when is_integer(number), do: number + 0.0
+  def string_to_float(number) when is_bitstring(number) do
+    if String.contains?(number, ".") do
+      String.to_float(number)
+    else
+      String.to_integer(number) + 0.0
+    end
+  end
+
 end

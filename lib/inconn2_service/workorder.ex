@@ -780,6 +780,11 @@ defmodule Inconn2Service.Workorder do
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
   end
 
+  def list_work_orders_by_ids(work_order_ids, prefix) do
+    from(wo in WorkOrder, where: wo.id in ^work_order_ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_work_orders_in_my_approval(user, prefix) do
      get_work_order_premits_to_be_approved(user, prefix) ++ get_work_orders_to_be_approved(user, prefix) ++ get_work_order_to_be_acknowledged(user, prefix) ++ get_work_order_loto_to_be_checked(user, prefix)
   end
@@ -2668,6 +2673,10 @@ defmodule Inconn2Service.Workorder do
   end
 
   def get_workorder_task!(id, prefix), do: Repo.get!(WorkorderTask, id, prefix: prefix)
+  def get_workorder_task_task_and_workorder!(task_id, work_order_id, prefix) do
+    from(wot in WorkorderTask, where: wot.task_id == ^task_id and wot.work_order_id == ^work_order_id)
+    |> Repo.one!(prefix: prefix)
+  end
 
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}

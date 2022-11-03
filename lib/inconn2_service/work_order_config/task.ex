@@ -102,7 +102,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
 
   defp validate_raise_ticket(options) do
     true_list = Stream.map(options, fn r -> r["raise_ticket"] end)
-                |> Enum.map(fn r -> is_boolean(r) end)
+                |> Enum.map(fn r -> is_boolean(r) or is_nil(r) end)
 
     false not in true_list
   end

@@ -223,11 +223,11 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   def download_tasks(prefix) do
     tasks = WorkOrderConfig.list_tasks(prefix)
 
-    header = [["id", "reference", "Label", "Task Type", "Estimated Time"]]
+    header = [["id", "reference", "Label", "Task Type", "Master task type id", "Estimated Time"]]
 
     body =
       Enum.map(tasks, fn r ->
-        fixed_attributes = [r.id, "", r.label, r.task_type, r.estimated_time]
+        fixed_attributes = [r.id, "", r.label, r.task_type, r.master_task_type_id, r.estimated_time]
         cond do
           r.task_type in ["IO", "IM"] ->
             variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}" end)
