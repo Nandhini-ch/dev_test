@@ -75,20 +75,25 @@ defmodule Inconn2Service.SeedFeatures do
       Account.list_licensees()
       |> Enum.map(fn licensee -> "inc_" <> licensee.sub_domain end)
 
-    prefixes
-    |> Enum.map(&Task.async(fn -> update_existing_role_profiles(&1) end))
-    |> Enum.map(&Task.await/1)
+      Enum.map(prefixes, &(update_existing_role_profiles(&1)))
+      Enum.map(prefixes, &(update_existing_roles(&1)))
 
-    prefixes
-    |> Enum.map(&Task.async(fn -> update_existing_roles(&1) end))
-    |> Enum.map(&Task.await/1)
+    # prefixes
+    # |> Enum.map(&Task.async(fn -> update_existing_role_profiles(&1) end))
+    # |> Enum.map(&Task.await/1)
+
+    # prefixes
+    # |> Enum.map(&Task.async(fn -> update_existing_roles(&1) end))
+    # |> Enum.map(&Task.await/1)
   end
 
   def update_existing_role_profiles(prefix) do
     @role_profiles
     |> Enum.map(fn {name, code} ->
-        Staff.get_role_profile_by_name!(name, prefix)
-        |> Staff.update_role_profile(form_role_profile_map(name, code), prefix)
+        case Staff.get_role_profile_by_name(name, prefix) do
+          nil -> nil
+          rp -> Staff.update_role_profile(rp, form_role_profile_map(name, code), prefix)
+        end
     end)
   end
 
