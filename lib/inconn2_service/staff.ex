@@ -898,6 +898,7 @@ defmodule Inconn2Service.Staff do
   def get_role_profile!(id, prefix), do: Repo.get!(RoleProfile, id, prefix: prefix)
   def get_role_profile(id, prefix), do: Repo.get(RoleProfile, id, prefix: prefix)
   def get_role_profile_by_name!(name, prefix), do: Repo.get_by!(RoleProfile, [name: name], prefix: prefix)
+  def get_role_profile_by_name(name, prefix), do: Repo.get_by(RoleProfile, [name: name], prefix: prefix)
 
   def create_role_profile(attrs \\ %{}, prefix) do
     %RoleProfile{}
