@@ -95,7 +95,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(task_lists, fn r ->
-        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids, nil), r.asset_category_id]
+        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids, prefix), r.asset_category_id]
       end)
 
       final_report = header ++ body
@@ -393,10 +393,10 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   end
 
 
-  defp convert_array_of_integers_to_string(array_of_ids, _) do
+  defp convert_array_of_integers_to_string(array_of_ids, prefix) do
     if array_of_ids != nil do
         array_of_ids
-        |> Stream.map(fn id -> !is_nil(Repo.get(Task, id)) end)
+        |> Stream.map(fn id -> !is_nil(Repo.get(Task, id, prefix: prefix)) end)
         |> Stream.map(fn id -> to_string(id) end)
         |> Enum.join(",")
     else
