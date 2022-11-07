@@ -40,6 +40,7 @@ defmodule Inconn2Service.FileLoader do
     %{}
     |> Map.put("label", Map.get(record, "Label"))
     |> Map.put("type", Map.get(record, "Type"))
+    |> Map.put("check_type_id", Map.get(record, "Check Type Id"))
   end
 
   def make_check_lists(record) do
@@ -107,6 +108,7 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("label", Map.get(record, "Label"))
     |> Map.put("task_type", Map.get(record, "Task Type"))
     |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
+    |> Map.put("master_task_type_id", Map.get(record, "Master Task Type Id"))
     |> Map.put("config", Map.get(record, "Config"))
   end
 
