@@ -298,3 +298,11 @@ List view of my team Ticketing,MYTTK,N
 List view of my team Pending approvals,MYTPA,N
 List view of my team store transaction,MYTST,N
 List view of my team attendance,MYTAT,N
+Create site,CREST,N
+My Work Order,MYWKO,Y
+My store task,MYSRT,Y
+My Pending Approvals,MYPAP,N
+Approve Reassign,APREA,N
+Approve Reshcedule,APRES,N
+Approve the ticket,APTCK,N
+Approve the Inventory,APINV,N

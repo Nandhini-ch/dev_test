@@ -56,8 +56,9 @@ defmodule Inconn2Service.SeedFeatures do
   #Seed features...
   def seed_features() do
     read_and_insert("assets/features/Features.csv", :features)
-    |> Stream.map(&Task.async(fn -> Common.create_feature(&1) end))
-    |> Enum.map(&Task.await/1)
+    |> Enum.map(&(Common.create_feature(&1)))
+    # |> Stream.map(&Task.async(fn -> Common.create_feature(&1) end))
+    # |> Enum.map(&Task.await/1)
   end
 
   #Seed role profiles...
