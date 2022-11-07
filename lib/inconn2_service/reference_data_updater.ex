@@ -85,9 +85,9 @@ defmodule Inconn2Service.ReferenceDataUpdater do
       Enum.zip(header, line) |> Enum.into(%{})
     end)
     |> Enum.map(fn m ->
-      %{"task_id" => m["task_id"],
+      %{"task_id" => m["task_id"] |> String.to_integer(),
         "date_time" => convert_date_time(m["date_time"]),
-        "work_order_id" => m["work_order_id"],
+        "work_order_id" => m["work_order_id"] |> String.to_integer(),
         "response" => %{"answers" => string_to_float(m["response"]) }}
     end)
   end
