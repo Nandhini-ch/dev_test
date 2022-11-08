@@ -83,6 +83,36 @@ defmodule Inconn2Service.ReferenceDataUploader do
     )
   end
 
+  def upload_check_types(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Description"]
+    upload_content(
+      content,
+      req_fields,
+      [],
+      &FileLoader.make_check_types/1,
+      CheckListConfig,
+      :get_check_type,
+      :create_check_type,
+      :update_check_type,
+      prefix
+    )
+  end
+
+  def upload_master_task_types(content, prefix) do
+    req_fields = ["id", "reference", "Name", "Description"]
+    upload_content(
+      content,
+      req_fields,
+      [],
+      &FileLoader.make_check_types/1,
+      WorkOrderConfig,
+      :get_master_task_type,
+      :create_master_task_type,
+      :update_master_task_type,
+      prefix
+    )
+  end
+
   def upload_check_lists(content, prefix) do
     req_fields = ["id", "reference", "Name", "Type", "Check Ids"]
     special_fields = [{"Check Ids", "array_of_integers", []}]

@@ -139,6 +139,7 @@ defmodule Inconn2ServiceWeb.Router do
     put "/tasks/:id/deactivate", TaskController, :deactivate_task
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     post "/upload_tasks", ReferenceUploadController, :upload_tasks
+    post "/upload_master_task_types", ReferenceUploadController, :upload_master_task_types
     resources "/task_lists", TaskListController, except: [:new, :edit]
     get "/task_lists/:id/tasks", TaskListController, :index_tasks_for_task_list
     put "/task_lists/:id/activate", TaskListController, :activate_task_list
@@ -152,6 +153,7 @@ defmodule Inconn2ServiceWeb.Router do
     put "/checks/:id/deactivate", CheckController, :deactivate_check
     get "/download_checks", ReferenceDownloadController, :download_checks_lists
     post "/upload_checks", ReferenceUploadController, :upload_checks
+    post "/upload_check_types", ReferenceUploadController, :upload_check_types
     resources "/check_lists", CheckListController, except: [:new, :edit]
     put "/check_lists/:id/activate", CheckListController, :activate_check_list
     put "/check_lists/:id/deactivate", CheckListController, :deactivate_check_list

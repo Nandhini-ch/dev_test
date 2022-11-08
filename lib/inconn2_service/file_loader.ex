@@ -50,6 +50,18 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("check_ids", Map.get(record, "Check Ids"))
   end
 
+  def make_master_task_types(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("description", Map.get(record, "Description"))
+  end
+
+  def make_check_types(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("description", Map.get(record, "Description"))
+  end
+
   def make_workorder_templates(record) do
     %{}
     |> Map.put("name", Map.get(record, "Name"))
