@@ -402,9 +402,11 @@ defmodule Inconn2Service.Assignment do
 
   defp get_previous_partial_attendance(site_id, employee_id, prefix) do
     from(a in Attendance,
-          where: a.site_id == ^site_id and
+          where: not is_nil(a.in_time) and
+                a.site_id == ^site_id and
                 a.employee_id == ^employee_id and
-                is_nil(a.out_time))
+                is_nil(a.out_time),
+                order_by: a.id, limit: 1)
     |> Repo.one(prefix: prefix)
   end
 
