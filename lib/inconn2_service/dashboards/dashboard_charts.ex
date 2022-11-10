@@ -638,7 +638,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
     [
       %{
-        name: "Scheduled",
+        name: "Not Completed",
         value: calculate_percentage(incomplete_count, total_count)
       },
       %{

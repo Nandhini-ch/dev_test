@@ -288,6 +288,7 @@ defmodule Inconn2Service.AssetConfig do
   def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
   def get_asset_category_by_ids(ids, prefix) do
     from(ac in AssetCategory, where: ac.id in ^ids)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
@@ -606,6 +607,7 @@ defmodule Inconn2Service.AssetConfig do
   def get_assets_for_location(location_id, prefix) do
     locations = get_location!(location_id, prefix)
                 |> HierarchyManager.subtree()
+                |> Repo.add_active_filter()
                 |> Repo.all(prefix: prefix)
 
     equipments = list_equipments_by_location_ids(Enum.map(locations, &(&1.id)), prefix)
@@ -1016,6 +1018,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments_by_location_ids(location_ids, prefix) do
     from(e in Equipment, where: e.location_id in ^location_ids)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
   end
