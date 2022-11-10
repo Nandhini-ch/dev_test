@@ -712,6 +712,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       |> Stream.map(fn asset -> get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix) end)
       |> Stream.map(fn {_k, v} -> v end)
       |> Enum.sum()
+      |> convert_to_float()
 
     %{
       label: AssetConfig.get_asset_category!(asset_category_id, prefix).name,
@@ -724,6 +725,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       ]
     }
   end
+
 
   defp get_mtbf_or_mttr_for_individual_asset(asset, from_dt, to_dt, label, query_func, prefix) do
     {asset_name, mtbf} = get_mtbf_or_mttr_tuple_for_asset(asset, from_dt, to_dt, query_func, prefix)
