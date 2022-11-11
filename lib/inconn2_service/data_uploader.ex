@@ -23,6 +23,18 @@ defmodule Inconn2Service.DataUploader do
     end
   end
 
+  # defp insert_hierarchical_structure(schema, data, prefix) do
+  #   {context, insert_func} = match_schema(schema)
+  # end
+
+  # defp filter_hierarchical(data, "root/existing_parent") do
+  #   Stream.reject(data, fn d -> is_nil(d["parent_reference"])  end)
+  # end
+
+  # defp filter_hierarchical(data, "non_existing_parent") do
+  #   Stream.reject(data, fn d -> !is_nil(d["parent_reference"])  end)
+  # end
+
   defp insert_flat_structure(schema, data, prefix) do
     {context, insert_func} = match_schema(schema)
     inserted =
@@ -36,7 +48,6 @@ defmodule Inconn2Service.DataUploader do
     return_data = get_return_data(inserted, data, context, insert_func, prefix)
     headers = get_headers(List.first(return_data))
     convert_return_data_to_csv(return_data, headers)
-    |> IO.inspect()
   end
 
   defp convert_return_data_to_csv(return_data, headers) do
