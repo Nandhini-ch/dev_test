@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.SavedDashboardFilterController do
   end
 
   def create(conn, %{"saved_dashboard_filter" => saved_dashboard_filter_params}) do
-    with {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} <- DashboardConfiguration.create_or_update_saved_dashboard_filter(saved_dashboard_filter_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} <- DashboardConfiguration.create_or_update_saved_dashboard_filter(saved_dashboard_filter_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.saved_dashboard_filter_path(conn, :show, saved_dashboard_filter))
