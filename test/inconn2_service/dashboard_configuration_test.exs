@@ -63,4 +63,69 @@ defmodule Inconn2Service.DashboardConfigurationTest do
       assert %Ecto.Changeset{} = DashboardConfiguration.change_user_widget_config(user_widget_config)
     end
   end
+
+  describe "saved_dashboard_filters" do
+    alias Inconn2Service.DashboardConfiguration.SavedDashboardFilter
+
+    @valid_attrs %{config: %{}, site_id: 42, user_id: 42, widget_code: "some widget_code"}
+    @update_attrs %{config: %{}, site_id: 43, user_id: 43, widget_code: "some updated widget_code"}
+    @invalid_attrs %{config: nil, site_id: nil, user_id: nil, widget_code: nil}
+
+    def saved_dashboard_filter_fixture(attrs \\ %{}) do
+      {:ok, saved_dashboard_filter} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> DashboardConfiguration.create_saved_dashboard_filter()
+
+      saved_dashboard_filter
+    end
+
+    test "list_saved_dashboard_filters/0 returns all saved_dashboard_filters" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert DashboardConfiguration.list_saved_dashboard_filters() == [saved_dashboard_filter]
+    end
+
+    test "get_saved_dashboard_filter!/1 returns the saved_dashboard_filter with given id" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert DashboardConfiguration.get_saved_dashboard_filter!(saved_dashboard_filter.id) == saved_dashboard_filter
+    end
+
+    test "create_saved_dashboard_filter/1 with valid data creates a saved_dashboard_filter" do
+      assert {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} = DashboardConfiguration.create_saved_dashboard_filter(@valid_attrs)
+      assert saved_dashboard_filter.config == %{}
+      assert saved_dashboard_filter.site_id == 42
+      assert saved_dashboard_filter.user_id == 42
+      assert saved_dashboard_filter.widget_code == "some widget_code"
+    end
+
+    test "create_saved_dashboard_filter/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = DashboardConfiguration.create_saved_dashboard_filter(@invalid_attrs)
+    end
+
+    test "update_saved_dashboard_filter/2 with valid data updates the saved_dashboard_filter" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} = DashboardConfiguration.update_saved_dashboard_filter(saved_dashboard_filter, @update_attrs)
+      assert saved_dashboard_filter.config == %{}
+      assert saved_dashboard_filter.site_id == 43
+      assert saved_dashboard_filter.user_id == 43
+      assert saved_dashboard_filter.widget_code == "some updated widget_code"
+    end
+
+    test "update_saved_dashboard_filter/2 with invalid data returns error changeset" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert {:error, %Ecto.Changeset{}} = DashboardConfiguration.update_saved_dashboard_filter(saved_dashboard_filter, @invalid_attrs)
+      assert saved_dashboard_filter == DashboardConfiguration.get_saved_dashboard_filter!(saved_dashboard_filter.id)
+    end
+
+    test "delete_saved_dashboard_filter/1 deletes the saved_dashboard_filter" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert {:ok, %SavedDashboardFilter{}} = DashboardConfiguration.delete_saved_dashboard_filter(saved_dashboard_filter)
+      assert_raise Ecto.NoResultsError, fn -> DashboardConfiguration.get_saved_dashboard_filter!(saved_dashboard_filter.id) end
+    end
+
+    test "change_saved_dashboard_filter/1 returns a saved_dashboard_filter changeset" do
+      saved_dashboard_filter = saved_dashboard_filter_fixture()
+      assert %Ecto.Changeset{} = DashboardConfiguration.change_saved_dashboard_filter(saved_dashboard_filter)
+    end
+  end
 end

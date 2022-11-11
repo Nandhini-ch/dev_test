@@ -499,6 +499,7 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
 
     post "/update_entries", ReferenceUpdateController, :update_table
+    resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
