@@ -98,9 +98,9 @@ defmodule Inconn2Service.DashboardConfiguration do
   end
 
   #Context functionds for SavedDashboardFilter
-  def list_saved_dashboard_filters(query_params, prefix) do
+  def list_saved_dashboard_filters(user, prefix) do
     SavedDashboardFilter
-    |> saved_dashboard_query(query_params)
+    |> where([user_id: ^user.id])
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
