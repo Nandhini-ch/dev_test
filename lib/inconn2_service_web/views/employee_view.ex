@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       party_id: employee.party_id,
       skills: (if is_nil(employee.preloaded_skills), do: [], else: render_many(employee.preloaded_skills, AssetCategoryView, "asset_category.json")),
       designation_id: employee.designation_id,
-      role_id: employee.role_id
+      # role_id: employee.role_id
     }
   end
 
