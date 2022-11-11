@@ -7,8 +7,14 @@ defmodule Inconn2ServiceWeb.SavedDashboardFilterController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    saved_dashboard_filters = DashboardConfiguration.list_saved_dashboard_filters(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", saved_dashboard_filters: saved_dashboard_filters)
+    saved_dashboard_filters = DashboardConfiguration.list_saved_dashboard_filters(conn.assigns.current_user, conn.query_params, conn.assigns.sub_domain_prefix)
+    cond do
+      !is_nil(conn.query_params["site_id"]) && !is_nil(conn.query_params["widget_code"]) ->
+        render(conn, "show.json", saved_dashboard_filter: saved_dashboard_filters |> List.first())
+
+      true ->
+        render(conn, "index.json", saved_dashboard_filters: saved_dashboard_filters)
+    end
   end
 
   def create(conn, %{"saved_dashboard_filter" => saved_dashboard_filter_params}) do
