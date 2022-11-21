@@ -78,10 +78,10 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(workorder_templates, fn r ->
-        [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, get_only_ids_for_workorder_tasks(r.tasks), r.estimated_time, r.scheduled,
+        [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, r.estimated_time, r.scheduled,
         r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times,
-        r.workorder_prior_time, r.workpermit_required, r.workpermit_check_list_id, r.loto_required, r.loto_lock_check_list_id,
-        r.loto_release_check_list_id]
+        r.workorder_prior_time, r.is_precheck_required, r.precheck_list_id, r.is_workpermit_required, r.is_workorder_approval_required,
+        r.is_workorder_acknowledgement_required, r.workpermit_check_list_id, r.is_loto_required, r.loto_lock_check_list_id, r.loto_release_check_list_id]
       end)
 
     final_report = header ++ body
