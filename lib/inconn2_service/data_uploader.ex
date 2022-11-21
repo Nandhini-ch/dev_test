@@ -51,6 +51,7 @@ defmodule Inconn2Service.DataUploader do
   end
 
   defp convert_return_data_to_csv(return_data, headers) do
+    IO.inspect(headers)
     Stream.map(return_data, fn d ->
       Enum.map(headers, fn h ->
         d[h]
