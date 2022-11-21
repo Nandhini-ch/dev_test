@@ -501,6 +501,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/update_entries", ReferenceUpdateController, :update_table
     resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 
+    post "/bulk_upload", DataUploadController, :upload_content
+
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
       get "/:team_id/attendances", AttendanceController, :index_for_team
