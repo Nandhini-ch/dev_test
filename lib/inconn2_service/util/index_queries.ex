@@ -289,4 +289,13 @@ defmodule Inconn2Service.Util.IndexQueries do
       _ , query -> query
     end)
   end
+
+  def saved_dashboard_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+      {"widget_code", widget_code}, query -> from q in query, where: q.widget_code == ^widget_code
+      {"user_id", user_id}, query -> from q in query, where: q.user_id == ^user_id
+      {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      _, query -> query
+    end)
+  end
 end

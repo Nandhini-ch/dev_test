@@ -346,10 +346,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
          join: e in Equipment, on: e.id == wos.asset_id and wos.asset_type == "E" and e.site_id == ^site_id,
          join: s in Site, on: s.id == e.site_id,
          join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
-         select: %{
-          schedule: wos,
-          template: wot
-         })
+         select: wos)
   end
 
   def get_expected_rosters(site_id, from_date, to_date, prefix) do

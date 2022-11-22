@@ -3,10 +3,11 @@ defmodule Inconn2Service.DashboardConfiguration do
   import Ecto.Changeset
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.IndexQueries
   alias Inconn2Service.Repo
   alias Inconn2Service.Common
 
-  alias Inconn2Service.DashboardConfiguration.UserWidgetConfig
+  alias Inconn2Service.DashboardConfiguration.{UserWidgetConfig, SavedDashboardFilter}
 
   def list_user_widget_configs(params, user, prefix) do
     user_id = get_user_from_map(params, user)
@@ -94,5 +95,50 @@ defmodule Inconn2Service.DashboardConfiguration do
 
   defp preload_widgets(user_widget_list) when is_list(user_widget_list) do
     Enum.map(user_widget_list, fn uwc -> Map.put(uwc, :widget, Common.get_widget_by_code(uwc.widget_code)) end)
+  end
+
+  #Context functionds for SavedDashboardFilter
+  def list_saved_dashboard_filters(user, query_params, prefix) do
+    SavedDashboardFilter
+    |> where([user_id: ^user.id])
+    |> saved_dashboard_query(query_params)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_saved_dashboard_filter!(id, prefix), do: Repo.get!(SavedDashboardFilter, id, prefix: prefix)
+
+  def get_saved_dashboard_for_params(widget_code, user_id, site_id, prefix) do
+    SavedDashboardFilter
+    |> where([widget_code: ^widget_code, user_id: ^user_id, site_id: ^site_id])
+    |> Repo.one(prefix: prefix)
+  end
+
+  def create_or_update_saved_dashboard_filter(attrs \\ %{}, user, prefix) do
+    case get_saved_dashboard_for_params(attrs["widget_code"], user.id, attrs["site_id"], prefix) do
+      nil -> create_saved_dashboard_filter(Map.put(attrs, "user_id", user.id), prefix)
+      saved_dashboard_filter -> update_saved_dashboard_filter(saved_dashboard_filter, Map.put(attrs, "user_id", user.id), prefix)
+    end
+  end
+
+  defp create_saved_dashboard_filter(attrs, prefix) do
+    %SavedDashboardFilter{}
+    |> SavedDashboardFilter.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+  defp update_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, attrs, prefix) do
+    saved_dashboard_filter
+    |> SavedDashboardFilter.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, prefix) do
+    # Repo.delete(saved_dashboard_filter)
+    update_saved_dashboard_filter(saved_dashboard_filter, %{"active" => false}, prefix)
+  end
+
+  def change_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, attrs \\ %{}) do
+    SavedDashboardFilter.changeset(saved_dashboard_filter, attrs)
   end
 end

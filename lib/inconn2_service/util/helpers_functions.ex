@@ -226,4 +226,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
+  def convert_to_float(number) when is_float(number), do: number
+  def convert_to_float(number), do: number * 1.0
+
 end
