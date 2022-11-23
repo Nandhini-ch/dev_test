@@ -114,7 +114,7 @@ defmodule Inconn2Service.SeedFeatures do
     %{
       "name" => name,
       "code" => code,
-      "permissions" => read_and_insert("assets/features/#{name}.csv", :role_profile)
+      "permissions" => read_and_insert("/priv/features/#{name}.csv", :role_profile)
     }
   end
 
