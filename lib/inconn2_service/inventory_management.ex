@@ -122,7 +122,7 @@ defmodule Inconn2Service.InventoryManagement do
   end
 
   # Context functions for %Store{}
-  def list_stores(query_params, prefix) do
+  def list_stores(query_params, prefix, user \\ %{}) do
     query = from s in Store, where: s.active
     query = Enum.reduce(query_params, query, fn
       {"type", type}, query ->
@@ -136,6 +136,9 @@ defmodule Inconn2Service.InventoryManagement do
 
       {"user_id", user_id}, query ->
         from q in query, where: q.user_id == ^user_id
+
+      {"storekeeper_user_id", "current"}, query ->
+        from q in query, where: q.storekeeper_user_id == ^user.id
 
       {"storekeeper_user_id", storekeeper_user_id}, query ->
         from q in query, where: q.storekeeper_user_id == ^storekeeper_user_id
