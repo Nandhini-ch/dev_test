@@ -360,10 +360,23 @@ defmodule Inconn2Service.InventoryManagement do
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
     |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> get_stock_for_item_and_store(t, prefix) end)
     |> Enum.group_by(&(&1.transaction_reference))
     |> rearrange_transaction_info()
     |> put_approval_status_for_transactions()
   end
+
+  defp get_stock_for_item_and_store(transaction, prefix) do
+    stock_query(
+      Stock,
+      %{
+        "item_id" => transaction.inventory_item_id,
+        "store_id" => transaction.store_id
+      }
+    ) |> Repo.all(prefix: prefix) |> Enum.map(fn s -> s.quantity end) |> Enum.sum() |> put_current_stock_for_transaction_result(transaction)
+  end
+
+  defp put_current_stock_for_transaction_result(stock, transaction), do: Map.put(transaction, :current_stock, stock)
 
   defp rearrange_transaction_info(transactions) do
     Enum.map(transactions, fn {reference, transactions_for_reference} ->
