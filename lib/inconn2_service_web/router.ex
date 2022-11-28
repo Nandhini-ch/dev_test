@@ -166,6 +166,7 @@ defmodule Inconn2ServiceWeb.Router do
     put "/update_workorder_schedules", WorkorderScheduleController, :update_multiple
     put "/workorder_schedule/:id/pause", WorkorderScheduleController, :pause_schedule
     put "/workorder_schedule/:id/resume", WorkorderScheduleController, :resume_schedule
+    put "/pause_resume_workorder_schedules", WorkorderScheduleController, :pause_resume_multiple
 
     get "/work_orders_of_user", WorkOrderController, :work_orders_of_user
     get "/work_orders/enable_start/:id", WorkOrderController, :enable_start

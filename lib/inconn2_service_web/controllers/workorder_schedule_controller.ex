@@ -62,6 +62,17 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
     end
   end
 
+  def pause_resume_multiple(conn, %{"workorder_schedules" => workorder_schedule_params}) do
+    with {:ok, workorder_schedules} <- Workorder.multiple_update_pause_schedule(workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+      workorder_schedules = Enum.map(workorder_schedules, fn workorder_schedule ->
+        get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
+      end)
+      conn
+      |> put_status(:ok)
+      |> render("index.json", workorder_schedules: workorder_schedules)
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
