@@ -55,7 +55,7 @@ defmodule Inconn2Service.SeedFeatures do
 
   #Seed features...
   def seed_features() do
-    read_and_insert("/priv/features/Features.csv", :features)
+    read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/Features.csv"), :features)
     |> Enum.map(&(Common.create_feature(&1)))
     # |> Stream.map(&Task.async(fn -> Common.create_feature(&1) end))
     # |> Enum.map(&Task.await/1)
@@ -114,7 +114,7 @@ defmodule Inconn2Service.SeedFeatures do
     %{
       "name" => name,
       "code" => code,
-      "permissions" => read_and_insert("/priv/features/#{name}.csv", :role_profile)
+      "permissions" => read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/#{name}.csv"), :role_profile)
     }
   end
 
