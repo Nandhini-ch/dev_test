@@ -1112,7 +1112,7 @@ defmodule Inconn2Service.InventoryManagement do
   defp preload_user_for_store(store, prefix), do: Map.put(store, :user, Staff.get_user_without_org_unit(store.user_id, prefix))
 
   defp preload_storekeeper_user_for_store({:error, reason}, _prefix), do: {:error, reason}
-  defp preload_storekeeper_user_for_store({:ok, store}, prefix), do: {:ok, preload_user_for_store(store, prefix)}
+  defp preload_storekeeper_user_for_store({:ok, store}, prefix), do: {:ok, preload_storekeeper_user_for_store(store, prefix)}
   defp preload_storekeeper_user_for_store(store, _prefix) when is_nil(store.storekeeper_user_id), do: Map.put(store, :storekeeper_user, nil)
   defp preload_storekeeper_user_for_store(store, prefix), do: Map.put(store, :storekeeper_user, Staff.get_user_without_org_unit(store.storekeeper_user_id, prefix))
 
