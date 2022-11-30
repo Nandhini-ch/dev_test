@@ -497,6 +497,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
     %{
       name: shift_name,
+      count: actual_attendances,
       value: (actual_attendances / expected_rosters) *100
     }
   end
@@ -530,6 +531,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
     %{
       name: shift_name,
+      count: actual_attendances,
       value: (actual_attendances / expected_rosters) *100
     }
   end
@@ -639,10 +641,12 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Scheduled",
+        count: incomplete_count,
         value: (incomplete_count/total_count) * 100
       },
       %{
         name: "Completed",
+        count: completed_count,
         value: (completed_count/total_count) * 100
       }
     ]
@@ -655,6 +659,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Workorders",
+        count: inprogress_count,
         value: (inprogress_count/total_count) * 100
       }
     ]
