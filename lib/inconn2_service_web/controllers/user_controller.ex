@@ -58,29 +58,47 @@ defmodule Inconn2ServiceWeb.UserController do
    end
  end
 
-  def change_password(conn, %{"credential" => credentials}) do
-    if conn.assigns.current_user.id == String.to_integer(conn.params["id"]) do
-      case Staff.change_user_password(conn.assigns.current_user, credentials, conn.assigns.sub_domain_prefix) do
-        {:ok, user} ->
-          render(conn, "success.json", user: user)
+ def change_password(conn, %{"credential" => credentials}) do
+  case Staff.change_user_password(conn.assigns.current_user, credentials, conn.assigns.sub_domain_prefix) do
+    {:ok, user} ->
+      render(conn, "success.json", user: user)
 
-        {:error, %Ecto.Changeset{} = changeset} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> put_view(Inconn2ServiceWeb.ChangesetView)
-          |> render("error.json", changeset: changeset)
-
-        {:error, reason} ->
-          conn
-          |> put_status(401)
-          |> render("error.json", %{error: reason})
-      end
-    else
+    {:error, %Ecto.Changeset{} = changeset} ->
       conn
-      |> put_status(404)
-      |> render("error.json", %{error: "Cannot change another users password"})
-    end
+      |> put_status(:unprocessable_entity)
+      |> put_view(Inconn2ServiceWeb.ChangesetView)
+      |> render("error.json", changeset: changeset)
+
+    {:error, reason} ->
+      conn
+      |> put_status(401)
+      |> render("error.json", %{error: reason})
   end
+ end
+
+  # def change_password(conn, %{"credential" => credentials}) do
+  #   if conn.assigns.current_user.id == String.to_integer(conn.params["id"]) do
+  #     case Staff.change_user_password(conn.assigns.current_user, credentials, conn.assigns.sub_domain_prefix) do
+  #       {:ok, user} ->
+  #         render(conn, "success.json", user: user)
+
+  #       {:error, %Ecto.Changeset{} = changeset} ->
+  #         conn
+  #         |> put_status(:unprocessable_entity)
+  #         |> put_view(Inconn2ServiceWeb.ChangesetView)
+  #         |> render("error.json", changeset: changeset)
+
+  #       {:error, reason} ->
+  #         conn
+  #         |> put_status(401)
+  #         |> render("error.json", %{error: reason})
+  #     end
+  #   else
+  #     conn
+  #     |> put_status(404)
+  #     |> render("error.json", %{error: "Cannot change another users password"})
+  #   end
+  # end
 
   def forgot_password(conn, %{"credentials" => credentials}) do
     case Staff.get_user_by_username_for_otp(credentials["username"], conn.assigns.sub_domain_prefix) do
