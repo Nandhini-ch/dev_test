@@ -226,7 +226,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/users", UserController, except: [:new, :edit]
     get "/reportee_users", UserController, :reportee_users
     get "/users/workorder_template/:workorder_template_id", UserController, :index_for_workorder_template
-    put "/users/change_password", UserController, :change_password
+    put "/change_password", UserController, :change_password
     get "/download_users", ReferenceDownloadController, :download_users
     resources "/modules", ModuleController, only: [:index, :show]
     get "/modules/:module_id/features", FeatureController, :index
