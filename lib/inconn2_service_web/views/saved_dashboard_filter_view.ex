@@ -12,6 +12,7 @@ defmodule Inconn2ServiceWeb.SavedDashboardFilterView do
 
   def render("saved_dashboard_filter.json", %{saved_dashboard_filter: saved_dashboard_filter}) do
     %{id: saved_dashboard_filter.id,
+      name: saved_dashboard_filter.name,
       widget_code: saved_dashboard_filter.widget_code,
       site_id: saved_dashboard_filter.site_id,
       user_id: saved_dashboard_filter.user_id,

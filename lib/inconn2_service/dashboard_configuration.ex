@@ -115,10 +115,11 @@ defmodule Inconn2Service.DashboardConfiguration do
   end
 
   def create_or_update_saved_dashboard_filter(attrs \\ %{}, user, prefix) do
-    case get_saved_dashboard_for_params(attrs["widget_code"], user.id, attrs["site_id"], prefix) do
-      nil -> create_saved_dashboard_filter(Map.put(attrs, "user_id", user.id), prefix)
-      saved_dashboard_filter -> update_saved_dashboard_filter(saved_dashboard_filter, Map.put(attrs, "user_id", user.id), prefix)
-    end
+    # case get_saved_dashboard_for_params(attrs["widget_code"], user.id, attrs["site_id"], prefix) do
+    #   nil -> create_saved_dashboard_filter(Map.put(attrs, "user_id", user.id), prefix)
+    #   saved_dashboard_filter -> update_saved_dashboard_filter(saved_dashboard_filter, Map.put(attrs, "user_id", user.id), prefix)
+    # end
+    create_saved_dashboard_filter(Map.put(attrs, "user_id", user.id), prefix)
   end
 
   defp create_saved_dashboard_filter(attrs, prefix) do
@@ -127,7 +128,7 @@ defmodule Inconn2Service.DashboardConfiguration do
     |> Repo.insert(prefix: prefix)
   end
 
-  defp update_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, attrs, prefix) do
+  def update_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, attrs, prefix) do
     saved_dashboard_filter
     |> SavedDashboardFilter.changeset(attrs)
     |> Repo.update(prefix: prefix)

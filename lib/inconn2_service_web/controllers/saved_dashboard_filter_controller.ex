@@ -10,7 +10,7 @@ defmodule Inconn2ServiceWeb.SavedDashboardFilterController do
     saved_dashboard_filters = DashboardConfiguration.list_saved_dashboard_filters(conn.assigns.current_user, conn.query_params, conn.assigns.sub_domain_prefix)
     cond do
       !is_nil(conn.query_params["site_id"]) && !is_nil(conn.query_params["widget_code"]) ->
-        render(conn, "show.json", saved_dashboard_filter: saved_dashboard_filters |> List.first())
+        render(conn, "index.json", saved_dashboard_filters: saved_dashboard_filters)
 
       true ->
         render(conn, "index.json", saved_dashboard_filters: saved_dashboard_filters)
@@ -31,13 +31,13 @@ defmodule Inconn2ServiceWeb.SavedDashboardFilterController do
     render(conn, "show.json", saved_dashboard_filter: saved_dashboard_filter)
   end
 
-  # def update(conn, %{"id" => id, "saved_dashboard_filter" => saved_dashboard_filter_params}) do
-  #   saved_dashboard_filter = DashboardConfiguration.get_saved_dashboard_filter!(id)
+  def update(conn, %{"id" => id, "saved_dashboard_filter" => saved_dashboard_filter_params}) do
+    saved_dashboard_filter = DashboardConfiguration.get_saved_dashboard_filter!(id, conn.assigns.sub_domain_prefix)
 
-  #   with {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} <- DashboardConfiguration.update_saved_dashboard_filter(saved_dashboard_filter, saved_dashboard_filter_params) do
-  #     render(conn, "show.json", saved_dashboard_filter: saved_dashboard_filter)
-  #   end
-  # end
+    with {:ok, %SavedDashboardFilter{} = saved_dashboard_filter} <- DashboardConfiguration.update_saved_dashboard_filter(saved_dashboard_filter, saved_dashboard_filter_params, conn.assigns.sub_domain_prefix) do
+      render(conn, "show.json", saved_dashboard_filter: saved_dashboard_filter)
+    end
+  end
 
   def delete(conn, %{"id" => id}) do
     saved_dashboard_filter = DashboardConfiguration.get_saved_dashboard_filter!(id, conn.assigns.sub_domain_prefix)

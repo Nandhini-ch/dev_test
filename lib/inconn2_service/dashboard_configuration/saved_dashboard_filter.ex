@@ -3,6 +3,7 @@ defmodule Inconn2Service.DashboardConfiguration.SavedDashboardFilter do
   import Ecto.Changeset
 
   schema "saved_dashboard_filters" do
+    field :name, :string
     field :config, :map
     field :site_id, :integer
     field :user_id, :integer
@@ -15,7 +16,7 @@ defmodule Inconn2Service.DashboardConfiguration.SavedDashboardFilter do
   @doc false
   def changeset(saved_dashboard_filter, attrs) do
     saved_dashboard_filter
-    |> cast(attrs, [:widget_code, :site_id, :user_id, :config, :active])
-    |> validate_required([:widget_code, :site_id, :user_id, :config])
+    |> cast(attrs, [:name, :widget_code, :site_id, :user_id, :config, :active])
+    |> validate_required([:name, :widget_code, :site_id, :user_id, :config])
   end
 end
