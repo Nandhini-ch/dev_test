@@ -135,8 +135,8 @@ defmodule Inconn2Service.DashboardConfiguration do
   end
 
   def delete_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, prefix) do
-    # Repo.delete(saved_dashboard_filter)
-    update_saved_dashboard_filter(saved_dashboard_filter, %{"active" => false}, prefix)
+    Repo.delete(saved_dashboard_filter, prefix: prefix)
+    # update_saved_dashboard_filter(saved_dashboard_filter, %{"active" => false}, prefix)
   end
 
   def change_saved_dashboard_filter(%SavedDashboardFilter{} = saved_dashboard_filter, attrs \\ %{}) do
