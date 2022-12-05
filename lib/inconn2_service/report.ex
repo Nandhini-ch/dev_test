@@ -2,6 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
+  alias Socket.Stream
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -436,12 +437,15 @@ defmodule Inconn2Service.Report do
       |> filter_by_site(rectified_query_params["site_id"])
       |> filter_by_asset_category(rectified_query_params["asset_category_id"])
 
+    summary_headers =["Store Location", "Count of receive Tx", "Count of issue Tx"]
+
+    summary = summary_for_inventory_report(result)
 
     filters = filter_data(query_params, prefix)
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Inventory Report", filters, result, headers, "IN")
+        convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers)
 
       "csv" ->
         csv_for_inventory_report(headers, result)
@@ -449,6 +453,17 @@ defmodule Inconn2Service.Report do
       _ ->
         result
     end
+  end
+
+  def summary_for_inventory_report(result) do
+    Enum.group_by(result, &(&1.store_id))
+    |> Enum.map(fn {_k, v} ->
+      %{
+        store_location: List.first(v).store_id,
+        count_of_receive: Enum.filter(v, fn a -> a.status in "IN" end) |> Enum.count(),
+        count_of_issue: Enum.filter(v, fn a -> a.status in "IS" end) |> Enum.count()
+      }
+    end)
   end
 
   def filter_by_site(list, nil), do: list
@@ -668,12 +683,16 @@ defmodule Inconn2Service.Report do
       end)
 
     report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Ticket Subcategory", "Description", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
+    summary_headers =["Ticket Category", "Count", "Resolved Count", "Open Count"]
 
     filters = filter_data(query_params, prefix)
 
+    summary = summary_for_workrequest_report(result)
+
+
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Ticket Report", filters, result, report_headers, "WR")
+        convert_to_pdf("Ticket Report", filters, result, report_headers, "WR", summary, summary_headers)
 
       "csv" ->
         csv_for_workrequest_report(report_headers, result)
@@ -699,6 +718,19 @@ defmodule Inconn2Service.Report do
     {number, _} = Float.parse(minutes)
     number * 60
   end
+
+  def summary_for_workrequest_report(result) do
+    Enum.group_by(result, &(&1.workrequest_category_id))
+    |> Enum.map(fn {_k, v} ->
+      %{
+        ticket_category: List.first(v).ticket_category,
+        count: Enum.count(v),
+        resolved_count: Enum.filter(v, fn a -> a.status == "cl" end) |> Enum.count(),
+        open_count: Enum.filter(v, fn a -> a.status != "cl" end) |> Enum.count()
+      }
+    end)
+  end
+
 
   defp get_site_date_time(site) do
     date_time = DateTime.now!(site.time_zone)
@@ -1290,8 +1322,82 @@ defmodule Inconn2Service.Report do
   end
 
 
-  defp convert_to_pdf(report_title, filters, data, report_headers, report_for) do
-    create_report_structure(report_title, filters, data, report_headers, report_for)
+  defp convert_to_pdf(report_title, filters, data, report_headers, report_for, summary \\ [], summary_headers \\ []) do
+    create_report_structure(report_title, filters, data, report_headers, report_for, summary, summary_headers)
+  end
+
+
+  def create_summary_table(summary, summary_headers, "WR") do
+    [
+      :table,
+      %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+      create_report_headers(summary_headers),
+      create_work_request_summary_table(summary)
+    ]
+  end
+
+  def create_summary_table(summary, summary_headers, "IN") do
+    [
+      :table,
+      %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+      create_report_headers(summary_headers),
+      create_inventory_table(summary)
+    ]
+  end
+
+  def create_summary_table(_summary, _summary_headers, _) do
+    []
+  end
+
+  def create_work_request_summary_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.ticket_category
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.resolved_count
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.open_count
+        ],
+      ]
+    end)
+  end
+
+  def create_inventory_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.store_location
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_of_receive
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_of_issue
+        ],
+      ]
+    end)
   end
 
   def create_report_structure(report_title, filters, data, _report_headers, "WOE") do
@@ -1340,7 +1446,7 @@ defmodule Inconn2Service.Report do
             :h3,
             %{style: style(%{"float" => "right", "font-style" => "italic"})},
             "Powered By Inconn"
-          ]
+          ],
         ]
       )
     {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
@@ -1348,7 +1454,7 @@ defmodule Inconn2Service.Report do
     pdf_content
   end
 
-  def create_report_structure(report_title, filters, data, report_headers, report_for) do
+  def create_report_structure(report_title, filters, data, report_headers, report_for, summary, summary_headers) do
     string =
       Sneeze.render(
         [
@@ -1391,6 +1497,11 @@ defmodule Inconn2Service.Report do
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
             create_table_body(data, report_for)
+          ],
+          [
+            :div,
+            %{style: style(%{"margin-top" => "20px"})},
+            create_summary_table(summary, summary_headers, report_for),
           ],
           [
             :h3,
@@ -1715,7 +1826,7 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.time_taken_to_close
-        ],
+        ]
       ]
     end)
   end

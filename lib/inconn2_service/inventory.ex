@@ -1,7 +1,4 @@
 defmodule Inconn2Service.Inventory do
-  @moduledoc """
-  The Inventory context.
-  """
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
@@ -15,111 +12,37 @@ defmodule Inconn2Service.Inventory do
 
   alias Ecto.Multi
 
-  @doc """
-  Returns the list of suppliers.
-
-  ## Examples
-
-      iex> list_suppliers()
-      [%Supplier{}, ...]
-
-  """
   def list_suppliers(prefix) do
     Repo.all(Supplier, prefix: prefix)
   end
 
-  @doc """
-  Gets a single supplier.
-
-  Raises `Ecto.NoResultsError` if the Supplier does not exist.
-
-  ## Examples
-
-      iex> get_supplier!(123)
-      %Supplier{}
-
-      iex> get_supplier!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_supplier!(id, prefix), do: Repo.get!(Supplier, id, prefix: prefix)
 
-  @doc """
-  Creates a supplier.
 
-  ## Examples
-
-      iex> create_supplier(%{field: value})
-      {:ok, %Supplier{}}
-
-      iex> create_supplier(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_supplier(attrs \\ %{}, prefix) do
     %Supplier{}
     |> Supplier.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a supplier.
 
-  ## Examples
-
-      iex> update_supplier(supplier, %{field: new_value})
-      {:ok, %Supplier{}}
-
-      iex> update_supplier(supplier, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_supplier(%Supplier{} = supplier, attrs, prefix) do
     supplier
     |> Supplier.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a supplier.
-
-  ## Examples
-
-      iex> delete_supplier(supplier)
-      {:ok, %Supplier{}}
-
-      iex> delete_supplier(supplier)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_supplier(%Supplier{} = supplier, prefix) do
     Repo.delete(supplier, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking supplier changes.
-
-  ## Examples
-
-      iex> change_supplier(supplier)
-      %Ecto.Changeset{data: %Supplier{}}
-
-  """
   def change_supplier(%Supplier{} = supplier, attrs \\ %{}) do
     Supplier.changeset(supplier, attrs)
   end
 
   alias Inconn2Service.Inventory.UOM
 
-  @doc """
-  Returns the list of uoms.
 
-  ## Examples
-
-      iex> list_uoms()
-      [%UOM{}, ...]
-
-  """
   def list_uoms(prefix) do
     Repo.all(UOM, prefix: prefix)
   end
@@ -132,116 +55,35 @@ defmodule Inconn2Service.Inventory do
     Repo.get_by(UOM, [uom_type: "cost"], prefix: prefix)
   end
 
-  @doc """
-  Gets a single uom.
-
-  Raises `Ecto.NoResultsError` if the Uom does not exist.
-
-  ## Examples
-
-      iex> get_uom!(123)
-      %UOM{}
-
-      iex> get_uom!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_uom!(id, prefix), do: Repo.get!(UOM, id, prefix: prefix)
 
-  @doc """
-  Creates a uom.
 
-  ## Examples
-
-      iex> create_uom(%{field: value})
-      {:ok, %UOM{}}
-
-      iex> create_uom(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_uom(attrs \\ %{}, prefix) do
     %UOM{}
     |> UOM.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a uom.
-
-  ## Examples
-
-      iex> update_uom(uom, %{field: new_value})
-      {:ok, %UOM{}}
-
-      iex> update_uom(uom, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_uom(%UOM{} = uom, attrs, prefix) do
     uom
     |> UOM.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a uom.
-
-  ## Examples
-
-      iex> delete_uom(uom)
-      {:ok, %UOM{}}
-
-      iex> delete_uom(uom)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_uom(%UOM{} = uom, prefix) do
     Repo.delete(uom, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking uom changes.
-
-  ## Examples
-
-      iex> change_uom(uom)
-      %Ecto.Changeset{data: %UOM{}}
-
-  """
   def change_uom(%UOM{} = uom, attrs \\ %{}) do
     UOM.changeset(uom, attrs)
   end
 
   alias Inconn2Service.Inventory.UomConversion
 
-  @doc """
-  Returns the list of uom_conversions.
-
-  ## Examples
-
-      iex> list_uom_conversions()
-      [%UomConversion{}, ...]
-
-  """
   def list_uom_conversions(prefix) do
     Repo.all(UomConversion, prefix: prefix)
   end
 
-  @doc """
-  Gets a single uom_conversion.
-
-  Raises `Ecto.NoResultsError` if the Uom conversion does not exist.
-
-  ## Examples
-
-      iex> get_uom_conversion!(123)
-      %UomConversion{}
-
-      iex> get_uom_conversion!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_uom_conversion!(id, prefix), do: Repo.get!(UomConversion, id, prefix: prefix)
 
   def convert(from_uom_id, to_uom_id, value, prefix, direction \\ "forward") do
@@ -266,18 +108,6 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  @doc """
-  Creates a uom_conversion.
-
-  ## Examples
-
-      iex> create_uom_conversion(%{field: value})
-      {:ok, %UomConversion{}}
-
-      iex> create_uom_conversion(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_uom_conversion(attrs \\ %{}, prefix) do
     %UomConversion{}
     |> UomConversion.changeset(attrs)
@@ -295,64 +125,24 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  @doc """
-  Updates a uom_conversion.
 
-  ## Examples
-
-      iex> update_uom_conversion(uom_conversion, %{field: new_value})
-      {:ok, %UomConversion{}}
-
-      iex> update_uom_conversion(uom_conversion, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_uom_conversion(%UomConversion{} = uom_conversion, attrs, prefix) do
     uom_conversion
     |> UomConversion.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a uom_conversion.
-
-  ## Examples
-
-      iex> delete_uom_conversion(uom_conversion)
-      {:ok, %UomConversion{}}
-
-      iex> delete_uom_conversion(uom_conversion)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_uom_conversion(%UomConversion{} = uom_conversion, prefix) do
     Repo.delete(uom_conversion, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking uom_conversion changes.
-
-  ## Examples
-
-      iex> change_uom_conversion(uom_conversion)
-      %Ecto.Changeset{data: %UomConversion{}}
-
-  """
   def change_uom_conversion(%UomConversion{} = uom_conversion, attrs \\ %{}) do
     UomConversion.changeset(uom_conversion, attrs)
   end
 
   alias Inconn2Service.Inventory.Item
 
-  @doc """
-  Returns the list of items.
 
-  ## Examples
-
-      iex> list_items()
-      [%Item{}, ...]
-
-  """
   def list_items(prefix) do
     Repo.all(Item, prefix: prefix) |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
@@ -364,36 +154,10 @@ defmodule Inconn2Service.Inventory do
     |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
 
-  @doc """
-  Gets a single item.
-
-  Raises `Ecto.NoResultsError` if the Item does not exist.
-
-  ## Examples
-
-      iex> get_item!(123)
-      %Item{}
-
-      iex> get_item!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_item!(id, prefix) do
     Repo.get!(Item, id, prefix: prefix) |> Repo.preload([:inventory_unit_uom, :purchase_unit_uom, :consume_unit_uom])
   end
 
-  @doc """
-  Creates a item.
-
-  ## Examples
-
-      iex> create_item(%{field: value})
-      {:ok, %Item{}}
-
-      iex> create_item(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_item(attrs \\ %{}, prefix) do
     result =
       %Item{}
@@ -438,18 +202,6 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  @doc """
-  Updates a item.
-
-  ## Examples
-
-      iex> update_item(item, %{field: new_value})
-      {:ok, %Item{}}
-
-      iex> update_item(item, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_item(%Item{} = item, attrs, prefix) do
     result =
       item
@@ -462,142 +214,48 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  @doc """
-  Deletes a item.
 
-  ## Examples
-
-      iex> delete_item(item)
-      {:ok, %Item{}}
-
-      iex> delete_item(item)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_item(%Item{} = item, prefix) do
     Repo.delete(item, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking item changes.
 
-  ## Examples
-
-      iex> change_item(item)
-      %Ecto.Changeset{data: %Item{}}
-
-  """
   def change_item(%Item{} = item, attrs \\ %{}) do
     Item.changeset(item, attrs)
   end
 
   alias Inconn2Service.Inventory.InventoryLocation
 
-  @doc """
-  Returns the list of inventory_locations.
-
-  ## Examples
-
-      iex> list_inventory_locations()
-      [%InventoryLocation{}, ...]
-
-  """
   def list_inventory_locations(prefix) do
     Repo.all(InventoryLocation, prefix: prefix)
   end
 
-  @doc """
-  Gets a single inventory_location.
-
-  Raises `Ecto.NoResultsError` if the Inventory location does not exist.
-
-  ## Examples
-
-      iex> get_inventory_location!(123)
-      %InventoryLocation{}
-
-      iex> get_inventory_location!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_inventory_location!(id, prefix), do: Repo.get!(InventoryLocation, id, prefix: prefix)
 
-  @doc """
-  Creates a inventory_location.
-
-  ## Examples
-
-      iex> create_inventory_location(%{field: value})
-      {:ok, %InventoryLocation{}}
-
-      iex> create_inventory_location(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_inventory_location(attrs \\ %{}, prefix) do
     %InventoryLocation{}
     |> InventoryLocation.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a inventory_location.
 
-  ## Examples
-
-      iex> update_inventory_location(inventory_location, %{field: new_value})
-      {:ok, %InventoryLocation{}}
-
-      iex> update_inventory_location(inventory_location, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_inventory_location(%InventoryLocation{} = inventory_location, attrs, prefix) do
     inventory_location
     |> InventoryLocation.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a inventory_location.
-
-  ## Examples
-
-      iex> delete_inventory_location(inventory_location)
-      {:ok, %InventoryLocation{}}
-
-      iex> delete_inventory_location(inventory_location)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_inventory_location(%InventoryLocation{} = inventory_location, prefix) do
     Repo.delete(inventory_location, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking inventory_location changes.
-
-  ## Examples
-
-      iex> change_inventory_location(inventory_location)
-      %Ecto.Changeset{data: %InventoryLocation{}}
-
-  """
   def change_inventory_location(%InventoryLocation{} = inventory_location, attrs \\ %{}) do
     InventoryLocation.changeset(inventory_location, attrs)
   end
 
   alias Inconn2Service.Inventory.InventoryStock
 
-  @doc """
-  Returns the list of inventory_stocks.
 
-  ## Examples
-
-      iex> list_inventory_stocks()
-      [%InventoryStock{}, ...]
-
-  """
   def list_inventory_stocks(prefix) do
     Repo.all(InventoryStock, prefix: prefix)
   end
@@ -609,20 +267,7 @@ defmodule Inconn2Service.Inventory do
     |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
   end
 
-  @doc """
-  Gets a single inventory_stock.
 
-  Raises `Ecto.NoResultsError` if the Inventory stock does not exist.
-
-  ## Examples
-
-      iex> get_inventory_stock!(123)
-      %InventoryStock{}
-
-      iex> get_inventory_stock!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_inventory_stock!(id, prefix), do: Repo.get!(InventoryStock, id, prefix: prefix) |> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
 
   def get_stock_for_item(item_id, prefix) do
@@ -639,82 +284,32 @@ defmodule Inconn2Service.Inventory do
     Map.put_new(stock, :price, average)
   end
 
-  @doc """
-  Creates a inventory_stock.
 
-  ## Examples
-
-      iex> create_inventory_stock(%{field: value})
-      {:ok, %InventoryStock{}}
-
-      iex> create_inventory_stock(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_inventory_stock(attrs \\ %{}, prefix) do
     %InventoryStock{}
     |> InventoryStock.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a inventory_stock.
 
-  ## Examples
-
-      iex> update_inventory_stock(inventory_stock, %{field: new_value})
-      {:ok, %InventoryStock{}}
-
-      iex> update_inventory_stock(inventory_stock, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_inventory_stock(%InventoryStock{} = inventory_stock, attrs, prefix) do
     inventory_stock
     |> InventoryStock.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a inventory_stock.
 
-  ## Examples
-
-      iex> delete_inventory_stock(inventory_stock)
-      {:ok, %InventoryStock{}}
-
-      iex> delete_inventory_stock(inventory_stock)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_inventory_stock(%InventoryStock{} = inventory_stock, prefix) do
     Repo.delete(inventory_stock, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking inventory_stock changes.
 
-  ## Examples
-
-      iex> change_inventory_stock(inventory_stock)
-      %Ecto.Changeset{data: %InventoryStock{}}
-
-  """
   def change_inventory_stock(%InventoryStock{} = inventory_stock, attrs \\ %{}) do
     InventoryStock.changeset(inventory_stock, attrs)
   end
 
   alias Inconn2Service.Inventory.InventoryTransaction
 
-  @doc """
-  Returns the list of inventory_transactions.
-
-  ## Examples
-
-      iex> list_inventory_transactions()
-      [%InventoryTransaction{}, ...]
-
-  """
   def list_inventory_transactions(prefix) do
     Repo.all(InventoryTransaction, prefix: prefix)
   end
@@ -725,34 +320,10 @@ defmodule Inconn2Service.Inventory do
     |> Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single inventory_transaction.
 
-  Raises `Ecto.NoResultsError` if the Inventory transaction does not exist.
-
-  ## Examples
-
-      iex> get_inventory_transaction!(123)
-      %InventoryTransaction{}
-
-      iex> get_inventory_transaction!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_inventory_transaction!(id, prefix), do: Repo.get!(InventoryTransaction, id, prefix: prefix)|> Repo.preload([:inventory_location, item: [:inventory_unit_uom, :consume_unit_uom, :purchase_unit_uom ]])
 
-  @doc """
-  Creates a inventory_transaction.
 
-  ## Examples
-
-      iex> create_inventory_transaction(%{field: value})
-      {:ok, %InventoryTransaction{}}
-
-      iex> create_inventory_transaction(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_inward_transaction_list("IN", dc_date, dc_reference, supplier_id, transactions, prefix) do
     {:ok,
       Enum.map(transactions, fn(t) ->
@@ -1337,64 +908,24 @@ defmodule Inconn2Service.Inventory do
   #   |> Repo.insert(prefix: prefix)
   # end
 
-  @doc """
-  Updates a inventory_transaction.
 
-  ## Examples
-
-      iex> update_inventory_transaction(inventory_transaction, %{field: new_value})
-      {:ok, %InventoryTransaction{}}
-
-      iex> update_inventory_transaction(inventory_transaction, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_inventory_transaction(%InventoryTransaction{} = inventory_transaction, attrs, prefix) do
     inventory_transaction
     |> InventoryTransaction.update_changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a inventory_transaction.
 
-  ## Examples
-
-      iex> delete_inventory_transaction(inventory_transaction)
-      {:ok, %InventoryTransaction{}}
-
-      iex> delete_inventory_transaction(inventory_transaction)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_inventory_transaction(%InventoryTransaction{} = inventory_transaction, prefix) do
     Repo.delete(inventory_transaction, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking inventory_transaction changes.
-
-  ## Examples
-
-      iex> change_inventory_transaction(inventory_transaction)
-      %Ecto.Changeset{data: %InventoryTransaction{}}
-
-  """
   def change_inventory_transaction(%InventoryTransaction{} = inventory_transaction, attrs \\ %{}) do
     InventoryTransaction.changeset(inventory_transaction, attrs)
   end
 
   alias Inconn2Service.Inventory.InventoryTransfer
 
-  @doc """
-  Returns the list of inventory_transfers.
-
-  ## Examples
-
-      iex> list_inventory_transfers()
-      [%InventoryTransfer{}, ...]
-
-  """
   def list_inventory_transfers(prefix) do
     Repo.all(InventoryTransfer, prefix: prefix)
   end
@@ -1423,35 +954,8 @@ defmodule Inconn2Service.Inventory do
   end
 
 
-
-  @doc """
-  Gets a single inventory_transfer.
-
-  Raises `Ecto.NoResultsError` if the Inventory transfer does not exist.
-
-  ## Examples
-
-      iex> get_inventory_transfer!(123)
-      %InventoryTransfer{}
-
-      iex> get_inventory_transfer!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_inventory_transfer!(id, prefix), do: Repo.get!(InventoryTransfer, id, prefix: prefix)
 
-  @doc """
-  Creates a inventory_transfer.
-
-  ## Examples
-
-      iex> create_inventory_transfer(%{field: value})
-      {:ok, %InventoryTransfer{}}
-
-      iex> create_inventory_transfer(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_inventory_transfer(attrs \\ %{}, prefix) do
     inventory_transfer = %InventoryTransfer{}
     |> InventoryTransfer.changeset(attrs)
@@ -1543,64 +1047,23 @@ defmodule Inconn2Service.Inventory do
   #   |> Repo.insert(prefix: prefix)
   # end
 
-  @doc """
-  Updates a inventory_transfer.
 
-  ## Examples
-
-      iex> update_inventory_transfer(inventory_transfer, %{field: new_value})
-      {:ok, %InventoryTransfer{}}
-
-      iex> update_inventory_transfer(inventory_transfer, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_inventory_transfer(%InventoryTransfer{} = inventory_transfer, attrs, prefix) do
     inventory_transfer
     |> InventoryTransfer.update_changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a inventory_transfer.
-
-  ## Examples
-
-      iex> delete_inventory_transfer(inventory_transfer)
-      {:ok, %InventoryTransfer{}}
-
-      iex> delete_inventory_transfer(inventory_transfer)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_inventory_transfer(%InventoryTransfer{} = inventory_transfer, prefix) do
     Repo.delete(inventory_transfer, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking inventory_transfer changes.
-
-  ## Examples
-
-      iex> change_inventory_transfer(inventory_transfer)
-      %Ecto.Changeset{data: %InventoryTransfer{}}
-
-  """
   def change_inventory_transfer(%InventoryTransfer{} = inventory_transfer, attrs \\ %{}) do
     InventoryTransfer.changeset(inventory_transfer, attrs)
   end
 
   alias Inconn2Service.Inventory.SupplierItem
 
-  @doc """
-  Returns the list of supplier_items.
-
-  ## Examples
-
-      iex> list_supplier_items()
-      [%SupplierItem{}, ...]
-
-  """
   def list_supplier_items(prefix) do
     Repo.all(SupplierItem, prefix: prefix) |> Repo.preload([:item, :supplier])
   end
@@ -1612,34 +1075,10 @@ defmodule Inconn2Service.Inventory do
     |> Repo.preload([:item, :supplier])
   end
 
-  @doc """
-  Gets a single supplier_item.
 
-  Raises `Ecto.NoResultsError` if the Supplier item does not exist.
-
-  ## Examples
-
-      iex> get_supplier_item!(123)
-      %SupplierItem{}
-
-      iex> get_supplier_item!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_supplier_item!(id, prefix), do: Repo.get!(SupplierItem, id, prefix: prefix) |> Repo.preload([:item, :supplier])
 
-  @doc """
-  Creates a supplier_item.
 
-  ## Examples
-
-      iex> create_supplier_item(%{field: value})
-      {:ok, %SupplierItem{}}
-
-      iex> create_supplier_item(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_supplier_item(attrs \\ %{}, prefix) do
     result = %SupplierItem{}
               |> SupplierItem.changeset(attrs)
@@ -1658,49 +1097,16 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  @doc """
-  Updates a supplier_item.
-
-  ## Examples
-
-      iex> update_supplier_item(supplier_item, %{field: new_value})
-      {:ok, %SupplierItem{}}
-
-      iex> update_supplier_item(supplier_item, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_supplier_item(%SupplierItem{} = supplier_item, attrs, prefix) do
     supplier_item
     |> SupplierItem.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a supplier_item.
-
-  ## Examples
-
-      iex> delete_supplier_item(supplier_item)
-      {:ok, %SupplierItem{}}
-
-      iex> delete_supplier_item(supplier_item)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_supplier_item(%SupplierItem{} = supplier_item, prefix) do
     Repo.delete(supplier_item, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking supplier_item changes.
-
-  ## Examples
-
-      iex> change_supplier_item(supplier_item)
-      %Ecto.Changeset{data: %SupplierItem{}}
-
-  """
   def change_supplier_item(%SupplierItem{} = supplier_item, attrs \\ %{}) do
     SupplierItem.changeset(supplier_item, attrs)
   end
