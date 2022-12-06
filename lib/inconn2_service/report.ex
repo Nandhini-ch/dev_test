@@ -2,7 +2,6 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
-  alias Socket.Stream
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -172,8 +171,10 @@ defmodule Inconn2Service.Report do
     result =
       people_report_query(query_params)
       |> Repo.all(prefix: prefix)
-      |> Stream.filter(fn x -> x.org_unit_id == query_params["org_unit_id"] end)
+      # |> Stream.filter(fn x -> x.org_unit_id == query_params["org_unit_id"] end)
       |> Enum.map(fn x -> load_people_attendance_percent(x, query_params, prefix) end)
+
+    summary = get_summary_of_people_report(result)
 
     case query_params["type"] do
       "pdf" ->
@@ -185,6 +186,19 @@ defmodule Inconn2Service.Report do
       _ ->
         result
     end
+  end
+
+  defp get_summary_of_people_report(result) do
+    IO.inspect(result)
+    |> Enum.group_by(&(&1.org_unit_id))
+    |> Enum.map(fn {_k, list} ->
+        [h | _t] = list
+        %{
+          department: h.department,
+          shift_coverage: Enum.reduce(list, 0, fn m, acc -> m.attendance_percentage + acc end),
+          work_done: Enum.reduce(list, 0, fn m, acc -> m.work_done_time_in_decimal + acc end) |> convert_man_hours_consumed()
+        }
+       end)
   end
 
   defp people_report_query(query_params) do
@@ -233,6 +247,7 @@ defmodule Inconn2Service.Report do
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
     |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
+    |> Map.put(:work_done_time_in_decimal, work_done_time)
 
   end
 
