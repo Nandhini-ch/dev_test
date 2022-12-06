@@ -371,11 +371,13 @@ defmodule Inconn2Service.Report do
 
     filters = filter_data(query_params, prefix)
 
-    get_summary_of_maintainance(result, prefix) |> IO.inspect()
+    summary = get_summary_of_maintainance(result, prefix)
+
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO"]
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Order Report", filters, result, report_headers, "WO")
+        convert_to_pdf("Work Order Report", filters, result, report_headers, "WO", summary, summary_headers)
 
       "csv" ->
         csv_for_workorder_report(report_headers, result)
@@ -387,16 +389,15 @@ defmodule Inconn2Service.Report do
 
   def get_summary_of_maintainance(result, prefix) do
     result
-    |> Stream.map(fn wo ->
+    |> Enum.map(fn wo ->
       workorder_template = Inconn2Service.Workorder.get_workorder_template(wo.workorder_template_id, prefix)
       Map.put(wo, :asset_category_id, workorder_template.asset_category_id)
     end)
     |> Enum.group_by(&(&1.asset_category_id))
     |> Enum.map(fn {_k, v} ->
       total_workorder = length(v)
-      completed_workorder = Stream.filter(v, fn a -> a.status in "cp" end) |> Enum.count()
+      completed_workorder = Enum.filter(v, fn a -> a.status in "cp" end) |> Enum.count()
       pending_workorder = total_workorder - completed_workorder
-      # over_due_workorder =
       %{
         asset_category: List.first(v).asset_category.name,
         total_workorder: length(v),
@@ -771,11 +772,13 @@ defmodule Inconn2Service.Report do
 
     filters = filter_data(query_params, prefix)
 
-    get_summary_of_assets(equipments_data ++ locations_data, prefix, from_date, to_date, query_params)
+    summary_headers = ["Asset Category", "Count of Assets", "Count by Status", "PPM Completion %"]
+
+    summary = get_summary_of_assets(equipments_data ++ locations_data, prefix, from_date, to_date, query_params)
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST")
+        convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST", summary, summary_headers)
 
       "csv" ->
         csv_for_asset_status_report(report_headers, equipments_data ++ locations_data)
@@ -791,10 +794,10 @@ defmodule Inconn2Service.Report do
     |> Enum.group_by(&(&1.asset_category_id))
     |> Enum.map(fn {k, v} ->
       count = length(v)
-      available_assets = Stream.filter(v, fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
+      available_assets = Enum.filter(v, fn a -> a.status in ["ON", "OFF"] end) |> Enum.count()
       break_down_assets = count - available_assets
       %{
-        asset_category: List.first(v).asset_category.name,
+        asset_category: List.first(v).asset_category,
         count: length(v),
         count_by_status: "Available: #{available_assets}, Not_available: #{break_down_assets}",
         ppm_completion: get_ppm_compliance_for_asset_category(k, from_date, to_date, query_params, prefix)
@@ -804,15 +807,20 @@ defmodule Inconn2Service.Report do
 
   defp get_ppm_compliance_for_asset_category(asset_category_id, from_date, to_date, query_params, prefix) do
     work_orders =
-      from(wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_id,
-      join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.from_date >= ^from_date and wo.to_date <= ^to_date)
+      from(wot in WorkorderTemplate, where: wot.asset_category_id == ^asset_category_id,
+      join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date,
+      select: wo)
       |> Repo.all(prefix: prefix)
       |> filter_wo_by_site(query_params["site_id"])
 
-    completed_workorders = Stream.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
+    completed_workorders = Enum.filter(work_orders, fn wo -> wo.status == "cp" end) |> Enum.count()
 
-    div(completed_workorders, work_orders |> Enum.count())
+    get_calculated_compliance_value(length(work_orders), completed_workorders)
   end
+
+  defp get_calculated_compliance_value(0, _), do: 0
+  defp get_calculated_compliance_value(total, completed), do: div(completed, total)
+
 
   defp filter_wo_by_site(work_orders, nil), do: work_orders
   defp filter_wo_by_site(work_orders, site_id), do: Enum.filter(work_orders, fn wo -> wo.site_id == site_id end)
@@ -1404,8 +1412,83 @@ defmodule Inconn2Service.Report do
     ]
   end
 
+  def create_summary_table(summary, summary_headers, "AST") do
+    [
+      :table,
+      %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+      create_report_headers(summary_headers),
+      create_asset_table(summary)
+    ]
+  end
+
+  def create_summary_table(summary, summary_headers, "WO") do
+    [
+      :table,
+      %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+      create_report_headers(summary_headers),
+      create_maintainance_table(summary)
+    ]
+  end
+
   def create_summary_table(_summary, _summary_headers, _) do
     []
+  end
+
+  def create_maintainance_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.asset_category
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.total_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.completed_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.pending_workorder
+        ]
+      ]
+    end)
+  end
+
+
+  def create_asset_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.asset_category
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_by_status
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.ppm_completion
+        ]
+      ]
+    end)
   end
 
   def create_work_request_summary_table(summary) do
