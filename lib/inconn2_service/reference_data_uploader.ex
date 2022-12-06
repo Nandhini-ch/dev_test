@@ -355,7 +355,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
         {:error, err_msgs} -> {:error, err_msgs}
       end
 
-    IO.inspect(validate_result)
+    # IO.inspect(validate_result)
 
     case validate_result do
       {:ok, records} ->
@@ -378,9 +378,9 @@ defmodule Inconn2Service.ReferenceDataUploader do
     Enum.map(records, fn r ->
       {_ctrl_map, attrs} =
         Map.split(r, ["id", "active", "reference", "parent reference", "action", "action_valid", "action_error"])
-      IO.inspect(attrs)
+      # IO.inspect(attrs)
       attrs = param_mapper.(attrs)
-      apply(context_module, insert_func, [attrs, prefix])
+      apply(context_module, insert_func, [attrs, prefix]) |> IO.inspect()
 
     end)
   end
@@ -406,7 +406,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
           |> fill_parent_id_and_reference()
 
 
-        IO.inspect(records)
+        # IO.inspect(records)
         {:ok, records}
 
       {:error, messages} ->
@@ -449,8 +449,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   defp perform_insert_with_parents(records, param_mapper, context_module, insert_func, prefix) do
     {processing_list, unprocessed_list} = Enum.split_with(records, fn x -> x["Parent Id"] != nil end)
-    IO.inspect(processing_list)
-    IO.inspect(unprocessed_list)
+    # IO.inspect(processing_list)
+    # IO.inspect(unprocessed_list)
     processed_list = insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
 
     {processing_list, unprocessed_list} = Enum.split_with(unprocessed_list, fn x -> x["parent reference"] == nil end)

@@ -175,16 +175,17 @@ defmodule Inconn2Service.Report do
       |> Enum.map(fn x -> load_people_attendance_percent(x, query_params, prefix) end)
 
     summary = get_summary_of_people_report(result)
+    summary_headers = ["Department", "Shift Coverage", "Work Done"]
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("People Report", filters, result, report_headers, "PPL")
+        {convert_to_pdf("People Report", filters, result, report_headers, "PPL", summary, summary_headers), summary}
 
       "csv" ->
-        csv_for_people_report(report_headers, result)
+        {csv_for_people_report(report_headers, result), summary}
 
       _ ->
-        result
+        {result, summary}
     end
   end
 
@@ -1446,8 +1447,68 @@ defmodule Inconn2Service.Report do
     ]
   end
 
+  def create_summary_table(summary, summary_headers, "PPL") do
+    [
+      :table,
+      %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+      create_report_headers(summary_headers),
+      create_maintainance_table(summary)
+    ]
+  end
+
   def create_summary_table(_summary, _summary_headers, _) do
     []
+  end
+
+  def create_people_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.department
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.shift_coverage
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.work_done
+        ]
+      ]
+    end)
+  end
+
+  def create_maintainance_table(summary) do
+    Enum.map(summary, fn s ->
+      [
+        :tr,
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.asset_category
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.total_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.completed_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.pending_workorder
+        ]
+      ]
+    end)
   end
 
   def create_maintainance_table(summary) do

@@ -253,7 +253,7 @@ defmodule Inconn2Service.FileLoader do
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
           convert_special_keys_to_required_type(tail, new_map)
       "random_json_key_value" ->
-        IO.inspect(map)
+        # IO.inspect(map)
         if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
           array =
             Enum.filter(map["Config"], fn x -> x != "" end)
@@ -262,7 +262,7 @@ defmodule Inconn2Service.FileLoader do
                 %{"label" => label, "value" => value}
               end)
           new_map = Map.put(map, "Config", %{"options" => array})
-          IO.inspect(new_map)
+          # IO.inspect(new_map)
           convert_special_keys_to_required_type(tail, new_map)
         else
           if map["Task Type"] == "MT" do
@@ -272,7 +272,7 @@ defmodule Inconn2Service.FileLoader do
           else
             [min, max] = String.split(Enum.at(map["Config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
             new_map = Map.put(map, "Config", %{"min_length" => min, "max_length" => max})
-            IO.inspect(new_map)
+            # IO.inspect(new_map)
             convert_special_keys_to_required_type(tail, new_map)
           end
         end
@@ -300,7 +300,7 @@ defmodule Inconn2Service.FileLoader do
               Enum.zip(header_fields, data_fields) |> Enum.into(%{})
             end
 
-          IO.inspect(map)
+          # IO.inspect(map)
           release_map = convert_special_keys_to_required_type(array_keys, map)
           release_map
         end)
@@ -314,7 +314,7 @@ defmodule Inconn2Service.FileLoader do
     {real_data, extra_fields} = Enum.split(data_fields, Enum.count(header_fields))
     new_header_fields = header_fields ++ ["Config"]
     new_data_fields = real_data ++ [extra_fields]
-    IO.inspect(Enum.zip(new_header_fields, new_data_fields) |> Enum.into(%{}))
+    # IO.inspect(Enum.zip(new_header_fields, new_data_fields) |> Enum.into(%{}))
     Enum.zip(new_header_fields, new_data_fields) |> Enum.into(%{})
   end
 

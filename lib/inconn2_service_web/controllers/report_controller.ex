@@ -110,7 +110,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_people_report(conn, _params) do
-    result = Report.people_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    {result, summary} = Report.people_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -126,7 +126,7 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> send_resp(200, csv)
 
       _ ->
-        render(conn, "people_report.json", people_info: result)
+        render(conn, "people_report.json", people_info: result, summary: summary)
     end
   end
 

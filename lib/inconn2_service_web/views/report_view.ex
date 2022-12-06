@@ -35,9 +35,10 @@ defmodule Inconn2ServiceWeb.ReportView do
     }
   end
 
-  def render("people_report.json", %{people_info: people_info}) do
+  def render("people_report.json", %{people_info: people_info, summary: summary}) do
     %{
-      data: render_many(people_info, ReportView, "people_report_item.json")
+      data: render_many(people_info, ReportView, "people_report_item.json"),
+      summary: summary
     }
   end
 
