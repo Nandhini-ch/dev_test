@@ -2,6 +2,14 @@ defmodule Inconn2ServiceWeb.ReportView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.{ReportView, WorkorderTaskView}
 
+  def render("work_order_report.json", %{work_order_info: work_order_info, summary: summary}) do
+    IO.inspect("213683704238")
+    %{
+      data: work_order_info,
+      summary: summary
+    }
+  end
+
   def render("work_order_report.json", %{work_order_info: work_order_info}) do
     %{
       data: work_order_info
@@ -20,9 +28,10 @@ defmodule Inconn2ServiceWeb.ReportView do
     }
   end
 
-  def render("inventory_report.json", %{inventory_info: inventory_info}) do
+  def render("inventory_report.json", %{inventory_info: inventory_info, summary: summary}) do
     %{
-      data: render_many(inventory_info, ReportView, "inventory_report_item.json")
+      data: render_many(inventory_info, ReportView, "inventory_report_item.json"),
+      summary: summary
     }
   end
 

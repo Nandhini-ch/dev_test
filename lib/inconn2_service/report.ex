@@ -356,6 +356,7 @@ defmodule Inconn2Service.Report do
           asset_code: asset_code,
           type: match_workorder_type(wo.type),
           status: wo.status,
+          workorder_template_id: wo.workorder_template_id,
           assigned_to: name,
           manhours_consumed: convert_man_hours_consumed(manhours_consumed),
           scheduled_date: convert_date_format(wo.scheduled_date),
@@ -377,13 +378,13 @@ defmodule Inconn2Service.Report do
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Work Order Report", filters, result, report_headers, "WO", summary, summary_headers)
+        {convert_to_pdf("Work Order Report", filters, result, report_headers, "WO", summary, summary_headers), summary}
 
       "csv" ->
-        csv_for_workorder_report(report_headers, result)
+        {csv_for_workorder_report(report_headers, result), summary}
 
       _ ->
-        result
+        {result, summary}
     end
   end
 
@@ -391,12 +392,12 @@ defmodule Inconn2Service.Report do
     result
     |> Enum.map(fn wo ->
       workorder_template = Inconn2Service.Workorder.get_workorder_template(wo.workorder_template_id, prefix)
-      Map.put(wo, :asset_category_id, workorder_template.asset_category_id)
+      Map.put(wo, :asset_category_id, workorder_template.asset_category_id) |> Map.put(:asset_category, Inconn2Service.AssetConfig.get_asset_category!(workorder_template.asset_category_id, prefix))
     end)
     |> Enum.group_by(&(&1.asset_category_id))
     |> Enum.map(fn {_k, v} ->
       total_workorder = length(v)
-      completed_workorder = Enum.filter(v, fn a -> a.status in "cp" end) |> Enum.count()
+      completed_workorder = Enum.filter(v, fn a -> a.status == "cp" end) |> Enum.count()
       pending_workorder = total_workorder - completed_workorder
       %{
         asset_category: List.first(v).asset_category.name,
@@ -469,13 +470,13 @@ defmodule Inconn2Service.Report do
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers)
+        {convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers), summary}
 
       "csv" ->
-        csv_for_inventory_report(headers, result)
+        {csv_for_inventory_report(headers, result).summary}
 
       _ ->
-        result
+        {result, summary}
     end
   end
 
@@ -716,13 +717,13 @@ defmodule Inconn2Service.Report do
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Ticket Report", filters, result, report_headers, "WR", summary, summary_headers)
+        {convert_to_pdf("Ticket Report", filters, result, report_headers, "WR", summary, summary_headers), summary}
 
       "csv" ->
-        csv_for_workrequest_report(report_headers, result)
+        {csv_for_workrequest_report(report_headers, result), summary}
 
       _ ->
-        result
+        {result, summary}
     end
   end
 
@@ -778,13 +779,13 @@ defmodule Inconn2Service.Report do
 
     case query_params["type"] do
       "pdf" ->
-        convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST", summary, summary_headers)
+        {convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST", summary, summary_headers), summary}
 
       "csv" ->
-        csv_for_asset_status_report(report_headers, equipments_data ++ locations_data)
+        {csv_for_asset_status_report(report_headers, equipments_data ++ locations_data), summary}
 
       _ ->
-        equipments_data ++ locations_data
+        {equipments_data ++ locations_data, summary}
     end
 
   end

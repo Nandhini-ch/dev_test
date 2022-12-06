@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_workflow_report(conn, _params) do
-    result = Report.work_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    {result, summary} = Report.work_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -32,7 +32,7 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> send_resp(200, csv)
 
       _ ->
-        render(conn, "work_order_report.json", work_order_info: result)
+        render(conn, "work_order_report.json", work_order_info: result, summary: summary)
     end
   end
 
@@ -68,7 +68,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_work_request_report(conn, _params) do
-    result = Report.work_request_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    {result, summary} = Report.work_request_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -84,12 +84,12 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> send_resp(200, csv)
 
       _ ->
-        render(conn, "work_order_report.json", work_order_info: result)
+        render(conn, "work_order_report.json", work_order_info: result, summary: summary)
     end
   end
 
   def get_asset_status_report(conn, _params) do
-    result = Report.asset_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    {result, summary} = Report.asset_status_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -105,7 +105,7 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> send_resp(200, csv)
 
       _ ->
-        render(conn, "work_order_report.json", work_order_info: result)
+        render(conn, "work_order_report.json", work_order_info: result, summary: summary)
     end
   end
 
@@ -179,7 +179,7 @@ defmodule Inconn2ServiceWeb.ReportController do
   end
 
   def get_inventory_report(conn, _params) do
-    inventory_report_data = Report.inventory_report(conn.assigns.sub_domain_prefix, conn.query_params)
+    {inventory_report_data, summary} = Report.inventory_report(conn.assigns.sub_domain_prefix, conn.query_params)
     case conn.query_params["type"] do
       "pdf" ->
         conn
@@ -195,7 +195,7 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> send_resp(200, csv)
 
       _ ->
-        render(conn, "inventory_report.json", inventory_info: inventory_report_data)
+        render(conn, "inventory_report.json", inventory_info: inventory_report_data, summary: summary)
     end
   end
 end
