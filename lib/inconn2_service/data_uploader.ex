@@ -117,6 +117,9 @@ defmodule Inconn2Service.DataUploader do
     case schema do
       "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task}
       "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type}
+      "workorder_template" -> {Inconn2Service.Workorder, :create_workorder_template}
+      "workorder_schedule" -> {Inconn2Service.Workorder, :create_workorder_schedules}
+      "check" -> {Inconn2Service.CheckListConfig, :create_check}
     end
   end
 end
