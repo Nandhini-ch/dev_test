@@ -115,7 +115,7 @@ defmodule Inconn2Service.DataUploader do
 
   defp match_schema(schema) do
     case schema do
-      "tasks" -> Inconn2Service.WorkOrderConfig.Task
+      "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task}
       "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type}
     end
   end
