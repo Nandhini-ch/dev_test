@@ -16,10 +16,23 @@ defmodule Inconn2Service.DataUploader do
 
     cond do
       check_for_hierarchical_structure(data) ->
-        IO.inspect("Hierarchical Structure")
+        {flat_part, tricky_part} = Enum.split_with(data, fn d -> d["parent_reference"] == "" end)
+        {inserted_flat_data, id_reference} = insert_flat_partin_hierarchy(schema, flat_part, prefix) |> IO.inspect
+        {context, insert_func} = match_schema(schema)
+        return_data_for_flat_part = get_return_data(inserted_flat_data, flat_part, context, insert_func, prefix)
+        headers = get_headers(List.first(return_data_for_flat_part))
+        id_reference |> IO.inspect()
+        cond do
+          length(return_data_for_flat_part) < length(flat_part) ->
+            convert_return_data_to_csv(return_data_for_flat_part, headers, true)
+          true ->
+            children_to_be_inserted = Enum.map(tricky_part, fn t -> Map.put(t, "parent_id", id_reference[t["parent_reference"]]) end)
+            convert_return_data_to_csv(return_data_for_flat_part, headers, true) ++ insert_flat_structure(schema, children_to_be_inserted, prefix, false)
+        end
 
       true ->
         insert_flat_structure(schema, data, prefix)
+
     end
   end
 
@@ -35,38 +48,62 @@ defmodule Inconn2Service.DataUploader do
   #   Stream.reject(data, fn d -> !is_nil(d["parent_reference"])  end)
   # end
 
-  defp insert_flat_structure(schema, data, prefix) do
+  # defp get_split_data_with_hierarchy(data) do
+  #   {flat_structure, children} = Enum.split(data, fn d -> d["parent_rederence"] == nil end)
+  # end
+
+  defp put_id_in_data(_resource, d, "l"), do: d
+  defp put_id_in_data(resource, d, "h"), do: Map.put(d, "id", resource.id)
+
+  defp inserting_core(schema, data, prefix, data_type) do
     {context, insert_func} = match_schema(schema)
-    inserted =
-      Stream.transform(data, 0, fn d, acc ->
-        case apply(context, insert_func, [d, prefix]) do
-          {:ok, _resource} -> {[d], acc + 1}
+    Stream.transform(data, 0, fn d, acc ->
+    case apply(context, insert_func, [d, prefix]) do
+      {:ok, resource} -> {[put_id_in_data(resource, d, data_type)], acc + 1}
           _ -> {:halt, acc}
         end
-      end)
-      |> Enum.to_list()
-    return_data = get_return_data(inserted, data, context, insert_func, prefix)
-    headers = get_headers(List.first(return_data))
-    convert_return_data_to_csv(return_data, headers)
+    end)
+    |> Enum.to_list()
   end
 
-  defp convert_return_data_to_csv(return_data, headers) do
-    IO.inspect(headers)
+  defp insert_flat_partin_hierarchy(schema, data, prefix) do
+    inserting_core(schema, data, prefix, "h")
+    |> seperate_id_from_inserted_data()
+  end
+
+  defp seperate_id_from_inserted_data(inserted_data) do
+    {
+      Enum.map(inserted_data, fn d -> Map.drop(d, ["id"]) end),
+      Enum.map(inserted_data, fn d -> {d["reference"], d["id"]} end) |> Enum.into(%{})
+    }
+  end
+
+  defp insert_flat_structure(schema, data, prefix, header_required \\ true) do
+    {context, insert_func} = match_schema(schema)
+    inserted = inserting_core(schema, data, prefix, "l")
+    return_data = get_return_data(inserted, data, context, insert_func, prefix)
+    headers = get_headers(List.first(return_data))
+    convert_return_data_to_csv(return_data, headers, header_required)
+  end
+
+  defp convert_return_data_to_csv(return_data, headers, header_required) do
+    # IO.inspect(headers)
     Stream.map(return_data, fn d ->
       Enum.map(headers, fn h ->
         d[h]
       end)
     end)
     |> Enum.to_list()
-    |> add_headers_to_csv_return_format(headers)
+    |> add_headers_to_csv_return_format(headers, header_required)
   end
 
-  defp add_headers_to_csv_return_format(return_csv_format, headers), do: [headers] ++ return_csv_format
+  defp add_headers_to_csv_return_format(return_csv_format, _headers, false), do: return_csv_format
+  defp add_headers_to_csv_return_format(return_csv_format, headers, true), do: [headers] ++ return_csv_format
 
   defp get_return_data(inserted_data, data, context, insert_func, prefix) do
     cond do
       length(inserted_data) < length(data) ->
-        not_inserted_list = data -- inserted_data
+        not_inserted_list = data -- inserted_data |> IO.inspect()
         d = not_inserted_list |> List.first()
         {:error, cs} = apply(context, insert_func, [d, prefix])
         Ecto.Changeset.traverse_errors(cs, fn {msg, _opts} ->
@@ -117,6 +154,7 @@ defmodule Inconn2Service.DataUploader do
     case schema do
       "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task}
       "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type}
+      "asset_categories" -> {Inconn2Service.AssetConfig, :create_asset_category}
     end
   end
 end
