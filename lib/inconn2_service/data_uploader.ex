@@ -1,6 +1,8 @@
 defmodule Inconn2Service.DataUploader do
   alias Inconn2Service.FileOperations
 
+  @ununiform_schemas ["tasks", "sites"]
+
   def process_bulk_upload(schema, content, prefix) do
     cond do
       schema not in ["tasks"] ->
@@ -17,8 +19,8 @@ defmodule Inconn2Service.DataUploader do
     cond do
       check_for_hierarchical_structure(data) ->
         {flat_part, tricky_part} = Enum.split_with(data, fn d -> d["parent_reference"] == "" end)
-        {inserted_flat_data, id_reference} = insert_flat_partin_hierarchy(schema, flat_part, prefix) |> IO.inspect
-        {context, insert_func} = match_schema(schema)
+        {inserted_flat_data, id_reference} = insert_flat_partin_hierarchy(schema, flat_part, prefix)
+        {context, insert_func, _special_fields} = match_schema(schema)
         return_data_for_flat_part = get_return_data(inserted_flat_data, flat_part, context, insert_func, prefix)
         headers = get_headers(List.first(return_data_for_flat_part))
         id_reference |> IO.inspect()
@@ -56,8 +58,8 @@ defmodule Inconn2Service.DataUploader do
   defp put_id_in_data(resource, d, "h"), do: Map.put(d, "id", resource.id)
 
   defp inserting_core(schema, data, prefix, data_type) do
-    {context, insert_func} = match_schema(schema)
-    Stream.transform(data, 0, fn d, acc ->
+    {context, insert_func, special_fields} = match_schema(schema)
+    Stream.transform(update_data(data, special_fields), 0, fn d, acc ->
     case apply(context, insert_func, [d, prefix]) do
       {:ok, resource} -> {[put_id_in_data(resource, d, data_type)], acc + 1}
           _ -> {:halt, acc}
@@ -79,7 +81,7 @@ defmodule Inconn2Service.DataUploader do
   end
 
   defp insert_flat_structure(schema, data, prefix, header_required \\ true) do
-    {context, insert_func} = match_schema(schema)
+    {context, insert_func, _special_fields} = match_schema(schema)
     inserted = inserting_core(schema, data, prefix, "l")
     return_data = get_return_data(inserted, data, context, insert_func, prefix)
     headers = get_headers(List.first(return_data))
@@ -95,6 +97,10 @@ defmodule Inconn2Service.DataUploader do
     end)
     |> Enum.to_list()
     |> add_headers_to_csv_return_format(headers, header_required)
+  end
+
+  defp update_data(data, special_fields) do
+    Enum.map(data, fn d -> FileOperations.convert_special_keys_to_required_type(special_fields, d) end)
   end
 
   defp add_headers_to_csv_return_format(return_csv_format, _headers, false), do: return_csv_format
@@ -153,14 +159,13 @@ defmodule Inconn2Service.DataUploader do
   defp match_schema(schema) do
     case schema do
       "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task}
-      "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type}
-      "asset_categories" -> {Inconn2Service.AssetConfig, :create_asset_category}
-      "workorder_templates" -> {Inconn2Service.Workorder, :create_workorder_template}
-      "workorder_schedules" -> {Inconn2Service.Workorder, :create_workorder_schedules}
-      "checks" -> {Inconn2Service.CheckListConfig, :create_check}
-      "employees" -> {Inconn2Service.Staff, :create_employee}
-      "users" -> {Inconn2Service.Staff, :create_user}
-
+      "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type, []}
+      "asset_categories" -> {Inconn2Service.AssetConfig, :create_asset_category, []}
+      "workorder_templates" -> {Inconn2Service.Workorder, :create_workorder_template, []}
+      "workorder_schedules" -> {Inconn2Service.Workorder, :create_workorder_schedules, []}
+      "checks" -> {Inconn2Service.CheckListConfig, :create_check, []}
+      "employees" -> {Inconn2Service.Staff, :create_employee, []}
+      "users" -> {Inconn2Service.Staff, :create_user, []}
     end
   end
 end
