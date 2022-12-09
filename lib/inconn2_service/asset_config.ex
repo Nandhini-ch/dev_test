@@ -1029,6 +1029,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_equipments_of_asset_category_and_in_given_ids(nil, _ids, _prefix), do: []
+  def list_equipments_of_asset_category_and_in_given_ids(ac_id, ids, prefix) do
+    from(e in Equipment, where: e.asset_category_id == ^ac_id and e.id  in ^ids)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_equipments_not_in_given_ids(ids, prefix) do
     from(e in Equipment, where: e.id not in ^ids)
     |> Repo.all(prefix: prefix)
