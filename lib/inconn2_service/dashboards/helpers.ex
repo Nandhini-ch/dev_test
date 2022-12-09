@@ -88,4 +88,14 @@ defmodule Inconn2Service.Dashboards.Helpers do
     |> Enum.map(fn shift -> {shift.name, shift.id} end)
   end
 
+  def get_top_10_data(data_list, key) do
+    data_list
+    |> Enum.sort_by(&(sort_value(&1, key)), &>=/2)
+    |> Enum.take(10)
+  end
+
+  defp sort_value(data_map, key) do
+    Enum.take_while(data_map.dataSets, fn m -> key in Map.values(m) end)
+  end
+
 end

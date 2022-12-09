@@ -139,7 +139,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     get_workorder_general_query(site_id, from_date, to_date) |> Repo.all(prefix: prefix)
   end
 
-  def get_workorder_chart_data_for_site(site_id, from_date, to_date, type, prefix) do
+  def get_workorder_chart_data_for_site_asset_category(site_id, from_date, to_date, type, prefix) do
     from(ac in AssetCategory,
          left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id,
          left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.type in ^type and wo.status != "cn",
@@ -148,6 +148,18 @@ defmodule Inconn2Service.Dashboards.NumericalData do
           asset_category_name: ac.name,
           work_order: wo
          })
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_workorder_chart_data_for_site_asset(site_id, from_date, to_date, asset_type, type, prefix) do
+    asset_query = get_asset_query_for_site(site_id, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.type in ^type and wo.status != "cn",
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            work_order: wo
+          })
     |> Repo.all(prefix: prefix)
   end
 
@@ -264,6 +276,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
 
   defp get_asset_query(asset_ids, "L"), do: from l in Location, where: l.id in ^asset_ids
   defp get_asset_query(asset_ids, "E"), do: from e in Equipment, where: e.id in ^asset_ids
+  defp get_asset_query_for_site(site_id, "L"), do: from l in Location, where: l.site_id == ^site_id
+  defp get_asset_query_for_site(site_id, "E"), do: from e in Equipment, where: e.site_id == ^site_id
 
   defp add_workorder_type_filter_to_query(query, nil), do: query
   defp add_workorder_type_filter_to_query(query, type) do
