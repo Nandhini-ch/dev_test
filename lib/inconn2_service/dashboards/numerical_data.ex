@@ -290,7 +290,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   end
 
   def get_equipment_ageing(equipment, site_dt, prefix) do
-    date_time =
+    date_time_list =
       from(as in AssetStatusTrack,
             where: as.asset_id == ^equipment.id and
                   as.asset_type == "E" and
@@ -298,10 +298,12 @@ defmodule Inconn2Service.Dashboards.NumericalData do
             select: as.changed_date_time)
       |> Repo.all(prefix: prefix)
       |> Enum.sort_by(&(&1), NaiveDateTime)
-      |> hd()
 
-    NaiveDateTime.diff(site_dt, date_time)
+    get_equipment_ageing_from_date_list(date_time_list, site_dt)
   end
+
+  defp get_equipment_ageing_from_date_list([], _site_dt), do: 0
+  defp get_equipment_ageing_from_date_list([date_time | _], site_dt), do: NaiveDateTime.diff(site_dt, date_time)
 
   def get_mtbf_of_equipment(equipment_id, from_dt, to_dt, prefix) do
     query = asset_status_track_query(equipment_id, "E", ["BRK"], "not", from_dt, to_dt)
