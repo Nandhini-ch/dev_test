@@ -51,32 +51,32 @@ defmodule Inconn2Service.FileOperations do
             actual_key
           end)
         submap_value_list =
-          Enum.map(options, fn {readble_key, _actual_key} ->
-            map[readble_key]
+          Enum.map(options, fn {_readble_key, actual_key} ->
+            map[actual_key]
           end)
           submap = Enum.zip(actual_keys, submap_value_list) |> Enum.into(%{})
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
           convert_special_keys_to_required_type(tail, new_map)
       "random_json_key_value" ->
         IO.inspect(map)
-        if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
+        if map["task_type"] == "IO" || map["task_type"] == "IM" do
           array =
-            Enum.filter(map["Config"], fn x -> x != "" end)
+            Enum.filter(map["config"], fn x -> x != "" end)
             |> Enum.map(fn x ->
                 [label, value] = String.split(x, ":")
                 %{"label" => label, "value" => value}
               end)
-          new_map = Map.put(map, "Config", %{"options" => array})
+          new_map = Map.put(map, "config", %{"options" => array})
           IO.inspect(new_map)
           convert_special_keys_to_required_type(tail, new_map)
         else
-          if map["Task Type"] == "MT" do
-            [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
-            new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
+          if map["task_type"] == "MT" do
+            [type, uom] = String.split(Enum.at(map["config"], 0), ":")
+            new_map = Map.put(map, "config", %{"type" => type, "UOM" => uom})
             convert_special_keys_to_required_type(tail, new_map)
           else
-            [min, max] = String.split(Enum.at(map["Config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
-            new_map = Map.put(map, "Config", %{"min_length" => min, "max_length" => max})
+            [min, max] = String.split(Enum.at(map["config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
+            new_map = Map.put(map, "config", %{"min_length" => min, "max_length" => max})
             IO.inspect(new_map)
             convert_special_keys_to_required_type(tail, new_map)
           end

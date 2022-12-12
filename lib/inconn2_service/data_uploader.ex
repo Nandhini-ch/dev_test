@@ -158,14 +158,28 @@ defmodule Inconn2Service.DataUploader do
 
   defp match_schema(schema) do
     case schema do
-      "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task}
+      "tasks" -> {Inconn2Service.WorkOrderConfig.Task, :create_task, [{"config", "random_json_key_value", []}]}
       "master_task_types" -> {Inconn2Service.WorkOrderConfig, :create_master_task_type, []}
       "asset_categories" -> {Inconn2Service.AssetConfig, :create_asset_category, []}
-      "workorder_templates" -> {Inconn2Service.Workorder, :create_workorder_template, []}
-      "workorder_schedules" -> {Inconn2Service.Workorder, :create_workorder_schedules, []}
+      "workorder_templates" -> {Inconn2Service.Workorder, :create_workorder_template,
+                                [{"tasks", "integer_array_tuples_with_index", []}, {"scheduled", "boolean", []},{"work_permit_required", "boolean", []},
+                                {"loto_required", "boolean", []}, {"applicable_start", "date", []}, {"applicable_end", "date", []}, {"breakdown", "boolean", []},
+                                {"audit", "boolean", []}, {"adhoc", "boolean", []}, {"tools", "array_of_map", []}, {"spares", "array_of_map", []}, {"consumables", "array_of_map", []},
+                                {"parts", "array_of_map", []},{"measuring_instruments", "array_of_map", []}, {"is_percheck_required", "boolean", []}, {"is_workpermit_required", "boolean", []},
+                                {"is_workorder_approval_required", "boolean", []}, {"is_workorder_acknowledgement_required", "boolean", []}, {"is_loto_required", "boolean", []},
+                                {"is_materials_required", "boolean", []}, {"is_manpower_required", "boolean", []}, {"materials", "array_of_map", []}, {"manpower", "array_of_map", []}]}
+      "workorder_schedules" -> {Inconn2Service.Workorder, :create_workorder_schedules, [{"holidays", "array_of_integers", []}, {"first_occurrence_date", "date", []},
+                                {"next_occurrence_date", "date", []}, {"workpermit_approval_user_ids", "array_of_integers", []}, {"is_paused", "boolean", []}]}
       "checks" -> {Inconn2Service.CheckListConfig, :create_check, []}
-      "employees" -> {Inconn2Service.Staff, :create_employee, []}
+      "employees" -> {Inconn2Service.Staff, :create_employee, [{"skills", "array_of_integers", []}, {"has_login_credentials", "boolean", []},
+                                                                {"employment_start_date", "date", []}, {"employment_end_date", "date", []}]}
       "users" -> {Inconn2Service.Staff, :create_user, []}
+      "equipment" -> {Inconn2Service.AssetConfig, :create_equipment, [{"connections_in", "array_of_integers", []}, {"connections_out", "array_of_integers", []},
+                    {"is_movable", "boolean", []}]}
+      "location" -> {Inconn2Service.AssetConfig, :create_location, []}
+      "site" -> {Inconn2Service.AssetConfig, :create_site, [{"address", "map_out_of_existing_options", [{"Address Line 1", "address_line1"}, {"Address Line 2", "address_line2"}, {"City", "city"}, {"State", "state"}, {"Country", "country"}, {"Postcode", "postcode"}]},
+      {"contact", "map_out_of_existing_options", [{"Contact First Name", "first_name"}, {"Contact Last Name", "last_name"}, {"Contact Designation", "designation"}, {"Contact Email", "email"}, {"Contact Mobile", "mobile"}, {"Contact Land Line", "land_line"}]}]}
+
     end
   end
 end
