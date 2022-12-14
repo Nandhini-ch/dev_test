@@ -39,6 +39,12 @@ defmodule Inconn2Service.Dashboards.Helpers do
   defp get_meters(nil, _prefix), do: []
   defp get_meters(asset_category_id, prefix), do: AssetConfig.get_assets_by_asset_category_id(asset_category_id, prefix)
 
+  def get_energey_sub_meters(config, "E", prefix) do
+    asset_category_id = config[match_ac_type_and_config_key("E")]
+    sub_meters_ids = config["energy_sub_meters"] |> convert_nil_to_list()
+    AssetConfig.list_equipments_of_asset_category_and_in_given_ids(asset_category_id, sub_meters_ids, prefix)
+  end
+
   def get_sub_meter_assets(config, meter_type, prefix) do
     asset_category_id = config[match_ac_type_and_config_key(meter_type)]
     main_meter_ids = config[match_main_meters_type_and_config_key(meter_type)] |> convert_nil_to_list()
@@ -80,6 +86,16 @@ defmodule Inconn2Service.Dashboards.Helpers do
     shift_ids
     |> Settings.get_shifts_by_ids(prefix)
     |> Enum.map(fn shift -> {shift.name, shift.id} end)
+  end
+
+  def get_top_10_data(data_list, key) do
+    data_list
+    |> Enum.sort_by(&(sort_value(&1, key)), &>=/2)
+    |> Enum.take(10)
+  end
+
+  defp sort_value(data_map, key) do
+    Enum.take_while(data_map.dataSets, fn m -> key in Map.values(m) end)
   end
 
 end
