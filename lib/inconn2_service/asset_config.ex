@@ -336,7 +336,9 @@ defmodule Inconn2Service.AssetConfig do
   def create_asset_category(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
-    if parent_id != nil do
+    # IO.inspect(String.length(parent_id))
+
+    if parent_id != nil and is_integer(parent_id) do
       attrs = add_or_change_asset_type_new_parent(attrs, parent_id, prefix)
       create_asset_category_with_asset_type(attrs, parent_id, prefix)
     else
@@ -353,6 +355,10 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   defp create_asset_category_in_tree(nil, ac_cs, prefix) do
+    Repo.insert(ac_cs, prefix: prefix)
+  end
+
+  defp create_asset_category_in_tree("", ac_cs, prefix) do
     Repo.insert(ac_cs, prefix: prefix)
   end
 
