@@ -243,7 +243,7 @@ defmodule Inconn2Service.Report do
 
 
     work_done_time =
-      Stream.map(actual_attendance, fn a -> NaiveDateTime.diff(a.out_time, a.in_time) end)
+      Stream.map(actual_attendance, fn at -> NaiveDateTime.diff(at.out_time, at.in_time) end)
       |> Enum.sum()
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
@@ -489,7 +489,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_inventory_report(headers, result).summary}
+        {csv_for_inventory_report(headers, result), summary}
 
       _ ->
         {result, summary}
@@ -525,6 +525,7 @@ defmodule Inconn2Service.Report do
         item_name: i.name,
         item_type: i.item_type,
         store_name: s.name,
+        store_id: s.id,
         site_id: s.site_id,
         reorder_level: i.minimum_stock_level,
         transaction_type: t.transaction_type,
