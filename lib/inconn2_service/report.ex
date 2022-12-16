@@ -707,6 +707,7 @@ defmodule Inconn2Service.Report do
           end
 
         %{
+          workrequest_category_id: wr.workrequest_category_id,
           asset_name: asset_name,
           asset_category: asset_category,
           ticket_type: (if wr.is_external_ticket do "External" else "Internal" end),

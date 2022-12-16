@@ -372,4 +372,71 @@ defmodule Inconn2Service.TicketTest do
       assert %Ecto.Changeset{} = Ticket.change_workrequest_subcategory(workrequest_subcategory)
     end
   end
+
+  describe "workrequest_feedbacks" do
+    alias Inconn2Service.Ticket.WorkrequestFeedback
+
+    @valid_attrs %{email: "some email", rating: 42, site_id: 42, user_id: 42, work_request_id: 42}
+    @update_attrs %{email: "some updated email", rating: 43, site_id: 43, user_id: 43, work_request_id: 43}
+    @invalid_attrs %{email: nil, rating: nil, site_id: nil, user_id: nil, work_request_id: nil}
+
+    def workrequest_feedback_fixture(attrs \\ %{}) do
+      {:ok, workrequest_feedback} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ticket.create_workrequest_feedback()
+
+      workrequest_feedback
+    end
+
+    test "list_workrequest_feedbacks/0 returns all workrequest_feedbacks" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert Ticket.list_workrequest_feedbacks() == [workrequest_feedback]
+    end
+
+    test "get_workrequest_feedback!/1 returns the workrequest_feedback with given id" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert Ticket.get_workrequest_feedback!(workrequest_feedback.id) == workrequest_feedback
+    end
+
+    test "create_workrequest_feedback/1 with valid data creates a workrequest_feedback" do
+      assert {:ok, %WorkrequestFeedback{} = workrequest_feedback} = Ticket.create_workrequest_feedback(@valid_attrs)
+      assert workrequest_feedback.email == "some email"
+      assert workrequest_feedback.rating == 42
+      assert workrequest_feedback.site_id == 42
+      assert workrequest_feedback.user_id == 42
+      assert workrequest_feedback.work_request_id == 42
+    end
+
+    test "create_workrequest_feedback/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ticket.create_workrequest_feedback(@invalid_attrs)
+    end
+
+    test "update_workrequest_feedback/2 with valid data updates the workrequest_feedback" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert {:ok, %WorkrequestFeedback{} = workrequest_feedback} = Ticket.update_workrequest_feedback(workrequest_feedback, @update_attrs)
+      assert workrequest_feedback.email == "some updated email"
+      assert workrequest_feedback.rating == 43
+      assert workrequest_feedback.site_id == 43
+      assert workrequest_feedback.user_id == 43
+      assert workrequest_feedback.work_request_id == 43
+    end
+
+    test "update_workrequest_feedback/2 with invalid data returns error changeset" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ticket.update_workrequest_feedback(workrequest_feedback, @invalid_attrs)
+      assert workrequest_feedback == Ticket.get_workrequest_feedback!(workrequest_feedback.id)
+    end
+
+    test "delete_workrequest_feedback/1 deletes the workrequest_feedback" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert {:ok, %WorkrequestFeedback{}} = Ticket.delete_workrequest_feedback(workrequest_feedback)
+      assert_raise Ecto.NoResultsError, fn -> Ticket.get_workrequest_feedback!(workrequest_feedback.id) end
+    end
+
+    test "change_workrequest_feedback/1 returns a workrequest_feedback changeset" do
+      workrequest_feedback = workrequest_feedback_fixture()
+      assert %Ecto.Changeset{} = Ticket.change_workrequest_feedback(workrequest_feedback)
+    end
+  end
 end

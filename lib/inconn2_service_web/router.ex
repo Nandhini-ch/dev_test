@@ -503,6 +503,8 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 
     post "/bulk_upload", DataUploadController, :upload_content
+    resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit]
+
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user

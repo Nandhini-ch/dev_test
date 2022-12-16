@@ -694,15 +694,6 @@ defmodule Inconn2Service.Ticket do
 
   alias Inconn2Service.Ticket.WorkrequestStatusTrack
 
-  @doc """
-  Returns the list of workrequest_status_track.
-
-  ## Examples
-
-      iex> list_workrequest_status_track()
-      [%WorkrequestStatusTrack{}, ...]
-
-  """
   def list_workrequest_status_track(prefix) do
     Repo.all(WorkrequestStatusTrack, prefix: prefix)
     |> Repo.sort_by_id()
@@ -715,98 +706,31 @@ defmodule Inconn2Service.Ticket do
     |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single workrequest_status_track.
-
-  Raises `Ecto.NoResultsError` if the Workrequest status track does not exist.
-
-  ## Examples
-
-      iex> get_workrequest_status_track!(123)
-      %WorkrequestStatusTrack{}
-
-      iex> get_workrequest_status_track!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workrequest_status_track!(id, prefix), do: Repo.get!(WorkrequestStatusTrack, id, prefix: prefix)
 
-  @doc """
-  Creates a workrequest_status_track.
-
-  ## Examples
-
-      iex> create_workrequest_status_track(%{field: value})
-      {:ok, %WorkrequestStatusTrack{}}
-
-      iex> create_workrequest_status_track(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workrequest_status_track(attrs \\ %{}, prefix) do
     %WorkrequestStatusTrack{}
     |> WorkrequestStatusTrack.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a workrequest_status_track.
-
-  ## Examples
-
-      iex> update_workrequest_status_track(workrequest_status_track, %{field: new_value})
-      {:ok, %WorkrequestStatusTrack{}}
-
-      iex> update_workrequest_status_track(workrequest_status_track, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, attrs, prefix) do
     workrequest_status_track
     |> WorkrequestStatusTrack.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a workrequest_status_track.
 
-  ## Examples
-
-      iex> delete_workrequest_status_track(workrequest_status_track)
-      {:ok, %WorkrequestStatusTrack{}}
-
-      iex> delete_workrequest_status_track(workrequest_status_track)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, prefix) do
     Repo.delete(workrequest_status_track, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workrequest_status_track changes.
-
-  ## Examples
-
-      iex> change_workrequest_status_track(workrequest_status_track)
-      %Ecto.Changeset{data: %WorkrequestStatusTrack{}}
-
-  """
   def change_workrequest_status_track(%WorkrequestStatusTrack{} = workrequest_status_track, attrs \\ %{}) do
     WorkrequestStatusTrack.changeset(workrequest_status_track, attrs)
   end
 
   alias Inconn2Service.Ticket.Approval
 
-  @doc """
-  Returns the list of approvals.
-
-  ## Examples
-
-      iex> list_approvals()
-      [%Approval{}, ...]
-
-  """
   def list_approvals(prefix) do
     Repo.all(Approval, prefix: prefix) |> Repo.preload([:work_request, :user])
   end
@@ -819,34 +743,8 @@ defmodule Inconn2Service.Ticket do
     |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single approval.
-
-  Raises `Ecto.NoResultsError` if the Approval does not exist.
-
-  ## Examples
-
-      iex> get_approval!(123)
-      %Approval{}
-
-      iex> get_approval!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_approval!(id, prefix), do: Repo.get!(Approval, id, prefix: prefix) |> Repo.preload([:work_request, :user])
 
-  @doc """
-  Creates a approval.
-
-  ## Examples
-
-      iex> create_approval(%{field: value})
-      {:ok, %Approval{}}
-
-      iex> create_approval(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_approval(attrs \\ %{}, prefix, user) do
     # IO.inspect(attrs)
     result = %Approval{}
@@ -907,18 +805,6 @@ defmodule Inconn2Service.Ticket do
   def compare_length(num1, num2) when num1 == num2, do: {:ok, "equal"}
   def compare_length(_num1, _num2), do: {:error, "not_equal"}
 
-  @doc """
-  Updates a approval.
-
-  ## Examples
-
-      iex> update_approval(approval, %{field: new_value})
-      {:ok, %Approval{}}
-
-      iex> update_approval(approval, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_approval(%Approval{} = approval, attrs, prefix, user) do
     result = approval
               |> Approval.changeset(attrs)
@@ -927,49 +813,16 @@ defmodule Inconn2Service.Ticket do
     update_status_for_work_request(result, prefix)
   end
 
-  @doc """
-  Deletes a approval.
-
-  ## Examples
-
-      iex> delete_approval(approval)
-      {:ok, %Approval{}}
-
-      iex> delete_approval(approval)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_approval(%Approval{} = approval, prefix) do
     Repo.delete(approval, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking approval changes.
 
-  ## Examples
-
-      iex> change_approval(approval)
-      %Ecto.Changeset{data: %Approval{}}
-
-  """
   def change_approval(%Approval{} = approval, attrs \\ %{}) do
     Approval.changeset(approval, attrs)
   end
 
   alias Inconn2Service.Ticket.WorkrequestSubcategory
-
-  @doc """
-  Returns the list of workrequest_subcategories.
-
-  ## Examples
-
-      iex> list_workrequest_subcategories()
-      [%WorkrequestSubcategory{}, ...]
-
-  """
-  # def list_workrequest_subcategories(prefix) do
-  #   Repo.all(WorkrequestSubcategory, prefix: prefix)
-  # end
 
   def list_workrequest_subcategories_for_category(workrequest_category_id, prefix) do
     WorkrequestSubcategory
@@ -979,34 +832,9 @@ defmodule Inconn2Service.Ticket do
 
   end
 
-  @doc """
-  Gets a single workrequest_subcategory.
-
-  Raises `Ecto.NoResultsError` if the Workrequest subcategory does not exist.
-
-  ## Examples
-
-      iex> get_workrequest_subcategory!(123)
-      %WorkrequestSubcategory{}
-
-      iex> get_workrequest_subcategory!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_workrequest_subcategory!(id, prefix), do: Repo.get!(WorkrequestSubcategory, id, prefix: prefix)
   def get_workrequest_subcategory(id, prefix), do: Repo.get(WorkrequestSubcategory, id, prefix: prefix)
-  @doc """
-  Creates a workrequest_subcategory.
 
-  ## Examples
-
-      iex> create_workrequest_subcategory(%{field: value})
-      {:ok, %WorkrequestSubcategory{}}
-
-      iex> create_workrequest_subcategory(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_workrequest_subcategory(attrs \\ %{}, prefix) do
     result = %WorkrequestSubcategory{}
               |> WorkrequestSubcategory.changeset(attrs)
@@ -1019,18 +847,6 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Updates a workrequest_subcategory.
-
-  ## Examples
-
-      iex> update_workrequest_subcategory(workrequest_subcategory, %{field: new_value})
-      {:ok, %WorkrequestSubcategory{}}
-
-      iex> update_workrequest_subcategory(workrequest_subcategory, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs, prefix) do
     result = workrequest_subcategory
               |> WorkrequestSubcategory.changeset(attrs)
@@ -1041,18 +857,6 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  @doc """
-  Deletes a workrequest_subcategory.
-
-  ## Examples
-
-      iex> delete_workrequest_subcategory(workrequest_subcategory)
-      {:ok, %WorkrequestSubcategory{}}
-
-      iex> delete_workrequest_subcategory(workrequest_subcategory)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
         update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
           {:deleted,
@@ -1060,15 +864,6 @@ defmodule Inconn2Service.Ticket do
            }
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking workrequest_subcategory changes.
-
-  ## Examples
-
-      iex> change_workrequest_subcategory(workrequest_subcategory)
-      %Ecto.Changeset{data: %WorkrequestSubcategory{}}
-
-  """
   def change_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs \\ %{}) do
     WorkrequestSubcategory.changeset(workrequest_subcategory, attrs)
   end
@@ -1286,4 +1081,35 @@ defmodule Inconn2Service.Ticket do
   defp preload_workrequest_subcategories({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_workrequest_subcategories({:ok, category}, prefix), do: {:ok, preload_workrequest_subcategories(category, prefix)}
   defp preload_workrequest_subcategories(category, prefix), do: Map.put(category, :workrequest_subcategories, list_workrequest_subcategories_for_category(category.id, prefix))
+
+  alias Inconn2Service.Ticket.WorkrequestFeedback
+
+  def list_workrequest_feedbacks(prefix) do
+    Repo.all(WorkrequestFeedback, prefix: prefix)
+  end
+
+
+  def get_workrequest_feedback!(id, prefix), do: Repo.get!(WorkrequestFeedback, id, prefix: prefix)
+
+  def create_workrequest_feedback(attrs \\ %{}, prefix) do
+    %WorkrequestFeedback{}
+    |> WorkrequestFeedback.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+  end
+
+
+  def update_workrequest_feedback(%WorkrequestFeedback{} = workrequest_feedback, attrs, prefix) do
+    workrequest_feedback
+    |> WorkrequestFeedback.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def delete_workrequest_feedback(%WorkrequestFeedback{} = workrequest_feedback, prefix) do
+    Repo.delete(workrequest_feedback, prefix: prefix)
+  end
+
+
+  def change_workrequest_feedback(%WorkrequestFeedback{} = workrequest_feedback, attrs \\ %{}) do
+    WorkrequestFeedback.changeset(workrequest_feedback, attrs)
+  end
 end
