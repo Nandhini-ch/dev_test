@@ -1135,6 +1135,7 @@ defmodule Inconn2Service.AssetConfig do
             }
           ],
           [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{parent_string_with_slash}#{equipment.name}"],
+          [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{equipment.equipment_code}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
@@ -1172,6 +1173,7 @@ defmodule Inconn2Service.AssetConfig do
             }
           ],
           [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{parent_string_with_slash}#{location.name}"],
+          [:h3, %{style: style(%{"width" => "90%", "font-size" => "20px"})}, "#{location.location_code}"],
           [
             :span,
             %{"style" => style(%{"float" => "right", "margin-top" => "100px"})},
