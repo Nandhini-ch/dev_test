@@ -1143,7 +1143,7 @@ defmodule Inconn2Service.AssetConfig do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     {equipment.name, pdf_content}
   end
@@ -1181,7 +1181,7 @@ defmodule Inconn2Service.AssetConfig do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     {location.name, pdf_content}
   end
