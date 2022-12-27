@@ -2189,7 +2189,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2236,7 +2236,7 @@ defmodule Inconn2Service.Report do
               "align-items" => "flex-start"
             })
         },
-        render_img_qr(equipments_qr, sub_domain),\
+        render_img_qr(equipments_qr, sub_domain),
         ]
       ])
 
@@ -2244,7 +2244,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
