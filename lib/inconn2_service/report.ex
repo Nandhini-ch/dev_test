@@ -2269,7 +2269,8 @@ defmodule Inconn2Service.Report do
             })
           },
         ],
-        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"]
+        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"],
+        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_code}"]
       ]
 
     end)
