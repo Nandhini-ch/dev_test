@@ -436,7 +436,7 @@ defmodule Inconn2Service.Ticket do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
           Elixir.Task.start(fn ->
-            Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, prefix)
+            Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, updated_work_request.remarks, updated_work_request.updated_updated_at, prefix)
           end)
           updated_work_request
       true ->
