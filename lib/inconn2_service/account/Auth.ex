@@ -2,17 +2,27 @@ defmodule Inconn2Service.Account.Auth do
   alias Inconn2Service.Staff
   import Comeonin
 
+  # def authenticate(username, password, prefix) do
+  #   user = Staff.get_user_by_username(username, prefix)
+
+  #   case IO.inspect(check_password(password, user)) do
+  #     {:error, msg} ->
+  #       # IO.inspect(msg)
+  #       # {:error, :invalid_credentials}
+  #       {:error, msg}
+
+  #     {:ok, user} ->
+  #       {:ok, user}
+  #   end
+  # end
+
   def authenticate(username, password, prefix) do
     user = Staff.get_user_by_username(username, prefix)
 
-    case IO.inspect(check_password(password, user)) do
-      {:error, msg} ->
-        # IO.inspect(msg)
-        # {:error, :invalid_credentials}
-        {:error, msg}
-
-      {:ok, user} ->
-        {:ok, user}
+    cond do
+     is_nil(user) || !user.active -> {:error, "user does not exist"}
+     user -> check_password(password, user)
+     true -> {:error, "Incorrect Password"}
     end
   end
 
