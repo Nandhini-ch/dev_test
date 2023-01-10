@@ -593,7 +593,7 @@ defmodule Inconn2Service.Staff do
 
       Repo.one(query, prefix: prefix)
       |> Repo.preload(employee: :org_unit)
-    end
+  end
 
   def create_user(attrs \\ %{}, prefix) do
     result = %User{}

@@ -392,12 +392,12 @@ defmodule Inconn2Service.ReferenceTemplateDownloader do
    def download_workorder_schedule(prefix) do
      workorder_schedule = Workorder.list_workorder_schedules(prefix)
 
-     header = [["id", "reference", "Asset Id", "Asset Type", "First Occurrence Date", "Next Occurrence Date", "First Occurrence Time", "Next Ocuurence Time", "Holidays",
+     header = [["id", "reference", "Workorder Template", "Asset Id", "Asset Type", "First Occurrence Date", "Next Occurrence Date", "First Occurrence Time", "Next Ocuurence Time", "Holidays",
                  "Workorder Approval User Id", "Workorder Acknowledgement User Id", "Workpermit Approval User Ids", "Loto Checker User Id"]]
 
      body =
         Enum.map(workorder_schedule, fn r ->
-          [r.id, "", r.asset_id, r.asset_type, r.first_occurrence_date, r.next_occurrence_date, r.first_occurrence_time, r.next_occurrence_time,
+          [r.id, "", r.workorder_template, r.asset_id, r.asset_type, r.first_occurrence_date, r.next_occurrence_date, r.first_occurrence_time, r.next_occurrence_time,
            r.holidays, r.workorder_approval_user_id, r.workorder_acknowledgement_user_id, r.workpermit_approval_user_ids, r.loto_checker_user_id]
         end)
 

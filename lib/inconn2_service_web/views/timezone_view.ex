@@ -13,7 +13,10 @@ defmodule Inconn2ServiceWeb.TimezoneView do
   def render("timezone.json", %{timezone: timezone}) do
     %{id: timezone.id,
       label: timezone.label,
-      zone_text: "#{timezone.label} #{timezone.utc_offset_text}"
+      zone_text: "#{timezone.label} #{timezone.utc_offset_text}",
+      city: timezone.city,
+      continent: timezone.continent,
+      state: timezone.state,
     }
   end
 end

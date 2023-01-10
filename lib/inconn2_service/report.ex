@@ -243,7 +243,7 @@ defmodule Inconn2Service.Report do
 
 
     work_done_time =
-      Stream.map(actual_attendance, fn a -> NaiveDateTime.diff(a.out_time, a.in_time) end)
+      Stream.map(actual_attendance, fn at -> NaiveDateTime.diff(at.out_time, at.in_time) end)
       |> Enum.sum()
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
@@ -489,7 +489,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_inventory_report(headers, result).summary}
+        {csv_for_inventory_report(headers, result), summary}
 
       _ ->
         {result, summary}
@@ -525,6 +525,7 @@ defmodule Inconn2Service.Report do
         item_name: i.name,
         item_type: i.item_type,
         store_name: s.name,
+        store_id: s.id,
         site_id: s.site_id,
         reorder_level: i.minimum_stock_level,
         transaction_type: t.transaction_type,
@@ -706,6 +707,7 @@ defmodule Inconn2Service.Report do
           end
 
         %{
+          workrequest_category_id: wr.workrequest_category_id,
           asset_name: asset_name,
           asset_category: asset_category,
           ticket_type: (if wr.is_external_ticket do "External" else "Internal" end),
@@ -1668,7 +1670,7 @@ defmodule Inconn2Service.Report do
           ],
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -1729,7 +1731,7 @@ defmodule Inconn2Service.Report do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2199,7 +2201,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data) do
     body =
       Enum.map(data, fn d ->
-        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_time, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
+        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
     [report_headers] ++ body
@@ -2407,7 +2409,7 @@ defmodule Inconn2Service.Report do
 
     IO.inspect(data)
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Workorder Preventive maintainance Report") <> heading <> data <> "</table>", page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(report_heading("Workorder Preventive maintainance Report") <> heading <> data <> "</table>", page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2456,7 +2458,7 @@ defmodule Inconn2Service.Report do
 
       IO.inspect(data)
 
-      {:ok, filename} = PdfGenerator.generate(report_heading("Complaint Reports") <> heading <> data <> "</table>", page_size: "A4")
+      {:ok, filename} = PdfGenerator.generate(report_heading("Complaint Reports") <> heading <> data <> "</table>", page_size: "A4", command_prefix: "xvfb-run")
       {:ok, pdf_content} = File.read(filename)
       pdf_content
   end
@@ -2490,7 +2492,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2519,7 +2521,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
+    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome, command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2545,7 +2547,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2574,7 +2576,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome)
+    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome, command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2676,7 +2678,7 @@ defmodule Inconn2Service.Report do
         0
       end
 
-    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Total: #{yes_count + no_count}, Completed: #{yes_count}(#{yes_percent}%), Not Completed: #{no_count}(#{no_percent}%)") <> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"])
+    {:ok, filename} = PdfGenerator.generate(report_heading("Work order completion reports") <> header <> heading <> data <>  ~s(</table>) <> ~s(<div style="page-break-before: always">)<> report_heading("Total: #{yes_count + no_count}, Completed: #{yes_count}(#{yes_percent}%), Not Completed: #{no_count}(#{no_percent}%)") <> report_heading("Work order remarks generated") <> heading <> remarks_data <> "</table> <br/>" <> ~s(<p style="float:right">Powered By INCONN</p>), page_size: "A4", shell_params: ["--orientation", "landscape"], command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
 
