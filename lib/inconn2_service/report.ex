@@ -501,8 +501,8 @@ defmodule Inconn2Service.Report do
     |> Enum.map(fn {_k, v} ->
       %{
         store_location: List.first(v).store_id,
-        count_of_receive: Enum.filter(v, fn a -> a.status in "IN" end) |> Enum.count(),
-        count_of_issue: Enum.filter(v, fn a -> a.status in "IS" end) |> Enum.count()
+        count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
+        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count()
       }
     end)
   end
@@ -536,7 +536,8 @@ defmodule Inconn2Service.Report do
         bin: t.bin,
         row: t.row,
         cost: t.cost,
-        supplier: su.name
+        supplier: su.name,
+        status: t.status
       }
   end
 
