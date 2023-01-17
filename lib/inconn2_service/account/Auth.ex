@@ -20,8 +20,6 @@ defmodule Inconn2Service.Account.Auth do
   def authenticate(username, password, prefix) do
     user = get_user(prefix, username)
 
-    IO.inspect(user.active)
-
     cond do
      is_nil(user) -> {:error, "user does not exist"}
      !user.active -> {:error, "user does not exist"}
