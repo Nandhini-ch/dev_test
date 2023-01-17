@@ -115,7 +115,7 @@ defmodule Inconn2ServiceWeb.UserController do
         )
         # text = Inconn2Service.SmsTemplates.forgot_password_template(otp_entry.otp)
         #The above line is supposed to send SMS to the user, it is commented dut to compications with the api.
-        render(conn, "user.json", user: user)
+        render(conn, "user_forgot_password.json", user: user)
 
       {:error, reason} ->
         conn
