@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Guardian do
   use Guardian, otp_app: :inconn2_service
   alias Inconn2Service.Staff
+  alias Inconn2Service.Common
   # functions required by Guardian
 
   def subject_for_token(
@@ -28,6 +29,12 @@ defmodule Inconn2Service.Guardian do
   #   resource = Staff.get_user!(user_id, "inc_bata")
   #   {:ok, resource}
   # end
+
+  def resource_from_claims(%{"sub" => "usr:admin@" <> user_id}) do
+    user_id = Integer.parse(user_id)
+    resource = Common.get_admin_user!(user_id)
+    {:ok, resource}
+  end
 
   def resource_from_claims(%{"sub" => "usr:" <> user_sub_domain}) do
     [user_id | [sub_domain_prefix]] = String.split(user_sub_domain, "@")
