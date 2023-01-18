@@ -1455,7 +1455,7 @@ defmodule Inconn2Service.Report do
       :table,
       %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
       create_report_headers(summary_headers),
-      create_maintainance_table(summary)
+      create_people_table(summary)
     ]
   end
 
@@ -1732,7 +1732,7 @@ defmodule Inconn2Service.Report do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
