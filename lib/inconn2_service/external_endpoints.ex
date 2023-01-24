@@ -10,7 +10,7 @@ defmodule Inconn2Service.ExternalEndpoints do
           message: "success",
           user: %{
             name: get_name_for_view(user),
-            email: user.email
+            username: user.username
           },
           prefix: String.split(claims["sub"], "@") |> List.last()
         }
