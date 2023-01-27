@@ -119,6 +119,19 @@ defmodule Inconn2Service.Account do
     end
   end
 
+  def search_licensee(name_text) do
+    if String.length(name_text) < 3 do
+      []
+    else
+      search_text = "%" <> name_text <> "%"
+
+      from(l in Licensee, where: ilike(l.sub_domain, ^search_text), order_by: l.sub_domain)
+      |> Repo.add_active_filter()
+      |> Repo.all()
+      |> Repo.preload(:business_type)
+    end
+  end
+
   def update_licensee(%Licensee{} = licensee, attrs) do
     licensee
     |> Licensee.changeset(attrs)

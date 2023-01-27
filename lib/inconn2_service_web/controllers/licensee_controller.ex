@@ -7,8 +7,15 @@ defmodule Inconn2ServiceWeb.LicenseeController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    licensees = Account.list_licensees()
-    render(conn, "index.json", licensees: licensees)
+    case Map.get(conn.query_params, "sub_domain", nil) do
+      nil ->
+        licensees = Account.list_licensees()
+        render(conn, "index.json", licensees: licensees)
+      sub_domain ->
+        licensees = Account.search_licensee(sub_domain)
+        render(conn, "index.json", licensees: licensees)
+    end
+
   end
 
   def create(conn, %{"licensee" => licensee_params}) do

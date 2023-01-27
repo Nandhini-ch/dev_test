@@ -328,8 +328,8 @@ defmodule Inconn2Service.AssetConfig do
     ids = Enum.map(subtree, fn x -> Map.fetch!(x, :id) end)
 
     case asset_type do
-      "L" -> from(l in Location, where: l.asset_category_id in ^ids and l.site_id == ^site_id) |> Repo.all(prefix: prefix)
-      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids and e.site_id == ^site_id) |> Repo.all(prefix: prefix)
+      "L" -> from(l in Location, where: l.asset_category_id in ^ids and l.site_id == ^site_id) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
+      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids and e.site_id == ^site_id) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
     end
   end
 
