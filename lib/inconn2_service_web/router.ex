@@ -49,6 +49,8 @@ defmodule Inconn2ServiceWeb.Router do
 
     end
 
+    resources "/admin_users", AdminUserController, except: [:new, :edit]
+
   end
 
   scope "/api", Inconn2ServiceWeb do
@@ -516,5 +518,8 @@ defmodule Inconn2ServiceWeb.Router do
       get "/transactions", TransactionController, :index_grouped_team
     end
 
+    scope "/external_endpoints" do
+      get "/get_info_from_token", ExternalEndpointController, :info_from_token
+    end
   end
 end

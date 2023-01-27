@@ -501,8 +501,8 @@ defmodule Inconn2Service.Report do
     |> Enum.map(fn {_k, v} ->
       %{
         store_location: List.first(v).store_id,
-        count_of_receive: Enum.filter(v, fn a -> a.status in "IN" end) |> Enum.count(),
-        count_of_issue: Enum.filter(v, fn a -> a.status in "IS" end) |> Enum.count()
+        count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
+        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count()
       }
     end)
   end
@@ -536,7 +536,8 @@ defmodule Inconn2Service.Report do
         bin: t.bin,
         row: t.row,
         cost: t.cost,
-        supplier: su.name
+        supplier: su.name,
+        status: t.status
       }
   end
 
@@ -1454,7 +1455,7 @@ defmodule Inconn2Service.Report do
       :table,
       %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
       create_report_headers(summary_headers),
-      create_maintainance_table(summary)
+      create_people_table(summary)
     ]
   end
 
@@ -1731,7 +1732,7 @@ defmodule Inconn2Service.Report do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end

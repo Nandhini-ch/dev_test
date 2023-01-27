@@ -115,7 +115,7 @@ defmodule Inconn2ServiceWeb.UserController do
         )
         # text = Inconn2Service.SmsTemplates.forgot_password_template(otp_entry.otp)
         #The above line is supposed to send SMS to the user, it is commented dut to compications with the api.
-        render(conn, "user.json", user: user)
+        render(conn, "user_forgot_password.json", user: user)
 
       {:error, reason} ->
         conn
@@ -127,7 +127,7 @@ defmodule Inconn2ServiceWeb.UserController do
   def confirm_otp(conn, %{"credential" => credential}) do
     case Confirmation.confirm_otp(credential["user_id"], credential["otp"], conn.assigns.sub_domain_prefix) do
       {:ok, user} ->
-        render(conn, "user.json", user: user)
+        render(conn, "user_forgot_password.json", user: user)
 
       {:error, reason} ->
         conn
@@ -143,7 +143,7 @@ defmodule Inconn2ServiceWeb.UserController do
       otp_entry && otp_entry.validated ->
         with {:ok, %User{} = user} <- Staff.reset_user_password(user, user_params, conn.assigns.sub_domain_prefix) do
           Confirmation.delete_forgot_password_otp(otp_entry, conn.assigns.sub_domain_prefix)
-          render(conn, "show.json", user: user)
+          render(conn, "user_forgot_password.json", user: user)
         end
 
       true ->

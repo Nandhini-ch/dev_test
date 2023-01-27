@@ -1,5 +1,6 @@
 defmodule Inconn2Service.Account.Auth do
   alias Inconn2Service.Staff
+  alias Inconn2Service.Common
   import Comeonin
 
   # def authenticate(username, password, prefix) do
@@ -17,9 +18,7 @@ defmodule Inconn2Service.Account.Auth do
   # end
 
   def authenticate(username, password, prefix) do
-    user = Staff.get_user_by_username(username, prefix)
-
-    IO.inspect(user.active)
+    user = get_user(prefix, username)
 
     cond do
      is_nil(user) -> {:error, "user does not exist"}
@@ -28,6 +27,10 @@ defmodule Inconn2Service.Account.Auth do
      true -> {:error, "Incorrect Password"}
     end
   end
+
+  defp get_user("inc_admin", username), do: Common.get_admin_user_by_username(username)
+  defp get_user(prefix, username), do: Staff.get_user_by_username(username, prefix)
+
 
   def check_password(nil, _) do
     false

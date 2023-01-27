@@ -459,4 +459,69 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_widget(widget)
     end
   end
+
+  describe "admin_user" do
+    alias Inconn2Service.Common.AdminUser
+
+    @valid_attrs %{email: "some email", full_name: "some full_name", password: "some password", phone_no: "some phone_no"}
+    @update_attrs %{email: "some updated email", full_name: "some updated full_name", password: "some updated password", phone_no: "some updated phone_no"}
+    @invalid_attrs %{email: nil, full_name: nil, password: nil, phone_no: nil}
+
+    def admin_user_fixture(attrs \\ %{}) do
+      {:ok, admin_user} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_admin_user()
+
+      admin_user
+    end
+
+    test "list_admin_user/0 returns all admin_user" do
+      admin_user = admin_user_fixture()
+      assert Common.list_admin_user() == [admin_user]
+    end
+
+    test "get_admin_user!/1 returns the admin_user with given id" do
+      admin_user = admin_user_fixture()
+      assert Common.get_admin_user!(admin_user.id) == admin_user
+    end
+
+    test "create_admin_user/1 with valid data creates a admin_user" do
+      assert {:ok, %AdminUser{} = admin_user} = Common.create_admin_user(@valid_attrs)
+      assert admin_user.email == "some email"
+      assert admin_user.full_name == "some full_name"
+      assert admin_user.password == "some password"
+      assert admin_user.phone_no == "some phone_no"
+    end
+
+    test "create_admin_user/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_admin_user(@invalid_attrs)
+    end
+
+    test "update_admin_user/2 with valid data updates the admin_user" do
+      admin_user = admin_user_fixture()
+      assert {:ok, %AdminUser{} = admin_user} = Common.update_admin_user(admin_user, @update_attrs)
+      assert admin_user.email == "some updated email"
+      assert admin_user.full_name == "some updated full_name"
+      assert admin_user.password == "some updated password"
+      assert admin_user.phone_no == "some updated phone_no"
+    end
+
+    test "update_admin_user/2 with invalid data returns error changeset" do
+      admin_user = admin_user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_admin_user(admin_user, @invalid_attrs)
+      assert admin_user == Common.get_admin_user!(admin_user.id)
+    end
+
+    test "delete_admin_user/1 deletes the admin_user" do
+      admin_user = admin_user_fixture()
+      assert {:ok, %AdminUser{}} = Common.delete_admin_user(admin_user)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_admin_user!(admin_user.id) end
+    end
+
+    test "change_admin_user/1 returns a admin_user changeset" do
+      admin_user = admin_user_fixture()
+      assert %Ecto.Changeset{} = Common.change_admin_user(admin_user)
+    end
+  end
 end
