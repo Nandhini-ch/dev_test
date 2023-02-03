@@ -506,6 +506,25 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def multiple_update_pause_schedule(attrs \\ %{}, prefix) do
+    workorder_schedule_ids = attrs["workorder_schedule_ids"]
+    result = update_individual_workorder_schedules_pause_resume(attrs, workorder_schedule_ids, prefix)
+    failures = get_success_or_failure_list(result, :error)
+    case length(failures) do
+      0 ->
+        {:ok, get_success_or_failure_list(result, :ok)}
+
+      _ ->
+        {:multiple_error, failures}
+    end
+  end
+
+  defp update_individual_workorder_schedules_pause_resume(attrs, workorder_schedule_ids, prefix) do
+    get_workorder_schedules_by_ids(workorder_schedule_ids, prefix)
+    |> Enum.map(&Elixir.Task.async(fn -> pause_or_resume_workorder_schedule(&1, attrs, prefix) end))
+    |> Elixir.Task.await_many(:infinity)
+  end
+
   def pause_or_resume_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, prefix) do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
