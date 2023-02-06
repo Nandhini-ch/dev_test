@@ -570,7 +570,7 @@ defmodule Inconn2Service.Staff do
     IO.inspect("1323424")
     IO.inspect(user)
     case user do
-      nil ->  {:error, "OTP has been sent to registered mobile no"}
+      nil ->  {:error, "Username/Password are incorrect"}
       _ -> {:ok, user}
     end
   end
