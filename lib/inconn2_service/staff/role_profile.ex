@@ -6,6 +6,7 @@ defmodule Inconn2Service.Staff.RoleProfile do
     field :name, :string
     field :code, :string
     field :permissions, {:array, :map}, default: []
+    field :hierarchy_id, :integer
 
     timestamps()
   end
@@ -13,7 +14,7 @@ defmodule Inconn2Service.Staff.RoleProfile do
   @doc false
   def changeset(role_profile, attrs) do
     role_profile
-    |> cast(attrs, [:name, :code, :permissions])
+    |> cast(attrs, [:name, :code, :permissions, :hierarchy_id])
     |> validate_required([:name, :code, :permissions])
     |> unique_constraint(:name)
     |> unique_constraint(:code)
