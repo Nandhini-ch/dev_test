@@ -719,7 +719,10 @@ defmodule Inconn2Service.Staff do
   def change_user_password(user, credentials, prefix) do
     case Auth.check_password(credentials["old_password"], user) do
       {:ok, user} ->
-              User.change_password_changeset(user, %{"password" => credentials["new_password"]}) |> Repo.update(prefix: prefix)
+          user
+          |> User.change_password_changeset(%{"password" => credentials["new_password"], "first_login" => false})
+          |> Repo.update(prefix: prefix)
+
       {:error, msg} ->
               {:error, msg}
     end
