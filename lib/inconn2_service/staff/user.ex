@@ -50,7 +50,7 @@ defmodule Inconn2Service.Staff.User do
 
   def change_password_changeset(user, attrs) do
     user
-    |> cast(attrs, [:password])
+    |> cast(attrs, [:password, :first_login])
     |> hash_password()
   end
 
