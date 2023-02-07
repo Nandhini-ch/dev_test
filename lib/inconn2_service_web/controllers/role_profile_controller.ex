@@ -7,7 +7,7 @@ defmodule Inconn2ServiceWeb.RoleProfileController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    role_profiles = Staff.list_role_profiles(conn.assigns.sub_domain_prefix)
+    role_profiles = Staff.list_role_profiles_for_user(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
                     |> Enum.map(fn role_profile -> Staff.filter_permissions(role_profile) end)
     render(conn, "index.json", role_profiles: role_profiles)
   end

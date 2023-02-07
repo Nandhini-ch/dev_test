@@ -71,6 +71,45 @@ defmodule Inconn2Service.SeedFeatures do
     |> Enum.map(&Task.await/1)
   end
 
+  def update_hierarchy_id_in_role_profile(prefix) do
+   map = role_profile_map()
+   Staff.list_role_profiles(prefix)
+   |> Enum.map(fn role_profile ->
+       Staff.update_role_profile(role_profile, %{"hierarchy_id" => map[role_profile.name]}, prefix)
+   end)
+  end
+
+  def update_hierarchy_id_in_role(prefix) do
+    rp_map = get_role_profile_hierarchy_map(prefix)
+
+    Staff.list_roles(prefix)
+    |> Enum.map(fn role ->
+        h_id = Map.fetch!(rp_map, role.role_profile_id)
+        Staff.update_role(role, %{"hierarchy_id" => h_id}, prefix)
+      end)
+  end
+
+  def get_role_profile_hierarchy_map(prefix) do
+    Staff.list_role_profiles(prefix)
+    |> Enum.map(fn rp -> {rp.id, rp.hierarchy_id} end)
+    |> Enum.into(%{})
+  end
+
+  def update_prefixes() do
+    Account.list_licensees()
+    |> Enum.map(fn licensee -> "inc_" <> licensee.sub_domain end)
+  end
+
+  def update_hierarchy_id_in_role_all_tenants() do
+    update_prefixes()
+    |> Enum.map(&(update_hierarchy_id_in_role(&1)))
+  end
+
+  def update_hierarchy_id_in_role_profiles_for_all_tenants() do
+    update_prefixes()
+    |> Enum.map(&(update_hierarchy_id_in_role_profile(&1)))
+  end
+
   def update_role_features_for_all_tenants() do
     prefixes =
       Account.list_licensees()
@@ -115,6 +154,17 @@ defmodule Inconn2Service.SeedFeatures do
       "name" => name,
       "code" => code,
       "permissions" => read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/#{name}.csv"), :role_profile)
+    }
+  end
+
+  defp role_profile_map() do
+    %{
+      "SuperAdmin" => 0,
+      "Admin" => 1,
+      "Manager" => 2,
+      "Supervisor" => 3,
+      "Technician" => 4,
+      "Others" => 5
     }
   end
 

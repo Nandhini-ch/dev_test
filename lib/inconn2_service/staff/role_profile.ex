@@ -15,7 +15,7 @@ defmodule Inconn2Service.Staff.RoleProfile do
   def changeset(role_profile, attrs) do
     role_profile
     |> cast(attrs, [:name, :code, :permissions, :hierarchy_id])
-    |> validate_required([:name, :code, :permissions])
+    |> validate_required([:name, :code, :permissions, :hierarchy_id])
     |> unique_constraint(:name)
     |> unique_constraint(:code)
     |> validate_code()

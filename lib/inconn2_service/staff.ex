@@ -744,8 +744,15 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def list_roles_for_user(user, prefix) do
+    role = get_role(user.role_id, prefix)
+    list_roles_based_on_hierarchy_id(role.hierarchy_id, prefix)
+  end
+
   def list_roles_based_on_hierarchy_id(hierarchy_id, prefix) do
-    from(r in Role, where: r.hierarchy_id > ^hierarchy_id) |> Repo.all(prefix: prefix)
+    from(r in Role, where: r.hierarchy_id > ^hierarchy_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
@@ -910,6 +917,11 @@ defmodule Inconn2Service.Staff do
   #Context functions for role profile
   def list_role_profiles(prefix) do
     Repo.all(RoleProfile, prefix: prefix)
+  end
+
+  def list_role_profiles_for_user(user, prefix) do
+    role = get_role(user.role_id, prefix)
+    list_role_profiles_based_on_hierarchy_id(role.hierarchy_id, prefix)
   end
 
   def list_role_profiles_based_on_hierarchy_id(hierarchy_id, prefix) do
