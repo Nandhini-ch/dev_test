@@ -1351,11 +1351,6 @@ defmodule Inconn2Service.Workorder do
     workorder_template = get_workorder_template(workorder_template_id, prefix)
     if workorder_template != nil and asset_id != nil do
       asset_type = workorder_template.asset_type
-      IO.inspect("11111111111")
-      IO.inspect(asset_id)
-      IO.inspect(asset_type)
-      IO.inspect(work_order)
-      IO.inspect("22222222222")
       case asset_type do
         "L" ->
           location = AssetConfig.get_location(asset_id, prefix)
