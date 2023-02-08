@@ -1,5 +1,6 @@
 defmodule Inconn2Service.Email do
   import Swoosh.Email
+  import Inconn2Service.Util.HelpersFunctions
 
   def send_ticket_complete_email(id, email, name, remarks, date_time, prefix) do
     new()
@@ -70,10 +71,10 @@ defmodule Inconn2Service.Email do
        #{remarks}
 
         Please click here to acknowledge your issue resolution -
-        https://#{sub_domain}.inconn.io/closedresponse?work_request_id=#{id}
+        https://#{sub_domain}.#{get_base_url()}/closedresponse?work_request_id=#{id}
 
         If you are not happy with the solution offered, please click here to reopen -
-        https://#{sub_domain}.inconn.io/ticketreopening?ticketId=#{id}
+        https://#{sub_domain}.#{get_base_url()}/ticketreopening?ticketId=#{id}
 
         Thank You,
         Regards
