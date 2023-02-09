@@ -66,7 +66,7 @@ defmodule Inconn2Service.Account do
 
     case result do
       {:ok, licensee} ->
-        create_tenant_tables_and_seed_data(licensee)
+        create_tenant_tables_and_seed_data(attrs, licensee)
         {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
 
       _ ->
@@ -74,7 +74,7 @@ defmodule Inconn2Service.Account do
     end
   end
 
-  defp create_tenant_tables_and_seed_data(licensee) do
+  defp create_tenant_tables_and_seed_data(attrs, licensee) do
     IO.puts("creating create_tenant")
         create_tenant(licensee)
         IO.inspect(licensee)
