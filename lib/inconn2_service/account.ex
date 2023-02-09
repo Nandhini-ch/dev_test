@@ -66,7 +66,16 @@ defmodule Inconn2Service.Account do
 
     case result do
       {:ok, licensee} ->
-        IO.puts("creating create_tenant")
+        create_tenant_tables_and_seed_data(licensee)
+        {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
+
+      _ ->
+        result
+    end
+  end
+
+  defp create_tenant_tables_and_seed_data(licensee) do
+    IO.puts("creating create_tenant")
         create_tenant(licensee)
         IO.inspect(licensee)
         party_type = licensee.party_type
@@ -99,11 +108,6 @@ defmodule Inconn2Service.Account do
           "role_id" => role.id,
           "party_id" => return_party.id
         }, prefix)
-        {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
-
-      _ ->
-        result
-    end
   end
 
   defp create_tenant(licensee) do
