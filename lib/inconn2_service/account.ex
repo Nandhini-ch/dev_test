@@ -66,7 +66,7 @@ defmodule Inconn2Service.Account do
 
     case result do
       {:ok, licensee} ->
-        create_tenant_tables_and_seed_data(attrs, licensee)
+        create_tenant_tables_and_seed_data(attrs["sub_domain"], licensee)
         {:ok, Repo.get!(Licensee, licensee.id) |> Repo.preload(:business_type)}
 
       _ ->
@@ -74,7 +74,7 @@ defmodule Inconn2Service.Account do
     end
   end
 
-  defp create_tenant_tables_and_seed_data(attrs, licensee) do
+  def create_tenant_tables_and_seed_data(sub_domain, licensee) do
     IO.puts("creating create_tenant")
         create_tenant(licensee)
         IO.inspect(licensee)
@@ -88,7 +88,7 @@ defmodule Inconn2Service.Account do
           )
 
         IO.inspect(return_party)
-        prefix = "inc_" <> attrs["sub_domain"]
+        prefix = "inc_" <> sub_domain
 
         #Seed role profiles
         SeedFeatures.seed_role_profiles(prefix)
