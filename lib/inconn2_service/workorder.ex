@@ -1354,10 +1354,10 @@ defmodule Inconn2Service.Workorder do
       case asset_type do
         "L" ->
           location = AssetConfig.get_location(asset_id, prefix)
-          Map.put_new(work_order, :asset_type, "L") |> Map.put_new(:asset_name, location.name)
+          Map.put_new(work_order, :asset_type, "L") |> Map.put_new(:asset_name, location[:name])
         "E" ->
           equipment = AssetConfig.get_equipment(asset_id, prefix)
-          Map.put_new(work_order, :asset_type, "E") |> Map.put_new(:asset_name, equipment.name)
+          Map.put_new(work_order, :asset_type, "E") |> Map.put_new(:asset_name, equipment[:name])
       end
     else
       Map.put_new(work_order, :asset_type, nil) |> Map.put_new(:asset_name, nil)
