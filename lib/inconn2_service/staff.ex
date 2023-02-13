@@ -758,6 +758,16 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
   end
 
+  def inserting_hierarchy_id_to_role(cs, prefix) do
+    case get_change(cs, :role_profile_id, nil) do
+      nil ->
+         cs
+      rp_id ->
+        rp = get_role_profile!(rp_id, prefix)
+        change(cs, %{hierarchy_id: rp.hierarchy_id})
+     end
+  end
+
   def get_role!(id, prefix), do: Repo.get!(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
   def get_role(id, prefix), do: Repo.get(Role, id, prefix: prefix) |> Repo.preload(:role_profile)
   def get_role_without_preload(id, prefix), do: Repo.get(Role, id, prefix: prefix)
@@ -772,6 +782,7 @@ defmodule Inconn2Service.Staff do
   def create_role(attrs \\ %{}, prefix) do
     result = %Role{}
               |> Role.changeset(attrs)
+              |> inserting_hierarchy_id_to_role(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, role} -> {:ok, role |> Repo.preload(:role_profile)}
@@ -783,6 +794,7 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
+    |> inserting_hierarchy_id_to_role(prefix)
     |> Repo.update(prefix: prefix)
   end
 

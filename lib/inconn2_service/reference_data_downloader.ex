@@ -11,6 +11,8 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   alias Inconn2Service.Inventory
   alias Inconn2Service.WorkOrderConfig.Task
 
+  import Inconn2Service.Util.HelpersFunctions
+
   def download_locations(prefix) do
     locations = AssetConfig.list_active_locations(prefix)
 
@@ -365,7 +367,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     data =
       Enum.map(locations_qr, fn x ->
         "inc_" <> sub_domain = prefix
-        IO.inspect("http://#{sub_domain}.inconn.com:4000#{x.asset_qr_url}")
+        IO.inspect("http://#{sub_domain}.#{get_base_url()}:4000#{x.asset_qr_url}")
         ~s(<div class="col-4"><img src="#{sub_domain}.localhost:4000#{x.asset_qr_url}" height="200px" width="200px"/><h3>#{x.asset_name}</h3></div>)
       end) |> Enum.join()
 

@@ -229,4 +229,10 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def convert_to_float(number) when is_float(number), do: number
   def convert_to_float(number), do: number * 1.0
 
+  def get_base_url() do
+    case Application.get_env(:inconn2_service, :environment) do
+      :prod -> "inconn.io"
+      :dev -> "inconn.com"
+    end
+  end
 end

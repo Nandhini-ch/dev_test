@@ -8,7 +8,8 @@
 use Mix.Config
 
 config :inconn2_service,
-  ecto_repos: [Inconn2Service.Repo]
+  ecto_repos: [Inconn2Service.Repo],
+  environment: Mix.env()
 
 config :inconn2_service, Inconn2Service.Guardian,
   issuer: "inconn2_service",
