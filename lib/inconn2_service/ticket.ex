@@ -414,10 +414,10 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         {:ok, status_track} = update_status_track(updated_work_request, prefix)
-        push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user) end)
         update_status_track(updated_work_request, prefix)
         # push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
-        send_completed_email(work_request, updated_work_request, prefix)
+        Elixir.Task.start(fn -> send_completed_email(work_request, updated_work_request, prefix) end)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->

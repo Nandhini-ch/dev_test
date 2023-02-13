@@ -282,6 +282,7 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_schedules_by_asset_ids_and_template(workorder_template_id, asset_ids, asset_type, prefix) do
     from(ws in WorkorderSchedule, where: ws.asset_id in ^asset_ids and ws.asset_type == ^asset_type and ws.workorder_template_id == ^workorder_template_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
 
