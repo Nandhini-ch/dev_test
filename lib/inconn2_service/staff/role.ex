@@ -20,7 +20,6 @@ defmodule Inconn2Service.Staff.Role do
     |> cast(attrs, [:name, :description, :role_profile_id, :permissions, :hierarchy_id, :active])
     |> validate_required([:name, :role_profile_id, :permissions])
     |> unique_constraint(:name)
-
     |> assoc_constraint(:role_profile)
   end
 end
