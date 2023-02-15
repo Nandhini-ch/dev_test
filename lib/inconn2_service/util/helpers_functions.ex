@@ -232,7 +232,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def get_base_url() do
     case Application.get_env(:inconn2_service, :environment) do
       :prod -> "inconn.io"
-      :dev -> "inconn.com"
+      :dev -> "inconn.com:8080"
     end
   end
 end
