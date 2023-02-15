@@ -71,10 +71,10 @@ defmodule Inconn2Service.Email do
        #{remarks}
 
         Please click here to acknowledge your issue resolution -
-        https://#{sub_domain}.#{get_base_url()}/closedresponse?work_request_id=#{id}
+        https://#{sub_domain}.#{get_frontend_url(sub_domain)}/closedresponse?work_request_id=#{id}
 
         If you are not happy with the solution offered, please click here to reopen -
-        https://#{sub_domain}.#{get_base_url()}/ticketreopening?ticketId=#{id}
+        https://#{sub_domain}.#{get_frontend_url(sub_domain)}/ticketreopening?ticketId=#{id}
 
         Thank You,
         Regards
