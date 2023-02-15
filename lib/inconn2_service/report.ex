@@ -2594,7 +2594,7 @@ defmodule Inconn2Service.Report do
         [
           :img,
           %{
-            src: "http://#{sub_domain}.#{get_base_url()}:4000#{x.asset_qr_url}",
+            src: "#{get_backend_url(sub_domain)}#{x.asset_qr_url}",
             style: style(%{
               "height" => "250px",
               "width" => "250px"

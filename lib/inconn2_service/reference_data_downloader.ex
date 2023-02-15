@@ -367,8 +367,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     data =
       Enum.map(locations_qr, fn x ->
         "inc_" <> sub_domain = prefix
-        IO.inspect("http://#{sub_domain}.#{get_base_url()}:4000#{x.asset_qr_url}")
-        ~s(<div class="col-4"><img src="#{sub_domain}.localhost:4000#{x.asset_qr_url}" height="200px" width="200px"/><h3>#{x.asset_name}</h3></div>)
+        ~s(<div class="col-4"><img src="#{get_backend_url(sub_domain)}#{x.asset_qr_url}" height="200px" width="200px"/><h3>#{x.asset_name}</h3></div>)
       end) |> Enum.join()
 
       header = [["divs"]]
