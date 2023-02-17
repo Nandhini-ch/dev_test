@@ -229,10 +229,17 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def convert_to_float(number) when is_float(number), do: number
   def convert_to_float(number), do: number * 1.0
 
-  def get_base_url() do
+  def get_backend_url(sub_domain) do
     case Application.get_env(:inconn2_service, :environment) do
-      :prod -> "inconn.io"
-      :dev -> "inconn.com"
+      :prod -> "https://#{sub_domain}.inconn.io:4001"
+      :dev -> "http://#{sub_domain}.inconn.com:4000"
+    end
+  end
+
+  def get_frontend_url(sub_domain) do
+    case Application.get_env(:inconn2_service, :environment) do
+      :prod -> "https://#{sub_domain}.inconn.io:443"
+      :dev -> "http://#{sub_domain}.inconn.com:8080"
     end
   end
 end
