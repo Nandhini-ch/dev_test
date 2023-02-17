@@ -550,7 +550,9 @@ defmodule Inconn2Service.Staff do
   def get_user(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(employee: :org_unit)
 
   def get_user_from_employee(emp_id, prefix) do
-    Repo.get_by(User, [employee_id: emp_id], prefix: prefix)
+    User
+    |> Repo.add_active_filter()
+    |> Repo.get_by([employee_id: emp_id], prefix: prefix)
   end
 
   def get_user_without_org_unit!(id, prefix), do: Repo.get(User, id, prefix: prefix) |> Repo.preload(:employee)
