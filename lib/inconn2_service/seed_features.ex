@@ -153,6 +153,7 @@ defmodule Inconn2Service.SeedFeatures do
     %{
       "name" => name,
       "code" => code,
+      "hierarchy_id" => role_profile_map()[name],
       "permissions" => read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/#{name}.csv"), :role_profile)
     }
   end

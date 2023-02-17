@@ -1,4 +1,4 @@
-alias Inconn2Service.{Staff, Assignment}
+alias Inconn2Service.{Staff, Assignment, Common}
 
 # feat1 = %{"name" => "Create sites", "code" => "CRST", "description" => "Can create site"}
 # feat2 = %{"name" => "Create Asset", "code" => "CRAS", "description" => "Can create locations and equipment"}
@@ -163,3 +163,10 @@ emp_rst6 = %{
  {:ok, emp_rst4c} = Assignment.create_employee_roster(emp_rst4, "inc_bata")
  {:ok, emp_rst5c} = Assignment.create_employee_roster(emp_rst5, "inc_bata")
  {:ok, emp_rst6c} = Assignment.create_employee_roster(emp_rst6, "inc_bata")
+
+ admin = %{
+  "full_name" => "Admin User",
+  "username" => "adminuser@inconn.com",
+  "password" => "password"
+ }
+{:ok, admin_c} = Common.create_admin_user(admin)

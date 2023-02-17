@@ -13,7 +13,7 @@ defmodule Inconn2Service.ExternalTicket do
   defp put_location_id(asset, "L"), do: "location_id=#{asset.id}"
 
   defp generate_asset_base_url(asset, asset_type, prefix) do
-    "https://#{split_prefix(prefix)}.#{get_base_url()}/externalticket?asset_id=#{asset.id}&asset_type=#{asset_type}&site_id=#{asset.site_id}&#{put_location_id(asset, asset_type)}"
+    "#{get_frontend_url(split_prefix(prefix))}/externalticket?asset_id=#{asset.id}&asset_type=#{asset_type}&site_id=#{asset.site_id}&#{put_location_id(asset, asset_type)}"
   end
 
   defp split_prefix(prefix) do
