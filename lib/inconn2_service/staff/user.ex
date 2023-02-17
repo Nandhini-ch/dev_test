@@ -10,6 +10,7 @@ defmodule Inconn2Service.Staff.User do
     field :first_name, :string
     field :last_name, :string
     field :password, :string, virtual: true
+    field :first_login, :boolean, default: true
     field :role_id, :integer
     field :email, :string
     field :mobile_no, :string
@@ -24,7 +25,7 @@ defmodule Inconn2Service.Staff.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :first_name, :last_name, :password, :email, :mobile_no, :role_id, :party_id, :employee_id, :active])
+    |> cast(attrs, [:username, :first_name, :last_name, :password, :email, :first_login, :mobile_no, :role_id, :party_id, :employee_id, :active])
     |> validate_required([:username, :password, :email, :mobile_no, :role_id, :party_id])
     |> validate_format(:email, ~r/@/)
     |> validate_confirmation(:password, message: "does not match password")
@@ -49,7 +50,7 @@ defmodule Inconn2Service.Staff.User do
 
   def change_password_changeset(user, attrs) do
     user
-    |> cast(attrs, [:password])
+    |> cast(attrs, [:password, :first_login])
     |> hash_password()
   end
 

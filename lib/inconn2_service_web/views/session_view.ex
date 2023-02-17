@@ -24,6 +24,7 @@ defmodule Inconn2ServiceWeb.SessionView do
         first_name: employee.first_name,
         last_name: employee.last_name,
         username: current_user.username,
+        first_login: current_user.first_login,
         party_id: current_user.party_id,
         party_type: party.party_type,
         is_licensee: party.licensee,

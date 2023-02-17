@@ -2586,7 +2586,6 @@ defmodule Inconn2Service.Report do
   def render_img_qr(qr_list, sub_domain) do
     Enum.map(qr_list, fn x ->
 
-      # IO.inspect("http://#{sub_domain}.inconn.io:4000#{x.asset_qr_url}")
       [
         :div,
         %{
@@ -2595,7 +2594,7 @@ defmodule Inconn2Service.Report do
         [
           :img,
           %{
-            src: "http://#{sub_domain}.inconn.io:4000#{x.asset_qr_url}",
+            src: "http://#{sub_domain}.#{get_base_url()}:4000#{x.asset_qr_url}",
             style: style(%{
               "height" => "250px",
               "width" => "250px"
