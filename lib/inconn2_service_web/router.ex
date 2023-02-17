@@ -12,10 +12,12 @@ defmodule Inconn2ServiceWeb.Router do
     plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
+  pipeline :authenticate_admin do
+    plug(Inconn2ServiceWeb.Plugs.AuthenticateAdmin)
+  end
+
   scope "/api", Inconn2ServiceWeb do
     pipe_through :api
-    resources "/business_types", BusinessTypeController, except: [:new, :edit]
-    resources "/licensees", LicenseeController, except: [:new, :edit]
     get "/timezones", TimezoneController, :index
     get "/equipments/:id/qr_code", EquipmentController, :display_qr_code
     get "/locations/:id/qr_code", LocationController, :display_qr_code
@@ -48,6 +50,13 @@ defmodule Inconn2ServiceWeb.Router do
       resources "/work_request", ExternalTicketController, only: [:create, :show, :update]
 
     end
+
+  end
+
+  scope "/api", Inconn2ServiceWeb do
+    pipe_through [:api, :authenticate, :authenticate_admin]
+    resources "/business_types", BusinessTypeController, except: [:new, :edit]
+    resources "/licensees", LicenseeController, except: [:new, :edit]
 
     resources "/admin_users", AdminUserController, except: [:new, :edit]
 
