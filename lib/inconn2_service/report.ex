@@ -2523,6 +2523,7 @@ defmodule Inconn2Service.Report do
       [:__@raw_html, body]])
 
     {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome, command_prefix: "xvfb-run")
+
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2569,7 +2570,7 @@ defmodule Inconn2Service.Report do
               "align-items" => "flex-start"
             })
         },
-        render_img_qr(equipments_qr, sub_domain),\
+        render_img_qr(equipments_qr, sub_domain),
         ]
       ])
 
@@ -2601,7 +2602,8 @@ defmodule Inconn2Service.Report do
             })
           },
         ],
-        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"]
+        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"],
+        [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_code}"]
       ]
 
     end)

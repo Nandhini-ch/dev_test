@@ -2154,7 +2154,7 @@ defmodule Inconn2Service.Workorder do
             asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
@@ -2193,7 +2193,7 @@ defmodule Inconn2Service.Workorder do
   end
 
   def flutter_query() do
-    from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and wo.is_deactivated == false,
+    from wo in WorkOrder, where: wo.status not in ["cp", "cn", "ackp"] and wo.is_deactivated == false,
       left_join: s in Site, on: s.id == wo.site_id,
       left_join: wr in WorkRequest, on: wo.work_request_id == wr.id,
       left_join: u in User, on: wo.user_id == u.id,

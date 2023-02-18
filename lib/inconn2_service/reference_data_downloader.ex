@@ -136,13 +136,13 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     check = Staff.list_employees(prefix)
 
     header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
-    "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
+    "Designation Id", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
     "Skills", "Org Unit Id", "Party Id"]]
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.first_name, r.last_name, r.employement_start_date, r.employment_end_date,
-        r.designation, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
+        [r.id, "", r.first_name, r.last_name, r.employment_start_date, r.employment_end_date,
+        r.designation_id, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
         convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id]
       end)
 
