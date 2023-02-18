@@ -781,9 +781,25 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def get_role_by_name(nil, _prefix), do: nil
+
+  def get_role_by_name(name, prefix) do
+    from(r in Role, where: r.name == ^name and r.active == true)
+    |> Repo.one(prefix: prefix)
+  end
+
+  def validate_role_name_constraint(cs, prefix) do
+    name = get_field(cs, :name, nil)
+    case get_role_by_name(name, prefix) do
+      nil -> cs
+      _ -> add_error(cs, :name, "Role Name Is Already Taken")
+    end
+  end
+
   def create_role(attrs \\ %{}, prefix) do
     result = %Role{}
               |> Role.changeset(attrs)
+              |> validate_role_name_constraint(prefix)
               |> inserting_hierarchy_id_to_role(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
@@ -796,6 +812,7 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
+    |> validate_role_name_constraint(prefix)
     |> inserting_hierarchy_id_to_role(prefix)
     |> Repo.update(prefix: prefix)
   end
