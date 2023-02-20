@@ -232,7 +232,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_employees(content, prefix) do
     req_fields = ["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
-                  "Designation", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
+                  "Designation Id", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Role Id", "Reports To",
                   "Skills", "Org Unit Id", "Party Id"]
 
     special_fields = [{"Skills", "array_of_integers", []}, {"Create User?", "boolean", []},
