@@ -305,12 +305,12 @@ defmodule Inconn2Service.AssetConfig do
   def get_assets(id, prefix) do
     asset_category = get_asset_category!(id, prefix)
     asset_type = asset_category.asset_type
-    subtree = HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix)
+    subtree = HierarchyManager.subtree(asset_category) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
     ids = Enum.map(subtree, fn x -> Map.fetch!(x, :id) end)
 
     case asset_type do
-      "L" -> from(l in Location, where: l.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
-      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
+      "L" -> from(l in Location, where: l.asset_category_id in ^ids) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
+      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
     end
   end
 
