@@ -95,6 +95,21 @@ defmodule Inconn2Service.AssetConfig do
    |> Repo.sort_by_id()
   end
 
+  def get_sites_by_site_code(nil, _prefix), do: []
+
+  def get_sites_by_site_code(site_code, prefix) do
+    from(s in Site, where: s.site_code == ^site_code and s.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_site_code_constraint(cs, prefix) do
+    site_code = get_field(cs, :site_code, nil)
+    case get_sites_by_site_code(site_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :site_code, "Site Code Is Already Taken")
+    end
+  end
+
   def list_sites_for_user(user, prefix) do
     case get_party!(user.party_id, prefix).party_type do
       "AO" -> list_sites(%{"party_id" => user.party_id}, prefix)
@@ -152,6 +167,7 @@ defmodule Inconn2Service.AssetConfig do
           site =
             %Site{}
             |> Site.changeset(attrs)
+            |> validate_site_code_constraint(prefix)
             |> Repo.insert(prefix: prefix)
       end
     end
@@ -160,6 +176,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_site(%Site{} = site, attrs, prefix) do
     site
     |> Site.changeset(attrs)
+    |> validate_site_code_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -975,6 +992,21 @@ defmodule Inconn2Service.AssetConfig do
     Equipment
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
+  end
+
+  def get_equipments_by_equipment_code(nil, _prefix), do: []
+
+  def get_equipments_by_equipment_code(equipment_code, prefix) do
+    from(e in Equipment, where: e.equipment_code == ^equipment_code and e.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_equipment_code_constraint(cs, prefix) do
+    equipment_code = get_field(cs, :equipment_code, nil)
+    case get_equipments_by_equipment_code(equipment_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+    end
   end
 
   def list_equipments_tree(site_id, prefix) do
