@@ -255,6 +255,22 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def list_employees_of_licensee(prefix) do
+    Employee
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Repo.sort_by_id()
+  end
+
+  def verify_the_licensee_in_party(user, prefix) do
+    if (AssetConfig.get_party!(user.party_id, prefix)).licensee  == false do
+        list_employees_of_party(user, prefix)
+    else
+        list_employees_of_licensee(prefix)
+    end
+  end
+
   def list_employees(%{"designation_id" => designation_id}, user, prefix) do
       filters = filter_by_user_is_licensee(user, prefix)
       Employee
