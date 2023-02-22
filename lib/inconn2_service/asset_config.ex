@@ -75,7 +75,7 @@ defmodule Inconn2Service.AssetConfig do
       has_site?(zone, prefix) ->
         {
           :could_not_delete,
-          "Cannot be deleted as there are site associated with thix zone or its descendants"
+          "Cannot be deleted as there are site associated with this zone or its descendants"
         }
       true ->
         update_zone(zone, %{"active" => false}, prefix)
@@ -93,6 +93,21 @@ defmodule Inconn2Service.AssetConfig do
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
    |> Repo.sort_by_id()
+  end
+
+  def get_sites_by_site_code(nil, _prefix), do: []
+
+  def get_sites_by_site_code(site_code, prefix) do
+    from(s in Site, where: s.site_code == ^site_code and s.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_site_code_constraint(cs, prefix) do
+    site_code = get_field(cs, :site_code, nil)
+    case get_sites_by_site_code(site_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :site_code, "Site Code Is Already Taken")
+    end
   end
 
   def list_sites_for_user(user, prefix) do
@@ -152,6 +167,7 @@ defmodule Inconn2Service.AssetConfig do
           site =
             %Site{}
             |> Site.changeset(attrs)
+            |> validate_site_code_constraint(prefix)
             |> Repo.insert(prefix: prefix)
       end
     end
@@ -160,6 +176,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_site(%Site{} = site, attrs, prefix) do
     site
     |> Site.changeset(attrs)
+    |> validate_site_code_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -305,12 +322,12 @@ defmodule Inconn2Service.AssetConfig do
   def get_assets(id, prefix) do
     asset_category = get_asset_category!(id, prefix)
     asset_type = asset_category.asset_type
-    subtree = HierarchyManager.subtree(asset_category) |> Repo.all(prefix: prefix)
+    subtree = HierarchyManager.subtree(asset_category) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
     ids = Enum.map(subtree, fn x -> Map.fetch!(x, :id) end)
 
     case asset_type do
-      "L" -> from(l in Location, where: l.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
-      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids) |> Repo.all(prefix: prefix)
+      "L" -> from(l in Location, where: l.asset_category_id in ^ids) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
+      "E" -> from(e in Equipment, where: e.asset_category_id in ^ids) |> Repo.add_active_filter() |> Repo.all(prefix: prefix)
     end
   end
 
@@ -641,6 +658,21 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_location_by_qr_code(qr_code, prefix), do: Repo.get_by(Location, [qr_code: qr_code], prefix: prefix)
 
+  def get_locations_by_location_code(nil, _prefix), do: []
+
+  def get_locations_by_location_code(location_code, prefix) do
+    from(l in Location, where: l.location_code == ^location_code and l.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_location_code_constraint(cs, prefix) do
+    location_code = get_field(cs, :location_code, nil)
+    case get_locations_by_location_code(location_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
+    end
+  end
+
 
   def get_root_locations(site_id, prefix) do
     root_path = []
@@ -664,6 +696,7 @@ defmodule Inconn2Service.AssetConfig do
     loc_cs =
       %Location{}
       |> Location.changeset(attrs)
+      |> validate_location_code_constraint(prefix)
       |> check_asset_category_type_loc(prefix)
 
     result = create_location_in_tree(parent_id, loc_cs, prefix)
@@ -868,9 +901,10 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_location_default_changeset_pipe(%Location{} = location, attrs, _prefix) do
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs, prefix) do
     location
     |> Location.changeset(attrs)
+    |> validate_location_code_constraint(prefix)
   end
 
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
@@ -975,6 +1009,21 @@ defmodule Inconn2Service.AssetConfig do
     Equipment
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
+  end
+
+  def get_equipments_by_equipment_code(nil, _prefix), do: []
+
+  def get_equipments_by_equipment_code(equipment_code, prefix) do
+    from(e in Equipment, where: e.equipment_code == ^equipment_code and e.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_equipment_code_constraint(cs, prefix) do
+    equipment_code = get_field(cs, :equipment_code, nil)
+    case get_equipments_by_equipment_code(equipment_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+    end
   end
 
   def list_equipments_tree(site_id, prefix) do

@@ -193,7 +193,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   def task_tasklist_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"task_id", task_id}, query -> from q in query, where: q.task_id == ^task_id
-      _, query -> from q in query, where: q.active
+      _, query -> query
     end)
   end
 
