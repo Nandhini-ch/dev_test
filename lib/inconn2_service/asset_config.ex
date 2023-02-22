@@ -75,7 +75,7 @@ defmodule Inconn2Service.AssetConfig do
       has_site?(zone, prefix) ->
         {
           :could_not_delete,
-          "Cannot be deleted as there are site associated with thix zone or its descendants"
+          "Cannot be deleted as there are site associated with this zone or its descendants"
         }
       true ->
         update_zone(zone, %{"active" => false}, prefix)
@@ -658,6 +658,21 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_location_by_qr_code(qr_code, prefix), do: Repo.get_by(Location, [qr_code: qr_code], prefix: prefix)
 
+  def get_locations_by_location_code(nil, _prefix), do: []
+
+  def get_locations_by_location_code(location_code, prefix) do
+    from(l in Location, where: l.location_code == ^location_code and l.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_location_code_constraint(cs, prefix) do
+    location_code = get_field(cs, :location_code, nil)
+    case get_locations_by_location_code(location_code, prefix) do
+      [] -> cs
+      _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
+    end
+  end
+
 
   def get_root_locations(site_id, prefix) do
     root_path = []
@@ -681,6 +696,7 @@ defmodule Inconn2Service.AssetConfig do
     loc_cs =
       %Location{}
       |> Location.changeset(attrs)
+      |> validate_location_code_constraint(prefix)
       |> check_asset_category_type_loc(prefix)
 
     result = create_location_in_tree(parent_id, loc_cs, prefix)
@@ -885,9 +901,10 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_location_default_changeset_pipe(%Location{} = location, attrs, _prefix) do
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs, prefix) do
     location
     |> Location.changeset(attrs)
+    |> validate_location_code_constraint(prefix)
   end
 
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do

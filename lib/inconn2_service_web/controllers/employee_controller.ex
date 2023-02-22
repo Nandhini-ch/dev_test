@@ -12,7 +12,7 @@ defmodule Inconn2ServiceWeb.EmployeeController do
   end
 
   def index_of_party(conn, _params) do
-    employees = Staff.list_employees_of_party(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    employees = Staff.verify_the_licensee_in_party(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "index_without_preloads.json", employees: employees)
   end
 
