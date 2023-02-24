@@ -783,7 +783,7 @@ defmodule Inconn2Service.Report do
 
   def asset_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
-    query_params = Map.put("asset_category_ids", AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"], prefix))
+    query_params = Map.put(query_params, "asset_category_ids", AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"], prefix))
 
     equipments_data = get_equipment_details(prefix, query_params)
     locations_data = get_location_details(prefix, query_params)
