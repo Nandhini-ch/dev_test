@@ -805,11 +805,12 @@ defmodule Inconn2Service.Staff do
   end
 
   def validate_role_name_constraint(cs, prefix) do
-    name = get_field(cs, :name, nil)
-    case get_role_by_name(name, prefix) do
-      nil -> cs
-      _ -> add_error(cs, :name, "Role Name Is Already Taken")
-    end
+    # name = get_field(cs, :name, nil)
+    # case get_role_by_name(name, prefix) do
+    #   nil -> cs
+    #   _ -> add_error(cs, :name, "Role Name Is Already Taken")
+    # end
+    cs
   end
 
   def create_role(attrs \\ %{}, prefix) do
@@ -1069,11 +1070,12 @@ defmodule Inconn2Service.Staff do
   end
 
   def validate_designation_name_constraint(cs, prefix) do
-    name = get_field(cs, :name, nil)
-    case get_designation_by_name(name, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :name, "Designation Name Is Already Taken")
-    end
+    # name = get_field(cs, :name, nil)
+    # case get_designation_by_name(name, prefix) do
+    #   [] -> cs
+    #   _ -> add_error(cs, :name, "Designation Name Is Already Taken")
+    # end
+    cs
   end
 
 
