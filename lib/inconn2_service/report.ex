@@ -782,7 +782,12 @@ defmodule Inconn2Service.Report do
   end
 
   def asset_status_report(prefix, query_params) do
-    query_params = rectify_query_params(query_params)
+    asset_category_ids = AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"], prefix)
+    query_params =
+      query_params
+      |> Map.put("asset_category_ids", asset_category_ids)
+      |> rectify_query_params()
+
     equipments_data = get_equipment_details(prefix, query_params)
     locations_data = get_location_details(prefix, query_params)
 
@@ -859,8 +864,11 @@ defmodule Inconn2Service.Report do
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
 
-        {"asset_category_id", asset_category_id}, main_query ->
-          from q in main_query, where: q.asset_category_id == ^asset_category_id
+        {"asset_category_ids", []}, main_query ->
+          main_query
+
+        {"asset_category_ids", asset_category_ids}, main_query ->
+          from q in main_query, where: q.asset_category_id in ^asset_category_ids
 
         _ , main_query ->
           main_query
@@ -998,8 +1006,11 @@ defmodule Inconn2Service.Report do
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
 
-        {"asset_category_id", asset_category_id}, main_query ->
-          from q in main_query, where: q.asset_category_id == ^asset_category_id
+        {"asset_category_ids", []}, main_query ->
+          main_query
+
+        {"asset_category_ids", asset_category_ids}, main_query ->
+          from q in main_query, where: q.asset_category_id in ^asset_category_ids
 
         _ , main_query ->
           main_query
