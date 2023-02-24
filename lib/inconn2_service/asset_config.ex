@@ -103,11 +103,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_site_code_constraint(cs, prefix) do
-    site_code = get_field(cs, :site_code, nil)
-    case get_sites_by_site_code(site_code, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :site_code, "Site Code Is Already Taken")
-    end
+    # site_code = get_field(cs, :site_code, nil)
+    # case get_sites_by_site_code(site_code, prefix) do
+    #   [] -> cs
+    #   _ -> add_error(cs, :site_code, "Site Code Is Already Taken")
+    # end
+    cs
   end
 
   def list_sites_for_user(user, prefix) do
@@ -666,11 +667,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_location_code_constraint(cs, prefix) do
-    location_code = get_field(cs, :location_code, nil)
-    case get_locations_by_location_code(location_code, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
-    end
+    # location_code = get_field(cs, :location_code, nil)
+    # case get_locations_by_location_code(location_code, prefix) do
+    #   [] -> cs
+    #   _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
+    # end
+    cs
   end
 
 
@@ -1019,11 +1021,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_equipment_code_constraint(cs, prefix) do
-    equipment_code = get_field(cs, :equipment_code, nil)
-    case get_equipments_by_equipment_code(equipment_code, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
-    end
+    # equipment_code = get_field(cs, :equipment_code, nil)
+    # case get_equipments_by_equipment_code(equipment_code, prefix) do
+    #   [] -> cs
+    #   _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+    # end
+    cs
   end
 
   def list_equipments_tree(site_id, prefix) do
