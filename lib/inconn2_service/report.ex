@@ -782,7 +782,7 @@ defmodule Inconn2Service.Report do
   end
 
   def asset_status_report(prefix, query_params) do
-    asset_category_ids = AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"])
+    asset_category_ids = AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"], prefix)
     query_params =
       query_params
       |> Map.put("asset_category_ids", asset_category_ids)

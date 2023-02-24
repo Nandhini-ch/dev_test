@@ -287,8 +287,8 @@ defmodule Inconn2Service.AssetConfig do
     from(a in AssetCategory, where: a.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-  def get_asset_category_subtree_ids(nil), do: []
-  def get_asset_category_subtree_ids(asset_category_id) do
+  def get_asset_category_subtree_ids(nil, _prefix), do: []
+  def get_asset_category_subtree_ids(asset_category_id, prefix) do
     asset_category_id
     |> get_asset_category!(prefix)
     |> HierarchyManager.subtree()
