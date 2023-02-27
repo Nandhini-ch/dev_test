@@ -758,14 +758,14 @@ defmodule Inconn2Service.AssetConfig do
           new_parent_id = attrs["parent_id"]
 
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs, prefix)
+            update_location_default_changeset_pipe(location, attrs)
             |> check_asset_category_type_loc(prefix)
 
           update_location_in_tree(new_parent_id, loc_cs, location, prefix)
 
         true ->
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs, prefix)
+            update_location_default_changeset_pipe(location, attrs)
             |> check_asset_category_type_loc(prefix)
 
           Repo.update(loc_cs, prefix: prefix)
@@ -901,10 +901,10 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_location_default_changeset_pipe(%Location{} = location, attrs, prefix) do
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs) do
     location
     |> Location.changeset(attrs)
-    |> validate_location_code_constraint(prefix)
+    # |> validate_location_code_constraint(prefix)
   end
 
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
