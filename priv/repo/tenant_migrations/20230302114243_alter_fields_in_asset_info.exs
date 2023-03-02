@@ -4,9 +4,9 @@ defmodule Inconn2Service.Repo.Migrations.AlterFieldsInAssetInfo do
   def change do
     alter table("equipment_manufacturers") do
       remove :service_branch_id, :integer
-      remove :manufacture_id, :integer
+      remove :manufacturer_id, :integer
       add :service_branch, :string
-      add :manufacture, :string
+      add :manufacturer, :string
     end
 
     alter table("equipment_maintenance_vendors") do
