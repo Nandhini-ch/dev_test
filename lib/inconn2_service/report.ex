@@ -552,16 +552,16 @@ defmodule Inconn2Service.Report do
           from q in main_query, where: q.site_id == ^site_id
 
         {"status", "closed"}, main_query ->
-          from q in main_query, where: q.status in ["CL", "CP"]
+          from q in main_query, where: q.status in ["CS", "CP"]
 
         {"status", "not-closed"}, main_query ->
-          from q in main_query, where: q.status not in ["CL", "ROP", "RJ", "CP"]
+          from q in main_query, where: q.status in ["RS", "AP", "AS"]
 
         {"status", "rejected"}, main_query ->
-          from q in main_query, where: q.status == ^"RJ"
+          from q in main_query, where: q.status in ["RJ", "CL"]
 
         {"status", "reopened"}, main_query ->
-          from q in main_query, where: q.status == ^"ROP"
+          from q in main_query, where: q.status in "ROP"
 
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
