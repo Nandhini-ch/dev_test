@@ -1082,14 +1082,14 @@ defmodule Inconn2Service.Staff do
   def create_designation(attrs \\ %{}, prefix) do
     %Designation{}
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
+    # |> validate_designation_name_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
   def update_designation(%Designation{} = designation, attrs, prefix) do
     designation
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
+    # |> validate_designation_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 

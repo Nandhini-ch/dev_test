@@ -697,7 +697,7 @@ defmodule Inconn2Service.AssetConfig do
     loc_cs =
       %Location{}
       |> Location.changeset(attrs)
-      |> validate_location_code_constraint(prefix)
+      # |> validate_location_code_constraint(prefix)
       |> check_asset_category_type_loc(prefix)
 
     result = create_location_in_tree(parent_id, loc_cs, prefix)
