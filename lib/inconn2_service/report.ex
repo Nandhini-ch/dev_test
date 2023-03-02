@@ -166,7 +166,7 @@ defmodule Inconn2Service.Report do
   end
 
   def people_report(prefix, query_params) do
-    report_headers = ["First Name", "Last Name", "Employee Code", "Designation", "Department", "Attendance Percentage", "Work Done Time"]
+    report_headers = ["First Name", "Last Name", "Designation", "Department", "Employee Code", "Attendance Percentage", "Work Done Time"]
     filters = filter_data(query_params, prefix)
     result =
       people_report_query(query_params)
