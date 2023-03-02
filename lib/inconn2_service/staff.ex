@@ -1062,25 +1062,40 @@ defmodule Inconn2Service.Staff do
   end
 
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
+  def get_designations_by_name(nil, _prefix), do: []
+
+  def get_designations_by_name(name, prefix) do
+    from(d in Designation, where: d.name == ^name and d.active == true, select: d.name)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_designation_name_constraint(cs, prefix) do
+    name = get_field(cs, :name, nil)
+    name_list = get_designations_by_name(name, prefix)
+    if name != name_list do
+      cs
+    else
+      add_error(cs, :name, "Name Is Already Taken")
+    end
+  end
 
   def create_designation(attrs \\ %{}, prefix) do
     %Designation{}
     |> Designation.changeset(attrs)
+    |> validate_designation_name_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
-
 
   def update_designation(%Designation{} = designation, attrs, prefix) do
     designation
     |> Designation.changeset(attrs)
+    |> validate_designation_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
-
 
   # def delete_designation(%Designation{} = designation, prefix) do
   #   Repo.delete(designation, prefix: prefix)
   # end
-
 
   def delete_designation(%Designation{} = designation, prefix) do
     cond do

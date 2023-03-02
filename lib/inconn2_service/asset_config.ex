@@ -667,12 +667,13 @@ defmodule Inconn2Service.AssetConfig do
 
   def validate_location_code_constraint(cs, prefix) do
     location_code = get_field(cs, :location_code, nil)
-    case get_locations_by_location_code(location_code, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
+    location_code_list = get_locations_by_location_code(location_code, prefix)
+    if location_code == location_code_list do
+      add_error(cs, :equipment_code, "Location Code Is Already Taken")
+    else
+      cs
     end
   end
-
 
   def get_root_locations(site_id, prefix) do
     root_path = []
@@ -1020,9 +1021,11 @@ defmodule Inconn2Service.AssetConfig do
 
   def validate_equipment_code_constraint(cs, prefix) do
     equipment_code = get_field(cs, :equipment_code, nil)
-    case get_equipments_by_equipment_code(equipment_code, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+    equipment_code_list = get_equipments_by_equipment_code(equipment_code, prefix)
+    if equipment_code == equipment_code_list do
+      add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+    else
+      cs
     end
   end
 
@@ -1262,7 +1265,7 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
-      |>  validate_custom_field_type(prefix, "equipment")
+      |> validate_custom_field_type(prefix, "equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
