@@ -18,7 +18,7 @@ defmodule Inconn2ServiceWeb.EquipmentMaintenanceVendorView do
       amc_to: equipment_maintenance_vendor.amc_to,
       amc_frequency: equipment_maintenance_vendor.amc_frequency,
       response_time_in_minutes: equipment_maintenance_vendor.response_time_in_minutes,
-      vendor_id: equipment_maintenance_vendor.vendor_id,
-      service_branch_id: equipment_maintenance_vendor.service_branch_id}
+      vendor: equipment_maintenance_vendor.vendor,
+      service_branch: equipment_maintenance_vendor.service_branch}
   end
 end

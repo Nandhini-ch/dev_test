@@ -7,8 +7,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentDlpVendor do
     field :dlp_from, :date
     field :dlp_to, :date
     field :is_asset_under_dlp, :boolean, default: false
-    field :service_branch_id, :integer
-    field :vendor_id, :integer
+    field :service_branch, :string
+    field :vendor, :string
     field :vendor_scope, :string
     belongs_to :equipment, Equipment
 
@@ -18,8 +18,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentDlpVendor do
   @doc false
   def changeset(equipment_dlp_vendor, attrs) do
     equipment_dlp_vendor
-    |> cast(attrs, [:vendor_scope, :is_asset_under_dlp, :dlp_from, :dlp_to, :vendor_id, :service_branch_id, :equipment_id])
-    |> validate_required([:vendor_id, :service_branch_id, :equipment_id])
+    |> cast(attrs, [:vendor_scope, :is_asset_under_dlp, :dlp_from, :dlp_to, :vendor, :service_branch, :equipment_id])
+    |> validate_required([:vendor, :service_branch, :equipment_id])
     |> validate_dates()
   end
 
