@@ -232,8 +232,8 @@ defmodule Inconn2Service.Staff do
   defp get_role_for_employee(employee, prefix) do
     user = get_user_from_employee(employee.id, prefix)
     case user do
-      nil -> Map.put(employee, :role_id, nil)
-      _ -> Map.put(employee, :role_id, user.role_id)
+      nil -> Map.put(employee, :role, nil)
+      _ -> Map.put(employee, :role, get_role!(user.role_id, prefix))
     end
   end
 
@@ -242,7 +242,7 @@ defmodule Inconn2Service.Staff do
     Employee
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
-    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -251,7 +251,7 @@ defmodule Inconn2Service.Staff do
     |> where([party_id: ^user.party_id])
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
-    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -259,7 +259,7 @@ defmodule Inconn2Service.Staff do
     Employee
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
-    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -280,7 +280,7 @@ defmodule Inconn2Service.Staff do
       |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
       |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
       |> Repo.preload(:org_unit)
-      # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+      |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
       |> Repo.sort_by_id()
     end
 
@@ -294,7 +294,7 @@ defmodule Inconn2Service.Staff do
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
     |> Repo.preload(:org_unit)
-    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -307,7 +307,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
-    # |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.preload(:org_unit)
     |> Repo.sort_by_id()
   end
@@ -397,6 +397,7 @@ defmodule Inconn2Service.Staff do
     Repo.get!(Employee, id, prefix: prefix)
     |> preload_employee(prefix)
     |> preload_skills(prefix)
+    |> get_role_for_employee(prefix)
     |> Repo.preload(:org_unit)
     |> Repo.preload(:user)
   end
@@ -426,7 +427,7 @@ defmodule Inconn2Service.Staff do
          {:ok, emp_set} ->
                  case create_employee_user(emp_set, attrs, prefix) do
                    {:ok, _user} ->
-                       {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+                       {:ok, emp_set |> preload_employee(prefix)  |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
 
                    {:error, changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
@@ -443,7 +444,7 @@ defmodule Inconn2Service.Staff do
                       |> validate_skill_ids(prefix)
                       |> Repo.insert(prefix: prefix)
       case employee_set do
-        {:ok, emp_set} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+        {:ok, emp_set} -> {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
         _ -> employee_set
       end
     end
@@ -482,7 +483,7 @@ defmodule Inconn2Service.Staff do
         case employee_set do
           {:ok, emp_set} ->
                   create_employee_user(emp_set, attrs, prefix)
-                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
           _ ->
                   employee_set
         end
@@ -494,7 +495,7 @@ defmodule Inconn2Service.Staff do
                     |> Repo.update(prefix: prefix)
       case employee_set do
           {:ok, emp_set} ->
-                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+                  {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
           _ ->
                   employee_set
       end
@@ -812,6 +813,8 @@ defmodule Inconn2Service.Staff do
     end
   end
 
+
+
   def create_role(attrs \\ %{}, prefix) do
     result = %Role{}
               |> Role.changeset(attrs)
@@ -1078,27 +1081,38 @@ defmodule Inconn2Service.Staff do
 
 
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
+  def get_designations_by_name(nil, _prefix), do: []
+
+  def get_designations_by_name(name, prefix) do
+    from(d in Designation, where: d.name == ^name and d.active == true, select: d.name)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_designation_name_constraint(cs, prefix) do
+    name = get_field(cs, :name, nil)
+    name_list = get_designations_by_name(name, prefix)
+    if name != name_list do
+      cs
+    else
+      add_error(cs, :name, "Name Is Already Taken")
+    end
+  end
 
   def create_designation(attrs \\ %{}, prefix) do
     %Designation{}
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
-
 
   def update_designation(%Designation{} = designation, attrs, prefix) do
     designation
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
-
 
   # def delete_designation(%Designation{} = designation, prefix) do
   #   Repo.delete(designation, prefix: prefix)
   # end
-
 
   def delete_designation(%Designation{} = designation, prefix) do
     cond do

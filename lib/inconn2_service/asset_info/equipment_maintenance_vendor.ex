@@ -9,8 +9,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentMaintenanceVendor do
     field :amc_to, :date
     field :is_asset_under_amc, :boolean, default: false
     field :response_time_in_minutes, :integer
-    field :service_branch_id, :integer
-    field :vendor_id, :integer
+    field :service_branch, :string
+    field :vendor, :string
     field :vendor_scope, :string
     belongs_to :equipment, Equipment
 
@@ -20,8 +20,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentMaintenanceVendor do
   @doc false
   def changeset(equipment_maintenance_vendor, attrs) do
     equipment_maintenance_vendor
-    |> cast(attrs, [:vendor_scope, :is_asset_under_amc, :amc_from, :amc_to, :amc_frequency, :response_time_in_minutes, :vendor_id, :service_branch_id, :equipment_id])
-    |> validate_required([:is_asset_under_amc, :vendor_id, :service_branch_id, :equipment_id])
+    |> cast(attrs, [:vendor_scope, :is_asset_under_amc, :amc_from, :amc_to, :amc_frequency, :response_time_in_minutes, :vendor, :service_branch, :equipment_id])
+    |> validate_required([:is_asset_under_amc, :vendor, :service_branch, :equipment_id])
     |> validate_dates()
   end
 

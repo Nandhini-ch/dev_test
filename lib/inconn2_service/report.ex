@@ -166,7 +166,7 @@ defmodule Inconn2Service.Report do
   end
 
   def people_report(prefix, query_params) do
-    report_headers = ["First Name", "Last Name", "Employee Code", "Designation", "Department", "Attendance Percentage", "Work Done Time"]
+    report_headers = ["First Name", "Last Name", "Designation", "Department", "Employee Code", "Attendance Percentage", "Work Done Time"]
     filters = filter_data(query_params, prefix)
     result =
       people_report_query(query_params)
@@ -552,16 +552,16 @@ defmodule Inconn2Service.Report do
           from q in main_query, where: q.site_id == ^site_id
 
         {"status", "closed"}, main_query ->
-          from q in main_query, where: q.status in ["CL", "CP"]
+          from q in main_query, where: q.status in ["CS", "CP"]
 
         {"status", "not-closed"}, main_query ->
-          from q in main_query, where: q.status not in ["CL", "ROP", "RJ", "CP"]
+          from q in main_query, where: q.status in ["RS", "AP", "AS"]
 
         {"status", "rejected"}, main_query ->
-          from q in main_query, where: q.status == ^"RJ"
+          from q in main_query, where: q.status in ["RJ", "CL"]
 
         {"status", "reopened"}, main_query ->
-          from q in main_query, where: q.status == ^"ROP"
+          from q in main_query, where: q.status in "ROP"
 
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
@@ -783,6 +783,8 @@ defmodule Inconn2Service.Report do
 
   def asset_status_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
+    query_params = Map.put(query_params, "asset_category_ids", AssetConfig.get_asset_category_subtree_ids(query_params["asset_category_id"], prefix))
+
     equipments_data = get_equipment_details(prefix, query_params)
     locations_data = get_location_details(prefix, query_params)
 
@@ -859,8 +861,11 @@ defmodule Inconn2Service.Report do
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
 
-        {"asset_category_id", asset_category_id}, main_query ->
-          from q in main_query, where: q.asset_category_id == ^asset_category_id
+        {"asset_category_ids", []}, main_query ->
+          main_query
+
+        {"asset_category_ids", asset_category_ids}, main_query ->
+          from q in main_query, where: q.asset_category_id in ^asset_category_ids
 
         _ , main_query ->
           main_query
@@ -998,8 +1003,11 @@ defmodule Inconn2Service.Report do
         {"status", status}, main_query ->
           from q in main_query, where: q.status == ^status
 
-        {"asset_category_id", asset_category_id}, main_query ->
-          from q in main_query, where: q.asset_category_id == ^asset_category_id
+        {"asset_category_ids", []}, main_query ->
+          main_query
+
+        {"asset_category_ids", asset_category_ids}, main_query ->
+          from q in main_query, where: q.asset_category_id in ^asset_category_ids
 
         _ , main_query ->
           main_query
@@ -1732,7 +1740,7 @@ defmodule Inconn2Service.Report do
           ]
         ]
       )
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4")
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2578,7 +2586,7 @@ defmodule Inconn2Service.Report do
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome, command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string, generator: :chrome, command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end

@@ -26,8 +26,8 @@ defmodule Inconn2ServiceWeb.EquipmentManufacturerView do
       is_warranty_available: equipment_manufacturer.is_warranty_available,
       warranty_from: equipment_manufacturer.warranty_from,
       warranty_to: equipment_manufacturer.warranty_to,
-      manufacturer_id: equipment_manufacturer.manufacturer_id,
-      service_branch_id: equipment_manufacturer.service_branch_id,
+      manufacturer: equipment_manufacturer.manufacturer,
+      service_branch: equipment_manufacturer.service_branch,
       country_of_origin: equipment_manufacturer.country_of_origin}
   end
 end

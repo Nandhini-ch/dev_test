@@ -19,8 +19,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
     field :warranty_from, :date
     field :warranty_to, :date
     field :year_of_manufacturing, :integer
-    field :manufacturer_id, :integer
-    field :service_branch_id, :integer
+    field :manufacturer, :string
+    field :service_branch, :string
     belongs_to :equipment, Equipment
 
     timestamps()
@@ -29,8 +29,8 @@ defmodule Inconn2Service.AssetInfo.EquipmentManufacturer do
   @doc false
   def changeset(equipment_manufacturer, attrs) do
     equipment_manufacturer
-    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer_id, :service_branch_id, :equipment_id])
-    |> validate_required([:manufacturer_id, :equipment_id])
+    |> cast(attrs, [:name, :model_no, :serial_no, :capacity, :unit_of_capacity, :year_of_manufacturing, :acquired_date, :commissioned_date, :purchase_price, :depreciation_factor, :description, :is_warranty_available, :warranty_from, :warranty_to, :country_of_origin, :manufacturer, :service_branch, :equipment_id])
+    |> validate_required([:manufacturer, :equipment_id])
     |> validate_dates()
     |> validate_commissioned_date()
   end
