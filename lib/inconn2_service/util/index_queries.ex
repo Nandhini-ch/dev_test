@@ -46,6 +46,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
     {"location_id", location_id}, query -> from q in query, where: q.location_id == ^location_id
     {"status", status}, query -> from q in query, where: q.status == ^status
+    {"criticality", 0}, query -> query
     {"criticality", criticality}, query -> from q in query, where: q.criticality == ^criticality
     _, query -> from q in query, where: q.active
     end)
