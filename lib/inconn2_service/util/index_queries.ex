@@ -46,6 +46,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
     {"location_id", location_id}, query -> from q in query, where: q.location_id == ^location_id
     {"status", status}, query -> from q in query, where: q.status == ^status
+    {"criticality", 0}, query -> query
     {"criticality", criticality}, query -> from q in query, where: q.criticality == ^criticality
     _, query -> from q in query, where: q.active
     end)
@@ -206,6 +207,8 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   def work_request_query(query, query_params) do
     Enum.reduce(query_params, query, fn
+      {"workrequest_category_id", 0}, query -> query
+      {"priority", ""}, query -> query
       {"workrequest_category_id", workrequest_category_id}, query -> from q in query, where: q.workrequest_category_id == ^workrequest_category_id
       {"priority", priority}, query -> from q in query, where: q.priority == ^priority
       _, query -> query
