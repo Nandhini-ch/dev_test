@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.EquipmentInsuranceVendorView do
       insurance_scope: equipment_insurance_vendor.insurance_scope,
       start_date: equipment_insurance_vendor.start_date,
       end_date: equipment_insurance_vendor.end_date,
-      vendor_id: equipment_insurance_vendor.vendor_id,
-      service_branch_id: equipment_insurance_vendor.service_branch_id}
+      vendor: equipment_insurance_vendor.vendor,
+      service_branch: equipment_insurance_vendor.service_branch}
   end
 end

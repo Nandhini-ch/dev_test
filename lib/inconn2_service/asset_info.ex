@@ -4,7 +4,7 @@ defmodule Inconn2Service.AssetInfo do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetInfo.Manufacturer
-  alias Inconn2Service.AssetConfig.Equipment
+  # alias Inconn2Service.AssetConfig.Equipment
 
   def list_manufacturers(prefix) do
     Repo.all(Manufacturer, prefix: prefix)

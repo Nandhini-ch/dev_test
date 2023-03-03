@@ -676,15 +676,22 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def validate_location_code_constraint(cs, prefix) do
-    # location_code = get_field(cs, :location_code, nil)
-    # case get_locations_by_location_code(location_code, prefix) do
-    #   [] -> cs
-    #   _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
-    # end
-    cs
-  end
-
+#   def validate_location_code_constraint(cs, prefix) do
+#     # location_code = get_field(cs, :location_code, nil)
+#     # case get_locations_by_location_code(location_code, prefix) do
+#     #   [] -> cs
+#     #   _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
+#     # end
+#     cs
+# =======
+#     location_code = get_field(cs, :location_code, nil)
+#     location_code_list = get_locations_by_location_code(location_code, prefix)
+#     if location_code == location_code_list do
+#       add_error(cs, :equipment_code, "Location Code Is Already Taken")
+#     else
+#       cs
+#     end
+#   end
 
   def get_root_locations(site_id, prefix) do
     root_path = []
@@ -708,7 +715,7 @@ defmodule Inconn2Service.AssetConfig do
     loc_cs =
       %Location{}
       |> Location.changeset(attrs)
-      |> validate_location_code_constraint(prefix)
+      # |> validate_location_code_constraint(prefix)
       |> check_asset_category_type_loc(prefix)
 
     result = create_location_in_tree(parent_id, loc_cs, prefix)
@@ -770,14 +777,14 @@ defmodule Inconn2Service.AssetConfig do
           new_parent_id = attrs["parent_id"]
 
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs, prefix)
+            update_location_default_changeset_pipe(location, attrs)
             |> check_asset_category_type_loc(prefix)
 
           update_location_in_tree(new_parent_id, loc_cs, location, prefix)
 
         true ->
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs, prefix)
+            update_location_default_changeset_pipe(location, attrs)
             |> check_asset_category_type_loc(prefix)
 
           Repo.update(loc_cs, prefix: prefix)
@@ -913,10 +920,10 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_location_default_changeset_pipe(%Location{} = location, attrs, prefix) do
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs) do
     location
     |> Location.changeset(attrs)
-    |> validate_location_code_constraint(prefix)
+    # |> validate_location_code_constraint(prefix)
   end
 
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
@@ -1030,14 +1037,22 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def validate_equipment_code_constraint(cs, prefix) do
-    # equipment_code = get_field(cs, :equipment_code, nil)
-    # case get_equipments_by_equipment_code(equipment_code, prefix) do
-    #   [] -> cs
-    #   _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
-    # end
-    cs
-  end
+#   def validate_equipment_code_constraint(cs, prefix) do
+#
+#     # equipment_code = get_field(cs, :equipment_code, nil)
+#     # case get_equipments_by_equipment_code(equipment_code, prefix) do
+#     #   [] -> cs
+#     #   _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+#     # end
+#     cs
+#     equipment_code = get_field(cs, :equipment_code, nil)
+#     equipment_code_list = get_equipments_by_equipment_code(equipment_code, prefix)
+#     if equipment_code == equipment_code_list do
+#       add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
+#     else
+#       cs
+#     end
+#   end
 
   def list_equipments_tree(site_id, prefix) do
     list_equipments(site_id, %{"active" => "true"}, prefix)
@@ -1275,7 +1290,7 @@ defmodule Inconn2Service.AssetConfig do
       |> Equipment.changeset(attrs)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
-      |>  validate_custom_field_type(prefix, "equipment")
+      |> validate_custom_field_type(prefix, "equipment")
 
     result = create_equipment_in_tree(parent_id, eq_cs, prefix)
 
