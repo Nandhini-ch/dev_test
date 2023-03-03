@@ -435,10 +435,8 @@ defmodule Inconn2Service.Ticket do
   defp send_completed_email(work_request, updated_work_request, status_track, prefix) do
     cond do
       work_request.status != "CP" and updated_work_request.status == "CP" ->
-          Elixir.Task.start(fn ->
-            date_time = NaiveDateTime.new(status_track.status_update_date, status_track.status_update_time)
+            date_time = NaiveDateTime.new!(status_track.status_update_date, status_track.status_update_time) |> NaiveDateTime.to_iso8601()
             Email.send_ticket_complete_email(updated_work_request.id, updated_work_request.external_email, updated_work_request.external_name, updated_work_request.remarks, date_time, prefix)
-          end)
           updated_work_request
       true ->
           updated_work_request
