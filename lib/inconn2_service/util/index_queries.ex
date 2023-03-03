@@ -206,6 +206,8 @@ defmodule Inconn2Service.Util.IndexQueries do
 
   def work_request_query(query, query_params) do
     Enum.reduce(query_params, query, fn
+      {"workrequest_category_id", 0}, query -> query
+      {"priority", ""}, query -> query
       {"workrequest_category_id", workrequest_category_id}, query -> from q in query, where: q.workrequest_category_id == ^workrequest_category_id
       {"priority", priority}, query -> from q in query, where: q.priority == ^priority
       _, query -> query
