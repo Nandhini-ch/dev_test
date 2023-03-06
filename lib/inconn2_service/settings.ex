@@ -3,6 +3,8 @@ defmodule Inconn2Service.Settings do
   The Settings context.
   """
 
+  import Ecto.Changeset
+
   import Ecto.Query, warn: false
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
@@ -124,9 +126,53 @@ defmodule Inconn2Service.Settings do
       {:error, %Ecto.Changeset{}}
 
   """
+  def get_shifts_by_name_and_site_id(nil, nil, _prefix), do: []
+
+  def get_shifts_by_name(name, site_id, prefix) do
+    from(s in Shift, where: s.name == ^name and s.site_id == ^site_id and s.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_shift_name_constraint(cs, prefix) do
+    name = get_change(cs, :name, nil)
+    site_id = get_change(cs, :site_id, nil)
+    name_list = get_shifts_by_name(name, site_id, prefix)
+    case length(name_list) do
+      0 -> cs
+      1 -> add_error(cs, :name, "Shift Name is already taken")
+    end
+  end
+
+  def get_shifts_by_code_and_site_id(nil, nil, _prefix), do: []
+
+
+  def get_shifts_by_code_and_site_id(code, site_id, prefix) do
+    from(s in Shift, where: s.code == ^code and s.site_id == ^site_id and s.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_shifts_by_code_and_site_id(code, site_id, prefix) do
+    from(s in Shift, where: is_nil(s.code == nil) and s.site_id == ^site_id and s.active == true)
+    |> Repo.one(prefix: prefix)
+  end
+
+
+
+  def validate_shift_code_constraint(cs, prefix) do
+    code = get_change(cs, :code, nil)
+    site_id = get_change(cs, :site_id, nil)
+    code_list = get_shifts_by_code_and_site_id(code, site_id, prefix)
+    case length(code_list) do
+      0 -> cs
+      1 -> add_error(cs, :code, "Shift Code is already taken")
+    end
+  end
+
   def create_shift(attrs \\ %{}, prefix) do
     %Shift{}
     |> Shift.changeset(attrs)
+    |> validate_shift_name_constraint(prefix)
+    |> validate_shift_code_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -145,6 +191,8 @@ defmodule Inconn2Service.Settings do
   def update_shift(%Shift{} = shift, attrs, prefix) do
     shift
     |> Shift.changeset(attrs)
+    |> validate_shift_name_constraint(prefix)
+    |> validate_shift_code_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 

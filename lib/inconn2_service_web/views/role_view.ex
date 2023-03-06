@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.RoleView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{RoleView, RoleProfileView}
+  alias Inconn2ServiceWeb.RoleView
 
   def render("index.json", %{roles: roles}) do
     %{data: render_many(roles, RoleView, "role.json")}
