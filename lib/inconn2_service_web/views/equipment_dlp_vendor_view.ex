@@ -16,7 +16,7 @@ defmodule Inconn2ServiceWeb.EquipmentDlpVendorView do
       is_asset_under_dlp: equipment_dlp_vendor.is_asset_under_dlp,
       dlp_from: equipment_dlp_vendor.dlp_from,
       dlp_to: equipment_dlp_vendor.dlp_to,
-      vendor_id: equipment_dlp_vendor.vendor_id,
-      service_branch_id: equipment_dlp_vendor.service_branch_id}
+      vendor: equipment_dlp_vendor.vendor,
+      service_branch: equipment_dlp_vendor.service_branch}
   end
 end
