@@ -145,18 +145,15 @@ defmodule Inconn2Service.Settings do
 
   def get_shifts_by_code_and_site_id(nil, nil, _prefix), do: []
 
+  def get_shifts_by_code_and_site_id(nil, site_id, prefix) do
+    from(s in Shift, where: is_nil(s.code) and s.site_id == ^site_id and s.active == true)
+    |> Repo.all(prefix: prefix)
+  end
 
   def get_shifts_by_code_and_site_id(code, site_id, prefix) do
     from(s in Shift, where: s.code == ^code and s.site_id == ^site_id and s.active == true)
     |> Repo.all(prefix: prefix)
   end
-
-  def get_shifts_by_code_and_site_id(code, site_id, prefix) do
-    from(s in Shift, where: is_nil(s.code == nil) and s.site_id == ^site_id and s.active == true)
-    |> Repo.one(prefix: prefix)
-  end
-
-
 
   def validate_shift_code_constraint(cs, prefix) do
     code = get_change(cs, :code, nil)
@@ -172,7 +169,7 @@ defmodule Inconn2Service.Settings do
     %Shift{}
     |> Shift.changeset(attrs)
     |> validate_shift_name_constraint(prefix)
-    |> validate_shift_code_constraint(prefix)
+    # |> validate_shift_code_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -192,7 +189,7 @@ defmodule Inconn2Service.Settings do
     shift
     |> Shift.changeset(attrs)
     |> validate_shift_name_constraint(prefix)
-    |> validate_shift_code_constraint(prefix)
+    # |> validate_shift_code_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
