@@ -532,8 +532,7 @@ defmodule Inconn2ServiceWeb.Router do
     end
 
     scope "/iot_service", IotService do
-      get "/assets/meters", AssetController, :meter_assets
-      get "/assets/sensors", AssetController, :sensor_assets
+      get "/assets_of_meters_and_sensors", AssetController, :assets_of_meters_and_sensors
     end
   end
 end
