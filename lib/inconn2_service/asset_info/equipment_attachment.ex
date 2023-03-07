@@ -7,6 +7,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentAttachment do
     field :attachment, :binary
     field :attachment_type, :string
     field :name, :string
+    field :file_size, :string
     belongs_to :equipment, Equipment
 
     timestamps()
@@ -15,7 +16,7 @@ defmodule Inconn2Service.AssetInfo.EquipmentAttachment do
   @doc false
   def changeset(equipment_attachment, attrs) do
     equipment_attachment
-    |> cast(attrs, [:name, :attachment, :attachment_type, :equipment_id])
+    |> cast(attrs, [:name, :attachment, :attachment_type, :equipment_id, :file_size])
     |> validate_required([:name, :attachment, :attachment_type, :equipment_id])
   end
 end

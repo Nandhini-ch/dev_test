@@ -187,11 +187,6 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.update(prefix: prefix)
   end
 
-  # def delete_site(%Site{} = site, prefix) do
-  #   Repo.delete(site, prefix: prefix)
-  # end
-
-
   def delete_site(%Site{} = site, prefix) do
     cond do
       has_equipment?(site, prefix) ->

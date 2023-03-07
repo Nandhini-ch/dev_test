@@ -254,10 +254,12 @@ defmodule Inconn2Service.AssetInfo do
   defp read_attachment(attrs) do
     attachment = Map.get(attrs, "attachment")
     if attachment != nil and attachment != "" do
+      {:ok, %{size: size}} = File.stat(attachment.path)
       {:ok, attachment_binary} = File.read(attachment.path)
       attachment_type = attachment.content_type
       attrs
       |> Map.put("attachment", attachment_binary)
+      |> Map.put("file_size", size)
       |> Map.put("attachment_type", attachment_type)
     else
       attrs
