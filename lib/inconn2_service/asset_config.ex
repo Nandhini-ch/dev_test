@@ -613,6 +613,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.sort_by_id()
   end
 
+  def list_locations_by_ids(ids, prefix) do
+    from(l in Location, where: l.id in ^ids)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_locations_tree(site_id, prefix) do
     list_locations(site_id, %{"active" => "true"}, prefix)
     |> HierarchyManager.build_tree()
@@ -1097,8 +1103,8 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments_by_ids(ids, prefix) do
     from(e in Equipment, where: e.id in ^ids)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
-    |> Repo.sort_by_id()
   end
 
   def list_equipments_of_asset_category_and_not_in_given_ids(nil, _ids, _prefix), do: []
