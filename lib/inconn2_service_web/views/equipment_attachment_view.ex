@@ -13,6 +13,7 @@ defmodule Inconn2ServiceWeb.EquipmentAttachmentView do
   def render("equipment_attachment.json", %{equipment_attachment: equipment_attachment}) do
     %{id: equipment_attachment.id,
       name: equipment_attachment.name,
+      file_size: equipment_attachment.file_size,
       attachment_type: equipment_attachment.attachment_type}
   end
 end
