@@ -4,6 +4,10 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
 
+  def add_asset_type_to_asset(asset, asset_type) do
+    Map.put(asset, :asset_type, asset_type)
+  end
+
   def is_date?(date) do
     case Date.from_iso8601(date) do
       {:ok, _} -> true
