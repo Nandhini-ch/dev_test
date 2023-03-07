@@ -463,11 +463,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   #Chart no 17
   def get_mtbf_chart(params, prefix) do
     cond do
-      not is_nil(params["asset_category_ids"]) ->
+      not is_nil(params["asset_category_ids"]) and params["asset_category_ids"] != [] ->
         get_mtbf_or_mttr_for_asset_categories(params, "MTBF", :get_mtbf_of_equipment, prefix)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["asset_ids"]) and params["asset_ids"] != [] ->
         get_mtbf_or_mttr_for_assets(params, "MTBF", :get_mtbf_of_equipment, prefix)
+
+      true ->
+        get_mtbf_or_mttr_for_assets(Map.put(params, "asset_ids", []), "MTBF", :get_mtbf_of_equipment, prefix)
 
     end
   end
@@ -475,11 +478,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   #Chart no 18
   def get_mttr_chart(params, prefix) do
     cond do
-      not is_nil(params["asset_category_ids"]) ->
+      not is_nil(params["asset_category_ids"]) and params["asset_category_ids"] != [] ->
         get_mtbf_or_mttr_for_asset_categories(params, "MTTR", :get_mttr_of_equipment, prefix)
 
-      not is_nil(params["asset_ids"]) ->
+      not is_nil(params["asset_ids"]) and params["asset_ids"] != [] ->
         get_mtbf_or_mttr_for_assets(params, "MTTR", :get_mttr_of_equipment, prefix)
+
+      true ->
+        get_mtbf_or_mttr_for_assets(Map.put(params, "asset_ids", []), "MTTR", :get_mttr_of_equipment, prefix)
 
     end
   end
@@ -784,7 +790,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: [
             %{
                 name: label,
-                value: Float.ceil(mtbf, 2),
+                value: Float.ceil(mtbf/1, 2),
                 displayValue: convert_to_hours_and_minutes(mtbf)
             }
         ]
