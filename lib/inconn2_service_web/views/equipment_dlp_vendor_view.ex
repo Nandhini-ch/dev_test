@@ -17,6 +17,6 @@ defmodule Inconn2ServiceWeb.EquipmentDlpVendorView do
       dlp_from: equipment_dlp_vendor.dlp_from,
       dlp_to: equipment_dlp_vendor.dlp_to,
       vendor: equipment_dlp_vendor.vendor,
-      service_branch_id: equipment_dlp_vendor.service_branch_id}
+      service_branch: equipment_dlp_vendor.service_branch}
   end
 end

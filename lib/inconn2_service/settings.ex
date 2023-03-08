@@ -13,15 +13,7 @@ defmodule Inconn2Service.Settings do
 
   alias Inconn2Service.Settings.Shift
 
-  @doc """
-  Returns the list of shifts.
 
-  ## Examples
-
-      iex> list_shifts()
-      [%Shift{}, ...]
-
-  """
   def list_shifts(prefix) do
     Shift
     |> Repo.add_active_filter()
@@ -92,20 +84,7 @@ defmodule Inconn2Service.Settings do
     |> Repo.sort_by_id()
   end
 
-  @doc """
-  Gets a single shift.
 
-  Raises `Ecto.NoResultsError` if the Shift does not exist.
-
-  ## Examples
-
-      iex> get_shift!(123)
-      %Shift{}
-
-      iex> get_shift!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_shifts_by_ids(ids, prefix) do
     from(sh in Shift, where: sh.id in ^ids)
     |> Repo.all(prefix: prefix)
@@ -114,101 +93,57 @@ defmodule Inconn2Service.Settings do
   def get_shift!(id, prefix), do: Repo.get!(Shift, id, prefix: prefix)
   def get_shift(id, prefix), do: Repo.get(Shift, id, prefix: prefix)
 
-  @doc """
-  Creates a shift.
+  # def get_shifts_by_name_and_site_id(name, site_id, prefix)  when not is_nil(name) and not is_nil(site_id) do
+  #   from(s in Shift, where: s.name == ^name and s.site_id == ^site_id and s.active == true)
+  #   |> Repo.all(prefix: prefix)
+  # end
 
-  ## Examples
+  # def get_shifts_by_name_and_site_id(_name, _site_id, _prefix), do: []
 
-      iex> create_shift(%{field: value})
-      {:ok, %Shift{}}
+  # def validate_shift_name_constraint(cs, prefix) do
+  #   name = get_field(cs, :name, nil)
+  #   site_id = get_field(cs, :site_id, nil)
+  #   name_list = get_shifts_by_name_and_site_id(name, site_id, prefix)
+  #   if 0 >= length(name_list) do
+  #     cs
+  #   else
+  #     add_error(cs, :name, "Shift Name is already taken")
+  #   end
+  # end
 
-      iex> create_shift(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def get_shifts_by_name_and_site_id(nil, nil, _prefix), do: []
-
-  def get_shifts_by_name(name, site_id, prefix) do
-    from(s in Shift, where: s.name == ^name and s.site_id == ^site_id and s.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def validate_shift_name_constraint(cs, prefix) do
-    name = get_change(cs, :name, nil)
-    site_id = get_change(cs, :site_id, nil)
-    name_list = get_shifts_by_name(name, site_id, prefix)
-    case length(name_list) do
-      0 -> cs
-      1 -> add_error(cs, :name, "Shift Name is already taken")
-    end
-  end
-
-  def get_shifts_by_code_and_site_id(nil, nil, _prefix), do: []
-
-  def get_shifts_by_code_and_site_id(nil, site_id, prefix) do
-    from(s in Shift, where: is_nil(s.code) and s.site_id == ^site_id and s.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def get_shifts_by_code_and_site_id(code, site_id, prefix) do
+  def get_shifts_by_code_and_site_id(code, site_id, prefix) when not is_nil(code) and not is_nil(site_id) do
     from(s in Shift, where: s.code == ^code and s.site_id == ^site_id and s.active == true)
     |> Repo.all(prefix: prefix)
   end
 
+  def get_shifts_by_code_and_site_id(_code, _site_id, _prefix), do: []
+
   def validate_shift_code_constraint(cs, prefix) do
-    code = get_change(cs, :code, nil)
-    site_id = get_change(cs, :site_id, nil)
+    code = get_field(cs, :code, nil)
+    site_id = get_field(cs, :site_id, nil)
     code_list = get_shifts_by_code_and_site_id(code, site_id, prefix)
-    case length(code_list) do
-      0 -> cs
-      1 -> add_error(cs, :code, "Shift Code is already taken")
+    if 0 >= length(code_list) do
+      cs
+    else
+      add_error(cs, :code, "Shift Code is already taken")
     end
   end
 
   def create_shift(attrs \\ %{}, prefix) do
     %Shift{}
     |> Shift.changeset(attrs)
-    |> validate_shift_name_constraint(prefix)
-    # |> validate_shift_code_constraint(prefix)
+    # |> validate_shift_name_constraint(prefix)
+    |> validate_shift_code_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a shift.
-
-  ## Examples
-
-      iex> update_shift(shift, %{field: new_value})
-      {:ok, %Shift{}}
-
-      iex> update_shift(shift, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_shift(%Shift{} = shift, attrs, prefix) do
     shift
     |> Shift.changeset(attrs)
-    |> validate_shift_name_constraint(prefix)
-    # |> validate_shift_code_constraint(prefix)
+    # |> validate_shift_name_constraint(prefix)
+    |> validate_shift_code_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
-
-  @doc """
-  Deletes a shift.
-
-  ## Examples
-
-      iex> delete_shift(shift)
-      {:ok, %Shift{}}
-
-      iex> delete_shift(shift)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  # def delete_shift(%Shift{} = shift, prefix) do
-  #   Repo.delete(shift, prefix: prefix)
-  # end
-
 
   def delete_shift(%Shift{} = shift, prefix) do
     cond do
@@ -230,30 +165,13 @@ defmodule Inconn2Service.Settings do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking shift changes.
 
-  ## Examples
-
-      iex> change_shift(shift)
-      %Ecto.Changeset{data: %Shift{}}
-
-  """
   def change_shift(%Shift{} = shift, attrs \\ %{}) do
     Shift.changeset(shift, attrs)
   end
 
   alias Inconn2Service.Settings.Holiday
 
-  @doc """
-  Returns the list of bankholidays.
-
-  ## Examples
-
-      iex> list_bankholidays()
-      [%Holiday{}, ...]
-
-  """
   def list_bankholidays(prefix) do
     Holiday
     |> Repo.add_active_filter()
@@ -285,70 +203,24 @@ defmodule Inconn2Service.Settings do
     |> Repo.all(prefix: prefix)
   end
 
-  @doc """
-  Gets a single holiday.
 
-  Raises `Ecto.NoResultsError` if the Holiday does not exist.
-
-  ## Examples
-
-      iex> get_holiday!(123)
-      %Holiday{}
-
-      iex> get_holiday!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_holiday!(id, prefix), do: Repo.get!(Holiday, id, prefix: prefix)
 
-  @doc """
-  Creates a holiday.
 
-  ## Examples
-
-      iex> create_holiday(%{field: value})
-      {:ok, %Holiday{}}
-
-      iex> create_holiday(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_holiday(attrs \\ %{}, prefix) do
     %Holiday{}
     |> Holiday.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a holiday.
 
-  ## Examples
-
-      iex> update_holiday(holiday, %{field: new_value})
-      {:ok, %Holiday{}}
-
-      iex> update_holiday(holiday, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_holiday(%Holiday{} = holiday, attrs, prefix) do
     holiday
     |> Holiday.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a holiday.
 
-  ## Examples
-
-      iex> delete_holiday(holiday)
-      {:ok, %Holiday{}}
-
-      iex> delete_holiday(holiday)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_holiday(%Holiday{} = holiday, prefix) do
     update_holiday(holiday, %{"active" => false}, prefix)
        {:deleted,
@@ -356,15 +228,6 @@ defmodule Inconn2Service.Settings do
        }
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking holiday changes.
-
-  ## Examples
-
-      iex> change_holiday(holiday)
-      %Ecto.Changeset{data: %Holiday{}}
-
-  """
   def change_holiday(%Holiday{} = holiday, attrs \\ %{}) do
     Holiday.changeset(holiday, attrs)
   end

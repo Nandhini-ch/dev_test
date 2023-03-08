@@ -797,7 +797,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
-  def get_role_by_name(nil, _prefix), do: nil
+  def get_role_by_name(nil, _prefix), do: []
 
   def get_role_by_name(name, prefix) do
     from(r in Role, where: r.name == ^name and r.active == true)
@@ -805,11 +805,12 @@ defmodule Inconn2Service.Staff do
   end
 
   def validate_role_name_constraint(cs, prefix) do
-    name = get_change(cs, :name, nil)
+    name = get_field(cs, :name, nil)
     role_name_list = get_role_by_name(name, prefix)
-    case length(role_name_list) do
-      0 -> cs
-      1 -> add_error(cs, :name, "Role Name Is Already Taken")
+    if 0 >= length(role_name_list) do
+      cs
+    else
+      add_error(cs, :name, "Role Name Is Already Taken")
     end
   end
 
@@ -829,8 +830,8 @@ defmodule Inconn2Service.Staff do
   def update_role(%Role{} = role, attrs, prefix) do
     role
     |> Role.changeset(attrs)
-    |> validate_role_name_constraint(prefix)
     |> inserting_hierarchy_id_to_role(prefix)
+    |> validate_role_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -1072,11 +1073,12 @@ defmodule Inconn2Service.Staff do
   end
 
   def validate_designation_name_constraint(cs, prefix) do
-    name = get_change(cs, :name, nil)
+    name = get_field(cs, :name, nil)
     name_list = get_designations_by_name(name, prefix)
-    case length(name_list) do
-      0 -> cs
-      1 -> add_error(cs, :name, "Name is already taken")
+    if 0 >= length(name_list) do
+      cs
+    else
+      add_error(cs, :name, "Designation Name is already taken")
     end
   end
 

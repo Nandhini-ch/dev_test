@@ -105,9 +105,10 @@ defmodule Inconn2Service.AssetConfig do
   def validate_site_code_constraint(cs, prefix) do
     site_code = get_field(cs, :site_code, nil)
     site_code_list = get_sites_by_site_code(site_code, prefix)
-    case  length(site_code_list) do
-      0 -> cs
-      1 -> add_error(cs, :site_code, "Site Code Is Already Taken")
+    if 0 >= length(site_code_list) do
+      cs
+    else
+      add_error(cs, :site_code, "Site Code Is Already Taken")
     end
   end
 
@@ -153,11 +154,11 @@ defmodule Inconn2Service.AssetConfig do
 
       case result do
         nil ->
-          # site =
+          site =
             %Site{}
             |> Site.changeset(attrs)
             |> add_error(:party_id, "Cannot create site, There is no Licensee / Party - Asset owner for this site")
-            # |> validate_site_code_constraint(prefix)
+            |> validate_site_code_constraint(prefix)
             |> Repo.insert(prefix: prefix)
 
 
@@ -166,10 +167,10 @@ defmodule Inconn2Service.AssetConfig do
           change_set
 
         _change_set ->
-          # site =
+          site =
             %Site{}
             |> Site.changeset(attrs)
-            # |> validate_site_code_constraint(prefix)
+            |> validate_site_code_constraint(prefix)
             |> Repo.insert(prefix: prefix)
       end
     end
@@ -684,11 +685,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_location_code_constraint(cs, prefix) do
-    location_code = get_change(cs, :location_code, nil)
+    location_code = get_field(cs, :location_code, nil)
     location_code_list = get_locations_by_location_code(location_code, prefix)
-    case length(location_code_list) do
-      0 -> cs
-      1 -> add_error(cs, :location_code, "Location Code is already taken")
+    if 0 >= length(location_code_list) do
+      cs
+    else
+      add_error(cs, :location_code, "Location Code is already taken")
     end
   end
 
@@ -1249,11 +1251,12 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_equipment_code_constraint(cs, prefix) do
-    equipment_code = get_change(cs, :equipment_code, nil)
+    equipment_code = get_field(cs, :equipment_code, nil)
     equipment_code_list = get_equipments_by_equipment_code(equipment_code, prefix)
-    case length(equipment_code_list) do
-      0 -> cs
-      1 -> add_error(cs, :equipment_code, "Equipment Code is already taken")
+    if 0 >= length(equipment_code_list) do
+      cs
+    else
+      add_error(cs, :equipment_code, "Equipment Code is already taken")
     end
   end
 

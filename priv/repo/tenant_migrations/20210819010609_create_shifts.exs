@@ -18,6 +18,6 @@ defmodule Inconn2Service.Repo.Migrations.CreateShifts do
 
     #create index(:shifts, [:site_id])
 
-    create unique_index(:shifts, [:site_id, :start_date, :end_date, :start_time, :end_time, :applicable_days], name: :index_shifts_dates)
+    #create unique_index(:shifts, [:site_id, :start_date, :end_date, :start_time, :end_time, :applicable_days], name: :index_shifts_dates)
   end
 end

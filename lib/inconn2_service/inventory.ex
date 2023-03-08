@@ -66,11 +66,12 @@ defmodule Inconn2Service.Inventory do
   end
 
   def validate_name_constraint_in_uom(cs, prefix) do
-    name = get_change(cs, :name, prefix)
+    name = get_field(cs, :name, prefix)
     uom_name_list = get_uom_by_name(name, prefix)
-    case length(uom_name_list) do
-      0 -> cs
-      1 -> add_error(cs, :name, "UOM name is already exists")
+    if 0 >= length(uom_name_list) do
+      cs
+    else
+      add_error(cs, :name, "UOM name is already exists")
     end
   end
 
@@ -126,29 +127,11 @@ defmodule Inconn2Service.Inventory do
     end
   end
 
-  def get_unique_category_helpdesk(nil, nil, nil,  _prefix), do: []
-
-  def get_unique_category_helpdesk(user_id, site_id, workrequest_category_id, prefix) do
-    from(c in CategoryHelpdesk, where: c.user_id == ^user_id and c.site_id == ^site_id and c.workrequest_category_id == ^workrequest_category_id and c.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def validate_category_helpdesk_constraint(cs, prefix) do
-    user_id = get_change(cs, :user_id, nil)
-    site_id = get_change(cs, :site_id, nil)
-    workrequest_category_id = get_change(cs, :workrequest_category_id, nil)
-    unique_list = get_unique_category_helpdesk(user_id, site_id, workrequest_category_id, prefix)
-    case length(unique_list) do
-      0 -> cs
-      1 -> add_error(cs, :code, "This Category Helpdesk is already taken")
-    end
-  end
 
   def create_uom_conversion(attrs \\ %{}, prefix) do
     %UomConversion{}
     |> UomConversion.changeset(attrs)
     |> set_inverse_field()
-    |> validate_category_helpdesk_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
@@ -166,7 +149,6 @@ defmodule Inconn2Service.Inventory do
   def update_uom_conversion(%UomConversion{} = uom_conversion, attrs, prefix) do
     uom_conversion
     |> UomConversion.changeset(attrs)
-    |> validate_category_helpdesk_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
