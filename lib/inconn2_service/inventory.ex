@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Inventory do
 
   import Ecto.Query, warn: false
+  alias Inconn2Service.Ticket.CategoryHelpdesk
   alias Inconn2Service.Repo
   import Ecto.Changeset
 
@@ -57,16 +58,34 @@ defmodule Inconn2Service.Inventory do
 
   def get_uom!(id, prefix), do: Repo.get!(UOM, id, prefix: prefix)
 
+  def get_uom_by_name(nil, _prefix), do: []
+
+  def get_uom_by_name(name, prefix) do
+    from(u in UOM, where: u.name == ^name)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_name_constraint_in_uom(cs, prefix) do
+    name = get_field(cs, :name, prefix)
+    uom_name_list = get_uom_by_name(name, prefix)
+    if 0 >= length(uom_name_list) do
+      cs
+    else
+      add_error(cs, :name, "UOM name is already exists")
+    end
+  end
 
   def create_uom(attrs \\ %{}, prefix) do
     %UOM{}
     |> UOM.changeset(attrs)
+    |> validate_name_constraint_in_uom(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
   def update_uom(%UOM{} = uom, attrs, prefix) do
     uom
     |> UOM.changeset(attrs)
+    |> validate_name_constraint_in_uom(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -107,6 +126,7 @@ defmodule Inconn2Service.Inventory do
         end
     end
   end
+
 
   def create_uom_conversion(attrs \\ %{}, prefix) do
     %UomConversion{}

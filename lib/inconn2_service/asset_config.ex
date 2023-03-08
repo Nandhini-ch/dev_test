@@ -103,12 +103,13 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def validate_site_code_constraint(cs, prefix) do
-    # site_code = get_field(cs, :site_code, nil)
-    # case get_sites_by_site_code(site_code, prefix) do
-    #   [] -> cs
-    #   _ -> add_error(cs, :site_code, "Site Code Is Already Taken")
-    # end
-    cs
+    site_code = get_field(cs, :site_code, nil)
+    site_code_list = get_sites_by_site_code(site_code, prefix)
+    if 0 >= length(site_code_list) do
+      cs
+    else
+      add_error(cs, :site_code, "Site Code Is Already Taken")
+    end
   end
 
   def list_sites_for_user(user, prefix) do
@@ -157,6 +158,7 @@ defmodule Inconn2Service.AssetConfig do
             %Site{}
             |> Site.changeset(attrs)
             |> add_error(:party_id, "Cannot create site, There is no Licensee / Party - Asset owner for this site")
+            |> validate_site_code_constraint(prefix)
             |> Repo.insert(prefix: prefix)
 
 
@@ -670,30 +672,6 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_location_by_qr_code(qr_code, prefix), do: Repo.get_by(Location, [qr_code: qr_code], prefix: prefix)
 
-  def get_locations_by_location_code(nil, _prefix), do: []
-
-  def get_locations_by_location_code(location_code, prefix) do
-    from(l in Location, where: l.location_code == ^location_code and l.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-#   def validate_location_code_constraint(cs, prefix) do
-#     # location_code = get_field(cs, :location_code, nil)
-#     # case get_locations_by_location_code(location_code, prefix) do
-#     #   [] -> cs
-#     #   _ -> add_error(cs, :location_code, "Location Code Is Already Taken")
-#     # end
-#     cs
-# =======
-#     location_code = get_field(cs, :location_code, nil)
-#     location_code_list = get_locations_by_location_code(location_code, prefix)
-#     if location_code == location_code_list do
-#       add_error(cs, :equipment_code, "Location Code Is Already Taken")
-#     else
-#       cs
-#     end
-#   end
-
   def get_root_locations(site_id, prefix) do
     root_path = []
 
@@ -710,13 +688,30 @@ defmodule Inconn2Service.AssetConfig do
     HierarchyManager.parent(loc) |> Repo.one(prefix: prefix)
   end
 
+  def get_locations_by_location_code(nil, _prefix), do: []
+
+  def get_locations_by_location_code(location_code, prefix) do
+    from(l in Location, where: l.location_code  == ^location_code and l.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_location_code_constraint(cs, prefix) do
+    location_code = get_field(cs, :location_code, nil)
+    location_code_list = get_locations_by_location_code(location_code, prefix)
+    if 0 >= length(location_code_list) do
+      cs
+    else
+      add_error(cs, :location_code, "Location Code is already taken")
+    end
+  end
+
   def create_location(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
     loc_cs =
       %Location{}
       |> Location.changeset(attrs)
-      # |> validate_location_code_constraint(prefix)
+      |> validate_location_code_constraint(prefix)
       |> check_asset_category_type_loc(prefix)
 
     result = create_location_in_tree(parent_id, loc_cs, prefix)
@@ -778,14 +773,14 @@ defmodule Inconn2Service.AssetConfig do
           new_parent_id = attrs["parent_id"]
 
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs)
+            update_location_default_changeset_pipe(location, attrs, prefix)
             |> check_asset_category_type_loc(prefix)
 
           update_location_in_tree(new_parent_id, loc_cs, location, prefix)
 
         true ->
           loc_cs =
-            update_location_default_changeset_pipe(location, attrs)
+            update_location_default_changeset_pipe(location, attrs, prefix)
             |> check_asset_category_type_loc(prefix)
 
           Repo.update(loc_cs, prefix: prefix)
@@ -921,10 +916,10 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
-  defp update_location_default_changeset_pipe(%Location{} = location, attrs) do
+  defp update_location_default_changeset_pipe(%Location{} = location, attrs, prefix) do
     location
     |> Location.changeset(attrs)
-    # |> validate_location_code_constraint(prefix)
+    |> validate_location_code_constraint(prefix)
   end
 
   def update_active_status_for_location(%Location{} = location, location_params, prefix) do
@@ -1030,30 +1025,6 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
   end
-
-  def get_equipments_by_equipment_code(nil, _prefix), do: []
-
-  def get_equipments_by_equipment_code(equipment_code, prefix) do
-    from(e in Equipment, where: e.equipment_code == ^equipment_code and e.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-#   def validate_equipment_code_constraint(cs, prefix) do
-#
-#     # equipment_code = get_field(cs, :equipment_code, nil)
-#     # case get_equipments_by_equipment_code(equipment_code, prefix) do
-#     #   [] -> cs
-#     #   _ -> add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
-#     # end
-#     cs
-#     equipment_code = get_field(cs, :equipment_code, nil)
-#     equipment_code_list = get_equipments_by_equipment_code(equipment_code, prefix)
-#     if equipment_code == equipment_code_list do
-#       add_error(cs, :equipment_code, "Equipment Code Is Already Taken")
-#     else
-#       cs
-#     end
-#   end
 
   def list_equipments_tree(site_id, prefix) do
     list_equipments(site_id, %{"active" => "true"}, prefix)
@@ -1283,12 +1254,30 @@ defmodule Inconn2Service.AssetConfig do
     HierarchyManager.parent(eq) |> Repo.one(prefix: prefix)
   end
 
+  def get_equipments_by_equipment_code(nil, _prefix), do: []
+
+  def get_equipments_by_equipment_code(equipment_code, prefix) do
+    from(e in Equipment, where: e.equipment_code  == ^equipment_code and e.active == true)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def validate_equipment_code_constraint(cs, prefix) do
+    equipment_code = get_field(cs, :equipment_code, nil)
+    equipment_code_list = get_equipments_by_equipment_code(equipment_code, prefix)
+    if 0 >= length(equipment_code_list) do
+      cs
+    else
+      add_error(cs, :equipment_code, "Equipment Code is already taken")
+    end
+  end
+
   def create_equipment(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
     eq_cs =
       %Equipment{}
       |> Equipment.changeset(attrs)
+      |> validate_equipment_code_constraint(prefix)
       |> check_asset_category_type_eq(prefix)
       |> check_site_id_of_location(prefix)
       |> validate_custom_field_type(prefix, "equipment")
@@ -1478,9 +1467,10 @@ defmodule Inconn2Service.AssetConfig do
     }
   end
 
-  defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, _prefix) do
+  defp update_equipment_default_changeset_pipe(%Equipment{} = equipment, attrs, prefix) do
     equipment
     |> Equipment.changeset(update_custom_fields(equipment, attrs))
+    |> validate_equipment_code_constraint(prefix)
   end
 
   def delete_equipment(%Equipment{} = equipment, prefix) do
