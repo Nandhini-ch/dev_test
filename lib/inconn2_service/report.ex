@@ -561,7 +561,7 @@ defmodule Inconn2Service.Report do
           from q in main_query, where: q.status in ["RJ", "CL"]
 
         {"status", "reopened"}, main_query ->
-          from q in main_query, where: q.status in "ROP"
+          from q in main_query, where: q.status in ["ROP"]
 
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
