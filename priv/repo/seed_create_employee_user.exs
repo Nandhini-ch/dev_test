@@ -128,7 +128,7 @@ emp_rst1 = %{
 }
 emp_rst2 = %{
   "employee_id" => emp_cs2.id,
-  "shift_id" => 2,
+  "shift_id" => 1,
   "start_date" => "2021-08-20",
   "end_date" => "2022-08-21"
 }
@@ -140,7 +140,7 @@ emp_rst3 = %{
 }
 emp_rst4 = %{
   "employee_id" => emp_cs1.id,
-  "shift_id" => 4,
+  "shift_id" => 1,
   "start_date" => "2021-08-20",
   "end_date" => "2022-08-30"
 }
