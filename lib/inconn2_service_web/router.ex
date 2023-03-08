@@ -530,5 +530,9 @@ defmodule Inconn2ServiceWeb.Router do
     scope "/external_endpoints" do
       get "/get_info_from_token", ExternalEndpointController, :info_from_token
     end
+
+    scope "/iot_service", IotService do
+      get "/assets_of_meters_and_sensors", AssetController, :assets_of_meters_and_sensors
+    end
   end
 end
