@@ -259,7 +259,7 @@ defmodule Inconn2Service.AssetInfo do
       attachment_type = attachment.content_type
       attrs
       |> Map.put("attachment", attachment_binary)
-      |> Map.put("file_size", size)
+      |> Map.put("file_size", to_string(size))
       |> Map.put("attachment_type", attachment_type)
     else
       attrs
