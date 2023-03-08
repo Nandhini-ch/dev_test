@@ -2,6 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
+  alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -1293,8 +1294,9 @@ defmodule Inconn2Service.Report do
   end
 
   def asset_schedule_for_asset_category(asset_category_id, prefix) do
+    asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     query =
-      from wot in WorkorderTemplate, where: wot.asset_category_id == ^asset_category_id, where: wot.repeat_unit not in ["H", "D"],
+      from wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_ids, where: wot.repeat_unit not in ["H", "D"],
        join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id,
        select: %{
          schedule: wos,
