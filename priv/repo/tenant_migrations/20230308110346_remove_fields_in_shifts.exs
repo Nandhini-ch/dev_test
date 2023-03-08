@@ -2,6 +2,6 @@ defmodule Inconn2Service.Repo.Migrations.RemoveFieldsInShifts do
   use Ecto.Migration
 
   def change do
-    drop index("shifts", [:name])
+    drop_if_exists index("shifts", [:name])
   end
 end
