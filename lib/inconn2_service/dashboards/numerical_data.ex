@@ -4,6 +4,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.AssetConfig
   alias Inconn2Service.Measurements.MeterReading
   alias Inconn2Service.AssetConfig.{Location, Equipment, Site}
   alias Inconn2Service.Workorder.WorkorderTemplate
@@ -285,7 +286,14 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   end
 
   def get_equipment_with_status(status, params, prefix) do
-    equipment_query(Equipment, Map.put(params, "status", status))
+    ids = AssetConfig.get_asset_category_subtree_ids(params["asset_category_id"], prefix)
+    params =
+      params
+      |> Map.put("status", status)
+      |> Map.put("asset_category_ids", ids)
+      |> Map.drop(["asset_category_id"])
+
+    equipment_query(Equipment, params)
     |> Repo.all(prefix: prefix)
   end
 
