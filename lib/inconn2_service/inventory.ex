@@ -68,7 +68,7 @@ defmodule Inconn2Service.Inventory do
   end
 
   def validate_name_constraint_in_uom(cs, prefix) do
-    name = get_change(cs, :name, prefix)
+    name = get_change(cs, :name, nil)
     uom_name_list = get_uom_by_name(name, prefix)
     if 0 >= length(uom_name_list) do
       cs

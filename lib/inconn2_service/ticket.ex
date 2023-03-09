@@ -664,7 +664,7 @@ defmodule Inconn2Service.Ticket do
   def validate_category_helpdesk_constraint(cs, prefix) do
     user_id = get_change(cs, :user_id, nil)
     site_id = get_change(cs, :site_id, nil)
-    workrequest_category_id = get_field(cs, :workrequest_category_id)
+    workrequest_category_id = get_change(cs, :workrequest_category_id, nil)
     if 0 >= length(get_category_helpdesk_by_user(user_id, site_id, workrequest_category_id, prefix)) do
       cs
     else
