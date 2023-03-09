@@ -1066,22 +1066,6 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
-  def get_designation_by_name(nil, _prefix), do: []
-
-  def get_designation_by_name(name, prefix) do
-    from(d in Designation, where: d.name == ^name and d.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def validate_designation_name_constraint(cs, prefix) do
-    name = get_field(cs, :name, nil)
-    case get_designation_by_name(name, prefix) do
-      [] -> cs
-      _ -> add_error(cs, :name, "Designation Name Is Already Taken")
-    end
-  end
-
-
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
 
   def get_designations_by_name(nil, _prefix), do: []
