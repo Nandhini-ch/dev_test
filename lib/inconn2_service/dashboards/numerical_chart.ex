@@ -77,7 +77,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     case code do
       "ENCON" -> [energy_consumption]
       "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"])]
-      "ENPEI" -> [energy_consumption, change_nil_to_one(config["area"])]
+      "ENPEI" -> [energy_consumption, change_nil_to_one(config["area_in_sqft"])]
       "ENTOP" -> [site_id, config, prefix]
       "WACON" -> [water_consumption]
       "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"])]
@@ -94,7 +94,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 1,
       key: "ENCON",
       name: "Energy Consumption",
-      displayTxt: energy_consumption,
+      displayTxt: Float.ceil(energy_consumption),
       unit: "kWh",
       type: 1
     }
@@ -105,7 +105,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 2,
       key: "ENCOS",
       name: "Energy Cost",
-      displayTxt: energy_consumption * cost_per_unit,
+      displayTxt: Float.ceil(energy_consumption * cost_per_unit),
       unit: "INR",
       type: 1
     }
@@ -116,7 +116,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 3,
       key: "ENPEI",
       name: "Energy performance Indicator (EPI)",
-      displayTxt: energy_consumption / area,
+      displayTxt: Float.ceil(energy_consumption / area),
       unit: "kWh/sqft",
       type: 1
     }
@@ -141,7 +141,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 5,
       key: "WACON",
       name: "Water Consumption",
-      displayTxt: water_consumption,
+      displayTxt: Float.ceil(water_consumption),
       unit: "kilo ltrs",
       type: 1
     }
@@ -152,7 +152,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 6,
       key: "WACOS",
       name: "Water Cost",
-      displayTxt: water_consumption * cost_per_unit,
+      displayTxt: Float.ceil(water_consumption * cost_per_unit),
       unit: "INR",
       type: 1
     }
@@ -163,7 +163,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 7,
       key: "FUCON",
       name: "Fuel Consumption",
-      displayTxt: fuel_consumption,
+      displayTxt: Float.ceil(fuel_consumption),
       unit: "ltrs",
       type: 1
     }
@@ -174,7 +174,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 8,
       key: "FUCOS",
       name: "Fuel Cost",
-      displayTxt: fuel_consumption * cost_per_unit,
+      displayTxt: Float.ceil(fuel_consumption * cost_per_unit),
       unit: "INR",
       type: 1
     }
@@ -298,7 +298,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 19,
       key: "INTRE",
       name: "Intime Reporting",
-      displayTxt: get_intime_reporting(site_id, prefix),
+      displayTxt: Float.ceil(get_intime_reporting(site_id, prefix)),
       unit: "%",
       type: 1
     }
@@ -309,7 +309,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 20,
       key: "SHFCV",
       name: "Shift Coverage",
-      displayTxt: get_shift_coverage(site_id, prefix),
+      displayTxt: Float.ceil(get_shift_coverage(site_id, prefix)),
       unit: "%",
       type: 1
     }
@@ -376,7 +376,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     [Enum.at(asset_and_energy_list, 0), Enum.at(asset_and_energy_list, 1), Enum.at(asset_and_energy_list, 2)]
     |> Stream.filter(&(not is_nil(&1)))
-    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: value} end)
+    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: Float.ceil(value)} end)
   end
 
   def get_energy_of_sub_meters_for_24_hours(site_id, config, prefix) do

@@ -1,7 +1,7 @@
 defmodule Inconn2Service.Inventory do
 
   import Ecto.Query, warn: false
-  alias Inconn2Service.Ticket.CategoryHelpdesk
+  # alias Inconn2Service.Ticket.CategoryHelpdesk
   alias Inconn2Service.Repo
   import Ecto.Changeset
 
@@ -45,7 +45,9 @@ defmodule Inconn2Service.Inventory do
 
 
   def list_uoms(prefix) do
-    Repo.all(UOM, prefix: prefix)
+    UOM
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def list_physical_uoms(prefix) do
@@ -66,7 +68,7 @@ defmodule Inconn2Service.Inventory do
   end
 
   def validate_name_constraint_in_uom(cs, prefix) do
-    name = get_field(cs, :name, prefix)
+    name = get_change(cs, :name, nil)
     uom_name_list = get_uom_by_name(name, prefix)
     if 0 >= length(uom_name_list) do
       cs
