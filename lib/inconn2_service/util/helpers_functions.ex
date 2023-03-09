@@ -163,7 +163,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def calculate_percentage(numerator, 0), do: numerator
   def calculate_percentage(numerator, denominator) do
     ((numerator/denominator) * 100)
-    |> Float.ceil(2)
+    |> convert_to_ceil_float()
   end
 
   def change_nil_to_zero(nil), do: 0
@@ -246,4 +246,9 @@ defmodule Inconn2Service.Util.HelpersFunctions do
       :dev -> "http://#{sub_domain}.inconn.com:8080"
     end
   end
+
+  def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2)
+
+  def convert_to_ceil_float(value), do: value
+
 end
