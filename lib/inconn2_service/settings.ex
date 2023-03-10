@@ -119,8 +119,8 @@ defmodule Inconn2Service.Settings do
   def get_shifts_by_code_and_site_id(_code, _site_id, _prefix), do: []
 
   def validate_shift_code_constraint(cs, prefix) do
-    code = get_field(cs, :code, nil)
-    site_id = get_field(cs, :site_id, nil)
+    code = get_change(cs, :code, nil)
+    site_id = get_change(cs, :site_id, nil)
     code_list = get_shifts_by_code_and_site_id(code, site_id, prefix)
     if 0 >= length(code_list) do
       cs

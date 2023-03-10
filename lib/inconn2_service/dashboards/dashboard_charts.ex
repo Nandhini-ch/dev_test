@@ -123,7 +123,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
         %{
           name: "Energy Consumption",
-          value: value
+          value: convert_to_ceil_float(value)
         }
       ]
     }
@@ -144,7 +144,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                   |> change_nil_to_zero()
             %{
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
-              value: energy_consumption * energy_cost_per_unit
+              value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
           end)
@@ -175,7 +175,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
         %{
           name: "EPI",
-          value: epi
+          value: convert_to_ceil_float(epi)
         }
       ]
     }
@@ -197,7 +197,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
         %{
           name: "Water Consumption",
-          value: value
+          value: convert_to_ceil_float(value)
         }
       ]
     }
@@ -218,7 +218,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                   |> change_nil_to_zero()
             %{
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
-              value: water_consumption * water_cost_per_unit
+              value: convert_to_ceil_float(water_consumption * water_cost_per_unit)
             }
 
           end)
@@ -246,7 +246,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: [
         %{
           name: "Fuel Consumption",
-          value: value
+          value: convert_to_ceil_float(value)
         }
       ]
     }
@@ -267,7 +267,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                   |> change_nil_to_zero()
             %{
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
-              value: fuel_consumption * fuel_cost_per_unit
+              value: convert_to_ceil_float(fuel_consumption * fuel_cost_per_unit)
             }
 
           end)
@@ -306,7 +306,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                   |> change_nil_to_zero()
             %{
               name: asset.name,
-              value: energy_consumption
+              value: convert_to_ceil_float(energy_consumption)
             }
           end)
 
@@ -324,7 +324,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           Enum.map(generators, fn asset_id ->
             %{
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
-              value: get_segr_for_asset(date, asset_id, prefix)
+              value: convert_to_ceil_float(get_segr_for_asset(date, asset_id, prefix))
             }
           end)
 
@@ -453,7 +453,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           dataSets: [
               %{
                   name: "Ageing",
-                  value: NumericalData.get_equipment_ageing(equipment, site_dt, prefix)
+                  value: convert_to_ceil_float(NumericalData.get_equipment_ageing(equipment, site_dt, prefix))
               }
           ]
       }
@@ -525,7 +525,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     %{
       name: shift_name,
       count: actual_attendances,
-      value: calculate_percentage(actual_attendances, expected_rosters)
+      value: convert_to_ceil_float(calculate_percentage(actual_attendances, expected_rosters))
     }
   end
 
@@ -559,7 +559,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     %{
       name: shift_name,
       count: actual_attendances,
-      value: calculate_percentage(actual_attendances, expected_rosters)
+      value: convert_to_ceil_float(calculate_percentage(actual_attendances, expected_rosters))
     }
   end
 
@@ -824,7 +824,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dataSets: [
           %{
             name: "Days",
-            value: process_breach_date_list(v) |> change_nil_to_zero()
+            value: convert_to_ceil_float(process_breach_date_list(v)) |> change_nil_to_zero()
           }
         ]
       }
