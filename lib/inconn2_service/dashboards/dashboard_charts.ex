@@ -570,6 +570,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
             from_date,
             to_date,
             types,
+            params["criticality"],
             prefix) |> group_by_asset_category(organize_for)
   end
 
@@ -583,6 +584,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         to_date,
         "L",
         types,
+        params["criticality"],
         prefix) |> group_by_asset(organize_for, "L", prefix)
 
     equipment_workorders =
@@ -592,6 +594,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         to_date,
         "E",
         types,
+        params["criticality"],
         prefix) |> group_by_asset(organize_for, "E", prefix)
 
     location_workorders ++ equipment_workorders
@@ -605,6 +608,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         to_date,
         params["asset_category_ids"],
         types,
+        params["criticality"],
         prefix) |> group_by_asset_category(organize_for)
   end
 
@@ -620,6 +624,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         location_ids,
         "L",
         types,
+        params["criticality"],
         prefix) |> group_by_asset(organize_for, "L", prefix)
 
     equipment_workorders =
@@ -630,6 +635,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         equipment_ids,
         "E",
         types,
+        params["criticality"],
         prefix) |> group_by_asset(organize_for, "E", prefix)
 
     location_workorders ++ equipment_workorders
