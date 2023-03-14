@@ -1129,7 +1129,6 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-
   def calendar(query_params, prefix) do
     rectified_query_params = rectify_query_params(query_params)
     asset_id = rectified_query_params["asset_id"]
@@ -1193,7 +1192,10 @@ defmodule Inconn2Service.Report do
           template_name: schedule.template_name,
           frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
           estimated_time: schedule.estimated_time,
-          dates: calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, []) |> Enum.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
+          dates:
+            calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+            |> Stream.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
+            |> Enum.filter(fn d -> d >= schedule.applicable_start and d <= schedule.applicable_end end)
         }
     end)
   |> Enum.map(fn schedule_with_date ->
@@ -1212,7 +1214,6 @@ defmodule Inconn2Service.Report do
       end)
      end)
   end
-
   def match_repeat_unit(unit) do
     case unit do
       "W" -> "Week"
@@ -1282,7 +1283,7 @@ defmodule Inconn2Service.Report do
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do
     query =
-      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id,
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true,
         join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
         select: %{
           schedule: wos,
@@ -1297,7 +1298,7 @@ defmodule Inconn2Service.Report do
     asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     query =
       from wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_ids, where: wot.repeat_unit not in ["H", "D"],
-       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id,
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true,
        select: %{
          schedule: wos,
          template: wot
@@ -1308,9 +1309,9 @@ defmodule Inconn2Service.Report do
 
   def execute_queryand_return_stream(query, prefix) do
     schedule_template_data = Repo.all(query, prefix: prefix)
-    IO.inspect(schedule_template_data)
+    # IO.inspect(schedule_template_data)
 
-    Stream.map(schedule_template_data, fn st ->
+    Enum.map(schedule_template_data, fn st ->
       %{
         schedule_id: st.schedule.id,
         # schedule_name: st.schedule.name,
@@ -1321,10 +1322,11 @@ defmodule Inconn2Service.Report do
         first_occurrence: st.schedule.first_occurrence_date,
         repeat_unit: st.template.repeat_unit,
         repeat_every: st.template.repeat_every,
-        estimated_time: st.template.estimated_time
+        estimated_time: st.template.estimated_time,
+        applicable_start: st.template.applicable_start,
+        applicable_end: st.template.applicable_end
       }
-
-    end)
+    end) |> IO.inspect()
   end
 
   defp get_last_entry_previous(asset_id, asset_type, date_time, prefix) do
