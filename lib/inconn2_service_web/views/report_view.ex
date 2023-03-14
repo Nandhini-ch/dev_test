@@ -92,6 +92,7 @@ defmodule Inconn2ServiceWeb.ReportView do
       first_name: item.first_name,
       last_name: item.last_name,
       designation: item.designation,
+      department: item.department,
       emp_code: item.emp_code,
       attendance_percentage: item.attendance_percentage,
       work_done_time: item.work_done_time
