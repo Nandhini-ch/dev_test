@@ -132,14 +132,28 @@ defmodule Inconn2Service.CheckListConfig do
 
   def delete_check_list(%CheckList{} = check_list, prefix) do
     cond do
-      has_workorder_template?(check_list, prefix) ->
+      has_workorder_template_workpermit_check_list_id?(check_list, prefix) ->
         {:could_not_delete,
         "Cannot Delete because there are workorder templates associated"}
+
+      has_workorder_template_precheck_list_id?(check_list, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are workorder templates associated"}
+
+        has_workorder_template_loto_lock_check_list_id?(check_list, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are workorder templates associated"}
+
+        has_workorder_template_loto_release_check_list_id?(check_list, prefix) ->
+        {:could_not_delete,
+        "Cannot Delete because there are workorder templates associated"}
+
 
       true ->
         update_checklist_without_validation(check_list, %{"active" => false}, prefix)
         {:deleted, "Check list was deleted"}
     end
+
   end
 
   # function commented because soft delet was implemented with same function name

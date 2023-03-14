@@ -81,6 +81,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"workpermit_check_list_id", workpermit_check_list_id}, query -> from q in query, where: q.workpermit_check_list_id == ^workpermit_check_list_id
     {"loto_lock_check_list_id", loto_lock_check_list_id}, query -> from q in query, where: q.loto_lock_check_list_id == ^loto_lock_check_list_id
     {"loto_release_check_list_id", loto_release_check_list_id}, query -> from q in query, where: q.loto_release_check_list_id == ^loto_release_check_list_id
+    {"precheck_list_id", precheck_list_id}, query -> from q in query, where: q.precheck_list_id == ^precheck_list_id
     {"task_list_id", task_list_id}, query -> from q in query, where: q.task_list_id == ^task_list_id
     _, query -> from q in query, where: q.active end)
   end

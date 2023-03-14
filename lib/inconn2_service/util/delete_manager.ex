@@ -50,9 +50,12 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   #def has_location?(%Site{} = site, prefix), do: (location_query(Location,%{"site_id" => site.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_workorder_template?(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_workorder_template?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"workpermit_check_list_id" => check_list.id, "loto_lock_check_list_id" => check_list.id, "loto_release_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
-  def has_workorder_template?(%TaskList{} = task_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate), %{"task_list_id" => task_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_ac?(%AssetCategory{} = asset_category, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"asset_category_id" => asset_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_workpermit_check_list_id?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"workpermit_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_precheck_list_id?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"precheck_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_loto_lock_check_list_id?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"loto_lock_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_loto_release_check_list_id?(%CheckList{} = check_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate),%{"loto_release_check_list_id" => check_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_workorder_template_task_list?(%TaskList{} = task_list, prefix), do: (workorder_template_query(Repo.add_active_filter(WorkorderTemplate), %{"task_list_id" => task_list.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_workorder_schedule?(%Location{} = location, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => location.id, "asset_type" => "L"}) |> Repo.all(prefix: prefix) |> length()) > 0
   def has_workorder_schedule?(%Equipment{} = equipment, prefix), do: (workorder_schedule_query(Repo.add_active_filter(WorkorderSchedule),%{"asset_id" => equipment.id, "asset_type" => "E"}) |> Repo.all(prefix: prefix) |> length()) > 0
