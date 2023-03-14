@@ -306,3 +306,7 @@ Approve Reassign,APREA,Y
 Approve Reshcedule,APRES,Y
 Approve the ticket,APTCK,Y
 Approve the Inventory,APINV,Y
+Create Asset Category,CRASC,Y
+Edit Asset Category,EDASC,Y
+Delete Asset Category,DEASC,Y
+List View Asset Category,LVASC,Y

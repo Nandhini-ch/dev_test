@@ -2,7 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
-  alias Inconn2Service.AssetConfig.AssetCategory
+  # alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -1194,8 +1194,7 @@ defmodule Inconn2Service.Report do
           estimated_time: schedule.estimated_time,
           dates:
             calculate_dates_for_schedule(schedule.first_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
-            |> Stream.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
-            |> Enum.filter(fn d -> d >= schedule.applicable_start and d <= schedule.applicable_end end)
+            |> Enum.filter(fn d ->  Date.compare(d, convert_string_to_date(from_date)) == :gt end)
         }
     end)
   |> Enum.map(fn schedule_with_date ->
@@ -1326,7 +1325,7 @@ defmodule Inconn2Service.Report do
         applicable_start: st.template.applicable_start,
         applicable_end: st.template.applicable_end
       }
-    end) |> IO.inspect()
+    end)
   end
 
   defp get_last_entry_previous(asset_id, asset_type, date_time, prefix) do
