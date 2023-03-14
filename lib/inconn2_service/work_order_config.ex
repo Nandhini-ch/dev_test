@@ -269,7 +269,7 @@ defmodule Inconn2Service.WorkOrderConfig do
 
   def delete_task_list(%TaskList{} = task_list, prefix) do
     cond do
-      has_workorder_template?(task_list, prefix) ->
+      has_workorder_template_task_list?(task_list, prefix) ->
         {:could_not_delete,
         "Cannot be deleted as there are Workorder Template associated with it"
       }
