@@ -14,9 +14,10 @@ defmodule Inconn2ServiceWeb.DashboardsView do
     }
   end
 
-  def render("assets_asset_categories.json", %{asset_categories: asset_categories, locations: locations, equipments: equipments}) do
+  def render("assets_asset_categories.json", %{asset_categories: asset_categories, asset_categories_tree: asset_categories_tree, locations: locations, equipments: equipments}) do
     %{
       data: %{
+        asset_categories_tree: render_many(asset_categories_tree, AssetCategoryView, "asset_category_node.json"),
         asset_categories: render_many(asset_categories, AssetCategoryView, "asset_category.json"),
         assets: render_many(locations, LocationView, "location_asset_node.json") ++
                 render_many(equipments, LocationView, "equipment_asset_node.json")

@@ -1,6 +1,7 @@
 defmodule Inconn2ServiceWeb.DashboardsController do
   use Inconn2ServiceWeb, :controller
 
+  alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Dashboards.{NumericalChart, DashboardCharts, Helpers}
   alias Inconn2ServiceWeb.AssetCategoryView
@@ -15,8 +16,9 @@ defmodule Inconn2ServiceWeb.DashboardsController do
 
   def get_asset_categories_and_assets(conn, %{"location_id" => location_id}) do
     asset_categories = AssetConfig.list_asset_categories_for_location(location_id, conn.assigns.sub_domain_prefix)
+    asset_categories_tree = asset_categories |> HierarchyManager.build_tree()
     {locations, equipments} = AssetConfig.get_assets_for_location(location_id, conn.assigns.sub_domain_prefix)
-    render(conn, "assets_asset_categories.json", asset_categories: asset_categories, locations: locations, equipments: equipments)
+    render(conn, "assets_asset_categories.json", asset_categories: asset_categories, asset_categories_tree: asset_categories_tree, locations: locations, equipments: equipments)
   end
 
   def get_high_level_data_web(conn, %{"site_id" => site_id}) do

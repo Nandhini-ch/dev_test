@@ -303,6 +303,11 @@ defmodule Inconn2Service.AssetConfig do
     |> get_asset_category_by_ids(prefix)
   end
 
+  def list_asset_categories_tree_for_location(location_id, prefix) do
+    list_asset_categories_for_location(location_id, prefix)
+    |> HierarchyManager.build_tree()
+  end
+
   def get_asset_category!(id, prefix), do: Repo.get!(AssetCategory, id, prefix: prefix)
   def get_asset_category(id, prefix), do: Repo.get(AssetCategory, id, prefix: prefix)
   def get_asset_category_by_ids(ids, prefix) do
