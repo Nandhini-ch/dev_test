@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.WorkOrderView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView, WorkRequestView}
+  alias Inconn2ServiceWeb.{WorkOrderView, LocationView, EquipmentView}
   alias Inconn2ServiceWeb.{UserView, WorkorderTemplateView}
   alias Inconn2ServiceWeb.{SiteView, EmployeeView, WorkorderTaskView}
 
@@ -57,7 +57,10 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       pause_resume_times: work_order.pause_resume_times,
       remarks: work_order.remarks,
       approver: work_order.approver,
-      is_paused: work_order.is_paused
+      is_paused: work_order.is_paused,
+      workorder_template_name: work_order.workorder_template.name,
+      repeat_every: work_order.workorder_template.repeat_every,
+      repeat_unit: work_order.workorder_template.repeat_unit
     }
   end
 

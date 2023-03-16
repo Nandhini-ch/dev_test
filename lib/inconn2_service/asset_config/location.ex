@@ -30,5 +30,6 @@ defmodule Inconn2Service.AssetConfig.Location do
     |> validate_inclusion(:criticality, [1, 2, 3, 4, 5])
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
+    |> unique_constraint(:location_code)
   end
 end
