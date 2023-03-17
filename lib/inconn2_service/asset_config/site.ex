@@ -44,5 +44,6 @@ defmodule Inconn2Service.AssetConfig.Site do
     |> cast_embed(:address)
     |> cast_embed(:contact)
     |> assoc_constraint(:party)
+    |> unique_constraint(:site_code)
   end
 end

@@ -47,6 +47,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
     |> assoc_constraint(:location)
+    |> unique_constraint(:equipment_code)
 
   end
 
