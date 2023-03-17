@@ -14,5 +14,6 @@ defmodule Inconn2Service.Staff.Designation do
     designation
     |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
+    |> unique_constraint([:name])
   end
 end
