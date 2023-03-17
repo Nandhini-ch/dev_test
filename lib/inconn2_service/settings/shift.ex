@@ -41,7 +41,6 @@ defmodule Inconn2Service.Settings.Shift do
     ])
     |> validate_date_order
     |> validate_applicable_days
-    # |> unique_constraint(:code)
     |> validate_code()
     |> assoc_constraint(:site)
   end
