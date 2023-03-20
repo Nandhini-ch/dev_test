@@ -229,7 +229,7 @@ defmodule Inconn2Service.Staff do
     OrgUnit.changeset(org_unit, attrs)
   end
 
-  defp get_role_for_employee(employee, prefix) do
+  def get_role_for_employee(employee, prefix) do
     user = get_user_from_employee(employee.id, prefix)
     case user do
       nil -> Map.put(employee, :role, nil)

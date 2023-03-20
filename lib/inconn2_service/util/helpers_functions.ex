@@ -251,4 +251,11 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def convert_to_ceil_float(value), do: value
 
+  def convert_list_from_query_params(nil), do: []
+  def convert_list_from_query_params(string) do
+    string
+    |> String.split(",")
+    |> Enum.map(&(String.to_integer/1))
+  end
+
 end

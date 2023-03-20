@@ -33,7 +33,7 @@ defmodule Inconn2Service.CheckListConfig do
     cond do
       has_check?(check_type, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Check assocaited"}
+        "Cannot Delete because there are Check associated"}
 
       true ->
         update_check_type(check_type, %{"active" => false}, prefix)
@@ -74,7 +74,7 @@ defmodule Inconn2Service.CheckListConfig do
     cond do
       has_check_list?(check, prefix) ->
         {:could_not_delete,
-        "Cannot Delete because there are Check List assocaited"}
+        "Cannot Delete because there are Check List associated"}
 
       true ->
         update_check(check, %{"active" => false}, prefix)

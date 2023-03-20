@@ -151,7 +151,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/tasks/:id/deactivate", TaskController, :deactivate_task
     get "/download_tasks", ReferenceDownloadController, :download_tasks
     post "/upload_tasks", ReferenceUploadController, :upload_tasks
-    post "/upload_master_task_types", ReferenceUploadController, :upload_master_task_types
     resources "/task_lists", TaskListController, except: [:new, :edit]
     get "/task_lists/:id/tasks", TaskListController, :index_tasks_for_task_list
     put "/task_lists/:id/activate", TaskListController, :activate_task_list
@@ -165,7 +164,6 @@ defmodule Inconn2ServiceWeb.Router do
     put "/checks/:id/deactivate", CheckController, :deactivate_check
     get "/download_checks", ReferenceDownloadController, :download_checks_lists
     post "/upload_checks", ReferenceUploadController, :upload_checks
-    post "/upload_check_types", ReferenceUploadController, :upload_check_types
     resources "/check_lists", CheckListController, except: [:new, :edit]
     put "/check_lists/:id/activate", CheckListController, :activate_check_list
     put "/check_lists/:id/deactivate", CheckListController, :deactivate_check_list
@@ -239,7 +237,6 @@ defmodule Inconn2ServiceWeb.Router do
     get "/reportee_users", UserController, :reportee_users
     get "/users/workorder_template/:workorder_template_id", UserController, :index_for_workorder_template
     put "/change_password", UserController, :change_password
-    get "/download_users", ReferenceDownloadController, :download_users
     resources "/modules", ModuleController, only: [:index, :show]
     get "/modules/:module_id/features", FeatureController, :index
     resources "/role_profiles", RoleProfileController, only: [:index, :show]
@@ -516,6 +513,27 @@ defmodule Inconn2ServiceWeb.Router do
 
     post "/bulk_upload", DataUploadController, :upload_content
     resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit]
+
+    get "/download_parties", ReferenceDownloadController, :download_parties
+    post "/upload_parties", ReferenceUploadController, :upload_parties
+    get "/download_scopes", ReferenceDownloadController, :download_scopes
+    post "/upload_scopes", ReferenceUploadController, :upload_scopes
+    get "/download_contracts", ReferenceDownloadController, :download_contracts
+    post "/upload_contracts", ReferenceUploadController, :upload_contracts
+    post "/upload_master_task_types", ReferenceUploadController, :upload_master_task_types
+    get "/download_master_task_types", ReferenceDownloadController, :download_master_task_types
+    post "/upload_check_types", ReferenceUploadController, :upload_check_types
+    get "/download_check_types", ReferenceDownloadController, :download_check_types
+    get "/download_users", ReferenceDownloadController, :download_users
+    post "/upload_users", ReferenceUploadController, :upload_users
+    get "/download_uom_categories", ReferenceDownloadController, :download_uom_categories
+    post "/upload_uom_categories", ReferenceUploadController, :upload_uom_categories
+    get "/download_unit_of_measurements", ReferenceDownloadController, :download_unit_of_measurements
+    post "/upload_unit_of_measurements", ReferenceUploadController, :upload_unit_of_measurements
+    get "/download_inventory_suppliers", ReferenceDownloadController, :download_inventory_suppliers
+    post "/upload_inventory_suppliers", ReferenceUploadController, :upload_inventory_suppliers
+    get "/download_inventory_items", ReferenceDownloadController, :download_inventory_items
+    post "/upload_inventory_items", ReferenceUploadController, :upload_inventory_items
 
 
     scope "/my_teams" do
