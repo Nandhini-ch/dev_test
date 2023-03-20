@@ -4,9 +4,9 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
   alias Inconn2Service.ReferenceDataDownloader
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def download_locations(conn, _params) do
+  def download_zones(conn, _params) do
     data =
-      ReferenceDataDownloader.download_locations(conn.assigns.sub_domain_prefix)
+      ReferenceDataDownloader.download_zones(conn.assigns.sub_domain_prefix)
       |> CSV.encode()
       |> Enum.to_list()
       |> to_string
@@ -14,6 +14,19 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"locations.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_sites(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_sites(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"sites.csv\"")
     |> send_resp(200, data)
   end
 
@@ -27,6 +40,19 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"asset_categories.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_locations(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_locations(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"locations.csv\"")
     |> send_resp(200, data)
   end
 
@@ -44,43 +70,55 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
-  def download_sites(conn, _params) do
+  def download_check_types(conn, _params) do
     data =
-      ReferenceDataDownloader.download_sites(conn.assigns.sub_domain_prefix)
+      ReferenceDataDownloader.download_check_types(conn.assigns.sub_domain_prefix)
       |> CSV.encode()
       |> Enum.to_list()
       |> to_string
 
     conn
     |> put_resp_content_type("text/csv")
-    |> put_resp_header("content-disposition", "attachment; filename=\"sites.csv\"")
+    |> put_resp_header("content-disposition", "attachment; filename=\"checks.csv\"")
     |> send_resp(200, data)
   end
 
-  def download_workorder_templates(conn, _params) do
+  def download_checks(conn, _params) do
     data =
-      ReferenceDataDownloader.download_work_order_templates(conn.assigns.sub_domain_prefix)
+      ReferenceDataDownloader.download_checks(conn.assigns.sub_domain_prefix)
       |> CSV.encode()
       |> Enum.to_list()
       |> to_string
 
     conn
     |> put_resp_content_type("text/csv")
-    |> put_resp_header("content-disposition", "attachment; filename=\"work_order_template.csv\"")
+    |> put_resp_header("content-disposition", "attachment; filename=\"checks.csv\"")
     |> send_resp(200, data)
   end
 
-
-  def download_workorder_schedules(conn, _params) do
+  def download_check_lists(conn, _params) do
     data =
-      ReferenceDataDownloader.download_workorder_schedules(conn.assigns.sub_domain_prefix)
+      ReferenceDataDownloader.download_check_lists(conn.assigns.sub_domain_prefix)
       |> CSV.encode()
       |> Enum.to_list()
       |> to_string
 
     conn
     |> put_resp_content_type("text/csv")
-    |> put_resp_header("content-disposition", "attachment; filename=\"workorder_schedules.csv\"")
+    |> put_resp_header("content-disposition", "attachment; filename=\"check_lists.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_master_task_types(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_master_task_types(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"tasks.csv\"")
     |> send_resp(200, data)
   end
 
@@ -110,29 +148,16 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
-  def download_check_lists(conn, _params) do
+  def download_workorder_templates(conn, _params) do
     data =
-      ReferenceDataDownloader.download_check_lists(conn.assigns.sub_domain_prefix)
+      ReferenceDataDownloader.download_work_order_templates(conn.assigns.sub_domain_prefix)
       |> CSV.encode()
       |> Enum.to_list()
       |> to_string
 
     conn
     |> put_resp_content_type("text/csv")
-    |> put_resp_header("content-disposition", "attachment; filename=\"check_lists.csv\"")
-    |> send_resp(200, data)
-  end
-
-  def download_checks(conn, _params) do
-    data =
-      ReferenceDataDownloader.download_checks(conn.assigns.sub_domain_prefix)
-      |> CSV.encode()
-      |> Enum.to_list()
-      |> to_string
-
-    conn
-    |> put_resp_content_type("text/csv")
-    |> put_resp_header("content-disposition", "attachment; filename=\"checks.csv\"")
+    |> put_resp_header("content-disposition", "attachment; filename=\"work_order_template.csv\"")
     |> send_resp(200, data)
   end
 
@@ -146,6 +171,110 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_inventory_items(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_inventory_items(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"items.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_inventory_suppliers(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_inventory_suppliers(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"suppliers.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_unit_of_measurements(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_unit_of_measurements(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_uom_categories(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_uom_categories(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_parties(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_parties(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_contracts(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_contracts(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_scopes(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_scopes(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"employees.csv\"")
+    |> send_resp(200, data)
+  end
+
+  def download_workorder_schedules(conn, _params) do
+    data =
+      ReferenceDataDownloader.download_workorder_schedules(conn.assigns.sub_domain_prefix)
+      |> CSV.encode()
+      |> Enum.to_list()
+      |> to_string
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"workorder_schedules.csv\"")
     |> send_resp(200, data)
   end
 
@@ -305,8 +434,6 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> send_resp(200, data)
   end
 
-
-
   def download_roles(conn, _params) do
     data =
       ReferenceDataDownloader.download_roles(conn.assigns.sub_domain_prefix)
@@ -332,5 +459,4 @@ defmodule Inconn2ServiceWeb.ReferenceDownloadController do
     |> put_resp_header("content-disposition", "attachment; filename=\"roles.csv\"")
     |> send_resp(200, data)
   end
-
 end
