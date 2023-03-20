@@ -646,7 +646,7 @@ defmodule Inconn2Service.Ticket do
     result = %CategoryHelpdesk{}
               |> CategoryHelpdesk.changeset(attrs)
               |> validate_user_id(prefix)
-              |> validate_category_helpdesk_constraint(prefix)
+              # |> validate_category_helpdesk_constraint(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])}
@@ -654,23 +654,23 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  def get_category_helpdesk_by_user(nil, nil, nil, _prefix), do: []
+  # def get_category_helpdesk_by_user(nil, nil, nil, _prefix), do: []
 
-  def get_category_helpdesk_by_user(user_id, site_id, workrequest_category_id, prefix) do
-    from(c in CategoryHelpdesk, where: c.user_id == ^user_id and c.site_id == ^site_id and c.workrequest_category_id == ^workrequest_category_id)
-    |> Repo.all(prefix: prefix)
-  end
+  # def get_category_helpdesk_by_user(user_id, site_id, workrequest_category_id, prefix) do
+  #   from(c in CategoryHelpdesk, where: c.user_id == ^user_id and c.site_id == ^site_id and c.workrequest_category_id == ^workrequest_category_id)
+  #   |> Repo.all(prefix: prefix)
+  # end
 
-  def validate_category_helpdesk_constraint(cs, prefix) do
-    user_id = get_change(cs, :user_id, nil)
-    site_id = get_change(cs, :site_id, nil)
-    workrequest_category_id = get_change(cs, :workrequest_category_id, nil)
-    if 0 >= length(get_category_helpdesk_by_user(user_id, site_id, workrequest_category_id, prefix)) do
-      cs
-    else
-      add_error(cs, :user_id, "This Category Helpdesk Is Already Assigned")
-    end
-  end
+  # def validate_category_helpdesk_constraint(cs, prefix) do
+  #   user_id = get_change(cs, :user_id, nil)
+  #   site_id = get_change(cs, :site_id, nil)
+  #   workrequest_category_id = get_change(cs, :workrequest_category_id, nil)
+  #   if 0 >= length(get_category_helpdesk_by_user(, prefix)) do
+  #     cs
+  #   else
+  #     add_error(cs, :user_id, "This Category Helpdesk Is Already Assigned")
+  #   end
+  # end
 
   defp validate_user_id(cs, prefix) do
     user_id = get_field(cs, :user_id, nil)
@@ -691,7 +691,7 @@ defmodule Inconn2Service.Ticket do
     result = category_helpdesk
               |> CategoryHelpdesk.changeset(attrs)
               |> validate_user_id(prefix)
-              |> validate_category_helpdesk_constraint(prefix)
+              # |> validate_category_helpdesk_constraint(prefix)
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, category_helpdesk} -> {:ok, category_helpdesk |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee], force: true)}

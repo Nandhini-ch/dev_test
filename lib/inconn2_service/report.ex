@@ -2,7 +2,7 @@ defmodule Inconn2Service.Report do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
-  alias Inconn2Service.AssetConfig.AssetCategory
+  # alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}

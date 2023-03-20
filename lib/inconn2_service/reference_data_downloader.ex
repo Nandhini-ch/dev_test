@@ -10,40 +10,41 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   alias Inconn2Service.Settings
   alias Inconn2Service.Inventory
   alias Inconn2Service.WorkOrderConfig.Task
+  alias Inconn2Service.InventoryManagement
+  alias Inconn2Service.ContractManagement
 
   import Inconn2Service.Util.HelpersFunctions
 
-  def download_locations(prefix) do
-    locations = AssetConfig.list_active_locations(prefix)
+  def download_zones(prefix) do
+    locations = AssetConfig.list_zones(prefix)
 
-    header = [["id", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Parent Id", "parent reference"]]
+    header = [["id", "reference", "Name", "Description", "Parent Id", "parent reference"]]
 
     body =
       Enum.map(locations, fn r ->
-        [r.id, "", r.name, r.description, r.location_code, r.asset_category_id, r.site_id, List.last(r.path), ""]
+        [r.id, "", r.name, r.description, List.last(r.path), ""]
       end)
 
     final_report = header ++ body
     final_report
   end
 
-  def download_equipments(prefix) do
-    locations = AssetConfig.list_equipments(prefix)
+  def download_sites(prefix) do
+    locations = AssetConfig.list_sites(prefix)
 
-    header = [["id", "reference", "Name", "Equipment Code", "Site Id", "Location Id", "Asset Category Id", "Connections In", "Connections Out", "Parent Id", "parent reference"]]
+    header = [["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Zone Id", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "Contact First Name", "Contact Last Name", "Contact Designation", "Contact Email", "Contact Mobile", "Contact Land Line"]]
 
     body =
       Enum.map(locations, fn r ->
-        [r.id, "", r.name, r.equipment_code, r.site_id, r.location_id, r.asset_category_id, convert_array_of_integers_to_string(r.connections_in), convert_array_of_integers_to_string(r.connections_out), List.last(r.path), ""]
+        [r.id, "", r.name, r.description, r.branch, r.area, r.latitude, r.longitude, r.fencing_radius, r.site_code, r.time_zone, r.zone_id, r.party_id, r.address.address_line1, r.address.address_line2, r.address.city, r.address.state, r.address.country, r.address.postcode, r.contact.first_name, r.contact.last_name, r.contact.designation, r.contact.email,r.contact.mobile, r.contact.land_line]
       end)
 
     final_report = header ++ body
-    IO.inspect(final_report)
     final_report
   end
 
   def download_asset_categories(prefix) do
-    asset_categories = AssetConfig.list_asset_categories(prefix)
+    asset_categories = AssetConfig.list_asset_categories(%{"active" => "true"}, prefix)
 
     header = [["id", "reference", "Name", "Asset Type", "Parent Id", "parent reference"]]
 
@@ -56,48 +57,59 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     final_report
   end
 
-  def download_sites(prefix) do
-    locations = AssetConfig.list_sites(prefix)
+  def download_locations(prefix) do
+    locations = AssetConfig.list_active_locations(prefix)
 
-    header = [["id", "reference", "Name", "Description", "Branch", "Area", "Latitude", "Longitude", "Fencing Radius", "Site Code", "Time Zone", "Party Id", "Address Line 1", "Address Line 2", "City", "State", "Country", "Postcode", "Contact First Name", "Contact Last Name", "Contact Designation", "Contact Email", "Contact Mobile", "Contact Land Line"]]
+    header = [["id", "reference", "Name", "Description", "Location Code", "Asset Category Id", "Site Id", "Status", "Criticality", "Parent Id", "parent reference"]]
 
     body =
       Enum.map(locations, fn r ->
-        [r.id, "", r.name, r.description, r.branch, r.area, r.latitude, r.longitude, r.fencing_radius, r.site_code, r.time_zone, r.party_id, r.address.address_line1, r.address.address_line2, r.address.city, r.address.state, r.address.country, r.address.postcode, r.contact.first_name, r.contact.last_name, r.contact.designation, r.contact.email, r.contact.land_line]
+        [r.id, "", r.name, r.description, r.location_code, r.asset_category_id, r.site_id, r.status, r.criticality, List.last(r.path), ""]
       end)
 
     final_report = header ++ body
     final_report
   end
 
-  def download_work_order_templates(prefix) do
-    workorder_templates = Workorder.list_workorder_templates(prefix)
 
-    header = [["id", "reference", "Asset Category Id", "Asset Type", "Name", "Task List Id", "Tasks", "Estimated Time", "Scheduled",
-     "Repeat Every", "Repeat Unit", "Applicable Start", "Applicable End", "Time Start", "Time End", "Create New", "Max Times",
-     "Work Order Prior Time", "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id",
-     "Loto Release Check List Id",]]
+
+  def download_equipments(prefix) do
+    locations = AssetConfig.list_equipments(prefix)
+
+    header = [["id", "reference", "Name", "Equipment Code", "Site Id", "Location Id", "Asset Category Id", "Connections In", "Connections Out",
+    "Status", "Criticality", "Tag Name", "Description", "Function", "Asset Owned By Id", "Is Movable", "Department", "Asset Manager Id", "Maintenance Manager Id",
+     "Asset Class","Parent Id", "parent reference"]]
 
     body =
-      Enum.map(workorder_templates, fn r ->
-        [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, r.estimated_time, r.scheduled,
-        r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times,
-        r.workorder_prior_time, r.is_precheck_required, r.precheck_list_id, r.is_workpermit_required, r.is_workorder_approval_required,
-        r.is_workorder_acknowledgement_required, r.workpermit_check_list_id, r.is_loto_required, r.loto_lock_check_list_id, r.loto_release_check_list_id]
+      Enum.map(locations, fn r ->
+        [r.id, "", r.name, r.equipment_code, r.site_id, r.location_id, r.asset_category_id, convert_array_of_integers_to_string(r.connections_in), convert_array_of_integers_to_string(r.connections_out),
+        r.status, r.criticality, r.tag_name, r.description, r.function, r.asset_owned_by_id, r.is_movable, r.department, r.asset_manager_id, r.maintenance_manager_id,
+         r.asset_class, List.last(r.path), ""]
       end)
 
     final_report = header ++ body
     final_report
   end
 
-  def download_task_lists(prefix) do
-    task_lists = WorkOrderConfig.list_task_lists(prefix)
+  def download_check_types(prefix) do
+    check_types = CheckListConfig.list_check_types(prefix)
+    header = [["id", "reference", "Name", "Description"]]
 
-    header = [["id", "reference", "Name", "Task Ids", "Asset Category Id"]]
+    body = Enum.map(check_types, fn r ->
+      [r.id, "", r.name, r.description]
+    end)
+
+    header ++ body
+  end
+
+  def download_checks(prefix) do
+    check = CheckListConfig.list_checks(%{}, prefix)
+
+    header = [["id", "reference", "Label", "Check Type Id"]]
 
     body =
-      Enum.map(task_lists, fn r ->
-        [r.id, "", r.name, convert_array_of_integers_to_string(r.task_ids, prefix), r.asset_category_id]
+      Enum.map(check, fn r ->
+        [r.id, "", r.label, r.check_type_id]
       end)
 
       final_report = header ++ body
@@ -105,7 +117,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   end
 
   def download_check_lists(prefix) do
-    check_lists = CheckListConfig.list_check_lists(prefix)
+    check_lists = CheckListConfig.list_check_lists(prefix, %{})
 
     header = [["id", "reference", "Name", "Type", "Check Ids"]]
 
@@ -118,46 +130,236 @@ defmodule Inconn2Service.ReferenceDataDownloader do
       final_report
   end
 
-  def download_checks(prefix) do
-    check = CheckListConfig.list_checks(%{}, prefix)
+  def download_master_task_types(prefix) do
+    master_task_types = WorkOrderConfig.list_master_task_types(prefix)
+    header = [["id", "reference", "Name", "Description"]]
 
-    header = [["id", "reference", "Label", "Type"]]
+    body = Enum.map(master_task_types, fn r ->
+      [r.id, "", r.name, r.description]
+    end)
+
+    header ++ body
+  end
+
+  def download_tasks(prefix) do
+    tasks = WorkOrderConfig.list_tasks(prefix)
+
+    header = [["id", "reference", "Label", "Task Type", "Master Task Type Id", "Estimated Time",
+    "UOM", "Category", "Max Length", "Min Length", "Max Value", "Min Value", "Threshold Value", "Type", "Config"
+    ]]
 
     body =
-      Enum.map(check, fn r ->
-        [r.id, "", r.label, r.type]
+      Enum.map(tasks, fn r ->
+        fixed_attributes = [r.id, "", r.label, r.task_type, r.master_task_type_id, r.estimated_time, r.config["UOM"], r.config["Category"],
+        r.config["max_length"], r.config["min_length"], r.config["max_value"],r.config["min_value"], r.config["threshold_value"], r.config["type"]
+      ]
+        cond do
+          r.task_type in ["IO", "IM"] ->
+            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}:#{x["raise_ticket"]}" end) |> Enum.join(";")
+            fixed_attributes ++ [variable_attributes]
+          r.task_type == "MT" ->
+            fixed_attributes ++ [""]
+          r.task_type == "OB" ->
+            fixed_attributes ++ [""]
+        end
       end)
 
       final_report = header ++ body
       final_report
   end
 
+  def download_task_lists(prefix) do
+    task_lists = WorkOrderConfig.list_task_lists(prefix)
+
+    header = [["id", "reference", "Name", "Task Ids", "Asset Category Id"]]
+
+    body =
+      Enum.map(task_lists, fn r ->
+        [r.id, "", r.name, convert_array_of_integers_to_string(Enum.map(r.task_tasklists, fn task -> task.task_id end)), r.asset_category_id]
+      end)
+
+      final_report = header ++ body
+      final_report
+  end
+
+  def download_work_order_templates(prefix) do
+    workorder_templates = Workorder.list_workorder_templates(prefix)
+
+    header = [["id", "reference", "Asset Category Id", "Asset Type", "Name", "Task List Id", "Estimated Time",
+    "Scheduled", "Breakdown", "Audit", "Adhoc", "Amc",  "Repeat Every", "Repeat Unit", "Applicable Start",
+   "Applicable End", "Time Start", "Time End", "Create New", "Max Times", "Work Order Prior Time",
+     "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id",
+    "Loto Release Check List Id", "Precheck Required","Precheck List Id", "Work Order Approval Required", "Work Order Acknowledgement Required"]]
+
+    body =
+      Enum.map(workorder_templates, fn r ->
+        [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, r.estimated_time,
+        r.scheduled, r.breakdown, r.audit, r.adhoc, r.amc,
+        r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times,
+        r.workorder_prior_time, r.is_workpermit_required, r.workpermit_check_list_id,  r.is_loto_required,  r.loto_lock_check_list_id,
+        r.loto_release_check_list_id,  r.is_precheck_required, r.precheck_list_id,  r.is_workorder_approval_required, r.is_workorder_acknowledgement_required]
+      end)
+
+    final_report = header ++ body
+    final_report
+  end
+
   def download_employees(prefix) do
-    check = Staff.list_employees(prefix)
+    check = Staff.list_employees(prefix) |> Enum.map(fn e -> Staff.get_role_for_employee(e, prefix) end)
 
     header = [["id", "reference", "First Name", "Last Name", "Employment Start Date", "Employment End Date",
     "Designation Id", "Email", "Employee Id", "Landline No", "Mobile No", "Salary", "Create User?", "Reports To",
-    "Skills", "Org Unit Id", "Party Id"]]
+    "Skills", "Org Unit Id", "Party Id", "Role Id"]]
+
 
     body =
       Enum.map(check, fn r ->
         [r.id, "", r.first_name, r.last_name, r.employment_start_date, r.employment_end_date,
         r.designation_id, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
-        convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id]
+        convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id, r.role_id]
       end)
 
       final_report = header ++ body
       final_report
   end
 
+  def download_inventory_items(prefix) do
+    items = InventoryManagement.list_inventory_items(prefix)
+
+    header = [
+      [
+        "id", "reference", "Item Name", "Part No", "Item Type", "Uom Type Id", "Purchase Unit Uom Id", "Inventory Unit Uom Id",
+        "Consume Unit Uom Id", "Unit Price", "Minimum Stock Level", "Remarks", "Asset Category Ids",
+        "Is Approval Required", "Approve User"
+      ]
+    ]
+
+    body =
+      Enum.map(items, fn i ->
+        [
+          i.id, "", i.name, i.part_no, i.item_type, i.uom_category_id, i.purchase_unit_of_measurement_id, i.inventory_unit_of_measurement_id,
+           i.consume_unit_of_measurement_id, i.unit_price, i.minimum_stock_level, i.remarks, convert_array_of_integers_to_string(i.asset_category_ids),
+           i.is_approval_required, i.approval_user_id
+        ]
+      end)
+
+    header ++ body
+  end
+
+  def download_inventory_suppliers(prefix) do
+    items = InventoryManagement.list_inventory_suppliers(prefix)
+
+    header = [
+      [
+        "id", "reference", "Supplier Name", "Reference Number", "Business Type", "Website", "GST Number", "Supplier Code",
+        "Description", "Contact Person", "Contact Number", "Escalation 1 Contact Name", "Escalation 1 Contact Number",
+        "Escalation 2 Contact Name", "Escalation 2 Contact Number"
+      ]
+    ]
+
+    body =
+      Enum.map(items, fn i ->
+        [
+          i.id, "", i.name, i.reference_no, i.business_type, i.website, i.gst_no, i.supplier_code,
+           i.description, i.contact_person, i.contact_no, i.escalation1_contact_name, i.escalation1_contact_no,
+           i.escalation2_contact_name, i.escalation2_contact_no
+        ]
+      end)
+
+    header ++ body
+  end
+
+  def download_unit_of_measurements(prefix) do
+    items = InventoryManagement.list_unit_of_measurements(%{}, prefix)
+
+    header = [
+      [ "id", "reference", "UOM Name", "Unit", "UOM Category Type Id" ]
+    ]
+
+    body =
+      Enum.map(items, fn i ->
+        [ i.id, "", i.name, i.unit, i.uom_category_id ]
+      end)
+
+    header ++ body
+  end
+
+  def download_uom_categories(prefix) do
+    items = InventoryManagement.list_uom_categories(prefix)
+
+    header = [
+      ["id", "reference", "UOM Category Name", "Description"]
+    ]
+
+    body =
+      Enum.map(items, fn i ->
+        [ i.id, "", i.name, i.description ]
+      end)
+
+    header ++ body
+  end
+
+  def download_parties(prefix) do
+     items =
+      AssetConfig.list_parties(%{"type" => "sp"}, prefix)
+
+    header = [
+      ["id", "reference", "Category Name", "Pan Number", "Address Line 1", "Address Line 2", "Country", "State", "City", "Postcode",
+       "First Name", "Last Name", "Designation", "Email", "Mobile", "Landline"
+      ]
+    ]
+
+    body =
+      Enum.map(items, fn i ->
+        [ i.id, "", i.company_name, i.pan_number, i.address.address_line1, i.address.address_line2, i.address.state, i.address.city, i.address.country, i.address.postcode,
+        i.contact.first_name, i.contact.last_name, i.contact.designation, i.contact.email, i.contact.mobile, i.contact.land_line
+      ]
+      end)
+
+    header ++ body
+  end
+
+  def download_contracts(prefix) do
+    items =
+      ContractManagement.list_contracts(%{}, prefix)
+
+   header = [
+     ["id", "reference", "Contract Name", "Contract Start Date", "Contract End Date", "Contract Type", "Effective Status", "Service Provider Id"]
+   ]
+
+   body =
+     Enum.map(items, fn i ->
+       [ i.id, "", i.name, i.start_date, i.end_date, i.contract_type, i.is_effective_status, i.party_id
+     ]
+     end)
+
+   header ++ body
+  end
+
+  def download_scopes(prefix) do
+   items = ContractManagement.list_scopes(%{}, prefix)
+
+   header = [
+    ["id", "reference", "Asset Category Ids", "Is Applicable To All Asset Category", "Location Ids", "Is Applicable To All Location", "Site Id", "Contract Id"]
+    ]
+
+   body =
+    Enum.map(items, fn i ->
+     [ i.id, "", convert_array_of_integers_to_string(i.asset_category_ids), i.is_applicable_to_all_asset_category, convert_array_of_integers_to_string(i.location_ids), i.is_applicable_to_all_location, i.site_id, i.contract_id
+    ]
+    end)
+
+   header ++ body
+  end
+
   def download_users(prefix) do
     check = Staff.list_users(prefix)
 
-    header = [["id", "reference", "Email", "Mobile No", "Username", "Role Id", "Party Id"]]
+    header = [["id", "reference", "Email", "Mobile No", "User Name", "First Name", "Last Name", "Role Id", "Party Id", "Password"]]
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.email, r.mobile_no, r.username, convert_array_of_integers_to_string(r.role_id), r.party_id]
+        [r.id, "", r.email, r.mobile_no, r.username,r.first_name, r.last_name, r.role_id, r.party_id, ""]
       end)
 
       final_report = header ++ body
@@ -216,31 +418,6 @@ defmodule Inconn2Service.ReferenceDataDownloader do
       Enum.map(shifts, fn r ->
         [r.id, "", r.name, r.start_time, r.end_time, convert_array_of_integers_to_string(r.applicable_days),
         r.start_date, r.end_date, r.site_id]
-      end)
-
-      final_report = header ++ body
-      final_report
-  end
-
-  def download_tasks(prefix) do
-    tasks = WorkOrderConfig.list_tasks(prefix)
-
-    header = [["id", "reference", "Label", "Task Type", "Master task type id", "Estimated Time"]]
-
-    body =
-      Enum.map(tasks, fn r ->
-        fixed_attributes = [r.id, "", r.label, r.task_type, r.master_task_type_id, r.estimated_time]
-        cond do
-          r.task_type in ["IO", "IM"] ->
-            variable_attributes = Enum.map(r.config["options"], fn x -> "#{x["label"]}:#{x["value"]}" end)
-            fixed_attributes ++ variable_attributes
-          r.task_type == "MT" ->
-            variable_attributes = ["#{r.config["type"]}: #{r.config["UOM"]}"]
-            fixed_attributes ++ variable_attributes
-          r.task_type == "OB" ->
-            variable_attributes = ["#{r.config["min_length"]} - #{r.config["max_length"]}"]
-            fixed_attributes ++ variable_attributes
-        end
       end)
 
       final_report = header ++ body
@@ -355,7 +532,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     header = [["id", "reference", "Name", "Description"]]
 
     body = Enum.map(roles, fn r ->
-      [[r.id, "", r.name, r.description]]
+      [r.id, "", r.name, r.description]
     end)
 
     header ++ body
@@ -393,10 +570,9 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     end
   end
 
-
-  defp convert_array_of_integers_to_string(array_of_ids, prefix) do
+  def convert_array_of_integers_to_string(array_of_ids, prefix) do
     if array_of_ids != nil do
-        array_of_ids
+      array_of_ids
         |> Stream.map(fn id -> !is_nil(Repo.get(Task, id, prefix: prefix)) end)
         |> Stream.map(fn id -> to_string(id) end)
         |> Enum.join(",")
@@ -405,9 +581,9 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     end
   end
 
-  defp get_only_ids_for_workorder_tasks(nil), do: ""
+  def get_only_ids_for_workorder_tasks(nil), do: ""
 
-  defp get_only_ids_for_workorder_tasks(array_of_maps) do
+  def get_only_ids_for_workorder_tasks(array_of_maps) do
     array_of_maps
     |> Enum.map(fn(map) -> map["id"] end)
     |> Enum.join(",")

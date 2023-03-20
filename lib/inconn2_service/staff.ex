@@ -229,7 +229,7 @@ defmodule Inconn2Service.Staff do
     OrgUnit.changeset(org_unit, attrs)
   end
 
-  defp get_role_for_employee(employee, prefix) do
+  def get_role_for_employee(employee, prefix) do
     user = get_user_from_employee(employee.id, prefix)
     case user do
       nil -> Map.put(employee, :role, nil)
@@ -798,29 +798,9 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
-  def get_role_by_name(nil, _prefix), do: []
-
-  def get_role_by_name(name, prefix) do
-    from(r in Role, where: r.name == ^name and r.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def validate_role_name_constraint(cs, prefix) do
-    name = get_change(cs, :name, nil)
-    role_name_list = get_role_by_name(name, prefix)
-    if 0 >= length(role_name_list) do
-      cs
-    else
-      add_error(cs, :name, "Role Name Is Already Taken")
-    end
-  end
-
-
-
   def create_role(attrs \\ %{}, prefix) do
     result = %Role{}
               |> Role.changeset(attrs)
-              |> validate_role_name_constraint(prefix)
               |> inserting_hierarchy_id_to_role(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
@@ -834,7 +814,6 @@ defmodule Inconn2Service.Staff do
     role
     |> Role.changeset(attrs)
     |> inserting_hierarchy_id_to_role(prefix)
-    |> validate_role_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
@@ -1068,34 +1047,15 @@ defmodule Inconn2Service.Staff do
 
   def get_designation!(id, prefix), do: Repo.get!(Designation, id, prefix: prefix)
 
-  def get_designations_by_name(nil, _prefix), do: []
-
-  def get_designations_by_name(name, prefix) do
-    from(d in Designation, where: d.name == ^name and d.active == true)
-    |> Repo.all(prefix: prefix)
-  end
-
-  def validate_designation_name_constraint(cs, prefix) do
-    name = get_change(cs, :name, nil)
-    name_list = get_designations_by_name(name, prefix)
-    if 0 >= length(name_list) do
-      cs
-    else
-      add_error(cs, :name, "Designation Name is already taken")
-    end
-  end
-
   def create_designation(attrs \\ %{}, prefix) do
     %Designation{}
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
   def update_designation(%Designation{} = designation, attrs, prefix) do
     designation
     |> Designation.changeset(attrs)
-    |> validate_designation_name_constraint(prefix)
     |> Repo.update(prefix: prefix)
   end
 
