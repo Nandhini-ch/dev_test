@@ -1,90 +1,10 @@
 defmodule Inconn2Service.FileLoader do
 
-  def make_locations(record) do
-      %{}
-      |> Map.put("name", Map.get(record, "Name"))
-      |> Map.put("description", Map.get(record, "Description"))
-      |> Map.put("location_code", Map.get(record, "Location Code"))
-      |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
-      |> Map.put("site_id", Map.get(record, "Site Id"))
-      |> Map.put("parent_id", Map.get(record, "Parent Id"))
-  end
-
-  def make_asset_categories(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("asset_type", Map.get(record, "Asset Type"))
-    |> Map.put("parent_id", Map.get(record, "Parent Id"))
-  end
-
-  def make_equipments(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("equipment_code", Map.get(record, "Equipment Code"))
-    |> Map.put("location_id", Map.get(record, "Location Id"))
-    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
-    |> Map.put("connections_in", Map.get(record, "Connections In"))
-    |> Map.put("connections_out", Map.get(record, "Connections Out"))
-    |> Map.put("site_id", Map.get(record, "Site Id"))
-    |> Map.put("parent_id", Map.get(record, "Parent Id"))
-  end
-
-  def make_task_lists(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("task_ids", Map.get(record, "Task Ids"))
-    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
-  end
-
-  def make_checks(record) do
-    %{}
-    |> Map.put("label", Map.get(record, "Label"))
-    |> Map.put("type", Map.get(record, "Type"))
-    |> Map.put("check_type_id", Map.get(record, "Check Type Id"))
-  end
-
-  def make_check_lists(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("type", Map.get(record, "Type"))
-    |> Map.put("check_ids", Map.get(record, "Check Ids"))
-  end
-
-  def make_master_task_types(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("description", Map.get(record, "Description"))
-  end
-
-  def make_check_types(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("description", Map.get(record, "Description"))
-  end
-
-  def make_workorder_templates(record) do
-    %{}
-    |> Map.put("name", Map.get(record, "Name"))
-    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
-    |> Map.put("asset_type", Map.get(record, "Asset Type"))
-    |> Map.put("task_list_id", Map.get(record, "Task List Id"))
-    |> Map.put("tasks", Map.get(record, "Tasks"))
-    |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
-    |> Map.put("scheduled", Map.get(record, "Scheduled"))
-    |> Map.put("repeat_every", Map.get(record, "Repeat Every"))
-    |> Map.put("repeat_unit", Map.get(record, "Repeat Unit"))
-    |> Map.put("applicable_start", Map.get(record, "Applicable Start"))
-    |> Map.put("applicable_end", Map.get(record, "Applicable End"))
-    |> Map.put("time_start", Map.get(record, "Time Start"))
-    |> Map.put("time_end", Map.get(record, "Time End"))
-    |> Map.put("create_new", Map.get(record, "Create New"))
-    |> Map.put("max_times", Map.get(record, "Max Times"))
-    |> Map.put("workorder_prior_time", Map.get(record, "Work Order Prior Time"))
-    |> Map.put("workpermit_required", Map.get(record, "Work Permit Required"))
-    |> Map.put("Workpermit_check_list_id", Map.get(record, "Work Permit Check List Id"))
-    |> Map.put("loto_required", Map.get(record, "Loto Required"))
-    |> Map.put("loto_lock_check_list_id", Map.get(record, "Loto Lock Check List Id"))
-    |> Map.put("loto_release_check_list_id", Map.get(record, "Loto Release Check List Id"))
+  def make_zones(record) do
+  %{}
+  |> Map.put("name", Map.get(record, "Name"))
+  |> Map.put("description", Map.get(record, "Description"))
+  |> Map.put("parent_id", Map.get(record, "Parent Id"))
   end
 
   def make_sites(record) do
@@ -101,27 +21,132 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("party_id", Map.get(record, "Party Id"))
     |> Map.put("address", Map.get(record, "Address"))
     |> Map.put("contact", Map.get(record, "Contact"))
+    |> Map.put("zone_id", Map.get(record, "Zone Id"))
   end
 
-  def make_workorder_schedules(record) do
+  def make_asset_categories(record) do
     %{}
-    |> Map.put("workorder_template_id", Map.get(record, "Workorder Template Id"))
-    |> Map.put("asset_id", Map.get(record, "Asset Id"))
+    |> Map.put("name", Map.get(record, "Name"))
     |> Map.put("asset_type", Map.get(record, "Asset Type"))
-    |> Map.put("holidays", Map.get(record, "Holidays"))
-    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
-    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
-    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
-    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
+    |> Map.put("parent_id", Map.get(record, "Parent Id"))
+  end
+
+  def make_locations(record) do
+      %{}
+      |> Map.put("name", Map.get(record, "Name"))
+      |> Map.put("description", Map.get(record, "Description"))
+      |> Map.put("location_code", Map.get(record, "Location Code"))
+      |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+      |> Map.put("site_id", Map.get(record, "Site Id"))
+      |> Map.put("criticality", Map.get(record, "Criticality"))
+      |> Map.put("status", Map.get(record, "Status"))
+      |> Map.put("parent_id", Map.get(record, "Parent Id"))
+  end
+
+  def make_equipments(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("equipment_code", Map.get(record, "Equipment Code"))
+    |> Map.put("location_id", Map.get(record, "Location Id"))
+    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+    |> Map.put("connections_in", Map.get(record, "Connections In"))
+    |> Map.put("connections_out", Map.get(record, "Connections Out"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+    |> Map.put("parent_id", Map.get(record, "Parent Id"))
+    |> Map.put("status", Map.get(record, "Status"))
+    |> Map.put("criticality", Map.get(record, "Criticality"))
+    |> Map.put("tag_name", Map.get(record, "Tag Name"))
+    |> Map.put("description", Map.get(record, "Description"))
+    |> Map.put("function", Map.get(record, "Function"))
+    |> Map.put("asset_owned_by_id", Map.get(record, "Asset Owned By Id"))
+    |> Map.put("is_movable", Map.get(record, "Is Movable"))
+    |> Map.put("department", Map.get(record, "Department"))
+    |> Map.put("asset_manager_id", Map.get(record, "Asset Manager Id"))
+    |> Map.put("maintenance_manager_id", Map.get(record, "Maintenance Manager Id"))
+    |> Map.put("asset_class", Map.get(record, "Asset Class"))
+  end
+
+  def make_check_types(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("description", Map.get(record, "Description"))
+  end
+
+  def make_checks(record) do
+    %{}
+    |> Map.put("label", Map.get(record, "Label"))
+    |> Map.put("check_type_id", Map.get(record, "Check Type Id"))
+    # |> Map.put("type", Map.get(record, "Type"))
+  end
+
+  def make_check_lists(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("type", Map.get(record, "Type"))
+    |> Map.put("check_ids", Map.get(record, "Check Ids"))
+  end
+
+  def make_master_task_types(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("description", Map.get(record, "Description"))
   end
 
   def make_tasks(record) do
+    config =
+      %{}
+      |> Map.put("UOM", Map.get(record, "UOM"))
+      |> Map.put("category", Map.get(record, "Category"))
+      |> Map.put("max_length", Map.get(record, "Max Length"))
+      |> Map.put("min_length", Map.get(record, "Min Length"))
+      |> Map.put("max_value", Map.get(record, "Max Value"))
+      |> Map.put("min_value", Map.get(record, "Min Value"))
+      |> Map.put("threshold_value", Map.get(record, "Threshold Value"))
+      |> Map.put("type", Map.get(record, "Type"))
+      |> Map.put("options", Map.get(record, "Options"))
+
+      %{}
+      |> Map.put("label", Map.get(record, "Label"))
+      |> Map.put("task_type", Map.get(record, "Task Type"))
+      |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
+      |> Map.put("master_task_type_id", Map.get(record, "Master Task Type Id"))
+      |> Map.put("config", config)
+    end
+
+  def make_task_lists(record) do
     %{}
-    |> Map.put("label", Map.get(record, "Label"))
-    |> Map.put("task_type", Map.get(record, "Task Type"))
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("tasks", Map.get(record, "Task Ids"))
+    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+  end
+
+  def make_workorder_templates(record) do
+    %{}
+    |> Map.put("applicable_start", Map.get(record, "Applicable Start"))
+    |> Map.put("applicable_end", Map.get(record, "Applicable End"))
+    |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
+    |> Map.put("asset_type", Map.get(record, "Asset Type"))
+    |> Map.put("create_new", Map.get(record, "Create New"))
     |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
-    |> Map.put("master_task_type_id", Map.get(record, "Master Task Type Id"))
-    |> Map.put("config", Map.get(record, "Config"))
+    |> Map.put("loto_lock_check_list_id", Map.get(record, "Loto Lock Check List Id"))
+    |> Map.put("loto_release_check_list_id", Map.get(record, "Loto Release Check List Id"))
+    |> Map.put("loto_required", Map.get(record, "Loto Required"))
+    |> Map.put("max_times", Map.get(record, "Max Times"))
+    |> Map.put("name", Map.get(record, "Name"))
+    |> Map.put("precheck_list_id", Map.get(record, "Precheck List Id"))
+    |> Map.put("is_precheck_required", Map.get(record, "Precheck Required"))
+    |> Map.put("repeat_every", Map.get(record, "Repeat Every"))
+    |> Map.put("repeat_unit", Map.get(record, "Repeat Unit"))
+    |> Map.put("scheduled", Map.get(record, "Scheduled"))
+    |> Map.put("task_list_id", Map.get(record, "Task List Id"))
+    |> Map.put("time_end", Map.get(record, "Time End"))
+    |> Map.put("time_start", Map.get(record, "Time Start"))
+    |> Map.put("is_workorder_acknowledgement_required", Map.get(record, "Work Order Acknowledgement Required"))
+    |> Map.put("is_workorder_approval_required", Map.get(record, "Work Order Approval Required"))
+    |> Map.put("workorder_prior_time", Map.get(record, "Work Order Prior Time"))
+    |> Map.put("Workpermit_check_list_id", Map.get(record, "Work Permit Check List Id"))
+    |> Map.put("workpermit_required", Map.get(record, "Work Permit Required"))
+    # |> Map.put("tasks", Map.get(record, "Tasks"))
   end
 
   def make_employees(record) do
@@ -142,6 +167,130 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("skills", Map.get(record, "Skills"))
     |> Map.put("org_unit_id", Map.get(record, "Org Unit Id"))
     |> Map.put("party_id", Map.get(record, "Party Id"))
+    |> Map.put("role_id", Map.get(record, "Role Id"))
+  end
+
+  def make_inventory_items(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Item Name"))
+    |> Map.put("part_no", Map.get(record, "Part No"))
+    |> Map.put("item_type", Map.get(record, "Item Type"))
+    |> Map.put("uom_category_id", Map.get(record, "Uom Type Id"))
+    |> Map.put("purchase_unit_of_measurement_id", Map.get(record, "Purchase Unit Uom Id"))
+    |> Map.put("inventory_unit_of_measurement_id", Map.get(record, "Inventory Unit Uom Id"))
+    |> Map.put("consume_unit_of_measurement_id", Map.get(record, "Consume Unit Uom Id"))
+    |> Map.put("unit_price", Map.get(record, "Unit Price"))
+    |> Map.put("minimum_stock_level", Map.get(record, "Minimum Stock Level"))
+    |> Map.put("remarks", Map.get(record, "Remarks"))
+    |> Map.put("asset_category_ids", Map.get(record, "Asset Category Ids"))
+    |> Map.put("is_approval_required", Map.get(record, "Is Approval Required"))
+    |> Map.put("approval_user_id", Map.get(record, "Approve User"))
+  end
+
+  def make_inventory_suppliers(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Supplier Name"))
+    |> Map.put("reference_no", Map.get(record, "Reference Number"))
+    |> Map.put("business_type", Map.get(record, "Business Type"))
+    |> Map.put("website", Map.get(record, "Website"))
+    |> Map.put("gst_no", Map.get(record, "GST Number"))
+    |> Map.put("supplier_code", Map.get(record, "Supplier Code"))
+    |> Map.put("description", Map.get(record, "Description"))
+    |> Map.put("contact_person", Map.get(record, "Contact Person"))
+    |> Map.put("contact_no", Map.get(record, "Contact Number"))
+    |> Map.put("escalation1_contact_name", Map.get(record, "Escalation 1 Contact Name"))
+    |> Map.put("escalation1_contact_no", Map.get(record, "Escalation 1 Contact Number"))
+    |> Map.put("escalation2_contact_name", Map.get(record, "Escalation 2 Contact Name"))
+    |> Map.put("escalation2_contact_no", Map.get(record, "Escalation 2 Contact Number"))
+  end
+
+  def make_unit_of_measurements(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "UOM Name"))
+    |> Map.put("unit", Map.get(record, "Unit"))
+    |> Map.put("uom_category_id", Map.get(record, "UOM Category Type Id"))
+  end
+
+  def make_uom_category(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "UOM Category Name"))
+    |> Map.put("description", Map.get(record, "Description"))
+  end
+
+  ["id", "reference", "Category Name", "Pan Number", "Address Line 1", "Address Line 2", "Country", "State", "City", "Postcode",
+    "First Name", "Last Name", "Designation", "Email", "Mobile", "Landline"
+   ]
+
+  def make_party(record) do
+   address =
+    %{}
+    |> Map.put("address_line1", Map.get(record, "Address Line 1"))
+    |> Map.put("address_line2", Map.get(record, "Address Line 2"))
+    |> Map.put("country", Map.get(record, "Country"))
+    |> Map.put("state", Map.get(record, "State"))
+    |> Map.put("city", Map.get(record, "City"))
+    |> Map.put("postcode", Map.get(record, "Postcode"))
+
+    contact =
+    %{}
+    |> Map.put("first_name", Map.get(record, "First Name"))
+    |> Map.put("last_name", Map.get(record, "Last Name"))
+    |> Map.put("designation", Map.get(record, "Designation"))
+    |> Map.put("email", Map.get(record, "Email"))
+    |> Map.put("mobile", Map.get(record, "Mobile"))
+    |> Map.put("land_line", Map.get(record, "Landline"))
+
+    %{}
+    |> Map.put("company_name", Map.get(record, "Category Name"))
+    |> Map.put("pan_number", Map.get(record, "Pan Number"))
+    |> Map.put("party_type", "SP")
+    |> Map.put("address", address)
+    |> Map.put("contact", contact)
+  end
+
+  def make_contract(record) do
+    %{}
+    |> Map.put("name", Map.get(record, "Contract Name"))
+    |> Map.put("start_date", Map.get(record, "Contract Start Date"))
+    |> Map.put("end_date", Map.get(record, "Contract End Date"))
+    |> Map.put("contract_type", Map.get(record, "Contract Type"))
+    |> Map.put("is_effective_status", Map.get(record, "Effective Status"))
+    |> Map.put("party_id", Map.get(record, "Service Provider Id"))
+  end
+
+  def make_scope(record) do
+    %{}
+    |> Map.put("asset_category_ids", Map.get(record, "Asset Category Ids"))
+    |> Map.put("is_applicable_to_all_asset_category", Map.get(record, "Is Applicable To All Asset Category"))
+    |> Map.put("location_ids", Map.get(record, "Location Ids"))
+    |> Map.put("is_applicable_to_all_location", Map.get(record, "Is Applicable To All Location"))
+    |> Map.put("site_id", Map.get(record, "Site Id"))
+    |> Map.put("contract_id", Map.get(record, "Contract Id"))
+    |> Map.put("name", "scope")
+  end
+
+  def make_workorder_schedules(record) do
+    %{}
+    |> Map.put("workorder_template_id", Map.get(record, "Workorder Template Id"))
+    |> Map.put("asset_id", Map.get(record, "Asset Id"))
+    |> Map.put("asset_type", Map.get(record, "Asset Type"))
+    |> Map.put("holidays", Map.get(record, "Holidays"))
+    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
+    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
+    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
+    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
+  end
+
+  def make_users(record) do
+    %{}
+    |> Map.put("username", Map.get(record, "UserName"))
+    |> Map.put("mobile_no", Map.get(record, "Mobile No"))
+    |> Map.put("email", Map.get(record, "Email"))
+    |> Map.put("role_id", Map.get(record, "Role Id"))
+    |> Map.put("party_id", Map.get(record, "Party Id"))
+    |> Map.put("first_name", Map.get(record, "First Name"))
+    |> Map.put("last_name", Map.get(record, "Last Name"))
+    |> Map.put("password", Map.get(record, "Password"))
   end
 
   def make_org_units(record) do
@@ -236,8 +385,19 @@ defmodule Inconn2Service.FileLoader do
           end
         convert_special_keys_to_required_type(tail, new_map)
 
+        "time" ->
+          new_map =
+            if map[key_name] != "" &&  is_binary(map[key_name]) do
+              [hh, mm, ss] = String.split(map[key_name], ":")
+              {:ok, time} = Time.from_iso8601("#{if String.to_integer(hh) < 10, do: "0#{hh}", else: hh}:#{mm}:#{ss}")
+              Map.put(map, key_name, time)
+            else
+              map
+            end
+          convert_special_keys_to_required_type(tail, new_map)
+
       "boolean" ->
-        value = if map[key_name] == "TRUE", do: true, else: false
+        value = if map[key_name] in ["TRUE", "True", "true"], do: true, else: false
         new_map = Map.put(map, key_name, value)
         convert_special_keys_to_required_type(tail, new_map)
 
@@ -253,29 +413,48 @@ defmodule Inconn2Service.FileLoader do
           submap = Enum.zip(actual_keys, submap_value_list) |> Enum.into(%{})
           new_map = Map.put_new(map, key_name, submap) |> Map.drop([options])
           convert_special_keys_to_required_type(tail, new_map)
+
       "random_json_key_value" ->
         # IO.inspect(map)
         if map["Task Type"] == "IO" || map["Task Type"] == "IM" do
           array =
-            Enum.filter(map["Config"], fn x -> x != "" end)
+            String.split(map["Config"], ";")
+            |> Enum.filter( fn x -> x != "" end)
             |> Enum.map(fn x ->
-                [label, value] = String.split(x, ":")
-                %{"label" => label, "value" => value}
+                [label, value, raise_ticket] = String.split(x, ":")
+                 r_ticket = if raise_ticket in ["TRUE", "True", "true"], do: true, else: false
+                %{"label" => label, "value" => value, "raise_ticket" => r_ticket}
               end)
-          new_map = Map.put(map, "Config", %{"options" => array})
+          # new_map = Map.put(map, "Config", %{"options" => array})
           # IO.inspect(new_map)
+          new_map = Map.put(map, "Options", array)
           convert_special_keys_to_required_type(tail, new_map)
         else
           if map["Task Type"] == "MT" do
-            [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
-            new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
-            convert_special_keys_to_required_type(tail, new_map)
+          new_map =
+          Map.put(map, "Max Value",  String.to_integer(Map.get(map, "Max Value")))
+          |> Map.put("Min Value",   String.to_integer(Map.get(map, "Min Value")))
+
+          convert_special_keys_to_required_type(tail, new_map)
           else
-            [min, max] = String.split(Enum.at(map["Config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
-            new_map = Map.put(map, "Config", %{"min_length" => min, "max_length" => max})
-            # IO.inspect(new_map)
+            new_map =
+             Map.put(map, "Max Length",   String.to_integer(Map.get(map, "Max Length")))
+             |> Map.put("Min Length",   String.to_integer(Map.get(map, "Min Length")))
+
             convert_special_keys_to_required_type(tail, new_map)
           end
+
+
+          # if map["Task Type"] == "MT" do
+          #   [type, uom] = String.split(Enum.at(map["Config"], 0), ":")
+          #   new_map = Map.put(map, "Config", %{"type" => type, "UOM" => uom})
+          #   convert_special_keys_to_required_type(tail, new_map)
+          # else
+          #   [min, max] = String.split(Enum.at(map["Config"], 0), "-") |> Enum.map(fn x -> String.trim(x) |> String.to_integer end)
+          #   new_map = Map.put(map, "Config", %{"min_length" => min, "max_length" => max})
+          #   # IO.inspect(new_map)
+          #   convert_special_keys_to_required_type(tail, new_map)
+          # end
         end
       _ ->
          IO.puts("No Type Match")
@@ -335,5 +514,4 @@ defmodule Inconn2Service.FileLoader do
 
     count == Enum.count(required_fields)
   end
-
 end
