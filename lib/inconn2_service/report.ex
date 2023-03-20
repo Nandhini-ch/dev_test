@@ -477,7 +477,7 @@ defmodule Inconn2Service.Report do
     result =
       Repo.all(date_applied_query, prefix: prefix)
       |> filter_by_site(rectified_query_params["site_id"])
-      |> filter_by_asset_category(convert_list_from_query_params(rectified_query_params["asset_category_ids"]))
+      |> filter_by_asset_category(rectified_query_params["asset_category_id"], prefix)
 
     summary_headers =["Store Location", "Count of receive Tx", "Count of issue Tx"]
 
@@ -511,8 +511,9 @@ defmodule Inconn2Service.Report do
   def filter_by_site(list, nil), do: list
   def filter_by_site(list, site_id), do: Enum.filter(list, fn x -> x.site_id == String.to_integer(site_id) end)
 
-  def filter_by_asset_category(list, []), do: list
-  def filter_by_asset_category(list, asset_category_ids) do
+  def filter_by_asset_category(list, nil, _prefix), do: list
+  def filter_by_asset_category(list, asset_category_id, prefix) do
+    asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     Enum.filter(list, fn x -> Enum.any?(asset_category_ids, &Enum.member?(x.asset_category_ids, &1)) end)
   end
 
