@@ -274,6 +274,34 @@ defmodule Inconn2Service.AssetConfig do
     |> Enum.map(fn x -> Map.fetch!(x, :id) end)
   end
 
+  def get_location_subtree_ids(nil, _perfix), do: []
+  def get_location_subtree_ids(location_id, prefix) do
+    location_id
+    |> get_location!(prefix)
+    |> HierarchyManager.subtree()
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
+  def get_equipment_subtree_ids(nil, _perfix), do: []
+  def get_equipment_subtree_ids(equipment_id, prefix) do
+    equipment_id
+    |> get_equipment!(prefix)
+    |> HierarchyManager.subtree()
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
+  def get_loc_and_eqp_subtree_ids(asset_id, asset_type, prefix) do
+    case asset_type do
+      "L" -> get_location_subtree_ids(asset_id, prefix)
+      "E" -> get_equipment_subtree_ids(asset_id, prefix)
+    end
+  end
+
+
   def list_asset_categories_for_location(location_id, prefix) do
     {locations, equipments} = get_assets_for_location(location_id, prefix)
 
