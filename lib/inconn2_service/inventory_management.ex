@@ -886,7 +886,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp reduce_stock_on_approval({:ok, transaction}, prefix) do
     cond do
-      transaction.status == "ACKP" ->
+      transaction.status == "AP" ->
         reduce_stock(transaction, prefix)
         {:ok, transaction}
 
