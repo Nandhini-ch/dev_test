@@ -404,7 +404,7 @@ defmodule Inconn2Service.InventoryManagement do
     is_approved_statuses = Enum.filter(transaction.transactions, fn x -> x.is_approval_required and x.is_approved == "AP" end)
     cond do
       "APRJ" in statuses or length(is_approved_statuses) > 0 ->
-        Map.put(transaction, :status, "Received Approval")
+        Map.put(transaction, :status, "Rejected")
 
       true ->
         Map.put(transaction, :status, "Created")
