@@ -263,9 +263,10 @@ defmodule Inconn2Service.Report do
   end
 
   def work_status_report(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+
     query_params =
       query_params
-      |> rectify_query_params()
       |> Map.put("asset_ids", AssetConfig.get_loc_and_eqp_subtree_ids(query_params["asset_id"], query_params["asset_type"], prefix))
 
     IO.inspect(query_params)
@@ -1398,7 +1399,7 @@ defmodule Inconn2Service.Report do
   defp rectify_query_params(query_params) do
     Enum.filter(query_params, fn {_key, value} ->
       value != "null"
-    end) |> Enum.into(%{})
+  end) |> Enum.into(%{})
   end
 
   defp get_dates_for_query(nil, nil, site_id, prefix) do
