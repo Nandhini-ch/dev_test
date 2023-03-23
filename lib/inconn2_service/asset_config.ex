@@ -294,7 +294,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Enum.map(fn x -> Map.fetch!(x, :id) end)
   end
 
-  def get_loc_and_eqp_subtree_ids(asset_id, asset_type, prefix) when asset_type != nil and asset_type != nil do
+  def get_loc_and_eqp_subtree_ids(asset_id, asset_type, prefix) when not is_nil(asset_id) and not is_nil(asset_type) do
     case asset_type do
       "L" -> get_location_subtree_ids(asset_id, prefix)
       "E" -> get_equipment_subtree_ids(asset_id, prefix)
