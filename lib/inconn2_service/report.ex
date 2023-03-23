@@ -1396,8 +1396,8 @@ defmodule Inconn2Service.Report do
   end
 
   defp rectify_query_params(query_params) do
-    Enum.filter(query_params, fn {key, value} ->
-      if value != "null", do: {key, value}
+    Enum.filter(query_params, fn {_key, value} ->
+      value != "null"
     end) |> Enum.into(%{})
   end
 
