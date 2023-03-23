@@ -201,6 +201,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       completed_date: work_order.completed_date,
       completed_time: work_order.completed_time,
       status: work_order.status,
+      cost: work_order.cost,
       is_workorder_approval_required: work_order.is_workorder_approval_required,
       workorder_approval_user_id: work_order.workorder_approval_user_id,
       is_workpermit_required: work_order.is_workpermit_required,
