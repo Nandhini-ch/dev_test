@@ -358,9 +358,7 @@ defmodule Inconn2Service.Staff do
     Repo.get(Employee, user.employee_id, prefix: prefix)
   end
 
-  def get_employee_from_user(nil,_prefix) do
-    nil
-  end
+  def get_employee_from_user(nil,_prefix), do: nil
 
   def get_employee_from_user(employee_id, prefix) do
     Repo.get(Employee, employee_id, prefix: prefix)
@@ -444,7 +442,8 @@ defmodule Inconn2Service.Staff do
                       |> validate_skill_ids(prefix)
                       |> Repo.insert(prefix: prefix)
       case employee_set do
-        {:ok, emp_set} -> {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+        {:ok, emp_set} ->
+            {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
         _ -> employee_set
       end
     end
