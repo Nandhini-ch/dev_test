@@ -472,34 +472,137 @@ defmodule Inconn2Service.Staff do
 
   def update_employee(%Employee{} = employee, attrs, prefix) do
     has_login_credentials = Map.get(attrs, "has_login_credentials", false)
-
-    if has_login_credentials == true do
-      employee_set = employee
+    employee_set = employee
                       |> Employee.changeset(attrs)
                       |> validate_skill_ids(prefix)
                       |> validate_role_id(prefix)
                       |> Repo.update(prefix: prefix)
-        case employee_set do
-          {:ok, emp_set} ->
-                  create_employee_user(emp_set, attrs, prefix)
-                  {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
-          _ ->
-                  employee_set
+
+    case employee_set do
+      {:ok, emp_set} ->
+        case update_employee_user(employee.has_login_credentials, has_login_credentials, emp_set, attrs, prefix) do
+          {:ok, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
+          {:deleted, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
+          error -> error
         end
 
-    else
-      employee_set = employee
-                    |> Employee.changeset(attrs)
-                    |> validate_skill_ids(prefix)
-                    |> Repo.update(prefix: prefix)
-      case employee_set do
-          {:ok, emp_set} ->
-                  {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
-          _ ->
-                  employee_set
-      end
+      _ ->
+        employee_set
     end
   end
+
+  def create_employee_user(employee, attrs \\ %{}, prefix) do
+    user = from(u in User, where: u.employee_id == ^employee.id and u.active == false) |> Repo.one(prefix: prefix)
+
+    case user do
+      nil ->
+        user_map = %{
+          "username" => employee.email,
+          "first_name" => employee.first_name,
+          "last_name" => employee.last_name,
+          "email" => employee.email,
+          "mobile_no" => employee.mobile_no,
+          "password" => employee.mobile_no,
+          "password_confirmation" => employee.mobile_no,
+          "party_id" => employee.party_id,
+          "employee_id" => employee.id,
+          "role_id" => attrs["role_id"]
+        }
+
+        %User{}
+        |> User.changeset(user_map)
+        |> Repo.insert(prefix: prefix)
+
+      user ->
+        user_map = %{
+          "username" => employee.email,
+          "first_name" => employee.first_name,
+          "last_name" => employee.last_name,
+          "email" => employee.email,
+          "mobile_no" => employee.mobile_no,
+          "party_id" => employee.party_id,
+          "role_id" => Map.get(attrs, "role_id", user.role_id),
+          "active" => true
+        }
+        user
+        |> User.changeset_update(user_map)
+        |> Repo.update(prefix: prefix)
+    end
+
+  end
+
+  defp update_employee_user(old_has_login, new_has_login, emp_set, attrs, prefix) do
+    cond do
+      old_has_login == false and new_has_login == true ->
+        create_employee_user(emp_set, attrs, prefix)
+
+      old_has_login == true and new_has_login == false ->
+        delete_employee_user(emp_set, prefix)
+
+      old_has_login == true and new_has_login == true ->
+        update_employee_fields_in_user(emp_set, attrs, prefix)
+
+      true ->
+        {:ok, emp_set}
+
+    end
+  end
+
+  def update_employee_fields_in_user(employee, attrs, prefix) do
+    user = from(u in User, where: u.employee_id == ^employee.id and u.active == true) |> Repo.one(prefix: prefix)
+
+    user_map = %{
+      "username" => employee.email,
+      "first_name" => employee.first_name,
+      "last_name" => employee.last_name,
+      "email" => employee.email,
+      "mobile_no" => employee.mobile_no,
+      "party_id" => employee.party_id,
+      "role_id" => Map.get(attrs, "role_id", user.role_id),
+      "active" => true
+    }
+
+    user
+    |> User.changeset_update(user_map)
+    |> Repo.update(prefix: prefix)
+  end
+
+  defp delete_employee_user(emp_set, prefix) do
+    from(u in User, where: u.employee_id == ^emp_set.id and u.active)
+    |> Repo.one!(prefix: prefix)
+    |> delete_user(prefix)
+  end
+
+  # def update_employee(%Employee{} = employee, attrs, prefix) do
+  #   has_login_credentials = Map.get(attrs, "has_login_credentials", false)
+
+  #   if has_login_credentials == true do
+  #     employee_set = employee
+  #                     |> Employee.changeset(attrs)
+  #                     |> validate_skill_ids(prefix)
+  #                     |> validate_role_id(prefix)
+  #                     |> Repo.update(prefix: prefix)
+  #       case employee_set do
+  #         {:ok, emp_set} ->
+  #                 create_employee_user(emp_set, attrs, prefix)
+  #                 {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
+  #         _ ->
+  #                 employee_set
+  #       end
+
+  #   else
+  #     employee_set = employee
+  #                   |> Employee.changeset(attrs)
+  #                   |> validate_skill_ids(prefix)
+  #                   |> Repo.update(prefix: prefix)
+  #     case employee_set do
+  #         {:ok, emp_set} ->
+  #                 {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+  #         _ ->
+  #                 employee_set
+  #     end
+  #   end
+  # end
 
   def delete_employee(%Employee{} = employee, prefix) do
     cond  do
@@ -624,25 +727,6 @@ defmodule Inconn2Service.Staff do
     end
   end
 
-  def create_employee_user(employee, attrs \\ %{}, prefix) do
-      user_map = %{
-        "username" => employee.email,
-        "first_name" => employee.first_name,
-        "last_name" => employee.last_name,
-        "email" => employee.email,
-        "mobile_no" => employee.mobile_no,
-        "password" => employee.mobile_no,
-        "password_confirmation" => employee.mobile_no,
-        "party_id" => employee.party_id,
-        "employee_id" => employee.id,
-        "role_id" => attrs["role_id"]
-      }
-
-      %User{}
-      |> User.changeset(user_map)
-      |> Repo.insert(prefix: prefix)
-  end
-
   def create_licensee_admin(attrs \\ %{}, prefix) do
     %User{}
     |> User.changeset(attrs)
@@ -679,10 +763,10 @@ defmodule Inconn2Service.Staff do
           "Cannot be deleted as there are Alert Configuration associated with it"
         }
 
-      has_employee?(user, prefix) ->
-        {:could_not_delete,
-           "Cannot be deleted as there are Employee associated with it"
-        }
+      # has_employee?(user, prefix) ->
+      #   {:could_not_delete,
+      #      "Cannot be deleted as there are Employee associated with it"
+      #   }
 
       has_category_helpdesk?(user, prefix) ->
         {:could_not_delete,
