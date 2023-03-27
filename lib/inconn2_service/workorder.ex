@@ -1772,6 +1772,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, _work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          create_status_track(work_order, user, prefix)
           result
       _ ->
         result
