@@ -37,6 +37,13 @@ defmodule Inconn2Service.Workorder do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_workorder_templates_by_asset_type(asset_type, prefix)  do
+    WorkorderTemplate
+    |> Repo.add_active_filter()
+    |> where(asset_type: ^asset_type)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
   def get_workorder_template(id, prefix), do: Repo.get(WorkorderTemplate, id, prefix: prefix)
 
