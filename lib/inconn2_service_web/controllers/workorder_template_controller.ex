@@ -7,8 +7,15 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    workorder_templates = Workorder.list_workorder_templates(conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", workorder_templates: workorder_templates)
+    case Map.get(conn.query_params, "asset_type", nil) do
+      nil ->
+        workorder_templates = Workorder.list_workorder_templates(conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", workorder_templates: workorder_templates)
+      asset_type ->
+        workorder_templates = Workorder.list_workorder_templates_by_asset_type(asset_type, conn.assigns.sub_domain_prefix)
+        render(conn, "index.json", workorder_templates: workorder_templates)
+      end
+
   end
 
   def index_assets_and_schedules(conn, %{"site_id" => site_id, "workorder_template_id" => workorder_template_id}) do
