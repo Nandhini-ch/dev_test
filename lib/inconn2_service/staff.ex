@@ -568,8 +568,8 @@ defmodule Inconn2Service.Staff do
   end
 
   defp delete_employee_user(emp_set, prefix) do
-    from(u in User, where: u.employee_id == ^emp_set.id and u.active)
-    |> Repo.one!(prefix: prefix)
+    from(u in User, where: u.employee_id == ^emp_set.id)
+    |> Repo.one(prefix: prefix)
     |> delete_user(prefix)
   end
 
@@ -754,6 +754,10 @@ defmodule Inconn2Service.Staff do
       {:ok, user} -> {:ok, user |> Repo.preload([employee: :org_unit], force: true)}
       _ -> result
     end
+  end
+
+  def delete_user(nil, _prefix) do
+    {:deleted, "No User"}
   end
 
   def delete_user(%User{} = user, prefix) do
