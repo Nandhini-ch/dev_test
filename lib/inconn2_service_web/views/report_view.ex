@@ -4,6 +4,7 @@ defmodule Inconn2ServiceWeb.ReportView do
 
   def render("work_order_report.json", %{work_order_info: work_order_info, summary: summary}) do
     IO.inspect("213683704238")
+
     %{
       data: work_order_info,
       summary: summary
@@ -53,19 +54,34 @@ defmodule Inconn2ServiceWeb.ReportView do
       id: wo.id,
       site: wo.site.name,
       workorder_template: wo.workorder_template.name,
-      asset: wo.asset.name,
+      asset: wo.asset_name,
+      status: wo.status,
       tasks: render_many(wo.tasks, WorkorderTaskView, "workorder_task_with_task.json")
     }
   end
 
   def render("exec_meter.json", %{report: wo}) do
     %{
-      date: wo.recorded_date_time,
+      wo_number: wo.id,
+      scheduled_date: wo.scheduled_date,
       site: wo.site.name,
-      asset: wo.asset,
+      asset: wo.asset_name,
       asset_code: wo.asset_code,
       done_by: wo.done_by,
-      within_range: nil
+      uom: wo.metering_task.task.config["UOM"],
+      measured_value: wo.metering_task.response["answers"],
+      within_range:
+        if(wo.metering_task.response["answers"] == nil,
+          do: nil,
+          else:
+            wo.metering_task.response["answers"] in String.to_integer(
+              wo.metering_task.task.config["min_value"]
+            )..String.to_integer(
+              wo.metering_task.task.config[
+                "max_value"
+              ]
+            )
+        )
     }
   end
 
