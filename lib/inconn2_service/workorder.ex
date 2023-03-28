@@ -1453,6 +1453,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          create_status_track(work_order, user, prefix)
           delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
           calculate_work_order_cost(updated_work_order, prefix)
@@ -1771,6 +1772,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, _work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          create_status_track(work_order, user, prefix)
           result
       _ ->
         result
@@ -1980,8 +1982,9 @@ defmodule Inconn2Service.Workorder do
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-      _ ->
-        IO.inspect("No Track")
+      status ->
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
     end
     {:ok, work_order}
   end
