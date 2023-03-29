@@ -45,12 +45,12 @@ defmodule Inconn2ServiceWeb.ReportController do
         |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.pdf\"")
         |> send_resp(200, result)
 
-      # "csv" ->
-      #   csv = result |> CSV.encode() |> Enum.to_list() |> to_string
-      #   conn
-      #   |> put_resp_content_type("text/csv")
-      #   |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.csv\"")
-      #   |> send_resp(200, csv)
+      "csv" ->
+        csv = result |> CSV.encode() |> Enum.to_list() |> to_string
+        conn
+        |> put_resp_content_type("text/csv")
+        |> put_resp_header("content-disposition", "attachment; filename=\"work_order_report.csv\"")
+        |> send_resp(200, csv)
 
        _ ->
         case conn.query_params["task_type"] do

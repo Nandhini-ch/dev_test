@@ -37,13 +37,15 @@ defmodule Inconn2Service.Report do
    case query_params["type"] do
     "pdf" ->
       convert_to_pdf("Work Order Execution Report", filters, readings, [], "WOE")
+    "csv" ->
+        csv_for_workorder_execution(readings)
     _ ->
     readings
    end
   end
 
   def work_order_execution_report_metering(workorders, filters, query_params, prefix) do
-   report_headers = ["Date", "Asset Name", "Asset Code", "Measured Value", "Unit of measurement", "Done by", "Within Range"]
+   report_headers = ["Date", "WO Number", "Asset Name", "Asset Code", "Measured Value", "Unit of measurement",  "Within Range", "Done by"]
 
    readings =
     Enum.reduce(workorders, [], fn wo, acc ->
@@ -60,6 +62,9 @@ defmodule Inconn2Service.Report do
         report_headers,
         "WOEM"
       )
+
+      "csv" ->
+        csv_for_workorder_execution_metering(report_headers, readings)
 
     _ ->
       readings
@@ -1921,20 +1926,20 @@ defmodule Inconn2Service.Report do
     Enum.map(report_body_json, fn rbj ->
       [
         :tr,
-        # [
-        #   :td,
-        #   %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-        #   rbj.reorded_date_time
-        # ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.asset_name
+          rbj.scheduled_date
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.asset_code
+          rbj.id
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          rbj.asset_name
         ],
         [
           :td,
@@ -1949,7 +1954,22 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.task.config["UOM"]
+          rbj.metering_task.task.config["UOM"]
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          if(rbj.metering_task.response["answers"] == nil,
+          do: nil,
+          else:
+            rbj.metering_task.response["answers"] in String.to_integer(
+              rbj.metering_task.task.config["min_value"]
+            )..String.to_integer(
+              rbj.metering_task.task.config[
+                "max_value"
+              ]
+            )
+        )
         ],
         [
           :td,
@@ -2280,6 +2300,69 @@ defmodule Inconn2Service.Report do
         ],
       ]
     end)
+  end
+
+  defp csv_for_workorder_execution(data) do
+    Enum.reduce(data, [], fn d, acc ->
+      head = [["WO Number: #{d.id}", "WO Status: #{d.status}", "Asset: #{d.asset_name}"]] ++ [[]]
+      task_head = [["Sl.No", "Description", "Response", "Remarks"]]
+
+      body =
+        Enum.map(d.tasks, fn t ->
+          case t.task.task_type do
+            "IO" ->
+              [
+                t.id,
+                t.task.label,
+                Enum.find(t.task.config["options"], fn con ->
+                  con["value"] == t.response["answers"]
+                end)["label"],
+                t.remarks
+              ]
+
+            "MT" ->
+              [
+                t.id,
+                t.task.label,
+                "Metering: #{t.response["answers"]}",
+                t.remarks
+              ]
+
+            "OB" ->
+              [
+                t.id,
+                t.task.label,
+                "Observation: #{t.response["answers"]}",
+                t.remarks
+              ]
+          end
+        end)
+
+      res = head ++ task_head ++ body ++ [[]] ++ [[]]
+      acc ++ res
+    end)
+  end
+
+  defp csv_for_workorder_execution_metering(report_headers, data) do
+    body =
+      Enum.map(data, fn rbj ->
+        [rbj.scheduled_date, rbj.id, rbj.asset_name, rbj.asset_code, rbj.metering_task.response["answers"], rbj.metering_task.task.config["UOM"],
+        if(rbj.metering_task.response["answers"] == nil,
+            do: nil,
+            else:
+              rbj.metering_task.response["answers"] in String.to_integer(
+                rbj.metering_task.task.config["min_value"]
+              )..String.to_integer(
+                rbj.metering_task.task.config[
+                  "max_value"
+                ]
+              )
+          ),
+         rbj.done_by, nil
+        ]
+      end)
+
+    [report_headers] ++ body
   end
 
   defp csv_for_workorder_report(report_headers, data) do
