@@ -33,7 +33,7 @@ defmodule Inconn2Service.Report do
 
   def all_work_order_execution_report(work_orders, filters, query_params, prefix) do
    readings =
-     work_orders |> Enum.map(fn wo -> get_work_order_tasks(wo, prefix) end)
+     work_orders |> Enum.map(fn wo -> get_work_order_tasks(wo, prefix) end) |> Enum.sort_by(&(&1.id), :desc)
    case query_params["type"] do
     "pdf" ->
       convert_to_pdf("Work Order Execution Report", filters, readings, [], "WOE")
@@ -52,6 +52,7 @@ defmodule Inconn2Service.Report do
       acc ++ get_metering_work_order_tasks(wo, prefix, query_params["uom"])
     end)
     |> Enum.map(fn wo -> put_done_by_in_readings(wo, prefix) end)
+    |> Enum.sort_by(&(&1.id), :desc)
 
    case query_params["type"] do
     "pdf" ->
@@ -2317,6 +2318,19 @@ defmodule Inconn2Service.Report do
                 Enum.find(t.task.config["options"], fn con ->
                   con["value"] == t.response["answers"]
                 end)["label"],
+                t.remarks
+              ]
+
+            "IM" ->
+              [
+                t.id,
+                t.task.label,
+                Enum.map(t.response["answers"], fn ans ->
+                  Enum.find(t.task.config["options"], fn con ->
+                    con["value"] == ans
+                  end)["label"]
+                end)
+                |> Enum.join(", "),
                 t.remarks
               ]
 
