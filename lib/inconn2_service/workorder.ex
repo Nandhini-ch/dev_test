@@ -37,6 +37,13 @@ defmodule Inconn2Service.Workorder do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_workorder_templates_by_asset_type(asset_type, prefix)  do
+    WorkorderTemplate
+    |> Repo.add_active_filter()
+    |> where(asset_type: ^asset_type)
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_workorder_template!(id, prefix), do: Repo.get!(WorkorderTemplate, id, prefix: prefix)
   def get_workorder_template(id, prefix), do: Repo.get(WorkorderTemplate, id, prefix: prefix)
 
@@ -1446,11 +1453,12 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          create_status_track(work_order, user, prefix)
           delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
           record_meter_readings(work_order, updated_work_order, prefix)
+          calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
-          calculate_work_order_cost(work_order, prefix)
           wo = get_work_order!(updated_work_order.id, prefix)
           {:ok, put_approval_user(wo, wo.status, prefix)}
       _ ->
@@ -1764,6 +1772,7 @@ defmodule Inconn2Service.Workorder do
     case result do
       {:ok, _work_order} ->
           # auto_update_workorder_task(work_order, prefix)
+          create_status_track(work_order, user, prefix)
           result
       _ ->
         result
@@ -1973,8 +1982,9 @@ defmodule Inconn2Service.Workorder do
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "cr", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => "as", "user_id" => user.id, "date" => date, "time" => time}, prefix)
         create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => work_order.status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
-      _ ->
-        IO.inspect("No Track")
+      status ->
+        {date, time} = get_date_time_for_site(work_order, prefix)
+        create_workorder_status_track(%{"work_order_id" => work_order.id, "status" => status, "user_id" => user.id, "date" => date, "time" => time}, prefix)
     end
     {:ok, work_order}
   end
@@ -3590,10 +3600,34 @@ defmodule Inconn2Service.Workorder do
   defp calculate_work_order_cost(work_order, prefix) do
     cond do
       work_order.status == "cp" ->
-        Elixir.Task.start(fn -> calculate_cost(work_order, prefix) end)
+        Elixir.Task.start(fn -> calculate_cost_by_template(work_order, prefix) end)
       true ->
         {:ok, work_order}
     end
+  end
+
+   def calculate_cost_by_template(work_order, prefix) do
+    workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
+    cost = calculate_materials_cost_by_template(workorder_template) + calculate_manpower_cost_by_template(workorder_template)
+    update_work_order_without_pipelines(work_order, %{"cost" => cost}, prefix)
+  end
+
+  def calculate_materials_cost_by_template(workorder_template) do
+    workorder_template.materials
+    |> Enum.map(fn x -> x["cost"] * x["quantity"] end)
+    |> Enum.sum()
+  end
+
+  def calculate_manpower_cost_by_template(workorder_template) do
+    workorder_template.manpower
+    |> Enum.map(fn x -> (x["cost"] / 30) * x["count"] end)
+    |> Enum.sum()
+  end
+
+  def update_work_order_without_pipelines(%WorkOrder{} = work_order, attrs, prefix) do
+    work_order
+      |> WorkOrder.changeset(attrs)
+      |> Repo.update(prefix: prefix)
   end
 
   defp calculate_cost(work_order, prefix) do
