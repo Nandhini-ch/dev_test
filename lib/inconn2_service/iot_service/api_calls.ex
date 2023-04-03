@@ -1,5 +1,5 @@
 defmodule Inconn2Service.IotService.ApiCalls do
-  @base_url "http://192.168.0.173:5000/api/inconn"
+  @base_url "http://localhost:5000/api/inconn"
 
   def asset_ids_of_meters_and_sensors(site_id, prefix) do
     get_request(

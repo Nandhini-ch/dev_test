@@ -552,5 +552,17 @@ defmodule Inconn2ServiceWeb.Router do
     scope "/iot_service", IotService do
       get "/assets_of_meters_and_sensors", AssetController, :assets_of_meters_and_sensors
     end
+
+  end
+
+  scope "/api", Inconn2ServiceWeb do
+    pipe_through :api
+
+    scope "/iot", IotService do
+      post "/send_alerts", AlertController, :send_alert
+      post "/send_sms", AlertController, :send_sms
+      post "/send_emails", AlertController, :send_email
+      post "/create_work_orders", AlertController, :create_work_order
+    end
   end
 end
