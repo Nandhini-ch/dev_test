@@ -22,6 +22,8 @@ defmodule Inconn2ServiceWeb.LocationView do
     %{
       id: location.id,
       name: location.name,
+      is_iot_enabled: location.is_iot_enabled,
+      iot_details: location.iot_details,
       description: location.description,
       location_code: location.location_code,
       site_id: location.site_id,
@@ -60,6 +62,8 @@ defmodule Inconn2ServiceWeb.LocationView do
     %{
       id: location.id,
       name: location.name,
+      is_iot_enabled: location.is_iot_enabled,
+      iot_details: location.iot_details,
       description: location.description,
       location_code: location.location_code,
       site_id: location.site_id,
@@ -75,6 +79,8 @@ defmodule Inconn2ServiceWeb.LocationView do
     %{
       id: location.id,
       name: location.name,
+      is_iot_enabled: location.is_iot_enabled,
+      iot_details: location.iot_details,
       description: location.description,
       location_code: location.location_code,
       site_id: location.site_id,
