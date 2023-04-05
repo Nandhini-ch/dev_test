@@ -88,5 +88,4 @@ defmodule Inconn2Service.Email do
   def send_email_iot_alert(params) do
     EmailSender.send_email(params["name"], params["email"], params["subject_string"], params["body_string"])
   end
-
 end

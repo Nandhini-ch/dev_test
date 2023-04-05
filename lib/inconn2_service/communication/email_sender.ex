@@ -9,6 +9,7 @@ defmodule Inconn2Service.Communication.EmailSender do
   def send_email(name, email, subject_string, body_string) do
     GenServer.cast(__MODULE__, {:send_email, {name, email, subject_string, body_string}})
   end
+
   def init(_args) do
     {:ok, []}
   end
