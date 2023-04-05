@@ -33,7 +33,6 @@ defmodule Inconn2ServiceWeb.WorkorderCheckController do
   def update(conn, %{"id" => id, "workorder_check" => workorder_check_params}) do
     workorder_check = Workorder.get_workorder_check!(id, conn.assigns.sub_domain_prefix)
     IO.inspect(workorder_check)
-    IO.puts("$$$$$$$$$$$$$$$$$$$$$$$$$")
     with {:ok, %WorkorderCheck{} = workorder_check} <- Workorder.update_workorder_check(workorder_check, workorder_check_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", workorder_check: workorder_check)
     end
