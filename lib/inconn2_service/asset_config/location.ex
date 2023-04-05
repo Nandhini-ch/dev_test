@@ -13,7 +13,7 @@ defmodule Inconn2Service.AssetConfig.Location do
     belongs_to :site, Site
     field :qr_code, Ecto.UUID, autogenerate: true
     field :status, :string, default: "ON"
-    field :is_iot_enabled, :boolean
+    field :is_iot_enabled, :boolean, default: false
     field :iot_details, :map, default: %{}
     field :criticality, :integer, default: 5
     field :parent_id, :integer, virtual: true

@@ -1,6 +1,6 @@
 defmodule Inconn2ServiceWeb.AssetView do
   use Inconn2ServiceWeb, :view
-  alias Inconn2ServiceWeb.AssetView
+  # alias Inconn2ServiceWeb.AssetView
   alias Inconn2ServiceWeb.{EquipmentView, LocationView}
 
   def render("location_render.json", %{location: asset}) do
