@@ -16,6 +16,4 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldToUserWidgetConfigs do
       add :is_iot_enabled, :boolean
     end
   end
-
-
 end
