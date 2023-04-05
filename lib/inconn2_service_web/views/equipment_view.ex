@@ -31,6 +31,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{
       id: equipment.id,
       name: equipment.name,
+      is_iot_enabled: equipment.is_iot_enabled,
+      iot_details: equipment.iot_details,
       equipment_code: equipment.equipment_code,
       location_id: equipment.location_id,
       site_id: equipment.site_id,
@@ -55,6 +57,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{
       id: equipment.id,
       name: equipment.name,
+      is_iot_enabled: equipment.is_iot_enabled,
+      iot_details: equipment.iot_details,
       equipment_code: equipment.equipment_code,
       location_id: equipment.location_id,
       site_id: equipment.site_id,
@@ -83,6 +87,8 @@ defmodule Inconn2ServiceWeb.EquipmentView do
     %{
       id: equipment.id,
       name: equipment.name,
+      is_iot_enabled: equipment.is_iot_enabled,
+      iot_details: equipment.iot_details,
       equipment_code: equipment.equipment_code,
       location_id: equipment.location_id,
       site_id: equipment.site_id,
