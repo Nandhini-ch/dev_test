@@ -22,7 +22,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     field :function, :string
     field :asset_owned_by_id, :integer
     field :is_movable, :boolean
-    field :is_iot_enabled, :boolean
+    field :is_iot_enabled, :boolean, default: false
     field :iot_details, :map, default: %{}
     field :department, :string
     field :asset_manager_id, :integer
