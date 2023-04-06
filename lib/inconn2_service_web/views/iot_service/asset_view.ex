@@ -15,4 +15,8 @@ defmodule Inconn2ServiceWeb.IotService.AssetView do
       asset_type: asset.asset_type,
       asset_name: asset.name}
   end
+
+  def render("success.json", %{data: data}) do
+    %{data: data}
+  end
 end
