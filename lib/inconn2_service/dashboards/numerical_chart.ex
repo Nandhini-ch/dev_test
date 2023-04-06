@@ -577,8 +577,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     from_date = Date.add(to_date, -7)
     params = %{
       "site_id" => site_id,
-      "from_date" => from_date,
-      "to_date" => to_date,
+      "from_date" => from_date |> Date.to_iso8601(),
+      "to_date" => to_date |> Date.to_iso8601(),
       "asset_ids" => Helpers.get_assets_for_dashboards(site_id, "E", prefix) |> Enum.map(&(&1.id))
     }
     apply(DashboardCharts, chart_func, [params, prefix])
