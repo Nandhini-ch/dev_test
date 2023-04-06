@@ -17,6 +17,7 @@ defmodule Inconn2ServiceWeb.UserWidgetConfigView do
       title: user_widget_config.widget.title,
       description: user_widget_config.widget.description,
       position: user_widget_config.position,
+      size: user_widget_config.size,
       user_id: user_widget_config.user_id}
   end
 end

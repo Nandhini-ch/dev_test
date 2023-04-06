@@ -83,4 +83,5 @@ defmodule Inconn2Service.Email do
         Kindly note that this is a system generated E-mail and this ID is not monitored, Please do not reply
     """
   end
+
 end
