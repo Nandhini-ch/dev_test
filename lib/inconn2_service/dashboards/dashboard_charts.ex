@@ -167,7 +167,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                       prefix)
       |> change_nil_to_zero()
 
-      area_in_sqft = change_nil_to_one(config["area"])
+      area_in_sqft = change_nil_to_one(config["area_in_sqft"])
       epi = energy_consumption / area_in_sqft
 
     %{
