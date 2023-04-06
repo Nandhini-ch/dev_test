@@ -43,7 +43,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     |> cast(attrs, [:name, :equipment_code, :is_iot_enabled, :iot_details, :parent_id, :asset_category_id, :status, :criticality, :site_id, :location_id, :connections_in, :connections_out, :active,
                               :tag_name, :description, :function, :asset_owned_by_id, :is_movable, :department, :asset_manager_id, :maintenance_manager_id, :created_on,
                               :asset_class, :custom])
-    |> validate_required([:name, :equipment_code, :is_iot_enabled, :iot_details, :asset_category_id, :site_id, :location_id])
+    |> validate_required([:name, :equipment_code, :asset_category_id, :site_id, :location_id])
     |> validate_inclusion(:status, ["ON", "OFF", "BRK", "PRS", "TRN", "WRO"])
     |> validate_inclusion(:criticality, [1, 2, 3, 4, 5])
     |> assoc_constraint(:site)

@@ -27,7 +27,7 @@ defmodule Inconn2Service.AssetConfig.Location do
   def changeset(location, attrs) do
     location
     |> cast(attrs, [:name, :description, :is_iot_enabled, :iot_details, :location_code, :asset_category_id, :site_id, :status, :criticality, :parent_id, :active])
-    |> validate_required([:name, :location_code, :iot_details, :asset_category_id, :site_id, :is_iot_enabled])
+    |> validate_required([:name, :location_code, :asset_category_id, :site_id])
     |> validate_inclusion(:status, ["ON", "OFF", "BRK", "PRS", "TRN", "WRO"])
     |> validate_inclusion(:criticality, [1, 2, 3, 4, 5])
     |> assoc_constraint(:site)
