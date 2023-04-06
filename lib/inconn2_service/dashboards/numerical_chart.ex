@@ -98,6 +98,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(energy_consumption),
       chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_consumption, prefix),
       unit: "kWh",
+      size: widget_config.size,
       type: get_chart_type("ENCON", widget_config.size)
     }
   end
@@ -110,6 +111,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(energy_consumption * cost_per_unit),
       chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_cost, prefix),
       unit: "INR",
+      size: widget_config.size,
       type: get_chart_type("ENCOS", widget_config.size)
     }
   end
@@ -122,6 +124,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(energy_consumption / area),
       chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_performance_indicator, prefix),
       unit: "kWh/sqft",
+      size: widget_config.size,
       type: get_chart_type("ENPEI", widget_config.size)
     }
   end
