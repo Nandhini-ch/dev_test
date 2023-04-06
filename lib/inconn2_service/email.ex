@@ -1,7 +1,6 @@
 defmodule Inconn2Service.Email do
   import Swoosh.Email
   import Inconn2Service.Util.HelpersFunctions
-  alias Inconn2Service.Communication.EmailSender
 
   def send_ticket_complete_email(id, email, name, remarks, date_time, prefix) do
     new()
@@ -85,7 +84,4 @@ defmodule Inconn2Service.Email do
     """
   end
 
-  def send_email_iot_alert(params) do
-    EmailSender.send_email(params["name"], params["email"], params["subject_string"], params["body_string"])
-  end
 end
