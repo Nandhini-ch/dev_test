@@ -574,7 +574,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def switch_widget_type(site_id, 2, chart_func, prefix) do
     to_date = get_site_date_now(site_id, prefix)
-    from_date = NaiveDateTime.add(to_date, -604800)
+    from_date = Date.add(to_date, -7)
     params = %{
       "site_id" => site_id,
       "from_date" => from_date,
