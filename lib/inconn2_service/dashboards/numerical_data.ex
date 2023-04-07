@@ -34,6 +34,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
 
       Enum.all?(assets, &(is_map(&1))) ->
         get_energy_consumption_for_assets_with_iot(assets, from_dt, to_dt, prefix)
+        |> Enum.reject(&is_nil/1)
+        |> Enum.sum()
 
       true ->
         0
