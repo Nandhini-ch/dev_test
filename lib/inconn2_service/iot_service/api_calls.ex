@@ -7,6 +7,19 @@ defmodule Inconn2Service.IotService.ApiCalls do
       %{licensee_prefix: prefix, site_id: site_id})
   end
 
+  def get_energy_consumption_for_asset(asset_id, asset_type, from_dt, to_dt, prefix) do
+    params =
+      %{
+        "asset_id" => asset_id,
+        "asset_type" => asset_type,
+        "from_dt" => from_dt,
+        "to_dt" => to_dt,
+        "licensee_prefix" => prefix
+      }
+
+    get_request(@base_url <> "/energy_meter_reading", params)
+  end
+
   defp get_request(url, params) do
     headers = ["Accept": "Application/json; Charset=utf-8"]
     {:ok, response} = HTTPoison.get(url, headers, [params: params])

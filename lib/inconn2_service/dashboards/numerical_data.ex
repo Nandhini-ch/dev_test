@@ -2,6 +2,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   import Ecto.Query, warn: false
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
+  alias Inconn2Service.IotService.ApiCalls
   alias Inconn2Service.Repo
 
   alias Inconn2Service.AssetConfig
@@ -19,15 +20,41 @@ defmodule Inconn2Service.Dashboards.NumericalData do
 
 
   def get_energy_consumption_for_assets(nil, _from_dt, _to_dt, _prefix), do: 0
-  def get_energy_consumption_for_assets(asset_ids, from_dt, to_dt, prefix) do
-    query = from mr in MeterReading,
-                  where: mr.asset_id in ^asset_ids and
+  def get_energy_consumption_for_assets(assets, from_dt, to_dt, prefix) do
+    cond do
+      Enum.all?(assets, &(is_integer(&1))) ->
+        query = from mr in MeterReading,
+                  where: mr.asset_id in ^assets and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
-    Repo.one(query, prefix: prefix)
+        Repo.one(query, prefix: prefix)
+
+      Enum.all?(assets, &(is_map(&1))) ->
+        get_energy_consumption_for_assets_with_iot(assets, from_dt, to_dt, prefix)
+
+      true ->
+        0
+    end
+  end
+
+  def get_energy_consumption_for_assets_with_iot(assets, from_dt, to_dt, prefix) do
+    Enum.map(assets, fn asset_map ->
+      if asset_map["iot"] do
+        get_energy_consumption_of_iot_asset(asset_map["id"], from_dt, to_dt, prefix)
+      else
+        query = from mr in MeterReading,
+                  where: mr.asset_id == ^asset_map["id"] and
+                        mr.asset_type == "E" and
+                        mr.meter_type == "E" and
+                        mr.recorded_date_time >= ^from_dt and
+                        mr.recorded_date_time <= ^to_dt,
+                  select: sum(mr.absolute_value)
+        Repo.one(query, prefix: prefix)
+      end
+    end)
   end
 
   def get_water_consumption_for_assets(nil, _from_dt, _to_dt, _prefix), do: 0
@@ -54,15 +81,30 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     Repo.one(query, prefix: prefix)
   end
 
-  def get_energy_consumption_for_asset(asset_id, from_dt, to_dt, prefix) do
+  def get_energy_consumption_for_asset(asset, from_dt, to_dt, prefix) when is_integer(asset) do
     query = from mr in MeterReading,
-                  where: mr.asset_id == ^asset_id and
+                  where: mr.asset_id == ^asset and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
     Repo.one(query, prefix: prefix)
+  end
+
+  def get_energy_consumption_for_asset(asset, from_dt, to_dt, prefix) when is_map(asset) do
+    if asset["iot"] do
+      get_energy_consumption_of_iot_asset(asset["id"], from_dt, to_dt, prefix)
+    else
+      query = from mr in MeterReading,
+                where: mr.asset_id == ^asset["id"] and
+                      mr.asset_type == "E" and
+                      mr.meter_type == "E" and
+                      mr.recorded_date_time >= ^from_dt and
+                      mr.recorded_date_time <= ^to_dt,
+                select: sum(mr.absolute_value)
+      Repo.one(query, prefix: prefix)
+    end
   end
 
   def get_water_consumption_for_asset(asset_id, from_dt, to_dt, prefix) do
@@ -466,5 +508,9 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     from(i in InventoryItem, where: ^params["asset_category_id"] in i.asset_category_ids,
         join: s in SiteStock, on: s.inventory_item_id == i.id and s.site_id == ^params["site_id"], select: s)
         |> Repo.all(prefix: prefix)
+  end
+
+  def get_energy_consumption_of_iot_asset(asset_id, from_dt, to_dt, prefix) do
+    ApiCalls.get_energy_consumption_for_asset(asset_id, "E", from_dt, to_dt, prefix)
   end
 end
