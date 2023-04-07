@@ -76,9 +76,9 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   defp match_arguments(code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, prefix) do
     case code do
-      "ENCON" -> [energy_consumption, site_id, widget_config, prefix]
-      "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"]), site_id, widget_config, prefix]
-      "ENPEI" -> [energy_consumption, change_nil_to_one(config["area_in_sqft"]), site_id, widget_config, prefix]
+      "ENCON" -> [energy_consumption, site_id, config, widget_config, prefix]
+      "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"]), site_id, config, widget_config, prefix]
+      "ENPEI" -> [energy_consumption, change_nil_to_one(config["area_in_sqft"]), site_id, config, widget_config, prefix]
       "ENTOP" -> [site_id, config, prefix]
       "WACON" -> [water_consumption]
       "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"])]
@@ -90,39 +90,39 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     end
   end
 
-  def energy_consumption_data(energy_consumption, site_id, widget_config, prefix) do
+  def energy_consumption_data(energy_consumption, site_id, config, widget_config, prefix) do
     %{
       id: 1,
       key: "ENCON",
       name: "Energy Consumption",
       displayTxt: convert_to_ceil_float(energy_consumption),
-      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_consumption, prefix),
+      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_consumption, config, prefix),
       unit: "kWh",
       size: widget_config.size,
       type: get_chart_type("ENCON", widget_config.size)
     }
   end
 
-  def energy_cost_data(energy_consumption, cost_per_unit, site_id, widget_config, prefix) do
+  def energy_cost_data(energy_consumption, cost_per_unit, site_id, config, widget_config, prefix) do
     %{
       id: 2,
       key: "ENCOS",
       name: "Energy Cost",
       displayTxt: convert_to_ceil_float(energy_consumption * cost_per_unit),
-      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_cost, prefix),
+      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_cost, config, prefix),
       unit: "INR",
       size: widget_config.size,
       type: get_chart_type("ENCOS", widget_config.size)
     }
   end
 
-  def epi_data(energy_consumption, area, site_id, widget_config, prefix) do
+  def epi_data(energy_consumption, area, site_id, config, widget_config, prefix) do
     %{
       id: 3,
       key: "ENPEI",
       name: "Energy performance Indicator (EPI)",
       displayTxt: convert_to_ceil_float(energy_consumption / area),
-      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_performance_indicator, prefix),
+      chart_data: switch_widget_type(site_id, widget_config.size, :get_energy_performance_indicator, config, prefix),
       unit: "kWh/sqft",
       size: widget_config.size,
       type: get_chart_type("ENPEI", widget_config.size)
@@ -575,7 +575,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       ]
   end
 
-  def switch_widget_type(site_id, 2, chart_func, prefix) do
+  def switch_widget_type(site_id, 2, chart_func, _config, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -7)
     params = %{
@@ -583,11 +583,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "from_date" => from_date |> Date.to_iso8601(),
       "to_date" => to_date |> Date.to_iso8601(),
       "asset_ids" => Helpers.get_assets_for_dashboards(site_id, "E", prefix) |> Enum.map(&(&1.id))
+      # "asset_ids" => config["energy_main_meters"]
     }
     apply(DashboardCharts, chart_func, [params, prefix])
   end
 
-  def switch_widget_type(_site_id, _size, _chart_func, _prefix), do: nil
+  def switch_widget_type(_site_id, _size, _chart_func, _config, _prefix), do: nil
 
   def get_chart_type("ENCON", 2), do: 4
   def get_chart_type("ENCOS", 2), do: 4
