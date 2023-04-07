@@ -484,6 +484,7 @@ defmodule Inconn2Service.Common do
       ** (Ecto.NoResultsError)
 
   """
+  def get_alert_notification_reserve!(0), do: nil
   def get_alert_notification_reserve!(id), do: Repo.get!(AlertNotificationReserve, id)
 
   def get_alert_by_code(code), do: Repo.get_by(AlertNotificationReserve, [code: code])

@@ -2,7 +2,8 @@ defmodule Inconn2ServiceWeb.IotService.AlertController do
   use Inconn2ServiceWeb, :controller
   alias Inconn2Service.IotService.Alert
 
-  def send_alert(conn, %{"alert_params" => _alert_params}) do
+  def send_alert_notifications(conn, %{"alert_notification_params" => alert_notification_params}) do
+    Alert.send_alert_and_notification(alert_notification_params, conn.assigns.sub_domain_prefix)
     render(conn, "alert.json", data: %{"result" => "success"})
   end
 
@@ -15,7 +16,8 @@ defmodule Inconn2ServiceWeb.IotService.AlertController do
     render(conn, "alert.json", data: %{"result" => "success"})
   end
 
-  def create_work_order(conn, %{"work_order_params" => _work_order_params}) do
-    render(conn, "alert.json", data: [])
+  def create_work_order(conn, %{"work_order_params" => work_order_params}) do
+    Alert.create_work_order(work_order_params, conn.assigns.sub_domain_prefix)
+    render(conn, "alert.json", data: %{"result" => "success"})
   end
 end
