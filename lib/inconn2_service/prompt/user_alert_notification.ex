@@ -1,4 +1,3 @@
-
 defmodule Inconn2Service.Prompt.UserAlertNotification do
   use Ecto.Schema
   import Ecto.Changeset
