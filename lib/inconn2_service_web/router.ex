@@ -560,7 +560,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     scope "/iot", IotService do
       post "/add_device_to_asset", AssetController, :add_device_to_asset
-      post "/send_alerts", AlertController, :send_alert
+      post "/send_alert_notification", AlertController, :send_alert_notifications
       post "/send_sms", AlertController, :send_sms
       post "/send_emails", AlertController, :send_email
       post "/create_work_orders", AlertController, :create_work_order
