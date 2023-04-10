@@ -8,13 +8,14 @@ defmodule Inconn2Service.IotService.ApiCalls do
   end
 
   def get_energy_consumption_for_asset(asset_id, asset_type, from_dt, to_dt, prefix) do
+    "inc_" <> sub_domain = prefix
     params =
       %{
         "asset_id" => asset_id,
         "asset_type" => asset_type,
         "from_dt" => from_dt,
         "to_dt" => to_dt,
-        "licensee_prefix" => prefix
+        "licensee_prefix" => sub_domain
       }
 
     get_request(@base_url <> "/energy_meter_reading", params)
