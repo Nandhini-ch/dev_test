@@ -1270,7 +1270,7 @@ defmodule Inconn2Service.Report do
           frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
           estimated_time: schedule.estimated_time,
           dates:
-            calculate_dates_for_schedule(schedule.last_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+            calculate_dates_for_schedule(schedule.next_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
             |> Enum.filter(fn d -> Date.compare(d, convert_string_to_date(from_date)) == :gt end)
             |> Enum.filter(fn d -> Date.compare(d, schedule.applicable_start) != :lt and Date.compare(d, schedule.applicable_end) != :gt end)
         }
@@ -1397,7 +1397,7 @@ defmodule Inconn2Service.Report do
         template_id: st.template.id,
         template_name: st.template.name,
         first_occurrence: st.schedule.first_occurrence_date,
-        last_occurrence: st.schedule.last_occurrence_date,
+        next_occurrence: st.schedule.next_occurrence_date,
         repeat_unit: st.template.repeat_unit,
         repeat_every: st.template.repeat_every,
         estimated_time: st.template.estimated_time,
