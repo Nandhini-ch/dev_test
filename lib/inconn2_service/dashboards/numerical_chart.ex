@@ -575,15 +575,15 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       ]
   end
 
-  def switch_widget_type(site_id, 2, chart_func, _config, prefix) do
+  def switch_widget_type(site_id, 2, chart_func, config, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -7)
     params = %{
       "site_id" => site_id,
       "from_date" => from_date |> Date.to_iso8601(),
       "to_date" => to_date |> Date.to_iso8601(),
-      "asset_ids" => Helpers.get_assets_for_dashboards(site_id, "E", prefix) |> Enum.map(&(&1.id))
-      # "asset_ids" => config["energy_main_meters"]
+      # "asset_ids" => Helpers.get_assets_for_dashboards(site_id, "E", prefix) |> Enum.map(&(&1.id))
+      "asset_ids" => config["energy_main_meters"]
     }
     apply(DashboardCharts, chart_func, [params, prefix])
   end
