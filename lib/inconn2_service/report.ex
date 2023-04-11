@@ -1360,7 +1360,7 @@ defmodule Inconn2Service.Report do
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do
     query =
-      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true,
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
         join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
         select: %{
           schedule: wos,
@@ -1375,7 +1375,7 @@ defmodule Inconn2Service.Report do
     asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     query =
       from wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_ids, where: wot.repeat_unit not in ["H", "D"],
-       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true,
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
        select: %{
          schedule: wos,
          template: wot
