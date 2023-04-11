@@ -1330,12 +1330,12 @@ defmodule Inconn2Service.Report do
     calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, [first_occurrence_date])
   end
 
-  def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+  def calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, date_list) do
     date = next_date(repeat_unit, repeat_every, List.last(date_list))
     case Date.compare(date, convert_string_to_date(to_date)) do
       :lt ->
         new_date_list = date_list ++ [date]
-        calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
+        calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
 
       _ ->
         date_list
