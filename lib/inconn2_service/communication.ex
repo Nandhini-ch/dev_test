@@ -35,7 +35,7 @@ defmodule Inconn2Service.Communication do
   end
 
   def get_job_ids_of_undelivered_message_status() do
-    from(s in SendSms, where: s.delivery_status == "Sent" or is_nil(s.delivery_status))
+    from(s in SendSms, where: (s.delivery_status == "Sent" or is_nil(s.delivery_status)) and s.error_code == "000")
     |> Repo.all()
     |> Enum.group_by(&(&1.job_id))
     |> Enum.map(fn {job_id, _sms_list} -> job_id end)
