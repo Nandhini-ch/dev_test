@@ -2326,7 +2326,7 @@ defmodule Inconn2Service.Report do
               [
                 t.id,
                 t.task.label,
-                Enum.map(t.response["answers"], fn ans ->
+                Enum.map(Map.get(t.response, "answers", []), fn ans ->
                   Enum.find(t.task.config["options"], fn con ->
                     con["value"] == ans
                   end)["label"]
