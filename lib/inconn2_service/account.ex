@@ -47,6 +47,11 @@ defmodule Inconn2Service.Account do
     Repo.all(Licensee) |> Repo.preload(:business_type)
   end
 
+  def list_sub_domains() do
+    from(l in Licensee,
+    select: l.sub_domain)
+    |> Repo.all()
+  end
 
   def get_licensee!(id), do: Repo.get!(Licensee, id) |> Repo.preload(:business_type)
 
