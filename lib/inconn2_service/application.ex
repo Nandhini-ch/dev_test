@@ -21,6 +21,8 @@ defmodule Inconn2Service.Application do
       # Inconn2Service.Batch.AlertEscalationGenServer,
       #Start the EmailSender GenServer
       # Inconn2Service.Communication.EmailSender,
+      #Start the SmsSender GenServer
+      # Inconn2Service.Communication.SmsSender,
       # Start the Endpoint (http/https)
       Inconn2ServiceWeb.Endpoint
       # Start a worker by calling: Inconn2Service.Worker.start_link(arg)
