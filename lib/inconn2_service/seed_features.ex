@@ -171,7 +171,7 @@ defmodule Inconn2Service.SeedFeatures do
   end
 
   def read_and_insert_data_in_table() do
-    Application.app_dir(:inconn2_service, "priv/features/test.json")
+    Application.app_dir(:inconn2_service, "priv/features/templates.json")
     |> File.read!()
     |> Jason.decode!()
     |> IO.inspect()
