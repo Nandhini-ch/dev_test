@@ -162,7 +162,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/checks", CheckController, except: [:new, :edit]
     put "/checks/:id/activate", CheckController, :activate_check
     put "/checks/:id/deactivate", CheckController, :deactivate_check
-    get "/download_checks", ReferenceDownloadController, :download_checks_lists
+    get "/download_checks", ReferenceDownloadController, :download_checks
     post "/upload_checks", ReferenceUploadController, :upload_checks
     resources "/check_lists", CheckListController, except: [:new, :edit]
     put "/check_lists/:id/activate", CheckListController, :activate_check_list
@@ -514,6 +514,8 @@ defmodule Inconn2ServiceWeb.Router do
     post "/bulk_upload", DataUploadController, :upload_content
     resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit]
 
+    get "/download_zones", ReferenceDownloadController, :download_zones
+    post "/upload_zones", ReferenceUploadController, :upload_zones
     get "/download_parties", ReferenceDownloadController, :download_parties
     post "/upload_parties", ReferenceUploadController, :upload_parties
     get "/download_scopes", ReferenceDownloadController, :download_scopes
@@ -564,6 +566,7 @@ defmodule Inconn2ServiceWeb.Router do
       post "/send_sms", AlertController, :send_sms
       post "/send_emails", AlertController, :send_email
       post "/create_work_orders", AlertController, :create_work_order
+      # resources "/send_sms", SendSmsController, except: [:new, :edit]
     end
   end
 end
