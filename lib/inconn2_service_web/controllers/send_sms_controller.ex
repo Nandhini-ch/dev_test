@@ -7,12 +7,12 @@ defmodule Inconn2ServiceWeb.SendSmsController do
   action_fallback Inconn2ServiceWeb.FallbackController
 
   def index(conn, _params) do
-    send_sms = Communication.list_send_sms()
+    send_sms = Communication.list_send_sms(conn.assigns.sub_domain_prefix)
     render(conn, "index.json", send_sms: send_sms)
   end
 
   def create(conn, %{"send_sms" => send_sms_params}) do
-    with {:ok, %SendSms{} = send_sms} <- Communication.create_send_sms(send_sms_params) do
+    with {:ok, %SendSms{} = send_sms} <- Communication.create_send_sms(send_sms_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.send_sms_path(conn, :show, send_sms))
@@ -21,22 +21,22 @@ defmodule Inconn2ServiceWeb.SendSmsController do
   end
 
   def show(conn, %{"id" => id}) do
-    send_sms = Communication.get_send_sms!(id)
+    send_sms = Communication.get_send_sms!(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", send_sms: send_sms)
   end
 
   def update(conn, %{"id" => id, "send_sms" => send_sms_params}) do
-    send_sms = Communication.get_send_sms!(id)
+    send_sms = Communication.get_send_sms!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %SendSms{} = send_sms} <- Communication.update_send_sms(send_sms, send_sms_params) do
+    with {:ok, %SendSms{} = send_sms} <- Communication.update_send_sms(send_sms, send_sms_params, conn.assigns.sub_domain_prefix) do
       render(conn, "show.json", send_sms: send_sms)
     end
   end
 
   def delete(conn, %{"id" => id}) do
-    send_sms = Communication.get_send_sms!(id)
+    send_sms = Communication.get_send_sms!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %SendSms{}} <- Communication.delete_send_sms(send_sms) do
+    with {:ok, %SendSms{}} <- Communication.delete_send_sms(send_sms, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end
