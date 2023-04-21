@@ -77,4 +77,63 @@ defmodule Inconn2Service.CommunicationTest do
       assert %Ecto.Changeset{} = Communication.change_send_sms(send_sms)
     end
   end
+
+  describe "message_templates" do
+    alias Inconn2Service.Communication.MessageTemplates
+
+    @valid_attrs %{message: "some message"}
+    @update_attrs %{message: "some updated message"}
+    @invalid_attrs %{message: nil}
+
+    def message_templates_fixture(attrs \\ %{}) do
+      {:ok, message_templates} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Communication.create_message_templates()
+
+      message_templates
+    end
+
+    test "list_message_templates/0 returns all message_templates" do
+      message_templates = message_templates_fixture()
+      assert Communication.list_message_templates() == [message_templates]
+    end
+
+    test "get_message_templates!/1 returns the message_templates with given id" do
+      message_templates = message_templates_fixture()
+      assert Communication.get_message_templates!(message_templates.id) == message_templates
+    end
+
+    test "create_message_templates/1 with valid data creates a message_templates" do
+      assert {:ok, %MessageTemplates{} = message_templates} = Communication.create_message_templates(@valid_attrs)
+      assert message_templates.message == "some message"
+    end
+
+    test "create_message_templates/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Communication.create_message_templates(@invalid_attrs)
+    end
+
+    test "update_message_templates/2 with valid data updates the message_templates" do
+      message_templates = message_templates_fixture()
+      assert {:ok, %MessageTemplates{} = message_templates} = Communication.update_message_templates(message_templates, @update_attrs)
+      assert message_templates.message == "some updated message"
+    end
+
+    test "update_message_templates/2 with invalid data returns error changeset" do
+      message_templates = message_templates_fixture()
+      assert {:error, %Ecto.Changeset{}} = Communication.update_message_templates(message_templates, @invalid_attrs)
+      assert message_templates == Communication.get_message_templates!(message_templates.id)
+    end
+
+    test "delete_message_templates/1 deletes the message_templates" do
+      message_templates = message_templates_fixture()
+      assert {:ok, %MessageTemplates{}} = Communication.delete_message_templates(message_templates)
+      assert_raise Ecto.NoResultsError, fn -> Communication.get_message_templates!(message_templates.id) end
+    end
+
+    test "change_message_templates/1 returns a message_templates changeset" do
+      message_templates = message_templates_fixture()
+      assert %Ecto.Changeset{} = Communication.change_message_templates(message_templates)
+    end
+  end
 end

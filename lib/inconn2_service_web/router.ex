@@ -567,6 +567,8 @@ defmodule Inconn2ServiceWeb.Router do
       post "/send_emails", AlertController, :send_email
       post "/create_work_orders", AlertController, :create_work_order
       # resources "/send_sms", SendSmsController, except: [:new, :edit]
+      # resources "/message_templates", MessageTemplatesController, except: [:new, :edit]
+
     end
   end
 end
