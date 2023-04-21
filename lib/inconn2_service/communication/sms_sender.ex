@@ -13,13 +13,13 @@ defmodule Inconn2Service.Communication.SmsSender do
 
   @impl true
   def init(_args) do
-    {:ok, Process.send_after(self(), :check_status, 1000)}
+    {:ok, Process.send_after(self(), :check_status, 60000)}
   end
 
   @impl true
   def handle_info(:check_status, _state) do
     update_delivery_status()
-    {:noreply, Process.send_after(self(), :check_status, 2000)}
+    {:noreply, Process.send_after(self(), :check_status, 60000)}
   end
 
   @impl true
@@ -39,8 +39,11 @@ defmodule Inconn2Service.Communication.SmsSender do
       "senderid" => "WYNWYT",
       "DLTTemplateId" => dlt_template_id,
       "TelemarketerId" => telemarketer_id,
-      "text" => text
+      "text" => "\"" <> text <> "\""
     }
+    # |> IO.inspect()
+    # IO.inspect(text)
+    IO.inspect("Dear USER, (1234) is the OTP generated for the Inconn application of password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy")
 
     response = HTTPoison.get(url, headers, [params: params])
 
