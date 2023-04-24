@@ -5,6 +5,7 @@ defmodule Inconn2ServiceWeb.UserController do
   alias Inconn2Service.Staff
   alias Inconn2Service.Confirmation
   alias Inconn2Service.Staff.User
+  alias Inconn2Service.Communication
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
@@ -103,12 +104,14 @@ defmodule Inconn2ServiceWeb.UserController do
   def forgot_password(conn, %{"credentials" => credentials}) do
     case Staff.get_user_by_username_for_otp(credentials["username"], conn.assigns.sub_domain_prefix) do
       {:ok, user} ->
+        otp = Enum.random(1000..9999)
+        Communication.form_and_send_sms("FOTP", "91" <> user.mobile_no, [user.first_name, otp], conn.assigns.sub_domain_prefix)
         Confirmation.create_forgot_password_otp(
           %{
             "user_id" => user.id,
             "username" => user.username,
             # "otp" => Enum.random(1000..9999), uncomment when is api is working properly
-            "otp" => 1234,
+            "otp" => otp,
             "created_date_time" => NaiveDateTime.utc_now()
           },
           conn.assigns.sub_domain_prefix

@@ -1,7 +1,7 @@
 defmodule Inconn2Service.Staff.Feature do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Inconn2Service.Staff.Module
+  # alias Inconn2Service.Staff.Module
 
   schema "features" do
     field :code, :string

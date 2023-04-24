@@ -1,4 +1,5 @@
 defmodule Inconn2Service.SeedFeatures do
+  alias Inconn2Service.Communication
   alias Inconn2Service.{Common, Staff, Account}
 
   @role_profiles [
@@ -169,4 +170,13 @@ defmodule Inconn2Service.SeedFeatures do
     }
   end
 
+  def read_and_insert_data_in_table() do
+    Application.app_dir(:inconn2_service, "priv/features/templates.json")
+    |> File.read!()
+    |> Jason.decode!()
+    |> IO.inspect()
+    |> Enum.map(fn attrs ->
+      Communication.create_message_templates(attrs)
+    end)
+  end
 end

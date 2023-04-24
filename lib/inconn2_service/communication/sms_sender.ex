@@ -2,28 +2,29 @@ defmodule Inconn2Service.Communication.SmsSender do
   use GenServer
 
   alias Inconn2Service.Communication
+  alias Inconn2Service.Account
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def send_sms(number, dlt_template_id, telemarketer_id, text) do
-    GenServer.cast(__MODULE__, {:send_sms, {number, dlt_template_id, telemarketer_id, text}})
+  def send_sms(number, dlt_template_id, telemarketer_id, text, prefix) do
+    GenServer.cast(__MODULE__, {:send_sms, {number, dlt_template_id, telemarketer_id, text, prefix}})
   end
 
   @impl true
   def init(_args) do
-    {:ok, Process.send_after(self(), :check_status, 1000)}
+    {:ok, Process.send_after(self(), :check_status, 60000)}
   end
 
   @impl true
   def handle_info(:check_status, _state) do
     update_delivery_status()
-    {:noreply, Process.send_after(self(), :check_status, 2000)}
+    {:noreply, Process.send_after(self(), :check_status, 60000)}
   end
 
   @impl true
-  def handle_cast({:send_sms, {number, dlt_template_id, telemarketer_id, text}}, state) do
+  def handle_cast({:send_sms, {number, dlt_template_id, telemarketer_id, text, prefix}}, state) do
     IO.inspect("><---------------><")
     url = "http://panel.smsmessenger.in/api/mt/SendSMS"
     headers = ["Accept": "Application/json; Charset=utf-8"]
@@ -39,15 +40,18 @@ defmodule Inconn2Service.Communication.SmsSender do
       "senderid" => "WYNWYT",
       "DLTTemplateId" => dlt_template_id,
       "TelemarketerId" => telemarketer_id,
-      "text" => text
+      "text" => "\"" <> text <> "\""
     }
+    # |> IO.inspect()
+    # IO.inspect(text)
+    IO.inspect("Dear USER, (1234) is the OTP generated for the Inconn application of password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy")
 
     response = HTTPoison.get(url, headers, [params: params])
 
     case response do
       {:ok, %{body: body}} ->
         body = Jason.decode!(body)
-        insert_data_into_table(body, params)
+        insert_data_into_table(body, params, prefix)
         {:noreply, state}
       {:error, %{reason: reason}} ->
         {:error, reason}
@@ -56,7 +60,7 @@ defmodule Inconn2Service.Communication.SmsSender do
     {:noreply, state}
   end
 
-  defp insert_data_into_table(body, params) do
+  defp insert_data_into_table(body, params, prefix) do
     IO.inspect(body)
 
     Enum.map(body["MessageData"], fn map ->
@@ -72,17 +76,20 @@ defmodule Inconn2Service.Communication.SmsSender do
         "message" => params["text"]
       }
       |> IO.inspect()
-      |> Communication.create_send_sms()
+      |> Communication.create_send_sms(prefix)
       |> IO.inspect()
     end)
   end
 
   def update_delivery_status() do
-    Communication.get_job_ids_of_undelivered_message_status()
-    |> Enum.map(fn job_id -> check_status(job_id) end)
+    Account.list_sub_domains()
+    |> Enum.map(fn sub_domain ->
+      Communication.get_job_ids_of_undelivered_message_status("inc_" <> sub_domain)
+      |> Enum.map(fn job_id -> check_status(job_id, "inc_" <> sub_domain) end)
+    end)
   end
 
-  defp check_status(job_id) do
+  defp check_status(job_id, prefix) do
     # check_url = "http://panel.smsmessenger.in/api/mt/GetDelivery"
     headers = ["Accept": "Application/json; Charset=utf-8"]
     url = "http://panel.smsmessenger.in/api/mt/GetDelivery?user=wynwy&password=Wynwy@ba&jobid=#{job_id}"
@@ -102,7 +109,7 @@ defmodule Inconn2Service.Communication.SmsSender do
         IO.puts("!!!!!!!!!!!body!!!!!!!!!!!!!!")
         IO.inspect(body)
         body["DeliveryReports"]
-        |> Enum.map(fn map ->  Communication.update_send_sms_by_message_id(map["MessageId"], map["DeliveryStatus"], map["DeliveryDate"]) end)
+        |> Enum.map(fn map ->  Communication.update_send_sms_by_message_id(map["MessageId"], map["DeliveryStatus"], map["DeliveryDate"], prefix) end)
 
 
         {:ok, body}
