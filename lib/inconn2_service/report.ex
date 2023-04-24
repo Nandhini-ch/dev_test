@@ -534,9 +534,9 @@ defmodule Inconn2Service.Report do
       end)
 
     {from_date, to_date} = get_dates_for_query(rectified_query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-    date_applied_query = from q in query_with_params, where: q.transaction_date >= ^from_date and q.transaction_date <= ^to_date
+    date_applied_query = from q in query_with_params, where: q.date >= ^from_date and q.date <= ^to_date
 
-    # IO.inspect(Repo.all(date_applied_query, prefix: prefix))
+    IO.inspect(Repo.all(date_applied_query, prefix: prefix))
 
     result =
       Repo.all(date_applied_query, prefix: prefix)
