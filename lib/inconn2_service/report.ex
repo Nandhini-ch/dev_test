@@ -532,6 +532,7 @@ defmodule Inconn2Service.Report do
     headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "Reorder Level", "UOM", "Aisle", "Row", "Bin", "Cost", "Supplier"]
     query_with_params =
       Enum.reduce(rectified_query_params, query, fn
+        {"transaction_type", ""}, query -> query
         {"transaction_type", transaction_type}, query -> from q in query, where: q.transaction_type == ^transaction_type
         {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
         {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
