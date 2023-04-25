@@ -299,10 +299,15 @@ defmodule Inconn2Service.Report do
       from(a in Attendance, where: a.employee_id == ^record.employee_id and a.in_time >= ^from_datetime and a.in_time <= ^to_datetime)
       |> Repo.all(prefix: prefix)
 
-
-    work_done_time =
-      Stream.map(actual_attendance, fn at -> NaiveDateTime.diff(at.out_time, at.in_time) end)
-      |> Enum.sum()
+      work_done_time =
+            Stream.map(actual_attendance, fn at ->
+                if at.out_time != nil do
+                  NaiveDateTime.diff(at.out_time, at.in_time)
+                else
+                  0
+                end
+              end)
+            |> Enum.sum()
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
     |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
