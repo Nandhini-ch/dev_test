@@ -1816,6 +1816,11 @@ defmodule Inconn2Service.Report do
             create_table_body(data, report_for)
           ],
           [
+            :h3,
+            %{style: style(%{"float" => "left", "font-style" => "italic"})},
+            "Summary"
+          ],
+          [
             :div,
             %{style: style(%{"margin-top" => "20px"})},
             create_summary_table(summary, summary_headers, report_for),
