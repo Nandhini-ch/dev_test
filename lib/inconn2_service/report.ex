@@ -1817,7 +1817,7 @@ defmodule Inconn2Service.Report do
           ],
           [
             :h3,
-            %{style: style(%{"float" => "left", "font-style" => "italic"})},
+            %{style: style(%{"float" => "left"})},
             "Summary"
           ],
           [
