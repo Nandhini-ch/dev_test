@@ -82,7 +82,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "ENCON" -> [energy_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENPEI" -> [energy_consumption, change_nil_to_one(config["area_in_sqft"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
-      "ENTOP" -> [site_id, config, prefix]
+      "ENTOP" -> [site_id, config, widget_config, prefix]
       "WACON" -> [water_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
       "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "FUCON" -> [fuel_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
@@ -135,13 +135,14 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  def top_three_data(site_id, config, prefix) do
+  def top_three_data(site_id, config, widget_config, prefix) do
     %{
       id: 4,
       key: "ENTOP",
       name: "Top 3 non main meter consumption",
       unit: "kWh",
       type: 2,
+      size: widget_config.size,
       tableInfo: %{
           headers: ["Name", "Consumption ( kWh )"],
           list: get_top_three_consumers_for_24_hours(site_id, config, prefix)
@@ -158,6 +159,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(water_consumption),
       chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_consumption, config, seven_days_range_tuple, prefix),
       unit: "kilo ltrs",
+      size: widget_config.size,
       type: get_chart_type("WACON", widget_config.size)
     }
   end
@@ -171,6 +173,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(water_consumption * cost_per_unit),
       chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
+      size: widget_config.size,
       type: get_chart_type("WACOS", widget_config.size)
     }
   end
@@ -184,6 +187,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(fuel_consumption),
       chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_consumption, config, seven_days_range_tuple, prefix),
       unit: "ltrs",
+      size: widget_config.size,
       type: get_chart_type("FUCON", widget_config.size)
     }
   end
@@ -197,6 +201,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       displayTxt: convert_to_ceil_float(fuel_consumption * cost_per_unit),
       chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
+      size: widget_config.size,
       type: get_chart_type("FUCOS", widget_config.size)
     }
   end
