@@ -83,10 +83,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENPEI" -> [energy_consumption, change_nil_to_one(config["area_in_sqft"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENTOP" -> [site_id, config, prefix]
-      "WACON" -> [water_consumption]
-      "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"])]
-      "FUCON" -> [fuel_consumption]
-      "FUCOS" -> [fuel_consumption, change_nil_to_zero(config["fuel_cost_per_unit"])]
+      "WACON" -> [water_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
+      "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
+      "FUCON" -> [fuel_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
+      "FUCOS" -> [fuel_consumption, change_nil_to_zero(config["fuel_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENSUB" -> [site_id, config, prefix]
       "SEGRE" -> [site_id, config, prefix]
       _ -> [site_id, prefix]
@@ -149,47 +149,55 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  def water_consumption_data(water_consumption) do
+  def water_consumption_data(water_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> convert_to_ceil_float(water_consumption) end
     %{
       id: 5,
       key: "WACON",
       name: "Water Consumption",
       displayTxt: convert_to_ceil_float(water_consumption),
+      chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_consumption, config, seven_days_range_tuple, prefix),
       unit: "kilo ltrs",
-      type: 1
+      type: get_chart_type("WACON", widget_config.size)
     }
   end
 
-  def water_cost_data(water_consumption, cost_per_unit) do
+  def water_cost_data(water_consumption, cost_per_unit, site_id, config, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> convert_to_ceil_float(water_consumption * cost_per_unit) end
     %{
       id: 6,
       key: "WACOS",
       name: "Water Cost",
       displayTxt: convert_to_ceil_float(water_consumption * cost_per_unit),
+      chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
-      type: 1
+      type: get_chart_type("WACOS", widget_config.size)
     }
   end
 
-  def fuel_consumption_data(fuel_consumption) do
+  def fuel_consumption_data(fuel_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> convert_to_ceil_float(fuel_consumption) end
     %{
       id: 7,
       key: "FUCON",
       name: "Fuel Consumption",
       displayTxt: convert_to_ceil_float(fuel_consumption),
+      chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_consumption, config, seven_days_range_tuple, prefix),
       unit: "ltrs",
-      type: 1
+      type: get_chart_type("FUCON", widget_config.size)
     }
   end
 
-  def fuel_cost_data(fuel_consumption, cost_per_unit) do
+  def fuel_cost_data(fuel_consumption, cost_per_unit, site_id, config, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> convert_to_ceil_float(fuel_consumption * cost_per_unit) end
     %{
       id: 8,
       key: "FUCOS",
       name: "Fuel Cost",
       displayTxt: convert_to_ceil_float(fuel_consumption * cost_per_unit),
+      chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
-      type: 1
+      type: get_chart_type("FUCOS", widget_config.size)
     }
   end
 
@@ -595,6 +603,34 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     apply(DashboardCharts, indivdual_chart_func, [params, prefix])
   end
 
+  def get_chart_data_water(_site_id, 1, numerical_func, _indivdual_chart_func, _config, _seven_days_range_tuple, _prefix) do
+    numerical_func.()
+  end
+
+  def get_chart_data_water(site_id, 2, _numerical_func, indivdual_chart_func, config, {seven_days_start, seven_days_end}, prefix) do
+    params = %{
+      "site_id" => site_id,
+      "from_date" => seven_days_start |> Date.to_iso8601(),
+      "to_date" => seven_days_end |> Date.to_iso8601(),
+      "asset_ids" => config["water_main_meters"]
+    }
+    apply(DashboardCharts, indivdual_chart_func, [params, prefix])
+  end
+
+  def get_chart_data_fuel(_site_id, 1, numerical_func, _indivdual_chart_func, _config, _seven_days_range_tuple, _prefix) do
+    numerical_func.()
+  end
+
+  def get_chart_data_fuel(site_id, 2, _numerical_func, indivdual_chart_func, config, {seven_days_start, seven_days_end}, prefix) do
+    params = %{
+      "site_id" => site_id,
+      "from_date" => seven_days_start |> Date.to_iso8601(),
+      "to_date" => seven_days_end |> Date.to_iso8601(),
+      "asset_ids" => config["fuel_main_meters"]
+    }
+    apply(DashboardCharts, indivdual_chart_func, [params, prefix])
+  end
+
   def switch_widget_type(site_id, 2, chart_func, config, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -7)
@@ -613,6 +649,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_chart_type("ENCON", 2), do: 4
   def get_chart_type("ENCOS", 2), do: 4
   def get_chart_type("ENPEI", 2), do: 5
+  def get_chart_type("WACON", 2), do: 4
+  def get_chart_type("WACOS", 2), do: 4
+  def get_chart_type("FUCON", 2), do: 5
+  def get_chart_type("FUCOS", 2), do: 4
   def get_chart_type(_, _), do: 1
 
 end
