@@ -1049,7 +1049,7 @@ defmodule Inconn2Service.Report do
       completion_percentage =
         if length(ppm_work_orders) != 0 do
           # IO.inspect("Dsadfsdgredfcvsgefd")
-          (completed_ppm/length(ppm_work_orders)) * 100.00
+          (completed_ppm/length(ppm_work_orders)) * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
         else
           0.0
         end
