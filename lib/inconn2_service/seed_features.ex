@@ -196,9 +196,9 @@ defmodule Inconn2Service.SeedFeatures do
     end)
   end
 
-  def seed_data() do
-    SeedFeatures.seed_features()
-    SeedFeatures.seed_message_templates()
-    SeedFeatures.seed_public_uom()
-  end
+  # def seed_data() do
+  #   SeedFeatures.seed_features()
+  #   SeedFeatures.seed_message_templates()
+  #   SeedFeatures.seed_public_uom()
+  # end
 end
