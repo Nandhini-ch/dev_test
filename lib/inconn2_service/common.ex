@@ -9,6 +9,7 @@ defmodule Inconn2Service.Common do
   alias Inconn2Service.Common.Timezone
   alias Inconn2Service.Prompt
   alias Inconn2Service.Prompt.UserAlertNotification
+  alias Inconn2Service.Common.PublicUom
 
   @doc """
   Returns the list of timezones.
@@ -956,91 +957,53 @@ defmodule Inconn2Service.Common do
     Repo.all(AdminUser)
   end
 
-  @doc """
-  Gets a single admin_user.
-
-  Raises `Ecto.NoResultsError` if the Admin users does not exist.
-
-  ## Examples
-
-      iex> get_admin_user!(123)
-      %AdminUser{}
-
-      iex> get_admin_user!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_admin_user!(id), do: Repo.get!(AdminUser, id)
 
-  @doc """
-  Gets a single admin_user bu username.
-
-  Raises `nil` if the Admin users does not exist.
-  """
   def get_admin_user_by_username(username), do: Repo.get_by(AdminUser, username: username)
 
-  @doc """
-  Creates a admin_user.
-
-  ## Examples
-
-      iex> create_admin_user(%{field: value})
-      {:ok, %AdminUser{}}
-
-      iex> create_admin_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_admin_user(attrs \\ %{}) do
     %AdminUser{}
     |> AdminUser.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a admin_user.
-
-  ## Examples
-
-      iex> update_admin_user(admin_user, %{field: new_value})
-      {:ok, %AdminUser{}}
-
-      iex> update_admin_user(admin_user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_admin_user(%AdminUser{} = admin_user, attrs) do
     admin_user
     |> AdminUser.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a admin_user.
-
-  ## Examples
-
-      iex> delete_admin_user(admin_user)
-      {:ok, %AdminUser{}}
-
-      iex> delete_admin_user(admin_user)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_admin_user(%AdminUser{} = admin_user) do
     Repo.delete(admin_user)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking admin_user changes.
-
-  ## Examples
-
-      iex> change_admin_user(admin_user)
-      %Ecto.Changeset{data: %AdminUser{}}
-
-  """
   def change_admin_user(%AdminUser{} = admin_user, attrs \\ %{}) do
     AdminUser.changeset(admin_user, attrs)
+  end
+
+  def list_public_uoms do
+    Repo.all(PublicUom)
+  end
+
+  def get_public_uom!(id), do: Repo.get!(PublicUom, id)
+
+  def create_public_uom(attrs \\ %{}) do
+    %PublicUom{}
+    |> PublicUom.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_public_uom(%PublicUom{} = public_uom, attrs) do
+    public_uom
+    |> PublicUom.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_public_uom(%PublicUom{} = public_uom) do
+    Repo.delete(public_uom)
+  end
+
+  def change_public_uom(%PublicUom{} = public_uom, attrs \\ %{}) do
+    PublicUom.changeset(public_uom, attrs)
   end
 end

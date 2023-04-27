@@ -1,0 +1,27 @@
+Measurement,KL,Kilolitres
+Measurement,L,Litre
+Measurement,ml,millilitre
+Measuremen,M,Meter
+Measurement,mm,Millilmetre
+Measurement,No,numbers
+Weights,Kg,Kilogram
+Weights,gm,Gram
+Technical - Electrical,Kwh,Real Power
+Technical - Electrical,Kvah,Apparent Power
+Technical - Electrical,Kvarh,Reactive Power
+Technical - Electrical,Kw,Power
+Technical - Electrical,V,Voltage
+Technical - Electrical,KV,KiloVolt
+Technical - Electrical,A,Ampere
+Technical - Electrical,KA,Kilo Ampere
+Technical - Electrical,PF,Power Factor
+Technical - Electrical,Hz,Frequency
+Temperature,C,deg Celsius
+Temperature,F,Fahrenhiet
+Speed,rpm,Rotation Per minute
+Pressure,Kg/Cm2,Kilogram per square centimeter
+Pressure,bar,Bar
+Flowmeter,cusec/min,Cubic feet per sec / Minute
+Flowmeter,Cusec/hr,Cubic feet per sec / Hour
+Time,Hr,Hour
+Percentage,%,value

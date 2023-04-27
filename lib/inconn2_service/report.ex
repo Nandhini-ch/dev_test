@@ -913,8 +913,7 @@ defmodule Inconn2Service.Report do
   end
 
   defp get_calculated_compliance_value(0, _), do: 0
-  defp get_calculated_compliance_value(total, completed), do: div(completed, total)
-
+  defp get_calculated_compliance_value(total, completed), do: completed/total * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
 
   defp filter_wo_by_site(work_orders, nil), do: work_orders
   defp filter_wo_by_site(work_orders, site_id), do: Enum.filter(work_orders, fn wo -> wo.site_id == site_id end)
@@ -1270,7 +1269,7 @@ defmodule Inconn2Service.Report do
           frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
           estimated_time: schedule.estimated_time,
           dates:
-            calculate_dates_for_schedule(schedule.last_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+            calculate_dates_for_schedule(schedule.next_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
             |> Enum.filter(fn d -> Date.compare(d, convert_string_to_date(from_date)) == :gt end)
             |> Enum.filter(fn d -> Date.compare(d, schedule.applicable_start) != :lt and Date.compare(d, schedule.applicable_end) != :gt end)
         }
@@ -1330,12 +1329,12 @@ defmodule Inconn2Service.Report do
     calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, [first_occurrence_date])
   end
 
-  def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+  def calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, date_list) do
     date = next_date(repeat_unit, repeat_every, List.last(date_list))
     case Date.compare(date, convert_string_to_date(to_date)) do
       :lt ->
         new_date_list = date_list ++ [date]
-        calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
+        calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
 
       _ ->
         date_list
@@ -1360,7 +1359,7 @@ defmodule Inconn2Service.Report do
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do
     query =
-      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true,
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
         join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
         select: %{
           schedule: wos,
@@ -1375,7 +1374,7 @@ defmodule Inconn2Service.Report do
     asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     query =
       from wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_ids, where: wot.repeat_unit not in ["H", "D"],
-       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true,
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
        select: %{
          schedule: wos,
          template: wot
@@ -1397,7 +1396,7 @@ defmodule Inconn2Service.Report do
         template_id: st.template.id,
         template_name: st.template.name,
         first_occurrence: st.schedule.first_occurrence_date,
-        last_occurrence: st.schedule.last_occurrence_date,
+        next_occurrence: st.schedule.next_occurrence_date,
         repeat_unit: st.template.repeat_unit,
         repeat_every: st.template.repeat_every,
         estimated_time: st.template.estimated_time,
