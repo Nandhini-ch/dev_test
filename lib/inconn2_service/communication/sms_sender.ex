@@ -25,7 +25,7 @@ defmodule Inconn2Service.Communication.SmsSender do
 
   @impl true
   def handle_cast({:send_sms, {number, dlt_template_id, telemarketer_id, text, prefix}}, state) do
-    IO.inspect("><---------------><")
+    # IO.inspect("><---------------><")
     url = "http://panel.smsmessenger.in/api/mt/SendSMS"
     headers = ["Accept": "Application/json; Charset=utf-8"]
 
@@ -61,7 +61,7 @@ defmodule Inconn2Service.Communication.SmsSender do
   end
 
   defp insert_data_into_table(body, params, prefix) do
-    IO.inspect(body)
+    # IO.inspect(body)
 
     Enum.map(body["MessageData"], fn map ->
       IO.inspect(map)
