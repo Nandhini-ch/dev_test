@@ -1049,7 +1049,7 @@ defmodule Inconn2Service.Report do
       completion_percentage =
         if length(ppm_work_orders) != 0 do
           # IO.inspect("Dsadfsdgredfcvsgefd")
-          (completed_ppm/length(ppm_work_orders)) * 100.00 |> to_string |> Kernel.<>("%")
+          (completed_ppm/length(ppm_work_orders)) * 100.00
         else
           0.0
         end
@@ -1064,7 +1064,7 @@ defmodule Inconn2Service.Report do
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: up_time,
         utilized_time: utilized_time,
-        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2) |> to_string |> Kernel.<>("%")
       }
     end)
   end
