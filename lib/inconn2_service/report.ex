@@ -918,7 +918,7 @@ defmodule Inconn2Service.Report do
     get_calculated_compliance_value(length(work_orders), completed_workorders)
   end
 
-  defp get_calculated_compliance_value(0, _), do: 0
+  defp get_calculated_compliance_value(0, _), do: "0" <> "%"
   defp get_calculated_compliance_value(total, completed), do: completed/total * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
 
   defp filter_wo_by_site(work_orders, nil), do: work_orders
