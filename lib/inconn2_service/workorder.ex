@@ -1362,15 +1362,18 @@ defmodule Inconn2Service.Workorder do
       case asset_type do
         "L" ->
           location = AssetConfig.get_location(asset_id, prefix)
-          Map.put_new(work_order, :asset_type, "L") |> Map.put_new(:asset_name, location.name)
+          Map.put_new(work_order, :asset_type, "L") |> Map.put_new(:asset_name, get_asset_name(location))
         "E" ->
           equipment = AssetConfig.get_equipment(asset_id, prefix)
-          Map.put_new(work_order, :asset_type, "E") |> Map.put_new(:asset_name, equipment.name)
+          Map.put_new(work_order, :asset_type, "E") |> Map.put_new(:asset_name, get_asset_name(equipment))
       end
     else
       Map.put_new(work_order, :asset_type, nil) |> Map.put_new(:asset_name, nil)
     end
   end
+
+  defp get_asset_name(nil), do: nil
+  defp get_asset_name(asset), do: asset.name
 
   defp add_overdue_flag(work_order, prefix) do
     site = AssetConfig.get_site!(work_order.site_id, prefix)

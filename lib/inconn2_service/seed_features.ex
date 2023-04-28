@@ -1,4 +1,5 @@
 defmodule Inconn2Service.SeedFeatures do
+  alias Inconn2Service.SeedFeatures
   alias Inconn2Service.Communication
   alias Inconn2Service.{Common, Staff, Account}
 
@@ -11,7 +12,7 @@ defmodule Inconn2Service.SeedFeatures do
   ]
 
   def read_and_insert(file_path, entity) do
-    {:ok, "\uFEFF" <> content} = File.read(file_path)
+    {:ok, content} = File.read(file_path)
 
     ["", content] =
         if String.starts_with?(content, "\uFEFF") do
@@ -54,6 +55,16 @@ defmodule Inconn2Service.SeedFeatures do
 
   end
 
+  defp process_individual(:public_uom, string) do
+    {uom_category, uom_unit, description} =
+      string
+      |> String.split(",")
+      |> List.to_tuple()
+
+    %{"uom_category" => uom_category, "uom_unit" => uom_unit, "description" => description}
+
+  end
+
   #Seed features...
   def seed_features() do
     read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/Features.csv"), :features)
@@ -70,6 +81,11 @@ defmodule Inconn2Service.SeedFeatures do
           Staff.create_role_profile(form_role_profile_map(name, code), prefix)
         end))
     |> Enum.map(&Task.await/1)
+  end
+
+  def seed_public_uom() do
+    read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/Uom.csv"), :public_uom)
+    |> Enum.map(&(Common.create_public_uom(&1)))
   end
 
   def update_hierarchy_id_in_role_profile(prefix) do
@@ -170,13 +186,19 @@ defmodule Inconn2Service.SeedFeatures do
     }
   end
 
-  def read_and_insert_data_in_table() do
-    Application.app_dir(:inconn2_service, "priv/features/test.json")
+  def seed_message_templates() do
+    Application.app_dir(:inconn2_service, "priv/features/templates.json")
     |> File.read!()
     |> Jason.decode!()
-    |> IO.inspect()
+    # |> IO.inspect()
     |> Enum.map(fn attrs ->
       Communication.create_message_templates(attrs)
     end)
   end
+
+  # def seed_data() do
+  #   SeedFeatures.seed_features()
+  #   SeedFeatures.seed_message_templates()
+  #   SeedFeatures.seed_public_uom()
+  # end
 end

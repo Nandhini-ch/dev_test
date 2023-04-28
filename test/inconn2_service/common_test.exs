@@ -524,4 +524,67 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_admin_user(admin_user)
     end
   end
+
+  describe "public_uoms" do
+    alias Inconn2Service.Common.PublicUom
+
+    @valid_attrs %{description: "some description", uom_category: "some uom_category", uom_unit: "some uom_unit"}
+    @update_attrs %{description: "some updated description", uom_category: "some updated uom_category", uom_unit: "some updated uom_unit"}
+    @invalid_attrs %{description: nil, uom_category: nil, uom_unit: nil}
+
+    def public_uom_fixture(attrs \\ %{}) do
+      {:ok, public_uom} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_public_uom()
+
+      public_uom
+    end
+
+    test "list_public_uoms/0 returns all public_uoms" do
+      public_uom = public_uom_fixture()
+      assert Common.list_public_uoms() == [public_uom]
+    end
+
+    test "get_public_uom!/1 returns the public_uom with given id" do
+      public_uom = public_uom_fixture()
+      assert Common.get_public_uom!(public_uom.id) == public_uom
+    end
+
+    test "create_public_uom/1 with valid data creates a public_uom" do
+      assert {:ok, %PublicUom{} = public_uom} = Common.create_public_uom(@valid_attrs)
+      assert public_uom.description == "some description"
+      assert public_uom.uom_category == "some uom_category"
+      assert public_uom.uom_unit == "some uom_unit"
+    end
+
+    test "create_public_uom/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_public_uom(@invalid_attrs)
+    end
+
+    test "update_public_uom/2 with valid data updates the public_uom" do
+      public_uom = public_uom_fixture()
+      assert {:ok, %PublicUom{} = public_uom} = Common.update_public_uom(public_uom, @update_attrs)
+      assert public_uom.description == "some updated description"
+      assert public_uom.uom_category == "some updated uom_category"
+      assert public_uom.uom_unit == "some updated uom_unit"
+    end
+
+    test "update_public_uom/2 with invalid data returns error changeset" do
+      public_uom = public_uom_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_public_uom(public_uom, @invalid_attrs)
+      assert public_uom == Common.get_public_uom!(public_uom.id)
+    end
+
+    test "delete_public_uom/1 deletes the public_uom" do
+      public_uom = public_uom_fixture()
+      assert {:ok, %PublicUom{}} = Common.delete_public_uom(public_uom)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_public_uom!(public_uom.id) end
+    end
+
+    test "change_public_uom/1 returns a public_uom changeset" do
+      public_uom = public_uom_fixture()
+      assert %Ecto.Changeset{} = Common.change_public_uom(public_uom)
+    end
+  end
 end

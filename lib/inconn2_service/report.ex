@@ -299,10 +299,15 @@ defmodule Inconn2Service.Report do
       from(a in Attendance, where: a.employee_id == ^record.employee_id and a.in_time >= ^from_datetime and a.in_time <= ^to_datetime)
       |> Repo.all(prefix: prefix)
 
-
-    work_done_time =
-      Stream.map(actual_attendance, fn at -> NaiveDateTime.diff(at.out_time, at.in_time) end)
-      |> Enum.sum()
+      work_done_time =
+            Stream.map(actual_attendance, fn at ->
+                if at.out_time != nil do
+                  NaiveDateTime.diff(at.out_time, at.in_time)
+                else
+                  0
+                end
+              end)
+            |> Enum.sum()
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
     |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
@@ -527,6 +532,7 @@ defmodule Inconn2Service.Report do
     headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "Reorder Level", "UOM", "Aisle", "Row", "Bin", "Cost", "Supplier"]
     query_with_params =
       Enum.reduce(rectified_query_params, query, fn
+        {"transaction_type", ""}, query -> query
         {"transaction_type", transaction_type}, query -> from q in query, where: q.transaction_type == ^transaction_type
         {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
         {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
@@ -536,7 +542,7 @@ defmodule Inconn2Service.Report do
     {from_date, to_date} = get_dates_for_query(rectified_query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_applied_query = from q in query_with_params, where: q.transaction_date >= ^from_date and q.transaction_date <= ^to_date
 
-    # IO.inspect(Repo.all(date_applied_query, prefix: prefix))
+    IO.inspect(Repo.all(date_applied_query, prefix: prefix))
 
     result =
       Repo.all(date_applied_query, prefix: prefix)
@@ -912,9 +918,8 @@ defmodule Inconn2Service.Report do
     get_calculated_compliance_value(length(work_orders), completed_workorders)
   end
 
-  defp get_calculated_compliance_value(0, _), do: 0
-  defp get_calculated_compliance_value(total, completed), do: div(completed, total)
-
+  defp get_calculated_compliance_value(0, _), do: "0" <> "%"
+  defp get_calculated_compliance_value(total, completed), do: completed/total * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
 
   defp filter_wo_by_site(work_orders, nil), do: work_orders
   defp filter_wo_by_site(work_orders, site_id), do: Enum.filter(work_orders, fn wo -> wo.site_id == site_id end)
@@ -1059,7 +1064,7 @@ defmodule Inconn2Service.Report do
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: up_time,
         utilized_time: utilized_time,
-        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2) |> to_string |> Kernel.<>("%")
       }
     end)
   end
@@ -1270,7 +1275,7 @@ defmodule Inconn2Service.Report do
           frequency: "#{schedule.repeat_every} #{match_repeat_unit(schedule.repeat_unit)}",
           estimated_time: schedule.estimated_time,
           dates:
-            calculate_dates_for_schedule(schedule.last_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
+            calculate_dates_for_schedule(schedule.next_occurrence, schedule.repeat_every, schedule.repeat_unit, to_date, [])
             |> Enum.filter(fn d -> Date.compare(d, convert_string_to_date(from_date)) == :gt end)
             |> Enum.filter(fn d -> Date.compare(d, schedule.applicable_start) != :lt and Date.compare(d, schedule.applicable_end) != :gt end)
         }
@@ -1330,12 +1335,12 @@ defmodule Inconn2Service.Report do
     calculate_dates_for_schedule(first_occurrence_date, repeat_every, repeat_unit, to_date, [first_occurrence_date])
   end
 
-  def calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, date_list) do
+  def calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, date_list) do
     date = next_date(repeat_unit, repeat_every, List.last(date_list))
     case Date.compare(date, convert_string_to_date(to_date)) do
       :lt ->
         new_date_list = date_list ++ [date]
-        calculate_dates_for_schedule(first_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
+        calculate_dates_for_schedule(next_occurrence, repeat_every, repeat_unit, to_date, new_date_list)
 
       _ ->
         date_list
@@ -1360,7 +1365,7 @@ defmodule Inconn2Service.Report do
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do
     query =
-      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true,
+      from wos in WorkorderSchedule, where: wos.asset_type == ^asset_type and wos.asset_id == ^asset_id and wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
         join: wot in WorkorderTemplate, on: wot.id == wos.workorder_template_id and wot.repeat_unit not in ["H", "D"],
         select: %{
           schedule: wos,
@@ -1375,7 +1380,7 @@ defmodule Inconn2Service.Report do
     asset_category_ids = AssetConfig.get_asset_category_subtree_ids(asset_category_id, prefix)
     query =
       from wot in WorkorderTemplate, where: wot.asset_category_id in ^asset_category_ids, where: wot.repeat_unit not in ["H", "D"],
-       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true,
+       join: wos in WorkorderSchedule, on: wot.id == wos.workorder_template_id, where: wos.is_paused == false and wos.active == true and not is_nil(wos.next_occurrence_date),
        select: %{
          schedule: wos,
          template: wot
@@ -1397,7 +1402,7 @@ defmodule Inconn2Service.Report do
         template_id: st.template.id,
         template_name: st.template.name,
         first_occurrence: st.schedule.first_occurrence_date,
-        last_occurrence: st.schedule.last_occurrence_date,
+        next_occurrence: st.schedule.next_occurrence_date,
         repeat_unit: st.template.repeat_unit,
         repeat_every: st.template.repeat_every,
         estimated_time: st.template.estimated_time,
@@ -1809,6 +1814,11 @@ defmodule Inconn2Service.Report do
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
             create_table_body(data, report_for)
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "left"})},
+            "Summary"
           ],
           [
             :div,
