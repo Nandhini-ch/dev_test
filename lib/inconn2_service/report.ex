@@ -2428,7 +2428,7 @@ defmodule Inconn2Service.Report do
         [d.asset_category, d.count, d.count_by_status, d.ppm_completion]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ ["Summary"] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+    [report_headers] ++ body ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_people_report(report_headers, data) do
