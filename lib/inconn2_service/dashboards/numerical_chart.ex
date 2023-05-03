@@ -89,6 +89,10 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "FUCOS" -> [fuel_consumption, change_nil_to_zero(config["fuel_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENSUB" -> [site_id, config, prefix]
       "SEGRE" -> [site_id, config, prefix]
+      "PPMCW" -> [site_id, widget_config, seven_days_range_tuple, prefix]
+      "OPWOR" -> [site_id, widget_config, seven_days_range_tuple, prefix]
+      "OPTIC" -> [site_id, widget_config, seven_days_range_tuple, prefix]
+      "SEWOR" -> [site_id, widget_config, seven_days_range_tuple, prefix]
       _ -> [site_id, prefix]
     end
   end
@@ -231,46 +235,58 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  def ppm_data(site_id, prefix) do
+  def ppm_data(site_id, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> get_ppm_compliance(site_id, prefix) end
     %{
       id: 11,
       key: "PPMCW",
       name: "PPM Compliance",
       unit: "%",
-      type: 1,
+      size: widget_config.size,
+      type: get_chart_type("PPMCW", widget_config.size),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ppm_chart, seven_days_range_tuple, prefix),
       displayTxt: get_ppm_compliance(site_id, prefix)
     }
   end
 
-  def workorder_status_data(site_id, prefix) do
+  def workorder_status_data(site_id, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> get_open_workorder_status(site_id, prefix) end
     %{
       id: 12,
       key: "OPWOR",
       name: "Open/in-progress Workorder status",
       unit: "%",
-      type: 1,
-      displayTxt: get_open_workorder_status(site_id, prefix),
+      size: widget_config.size,
+      type: get_chart_type("OPWOR", widget_config.size),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_open_workorder_chart, seven_days_range_tuple, prefix),
+      displayTxt: get_open_workorder_status(site_id, prefix)
     }
   end
 
-  def ticket_status_data(site_id, prefix) do
+  def ticket_status_data(site_id, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> get_open_ticket_status(site_id, prefix) end
     %{
       id: 13,
       key: "OPTIC",
       name: "Open/in-progress Ticket status",
       unit: "Tickets",
-      type: 1,
+      size: widget_config.size,
+      type: get_chart_type("OPTIC", widget_config.size),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_open_status_chart, seven_days_range_tuple, prefix),
       displayTxt: get_open_ticket_status(site_id, prefix),
     }
   end
 
-  def service_workorder_data(site_id, prefix) do
+  def service_workorder_data(site_id, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> get_ticket_workorder_status_chart(site_id, prefix) end
     %{
       id: 14,
       key: "SEWOR",
       name: "Service Workorder Status",
       unit: "%",
-      type: 3,
+      size: widget_config.size,
+      type: get_chart_type("SEWOR", widget_config.size),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_workorder_status_chart, seven_days_range_tuple, prefix),
       chartResp: get_ticket_workorder_status_chart(site_id, prefix),
     }
   end
@@ -636,6 +652,19 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     apply(DashboardCharts, indivdual_chart_func, [params, prefix])
   end
 
+  def get_chart_data_work_order_and_ticket(_site_id, 1, numerical_func, _indivdual_chart_func, _seven_days_range_tuple, _prefix) do
+    numerical_func.()
+  end
+
+  def get_chart_data_work_order_and_ticket(site_id, 2, _numerical_func, indivdual_chart_func, {seven_days_start, seven_days_end}, prefix) do
+    params = %{
+      "site_id" => site_id,
+      "from_date" => seven_days_start |> Date.to_iso8601(),
+      "to_date" => seven_days_end |> Date.to_iso8601()
+    }
+    apply(DashboardCharts, indivdual_chart_func, [params, prefix])
+  end
+
   def switch_widget_type(site_id, 2, chart_func, config, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -7)
@@ -658,6 +687,11 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_chart_type("WACOS", 2), do: 4
   def get_chart_type("FUCON", 2), do: 5
   def get_chart_type("FUCOS", 2), do: 4
+  def get_chart_type("PPMCW", 2), do: 5
+  def get_chart_type("OPWOR", 2), do: 5
+  def get_chart_type("OPTIC", 2), do: 5
+  def get_chart_type("SEWOR", 1), do: 3
+  def get_chart_type("SEWOR", 2), do: 5
   def get_chart_type(_, _), do: 1
 
 end
