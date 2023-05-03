@@ -881,7 +881,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_asset_status_report(report_headers, equipments_data ++ locations_data), summary}
+        {csv_for_asset_status_report(report_headers, equipments_data ++ locations_data, summary, summary_headers), summary}
 
       _ ->
         {equipments_data ++ locations_data, summary}
@@ -2417,13 +2417,13 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body
   end
 
-  defp csv_for_asset_status_report(report_headers, data) do
+  defp csv_for_asset_status_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.asset_code, d.asset_category, d.asset_type, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
       end)
 
-    [report_headers] ++ body
+    [report_headers] ++ body ++ [summary_headers] ++ [summary]
   end
 
   defp csv_for_people_report(report_headers, data) do

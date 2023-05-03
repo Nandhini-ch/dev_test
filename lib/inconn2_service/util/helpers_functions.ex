@@ -236,20 +236,29 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def get_backend_url(sub_domain) do
     case Application.get_env(:inconn2_service, :environment) do
       :prod -> "https://#{sub_domain}.inconn.io:4001"
-      :dev -> "http://#{sub_domain}.inconn.com:4000"
+      :pre_prod -> "https://#{sub_domain}.inconn.com:4001"
+      :dev -> "http://#{sub_domain}.inconn.in:4000"
     end
   end
 
   def get_frontend_url(sub_domain) do
     case Application.get_env(:inconn2_service, :environment) do
       :prod -> "https://#{sub_domain}.inconn.io:443"
-      :dev -> "http://#{sub_domain}.inconn.com:8080"
+      :pre_prod -> "https://#{sub_domain}.inconn.com:443"
+      :dev -> "http://#{sub_domain}.inconn.in:8080"
     end
   end
 
   def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2)
 
   def convert_to_ceil_float(value), do: value
+
+  def naming_conversion(nil), do: ""
+  def naming_conversion(string) do
+    string
+    |> String.replace(~r/\s+/, "_")
+    |> String.downcase()
+  end
 
   def convert_list_from_query_params(nil), do: []
   def convert_list_from_query_params(string) do
