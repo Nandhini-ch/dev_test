@@ -2425,7 +2425,7 @@ defmodule Inconn2Service.Report do
 
     summary =
       Enum.map(summary, fn d ->
-        [d.asset_category, d.count_of_Assets, d.total_wo, d.completed_wo, d.pending_wo]
+        [d.asset_category, d.count, d.count_by_status, d.ppm_completion]
       end)
 
     [report_headers] ++ body ++ [summary_headers] ++ summary
