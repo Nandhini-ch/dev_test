@@ -204,6 +204,22 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     final_report
   end
 
+  # def download_workorder_schedules(prefix) do
+  #   workorder_schedules = Workorder.list_workorder_schedules(prefix)
+
+  #   header = [["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "First Occurrence Date", "First Occurrence Time",
+  #            "Next Occurrence Date", "Next Occurrence Time"]]
+
+  #   body =
+  #     Enum.map(workorder_schedules, fn r ->
+  #       [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), r.first_occurrence_date, r.first_occurrence_time,
+  #       r.next_occurrence_date, r.next_occurrence_time]
+  #     end)
+
+  #   final_report = header ++ body
+  #   final_report
+  # end
+
   def download_employees(prefix) do
     check = Staff.list_employees(prefix) |> Enum.map(fn e -> Staff.get_role_for_employee(e, prefix) end)
 
@@ -216,7 +232,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
       Enum.map(check, fn r ->
         [r.id, "", r.first_name, r.last_name, r.employment_start_date, r.employment_end_date,
         r.designation_id, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
-        convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id, r.role_id]
+        convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id, r.role.id]
       end)
 
       final_report = header ++ body
@@ -422,23 +438,6 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
       final_report = header ++ body
       final_report
-  end
-
-  def download_workorder_schedules(prefix) do
-    workorder_schedules = Workorder.list_workorder_schedules(prefix)
-
-    header = [["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "First Occurrence Date", "First Occurrence Time",
-             "Next Occurrence Date", "Next Occurrence Time"]]
-
-    body =
-      Enum.map(workorder_schedules, fn r ->
-        # IO.inspect(r)
-        [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), r.first_occurrence_date, r.first_occurrence_time,
-        r.next_occurrence_date, r.next_occurrence_time]
-      end)
-
-    final_report = header ++ body
-    final_report
   end
 
   def download_inventory_locations(prefix) do

@@ -469,7 +469,7 @@ defmodule Inconn2ServiceWeb.Router do
     get "/user_widget_configs", UserWidgetConfigController, :index
     post "/user_widget_configs", UserWidgetConfigController, :create_or_update
 
-    # resources "/public_uoms", PublicUomController, except: [:new, :edit]
+    get "/public_uoms", PublicUomController, :index
 
     get "/rosters", RosterController, :index
     get "/my_rosters", RosterController, :index_for_user
