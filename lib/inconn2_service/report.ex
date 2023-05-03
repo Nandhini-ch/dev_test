@@ -2423,7 +2423,12 @@ defmodule Inconn2Service.Report do
         [d.asset_name, d.asset_code, d.asset_category, d.asset_type, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
       end)
 
-    [report_headers] ++ body ++ [summary_headers] ++ [summary]
+    summary =
+      Enum.map(summary, fn d ->
+        [d.asset_category, d.count_of_Assets, d.total_wo, d.completed_wo, d.pending_wo]
+      end)
+
+    [report_headers] ++ body ++ [summary_headers] ++ summary
   end
 
   defp csv_for_people_report(report_headers, data) do
