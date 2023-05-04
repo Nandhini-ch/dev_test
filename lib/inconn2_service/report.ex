@@ -240,7 +240,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("People Report", filters, result, report_headers, "PPL", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_people_report(report_headers, result), summary}
+        {csv_for_people_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -467,7 +467,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Work Order Report", filters, result, report_headers, "WO", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_workorder_report(report_headers, result), summary}
+        {csv_for_workorder_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -478,7 +478,9 @@ defmodule Inconn2Service.Report do
     result
     |> Enum.map(fn wo ->
       workorder_template = Inconn2Service.Workorder.get_workorder_template(wo.workorder_template_id, prefix)
-      Map.put(wo, :asset_category_id, workorder_template.asset_category_id) |> Map.put(:asset_category, Inconn2Service.AssetConfig.get_asset_category!(workorder_template.asset_category_id, prefix))
+      Map.put(wo, :asset_category_id, workorder_template.asset_category_id)
+      |> Map.put(:asset_category, Inconn2Service.AssetConfig.get_asset_category!(workorder_template.asset_category_id, prefix)
+      |> Map.put(:estimated_time, workorder_template.estimated_time))
     end)
     |> Enum.group_by(&(&1.asset_category_id))
     |> Enum.map(fn {_k, v} ->
@@ -487,12 +489,29 @@ defmodule Inconn2Service.Report do
       pending_workorder = total_workorder - completed_workorder
       %{
         asset_category: List.first(v).asset_category.name,
+        # count_of_assets: calculate_count_of_assets(v),
         total_workorder: length(v),
         completed_workorder: "Completed Workorder: #{completed_workorder}",
         pending_workorder: "Pending Workorder: #{pending_workorder}",
+        # overdue_percentage: calculate_overdue(v)
       }
     end)
   end
+
+  # defp calculate_count_of_assets(wo_list) do
+  #   wo_list
+  #   |> Enum.group_by(&(&1.asset_id))
+  #   |> length()
+  # end
+
+  # defp calculate_overdue(wo_list) do
+  #   total_list =
+  #     Enum.map(wo_list, fn wo ->
+  #       (wo.estimated_time * 60) < NaiveDateTime.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.diff(wo.start_date, wo.start_time))
+  #     end)
+  #   overdue_count = Enum.count(overdue_list, fn boolean -> boolean end)
+  #   calculate_percentage(overdue_count, length(total_list))
+  # end
 
   defp convert_to_positive(number) do
     cond do
@@ -560,7 +579,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_inventory_report(headers, result), summary}
+        {csv_for_inventory_report(headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -1790,13 +1809,6 @@ defmodule Inconn2Service.Report do
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
-              end
-            ],
-            [
               :h2,
               if filters.site != nil do
                 "Site: #{filters.site.name}"
@@ -1805,6 +1817,9 @@ defmodule Inconn2Service.Report do
             [
               :span,
               %{style: style(%{"float" => "right", "font-size" => "20px"})},
+              if filters.from_date != nil do
+                "From Date: #{filters.from_date}"
+              end,
               if filters.to_date != nil do
                 "To Date: #{filters.to_date}"
               end
@@ -2390,7 +2405,7 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body
   end
 
-  defp csv_for_workorder_report(report_headers, data) do
+  defp csv_for_workorder_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
@@ -2399,13 +2414,18 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body
   end
 
-  defp csv_for_inventory_report(report_headers, data) do
+  defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.bin, d.row, d.cost, d.supplier]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.store_location, d.count_of_receive, d.count_of_issue]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_workrequest_report(report_headers, data) do
@@ -2413,8 +2433,6 @@ defmodule Inconn2Service.Report do
       Enum.map(data, fn d ->
         [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.ticket_subcategory, d.description, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
-
-    [report_headers] ++ body
   end
 
   defp csv_for_asset_status_report(report_headers, data, summary, summary_headers) do
@@ -2428,16 +2446,21 @@ defmodule Inconn2Service.Report do
         [d.asset_category, d.count, d.count_by_status, d.ppm_completion]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
-  defp csv_for_people_report(report_headers, data) do
+  defp csv_for_people_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.first_name, d.last_name, d.designation, d.department, d.emp_code, d.attendance_percentage, d.work_done_time]
       end)
 
-    [report_headers] ++ body
+      summary =
+        Enum.map(summary, fn d ->
+          [d.department, d.shift_coverage, d.work_done]
+        end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   # defp match_work_order_type(type) do
