@@ -19,6 +19,11 @@ defmodule Inconn2Service.Settings do
     |> Repo.sort_by_id()
   end
 
+  def list_shift_ids(site_id, prefix) do
+    from(sh in Shift, where: sh.site_id == ^site_id and sh.active, select: sh.id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_shifts(site_id, prefix) do
     Shift
     |> where(site_id: ^site_id)

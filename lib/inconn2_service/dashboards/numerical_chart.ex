@@ -4,6 +4,8 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   @open_workorders ["cr", "as", "execwa"]
 
   import Inconn2Service.Util.HelpersFunctions
+  alias Inconn2Service.Settings
+  alias Inconn2Service.Staff
   alias Inconn2Service.Dashboards.{NumericalData, Helpers}
   alias Inconn2Service.DashboardConfiguration
   alias Inconn2Service.AssetConfig
@@ -31,14 +33,14 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     # all_widgets()
     DashboardConfiguration.list_user_widget_configs_for_user(user.id, device, prefix)
-    |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, {seven_day_start, seven_day_end}, prefix) end))
+    |> Stream.map(&Task.async(fn -> get_individual_data(&1, energy_consumption, water_consumption, fuel_consumption, config, site_id, {seven_day_start, seven_day_end}, user, prefix) end))
     |> Enum.map(&Task.await/1)
 
   end
 
-  defp get_individual_data(widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, seven_days_range_tuple, prefix) do
+  defp get_individual_data(widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, seven_days_range_tuple, user, prefix) do
     func = match_widget_codes()[widget_config.widget_code]
-    args = match_arguments(widget_config.widget_code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, seven_days_range_tuple, prefix)
+    args = match_arguments(widget_config.widget_code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, seven_days_range_tuple, user, prefix)
     case func do
       nil ->
         %{}
@@ -77,7 +79,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  defp match_arguments(code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, seven_days_range_tuple, prefix) do
+  defp match_arguments(code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, seven_days_range_tuple, user, prefix) do
     case code do
       "ENCON" -> [energy_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
       "ENCOS" -> [energy_consumption, change_nil_to_zero(config["energy_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
@@ -87,13 +89,16 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       "WACOS" -> [water_consumption, change_nil_to_zero(config["water_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
       "FUCON" -> [fuel_consumption, site_id, config, widget_config, seven_days_range_tuple, prefix]
       "FUCOS" -> [fuel_consumption, change_nil_to_zero(config["fuel_cost_per_unit"]), site_id, config, widget_config, seven_days_range_tuple, prefix]
-      "ENSUB" -> [site_id, config, prefix]
-      "SEGRE" -> [site_id, config, prefix]
+      "ENSUB" -> [site_id, config, widget_config, prefix]
+      "SEGRE" -> [site_id, config, widget_config, prefix]
       "PPMCW" -> [site_id, widget_config, seven_days_range_tuple, prefix]
       "OPWOR" -> [site_id, widget_config, seven_days_range_tuple, prefix]
       "OPTIC" -> [site_id, widget_config, seven_days_range_tuple, prefix]
       "SEWOR" -> [site_id, widget_config, seven_days_range_tuple, prefix]
-      _ -> [site_id, prefix]
+      "INTRE" -> [site_id, widget_config, seven_days_range_tuple, user, prefix]
+      "SHFCV" -> [site_id, widget_config, seven_days_range_tuple, user, prefix]
+      "COSMN" -> [site_id, widget_config, seven_days_range_tuple, prefix]
+      _ -> [site_id, widget_config, prefix]
     end
   end
 
@@ -103,7 +108,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 1,
       key: "ENCON",
       name: "Energy Consumption",
-      displayTxt: convert_to_ceil_float(energy_consumption),
       chart_data: get_chart_data_energy(site_id, widget_config.size, numerical_func, :get_energy_consumption, config, seven_days_range_tuple, prefix),
       unit: "kWh",
       size: widget_config.size,
@@ -117,7 +121,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 2,
       key: "ENCOS",
       name: "Energy Cost",
-      displayTxt: convert_to_ceil_float(energy_consumption * cost_per_unit),
       chart_data: get_chart_data_energy(site_id, widget_config.size, numerical_func, :get_energy_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
       size: widget_config.size,
@@ -131,7 +134,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 3,
       key: "ENPEI",
       name: "Energy performance Indicator (EPI)",
-      displayTxt: convert_to_ceil_float(energy_consumption / area),
       chart_data: get_chart_data_energy(site_id, widget_config.size, numerical_func, :get_energy_performance_indicator, config, seven_days_range_tuple, prefix),
       unit: "kWh/sqft",
       size: widget_config.size,
@@ -147,7 +149,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "kWh",
       type: 2,
       size: widget_config.size,
-      tableInfo: %{
+      chart_data: %{
           headers: ["Name", "Consumption ( kWh )"],
           list: get_top_three_consumers_for_24_hours(site_id, config, prefix)
       }
@@ -160,7 +162,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 5,
       key: "WACON",
       name: "Water Consumption",
-      displayTxt: convert_to_ceil_float(water_consumption),
       chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_consumption, config, seven_days_range_tuple, prefix),
       unit: "kilo ltrs",
       size: widget_config.size,
@@ -174,7 +175,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 6,
       key: "WACOS",
       name: "Water Cost",
-      displayTxt: convert_to_ceil_float(water_consumption * cost_per_unit),
       chart_data: get_chart_data_water(site_id, widget_config.size, numerical_func, :get_water_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
       size: widget_config.size,
@@ -188,7 +188,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 7,
       key: "FUCON",
       name: "Fuel Consumption",
-      displayTxt: convert_to_ceil_float(fuel_consumption),
       chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_consumption, config, seven_days_range_tuple, prefix),
       unit: "ltrs",
       size: widget_config.size,
@@ -202,7 +201,6 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       id: 8,
       key: "FUCOS",
       name: "Fuel Cost",
-      displayTxt: convert_to_ceil_float(fuel_consumption * cost_per_unit),
       chart_data: get_chart_data_fuel(site_id, widget_config.size, numerical_func, :get_fuel_cost, config, seven_days_range_tuple, prefix),
       unit: "INR",
       size: widget_config.size,
@@ -210,28 +208,30 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     }
   end
 
-  def sub_meters_data(site_id, config, prefix) do
+  def sub_meters_data(site_id, config, widget_config, prefix) do
     %{
       id: 9,
       key: "ENSUB",
       name: "Sub meters - Consumption",
       unit: "kWh",
       type: 2,
-      tableInfo: %{
+      size: widget_config.size,
+      chart_data: %{
           headers: ["Name", "Consumption ( kWh )"],
           list: get_energy_of_sub_meters_for_24_hours(site_id, config, prefix)
       }
     }
   end
 
-  def segr_data(site_id, config, prefix) do
+  def segr_data(site_id, config, widget_config, prefix) do
     %{
       id: 10,
       key: "SEGRE",
       name: "SEGR",
       unit: "kwhr/litr",
       type: 1,
-      displayTxt: get_segr_for_24_hours(site_id, config, prefix)
+      size: widget_config.size,
+      chart_data: get_segr_for_24_hours(site_id, config, prefix)
     }
   end
 
@@ -244,8 +244,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "%",
       size: widget_config.size,
       type: get_chart_type("PPMCW", widget_config.size),
-      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ppm_chart, seven_days_range_tuple, prefix),
-      displayTxt: get_ppm_compliance(site_id, prefix)
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ppm_chart, seven_days_range_tuple, prefix)
     }
   end
 
@@ -258,8 +257,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "%",
       size: widget_config.size,
       type: get_chart_type("OPWOR", widget_config.size),
-      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_open_workorder_chart, seven_days_range_tuple, prefix),
-      displayTxt: get_open_workorder_status(site_id, prefix)
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_open_workorder_chart, seven_days_range_tuple, prefix)
     }
   end
 
@@ -272,8 +270,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "Tickets",
       size: widget_config.size,
       type: get_chart_type("OPTIC", widget_config.size),
-      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_open_status_chart, seven_days_range_tuple, prefix),
-      displayTxt: get_open_ticket_status(site_id, prefix),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_open_status_chart, seven_days_range_tuple, prefix)
     }
   end
 
@@ -286,106 +283,117 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "%",
       size: widget_config.size,
       type: get_chart_type("SEWOR", widget_config.size),
-      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_workorder_status_chart, seven_days_range_tuple, prefix),
-      chartResp: get_ticket_workorder_status_chart(site_id, prefix),
+      chart_data: get_chart_data_work_order_and_ticket(site_id, widget_config.size, numerical_func, :get_ticket_workorder_status_chart, seven_days_range_tuple, prefix)
     }
   end
 
-  def breakdown_workorder_data(site_id, prefix) do
+  def breakdown_workorder_data(site_id, widget_config, prefix) do
     %{
       id: 15,
       key: "BRWOR",
       name: "Breakdown work Status – YTD",
       unit: "WorkOrders",
       type: 1,
-      displayTxt: get_breakdown_workorder_status_shcart(site_id, prefix)
+      size: widget_config.size,
+      chart_data: get_breakdown_workorder_status_shcart(site_id, prefix)
     }
   end
 
-  def equipment_under_maintenance_data(site_id, prefix) do
+  def equipment_under_maintenance_data(site_id, widget_config, prefix) do
     %{
       id: 16,
       key: "EQUMN",
       name: "Equipment under maintenance at present",
       unit: "assets",
       type: 1,
-      displayTxt: get_equipment_under_maintenance(site_id, prefix)
+      size: widget_config.size,
+      chart_data: get_equipment_under_maintenance(site_id, prefix)
    }
   end
 
-  def mtbf_data(site_id, prefix) do
+  def mtbf_data(site_id, widget_config, prefix) do
     %{
       id: 17,
       key: "MTBFA",
       name: "Mean time between failures",
       unit: "YTD",
       type: 1,
-      displayTxt: get_mtbf(site_id, prefix)
+      size: widget_config.size,
+      chart_data: get_mtbf(site_id, prefix)
     }
   end
 
-  def mttr_data(site_id, prefix) do
+  def mttr_data(site_id, widget_config, prefix) do
     %{
       id: 18,
       key: "MTTRA",
       name: "Mean time to recovery",
       unit: "YTD",
       type: 1,
-      displayTxt: get_mttr(site_id, prefix)
+      size: widget_config.size,
+      chart_data: get_mttr(site_id, prefix)
     }
   end
 
-  def intime_reporting_data(site_id, prefix) do
+  def intime_reporting_data(site_id, widget_config, seven_days_range_tuple, user, prefix) do
+    numerical_func = fn -> get_intime_reporting(site_id, prefix) |> convert_to_ceil_float() end
     %{
       id: 19,
       key: "INTRE",
       name: "Intime Reporting",
-      displayTxt: get_intime_reporting(site_id, prefix) |> convert_to_ceil_float(),
       unit: "%",
-      type: 1
+      size: widget_config.size,
+      type: get_chart_type("INTRE", widget_config.size),
+      chart_data: get_chart_data_intime_and_shift(site_id, widget_config.size, numerical_func, :get_intime_reporting_chart, seven_days_range_tuple, user, prefix)
     }
   end
 
-  def shift_coverage_data(site_id, prefix) do
+  def shift_coverage_data(site_id, widget_config, seven_days_range_tuple, user, prefix) do
+    numerical_func = fn -> get_shift_coverage(site_id, prefix) |> convert_to_ceil_float() end
     %{
       id: 20,
       key: "SHFCV",
       name: "Shift Coverage",
-      displayTxt: get_shift_coverage(site_id, prefix) |> convert_to_ceil_float(),
       unit: "%",
-      type: 1
+      size: widget_config.size,
+      type: get_chart_type("SHFCV", widget_config.size),
+      chart_data: get_chart_data_intime_and_shift(site_id, widget_config.size, numerical_func, :get_shift_coverage_chart, seven_days_range_tuple, user, prefix)
     }
   end
 
-  def cost_maintenance_data(site_id, prefix) do
+  def cost_maintenance_data(site_id, widget_config, seven_days_range_tuple, prefix) do
+    numerical_func = fn -> get_work_order_cost(site_id, prefix) end
     %{
       id: 21,
       key: "COSMN",
       name: "Cost - Maintenance",
-      displayTxt: get_work_order_cost(site_id, prefix),
       unit: "INR",
-      type: 1
+      size: widget_config.size,
+      type: get_chart_type("COSMN", widget_config.size),
+      chart_data: get_chart_data_workorder_cost(site_id, widget_config.size, numerical_func, :get_work_order_cost_data, seven_days_range_tuple, prefix)
     }
   end
 
-  def msl_breach_count_data(site_id, prefix) do
+  def msl_breach_count_data(site_id, widget_config, prefix) do
     %{
       id: 22,
       key: "MSLBC",
       name: "MSL Breach Count",
-      displayTxt: get_breached_items(site_id, prefix),
+      chart_data: get_breached_items(site_id, prefix),
       unit: "",
+      size: widget_config.size,
       type: 1
     }
   end
 
-  def ppm_plan_data(site_id, prefix) do
+  def ppm_plan_data(site_id, widget_config, prefix) do
     %{
       id: 23,
       key: "PPMPL",
       name: "Planner for PPM - Compliance",
-      displayTxt: get_ppm_plan(site_id, prefix),
+      chart_data: get_ppm_plan(site_id, prefix),
       unit: "",
+      size: widget_config.size,
       type: 1
     }
   end
@@ -665,20 +673,40 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     apply(DashboardCharts, indivdual_chart_func, [params, prefix])
   end
 
-  def switch_widget_type(site_id, 2, chart_func, config, prefix) do
-    to_date = get_site_date_now(site_id, prefix)
-    from_date = Date.add(to_date, -7)
-    params = %{
-      "site_id" => site_id,
-      "from_date" => from_date |> Date.to_iso8601(),
-      "to_date" => to_date |> Date.to_iso8601(),
-      # "asset_ids" => Helpers.get_assets_for_dashboards(site_id, "E", prefix) |> Enum.map(&(&1.id))
-      "asset_ids" => config["energy_main_meters"]
-    }
-    apply(DashboardCharts, chart_func, [params, prefix])
+  def get_chart_data_intime_and_shift(_site_id, 1, numerical_func, _indivdual_chart_func, _seven_days_range_tuple, _user, _prefix) do
+    numerical_func.()
   end
 
-  def switch_widget_type(_site_id, _size, _chart_func, _config, _prefix), do: nil
+  def get_chart_data_intime_and_shift(site_id, 2, _numerical_func, indivdual_chart_func, {seven_days_start, seven_days_end}, user, prefix) do
+    params = %{
+      "site_id" => site_id,
+      "from_date" => seven_days_start |> Date.to_iso8601(),
+      "to_date" => seven_days_end |> Date.to_iso8601(),
+      "shift_ids" => Settings.list_shift_ids(site_id, prefix),
+      "org_unit_ids" => Staff.list_org_unit_ids_for_user(user, prefix)
+    }
+    apply(DashboardCharts, indivdual_chart_func, [params, prefix])
+  end
+
+  def get_chart_data_workorder_cost(_site_id, 1, numerical_func, _indivdual_chart_func, _seven_days_range_tuple, _prefix) do
+    numerical_func.()
+  end
+
+  def get_chart_data_workorder_cost(site_id, 2, _numerical_func, indivdual_chart_func, {seven_days_start, seven_days_end}, prefix) do
+    params = %{
+      "site_id" => site_id,
+      "from_date" => seven_days_start |> Date.to_iso8601(),
+      "to_date" => seven_days_end |> Date.to_iso8601()
+    }
+    apply(DashboardCharts, indivdual_chart_func, [params, prefix])
+  end
+
+  # Chart types:
+  # 1 => Number
+  # 2 => Table
+  # 3 => Pie Chart
+  # 4 => Trend Line
+  # 5 => Bar Chart
 
   def get_chart_type("ENCON", 2), do: 4
   def get_chart_type("ENCOS", 2), do: 4
@@ -692,6 +720,9 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_chart_type("OPTIC", 2), do: 5
   def get_chart_type("SEWOR", 1), do: 3
   def get_chart_type("SEWOR", 2), do: 5
+  def get_chart_type("INTRE", 2), do: 5
+  def get_chart_type("SHFCV", 2), do: 4
+  def get_chart_type("COSMN", 2), do: 4
   def get_chart_type(_, _), do: 1
 
 end

@@ -34,6 +34,11 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def list_org_unit_ids_for_user(user, prefix) do
+    from(ou in OrgUnit, where: ou.party_id == ^user.party_id and ou.active, select: ou.id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_org_units_tree(party_id, prefix) do
     list_org_units(party_id, prefix)
     |> HierarchyManager.build_tree()
