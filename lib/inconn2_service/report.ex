@@ -832,7 +832,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Ticket Report", filters, result, report_headers, "WR", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_workrequest_report(report_headers, result), summary}
+        {csv_for_workrequest_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -2440,11 +2440,19 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
-  defp csv_for_workrequest_report(report_headers, data) do
+  defp csv_for_workrequest_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.ticket_subcategory, d.description, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
+
+    summary =
+      Enum.map(summary, fn d ->
+        [d.ticket_category, d.count, d.resolved_count, d.open_count]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+
   end
 
   defp csv_for_asset_status_report(report_headers, data, summary, summary_headers) do
