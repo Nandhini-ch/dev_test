@@ -249,7 +249,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
-  def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2)
+  def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2) |> Float.to_string()
 
   def convert_to_ceil_float(value), do: value
 
