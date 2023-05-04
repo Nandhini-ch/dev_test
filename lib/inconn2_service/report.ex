@@ -2257,7 +2257,7 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.cost
+          convert_float_to_binary(rbj.cost)
         ],
         [
           :td,
