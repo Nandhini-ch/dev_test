@@ -1736,7 +1736,7 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-  def create_report_structure(report_title, filters, data, _report_headers, "WOE") do
+  def create_report_structure(report_title, filters, data, _report_headers, "WOE", _summary, _summary_headers) do
     string =
       Sneeze.render(
         [
@@ -1787,6 +1787,66 @@ defmodule Inconn2Service.Report do
             %{style: style(%{"float" => "right", "font-style" => "italic"})},
             "Powered By Inconn"
           ],
+        ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+  end
+
+  def create_report_structure(report_title, filters, data, report_headers, "WOEM", _summary, _summary_headers) do
+    string =
+      Sneeze.render(
+        [
+          :div,
+          [
+            :h1,
+            %{
+              style: style(%{"text-align" => "center"})
+            },
+            "#{report_title}"
+          ],
+            [
+              :h2,
+              if filters.licensee != nil do
+                "#{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :h2,
+              if filters.site != nil do
+                "Site: #{filters.site.name}"
+              end
+            ],
+            [
+              :div,
+              %{style: style(%{"font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
+            ],
+          [
+            :table,
+            %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+            create_report_headers(report_headers),
+            create_table_body(data, "WOEM")
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "right", "font-style" => "italic"})},
+            "Powered By Inconn"
+          ]
         ]
       )
     {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
