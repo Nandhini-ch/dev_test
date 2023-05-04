@@ -1760,24 +1760,24 @@ defmodule Inconn2Service.Report do
                 "Site: #{filters.site.name}"
               end
             ],
-            [
-              :div,
-              %{style: style(%{"font-size" => "20px"})},
+            # [
+            #   :div,
+            #   %{style: style(%{"font-size" => "20px"})},
               [
-                :div,
+                :span,
                 %{style: style(%{"float" => "left", "font-size" => "20px"})},
                 if filters.from_date != nil do
                   "From Date: #{filters.from_date}"
                 end,
               ],
               [
-                :div,
+                :span,
                 %{style: style(%{"float" => "right", "font-size" => "20px"})},
                 if filters.to_date != nil do
                   "To Date: #{filters.to_date}"
                 end
-              ]
-            ],
+              ],
+            # ],
           [
             :div,
             create_table_body(data, "WOE")
