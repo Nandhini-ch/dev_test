@@ -1762,7 +1762,7 @@ defmodule Inconn2Service.Report do
             ],
             [
               :div,
-              %{style: style(%{"display" => "flex", "justify-content" => "space-evenly", "font-size" => "20px"})},
+              %{style: style(%{"font-size" => "20px"})},
               [
                 :div,
                 %{style: style(%{"float" => "left", "font-size" => "20px"})},
