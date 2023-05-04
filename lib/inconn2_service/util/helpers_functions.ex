@@ -249,9 +249,13 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
-  def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2) |> Float.to_string()
+  def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2)
 
   def convert_to_ceil_float(value), do: value
+
+  def convert_float_to_binary(value) when is_float(value), do: Float.ceil(value) |> :erlang.float_to_binary()
+
+  def convert_float_to_binary(value), do: value
 
   def naming_conversion(nil), do: ""
   def naming_conversion(string) do
