@@ -1755,25 +1755,29 @@ defmodule Inconn2Service.Report do
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
-              end,
-
-              [[]],
-
-              if filters.to_date != nil do
-                "To Date: #{filters.to_date}"
-              end
-            ],
-            [
               :h2,
               if filters.site != nil do
                 "Site: #{filters.site.name}"
               end
             ],
-
+            [
+              :div,
+              %{style: style(%{"display" => "flex", "justify-content" => "space-evenly", "font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
+            ],
           [
             :div,
             create_table_body(data, "WOE")
@@ -1815,14 +1819,22 @@ defmodule Inconn2Service.Report do
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
-              end,
-              if filters.to_date != nil do
-                "To Date: #{filters.to_date}"
-              end
+              :div,
+              %{style: style(%{"display" => "flex", "justify-content" => "space-evenly", "font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
             ],
           [
             :table,
