@@ -460,7 +460,7 @@ defmodule Inconn2Service.Report do
 
     summary = get_summary_of_maintainance(result, prefix)
 
-    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO"]
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue"]
 
     case query_params["type"] do
       "pdf" ->
@@ -2247,12 +2247,12 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.bin
+          rbj.row
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.row
+          rbj.bin
         ],
         [
           :td,
@@ -2423,7 +2423,12 @@ defmodule Inconn2Service.Report do
         [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.asset_category, d.count_of_assets, d.total_workorder, d.completed_workorder, d.pending_workorder, d.overdue_percentage]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
