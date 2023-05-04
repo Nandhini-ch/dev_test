@@ -108,13 +108,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   defp get_individual_energy_consumption_data(date, params, prefix) do
+    {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     value =
       NumericalData.get_energy_consumption_for_assets(
                       energy_main_meters,
-                      NaiveDateTime.new!(date, ~T[00:00:00]),
-                      NaiveDateTime.new!(date, ~T[23:59:59]),
+                      NaiveDateTime.new!(date, from_time),
+                      NaiveDateTime.new!(date, to_time),
                       prefix)
       |> change_nil_to_zero()
 
@@ -853,6 +854,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     Enum.sort_by(breach_data, &(&1.breached_date_time), NaiveDateTime)
     |> Enum.filter(fn x -> x.is_msl_breached == "YES" end)
     |> List.first()
+  end
+
+  defp process_wo_for_date(work_orders, nil, prefix) do
+    process_wo_for_date(work_orders, "L", prefix) ++ process_wo_for_date(work_orders, "E", prefix)
   end
 
   defp process_wo_for_date(work_orders, asset_type, prefix) do

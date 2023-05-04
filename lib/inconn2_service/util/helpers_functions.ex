@@ -126,6 +126,14 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_from_time_to_time_from_iso(nil, nil), do: {~T[00:00:00], ~T[23:59:59]}
+  def get_from_time_to_time_from_iso(from_time, to_time) do
+    {
+      Time.from_iso8601!(from_time),
+      Time.from_iso8601!(to_time)
+    }
+  end
+
   def get_from_and_to_date_time(nil, nil), do: {nil, nil}
   def get_from_and_to_date_time(from_date, to_date) do
     {from_date_as_date, to_date_as_date} = get_from_date_to_date_from_iso(from_date, to_date)
