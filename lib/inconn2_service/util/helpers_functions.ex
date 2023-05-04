@@ -253,7 +253,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def convert_to_ceil_float(value), do: value
 
-  def convert_float_to_binary(value) when is_float(value), do: Float.ceil(value) |> :erlang.float_to_binary()
+  def convert_float_to_binary(value) when is_float(value), do: Float.ceil(value) |> :erlang.float_to_binary([ decimals: 2])
 
   def convert_float_to_binary(value), do: value
 
