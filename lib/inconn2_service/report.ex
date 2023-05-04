@@ -1764,15 +1764,15 @@ defmodule Inconn2Service.Report do
             #   :div,
             #   %{style: style(%{"font-size" => "20px"})},
               [
-                :span,
-                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                :div,
+                %{style: style(%{"float" => "", "font-size" => "20px"})},
                 if filters.from_date != nil do
                   "From Date: #{filters.from_date}"
                 end,
               ],
               [
-                :span,
-                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                :div,
+                %{style: style(%{"float" => "", "font-size" => "20px"})},
                 if filters.to_date != nil do
                   "To Date: #{filters.to_date}"
                 end
@@ -1820,7 +1820,7 @@ defmodule Inconn2Service.Report do
             ],
             [
               :div,
-              %{style: style(%{"display" => "flex", "justify-content" => "space-evenly", "font-size" => "20px"})},
+              %{style: style(%{"font-size" => "20px"})},
               [
                 :div,
                 %{style: style(%{"float" => "left", "font-size" => "20px"})},
