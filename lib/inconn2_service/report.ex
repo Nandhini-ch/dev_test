@@ -487,31 +487,25 @@ defmodule Inconn2Service.Report do
       total_workorder = length(v)
       completed_workorder = Enum.filter(v, fn a -> a.status == "cp" end) |> Enum.count()
       pending_workorder = total_workorder - completed_workorder
+      asset_category = List.first(v).asset_category
       %{
-        asset_category: List.first(v).asset_category.name,
-        # count_of_assets: calculate_count_of_assets(v),
+        asset_category: asset_category.name,
+        count_of_assets: AssetConfig.get_asset_count_by_asset_category(asset_category.id, asset_category.asset_type, prefix),
         total_workorder: length(v),
         completed_workorder: "Completed Workorder: #{completed_workorder}",
         pending_workorder: "Pending Workorder: #{pending_workorder}",
-        # overdue_percentage: calculate_overdue(v)
+        overdue_percentage: "#{calculate_overdue(v, prefix)} %"
       }
     end)
   end
 
-  # defp calculate_count_of_assets(wo_list) do
-  #   wo_list
-  #   |> Enum.group_by(&(&1.asset_id))
-  #   |> length()
-  # end
-
-  # defp calculate_overdue(wo_list) do
-  #   total_list =
-  #     Enum.map(wo_list, fn wo ->
-  #       (wo.estimated_time * 60) < NaiveDateTime.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.diff(wo.start_date, wo.start_time))
-  #     end)
-  #   overdue_count = Enum.count(overdue_list, fn boolean -> boolean end)
-  #   calculate_percentage(overdue_count, length(total_list))
-  # end
+  defp calculate_overdue(wo_list, prefix) do
+    pending_list = Enum.filter(wo_list, fn a -> a.status != "cp" end)
+    overdue_count =
+      Enum.map(pending_list, fn wo -> Workorder.add_overdue_flag(wo, prefix) end)
+     |> Enum.count(fn wo -> wo.overdue end)
+    calculate_percentage(overdue_count, length(pending_list))
+  end
 
   defp convert_to_positive(number) do
     cond do
