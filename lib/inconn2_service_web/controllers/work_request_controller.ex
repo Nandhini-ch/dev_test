@@ -56,6 +56,11 @@ defmodule Inconn2ServiceWeb.WorkRequestController do
     render(conn, "index.json", work_requests: work_requests)
   end
 
+  def work_requests_with_pending_approval_for_teams(conn, _) do
+    work_requests = Ticket.list_pending_work_request_for_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", work_requests: work_requests)
+  end
+
   def create(conn, %{"work_request" => work_request_params}) do
     with {:ok, %WorkRequest{} = work_request} <- Ticket.create_work_request(work_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
       conn
