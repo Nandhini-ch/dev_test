@@ -11,6 +11,11 @@ defmodule Inconn2ServiceWeb.InventoryItemController do
     render(conn, "index.json", inventory_items: inventory_items)
   end
 
+  def index_for_store_keeper(conn, _params) do
+    inventory_items = InventoryManagement.list_inventory_items_for_store_keeper(conn.query_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", inventory_items: inventory_items)
+  end
+
   def create(conn, %{"inventory_item" => inventory_item_params}) do
     with {:ok, %InventoryItem{} = inventory_item} <- InventoryManagement.create_inventory_item(inventory_item_params, conn.assigns.sub_domain_prefix) do
       conn

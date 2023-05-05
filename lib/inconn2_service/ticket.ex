@@ -193,6 +193,26 @@ defmodule Inconn2Service.Ticket do
     |> Repo.sort_by_id()
   end
 
+  def list_pending_work_request_for_approval(user, prefix) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    query = from w in WorkRequest, where: w.status not in ["AP", "RJ", "CL", "CP", "ROP", "CS"]
+    Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+    |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
+    |> filter_for_workrequest_approval_in_team(team_user_ids)
+    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+    |> Enum.filter(fn wr -> !exclude_work_request_approved(wr, user, prefix) end)
+    |> Repo.sort_by_id()
+  end
+
+  def filter_for_workrequest_approval_in_team(work_requests, team_user_ids) do
+    Enum.filter(work_requests, fn wr ->
+      boolean_list = Enum.map(team_user_ids, fn user_id -> user_id in wr.approvals_required end)
+      true in boolean_list
+    end)
+  end
+
   defp exclude_work_request_approved(work_request, current_user, prefix) do
     from(a in Inconn2Service.Ticket.Approval, where: a.work_request_id == ^work_request.id and a.user_id == ^current_user.id)
     |> Repo.exists?(prefix: prefix)
@@ -490,15 +510,16 @@ defmodule Inconn2Service.Ticket do
     if status != nil do
       raised_dt = get_field(cs, :raised_date_time)
       site_dt = get_site_date_time(work_request, prefix)
-      case status do
-        "AS" ->
-            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
-            change(cs, %{response_tat: tat})
-        "CP" ->
-            tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
-              change(cs, %{resolution_tat: tat})
-          _ ->
-            cs
+      cond do
+        work_request.status == "RS" and status != "RS" ->
+          tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+          change(cs, %{response_tat: tat})
+
+        work_request.status != "CP" and status == "CP" ->
+          tat = NaiveDateTime.diff(site_dt, raised_dt) / 60 |> trunc()
+          change(cs, %{resolution_tat: tat})
+        true ->
+          cs
       end
     else
       cs

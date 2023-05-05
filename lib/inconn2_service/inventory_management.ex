@@ -280,6 +280,22 @@ defmodule Inconn2Service.InventoryManagement do
     |> Enum.map(fn i -> preload_stocked_quantity_for_item(i, query_params["location_id"]) end)
   end
 
+  def list_inventory_items_for_store_keeper(query_params, user, prefix) do
+    from(i in InventoryItem, where: i.active,
+    join: st in Stock, on: i.id == st.inventory_item_id,
+    join: s in Store, on: s.id == st.store_id, where: s.user_id == ^user.id,
+    select: i)
+    |> inventory_item_query(from(query_params))
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
+    |> Repo.preload([:consume_unit_of_measurement, :uom_category, :inventory_supplier_items])
+    |> Repo.preload([stocks: :store])
+    |> preload_asset_categories(prefix)
+    |> filter_on_supplier(query_params["supplier_id"])
+    # |> preload_stocked_quantity_for_item(query_params["location_id"])
+    |> Enum.map(fn i -> preload_stocked_quantity_for_item(i, query_params["location_id"]) end)
+  end
+
   def get_inventory_item!(id, prefix) do
     IO.inspect(prefix)
     Repo.get!(InventoryItem, id, prefix: prefix)
@@ -429,6 +445,19 @@ defmodule Inconn2Service.InventoryManagement do
 
   def list_transactions_to_be_approved_grouped(user, prefix) do
     from(t in Transaction, where: t.approver_user_id == ^user.id and t.status == "NA" and t.is_approved != "AP")
+    |> Repo.all(prefix: prefix)
+    |> preload_stuff_for_transaction()
+    |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)
+    |> Stream.map(fn t -> load_transaction_user_for_transaction(t, prefix) end)
+    |> Enum.group_by(&(&1.transaction_reference))
+    |> rearrange_transaction_info()
+    |> put_approval_status_for_transactions()
+  end
+
+  def list_pending_transactions_for_approval(user, prefix) do
+    teams = Staff.get_team_ids_for_user(user, prefix)
+    team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
+    from(t in Transaction, where: t.approver_user_id in ^team_user_ids and t.status == "NA" and t.is_approved != "AP")
     |> Repo.all(prefix: prefix)
     |> preload_stuff_for_transaction()
     |> Stream.map(fn t -> load_approver_user_for_transaction(t, prefix) end)

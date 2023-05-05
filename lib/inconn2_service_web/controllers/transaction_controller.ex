@@ -46,6 +46,11 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
+  def transactions_with_pending_approval_for_teams(conn, _params) do
+    transactions = InventoryManagement.list_pending_transactions_for_approval(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "index.json", transactions: transactions)
+  end
+
   def create(conn, %{"transaction" => transaction_params}) do
     with {:ok, %Transaction{} = transaction} <- InventoryManagement.create_transaction(transaction_params,conn.assigns.sub_domain_prefix) do
       conn
