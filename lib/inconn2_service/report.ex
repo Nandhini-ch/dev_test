@@ -1606,6 +1606,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_of_assets
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.total_workorder
         ],
         [
@@ -1617,6 +1622,11 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.pending_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.overdue_percentage
         ]
       ]
     end)
