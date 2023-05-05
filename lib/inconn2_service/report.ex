@@ -460,7 +460,7 @@ defmodule Inconn2Service.Report do
 
     summary = get_summary_of_maintainance(result, prefix)
 
-    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue"]
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue %"]
 
     case query_params["type"] do
       "pdf" ->
@@ -499,7 +499,7 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-  defp calculate_overdue(wo_list, prefix) do
+  def calculate_overdue(wo_list, prefix) do
     pending_list = Enum.filter(wo_list, fn a -> a.status != "cp" end)
     overdue_count =
       Enum.map(pending_list, fn wo -> Workorder.add_overdue_flag(wo, prefix) end)
@@ -814,7 +814,7 @@ defmodule Inconn2Service.Report do
       end)
 
     report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Ticket Subcategory", "Description", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
-    summary_headers =["Ticket Category", "Count", "Resolved Count", "Open Count"]
+    summary_headers =["Ticket Category", "Count of tickets", "Resolved Count", "Open Count"]
 
     filters = filter_data(query_params, prefix)
 
