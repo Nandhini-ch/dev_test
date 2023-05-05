@@ -1375,7 +1375,7 @@ defmodule Inconn2Service.Workorder do
   defp get_asset_name(nil), do: nil
   defp get_asset_name(asset), do: asset.name
 
-  defp add_overdue_flag(work_order, prefix) do
+  def add_overdue_flag(work_order, prefix) do
     site = AssetConfig.get_site!(work_order.site_id, prefix)
     site_dt = DateTime.now!(site.time_zone)
     site_dt = DateTime.to_naive(site_dt)

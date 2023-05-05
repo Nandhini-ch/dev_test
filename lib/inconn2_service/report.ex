@@ -460,7 +460,7 @@ defmodule Inconn2Service.Report do
 
     summary = get_summary_of_maintainance(result, prefix)
 
-    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue"]
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue %"]
 
     case query_params["type"] do
       "pdf" ->
@@ -487,31 +487,25 @@ defmodule Inconn2Service.Report do
       total_workorder = length(v)
       completed_workorder = Enum.filter(v, fn a -> a.status == "cp" end) |> Enum.count()
       pending_workorder = total_workorder - completed_workorder
+      asset_category = List.first(v).asset_category
       %{
-        asset_category: List.first(v).asset_category.name,
-        # count_of_assets: calculate_count_of_assets(v),
+        asset_category: asset_category.name,
+        count_of_assets: AssetConfig.get_asset_count_by_asset_category(asset_category.id, asset_category.asset_type, prefix),
         total_workorder: length(v),
         completed_workorder: "Completed Workorder: #{completed_workorder}",
         pending_workorder: "Pending Workorder: #{pending_workorder}",
-        # overdue_percentage: calculate_overdue(v)
+        overdue_percentage: "#{calculate_overdue(v, prefix)} %"
       }
     end)
   end
 
-  # defp calculate_count_of_assets(wo_list) do
-  #   wo_list
-  #   |> Enum.group_by(&(&1.asset_id))
-  #   |> length()
-  # end
-
-  # defp calculate_overdue(wo_list) do
-  #   total_list =
-  #     Enum.map(wo_list, fn wo ->
-  #       (wo.estimated_time * 60) < NaiveDateTime.diff(NaiveDateTime.new!(wo.completed_date, wo.completed_time), NaiveDateTime.diff(wo.start_date, wo.start_time))
-  #     end)
-  #   overdue_count = Enum.count(overdue_list, fn boolean -> boolean end)
-  #   calculate_percentage(overdue_count, length(total_list))
-  # end
+  def calculate_overdue(wo_list, prefix) do
+    pending_list = Enum.filter(wo_list, fn a -> a.status != "cp" end)
+    overdue_count =
+      Enum.map(pending_list, fn wo -> Workorder.add_overdue_flag(wo, prefix) end)
+     |> Enum.count(fn wo -> wo.overdue end)
+    calculate_percentage(overdue_count, length(pending_list))
+  end
 
   defp convert_to_positive(number) do
     cond do
@@ -820,7 +814,7 @@ defmodule Inconn2Service.Report do
       end)
 
     report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Ticket Subcategory", "Description", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
-    summary_headers =["Ticket Category", "Count", "Resolved Count", "Open Count"]
+    summary_headers =["Ticket Category", "Count of tickets", "Resolved Count", "Open Count"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1612,6 +1606,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_of_assets
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.total_workorder
         ],
         [
@@ -1623,6 +1622,11 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.pending_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.overdue_percentage
         ]
       ]
     end)
