@@ -438,7 +438,7 @@ defmodule Inconn2Service.Report do
 
         %{
           id: wo.id,
-          site_id: site_id,
+          site_id: wo.site_id,
           asset_name: asset_name,
           asset_code: asset_code,
           type: match_workorder_type(wo.type),
