@@ -562,7 +562,7 @@ defmodule Inconn2Service.Report do
       |> filter_by_site(rectified_query_params["site_id"])
       |> filter_by_asset_category(rectified_query_params["asset_category_id"], prefix)
 
-    summary_headers =["Store Location", "Count of Received Transaction", "Count of Issued Transaction"]
+    summary_headers =["Store Location", "Count of Receive Transactions", "Count of Issue Transactions"]
 
     summary = summary_for_inventory_report(result)
 
