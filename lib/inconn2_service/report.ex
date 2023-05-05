@@ -460,7 +460,7 @@ defmodule Inconn2Service.Report do
 
     summary = get_summary_of_maintainance(result, prefix)
 
-    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue %"]
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue"]
 
     case query_params["type"] do
       "pdf" ->
@@ -562,7 +562,7 @@ defmodule Inconn2Service.Report do
       |> filter_by_site(rectified_query_params["site_id"])
       |> filter_by_asset_category(rectified_query_params["asset_category_id"], prefix)
 
-    summary_headers =["Store Location", "Count of receive Tx", "Count of issue Tx"]
+    summary_headers =["Store Location", "Count of Received Transaction", "Count of Issued Transaction"]
 
     summary = summary_for_inventory_report(result)
 
