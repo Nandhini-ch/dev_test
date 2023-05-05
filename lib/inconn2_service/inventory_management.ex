@@ -285,7 +285,7 @@ defmodule Inconn2Service.InventoryManagement do
     join: st in Stock, on: i.id == st.inventory_item_id,
     join: s in Store, on: s.id == st.store_id, where: s.user_id == ^user.id,
     select: i)
-    |> inventory_item_query(from(query_params))
+    |> inventory_item_query(query_params)
     |> Repo.all(prefix: prefix)
     |> Repo.preload([:inventory_unit_of_measurement, :purchase_unit_of_measurement])
     |> Repo.preload([:consume_unit_of_measurement, :uom_category, :inventory_supplier_items])
@@ -454,7 +454,7 @@ defmodule Inconn2Service.InventoryManagement do
     |> put_approval_status_for_transactions()
   end
 
-  def list_pending_transactions_for_approval(user, prefix) do
+  def list_pending_transactions_approval_for_my_teams(user, prefix) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
     from(t in Transaction, where: t.approver_user_id in ^team_user_ids and t.status == "NA" and t.is_approved != "AP")
