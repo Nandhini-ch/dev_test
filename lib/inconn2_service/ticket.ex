@@ -210,7 +210,7 @@ defmodule Inconn2Service.Ticket do
     Enum.filter(work_requests, fn wr ->
       boolean_list = Enum.map(team_user_ids, fn user_id -> user_id in wr.approvals_required end)
       true in boolean_list
-    end)
+    end) |> IO.inspect()
   end
 
   defp exclude_work_request_approved(work_request, current_user, prefix) do
