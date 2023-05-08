@@ -1457,7 +1457,7 @@ defmodule Inconn2Service.Workorder do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
           create_status_track(work_order, user, prefix)
-          delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
+          Elixir.Task.start(fn -> delete_workorder_in_alert_notification_generator(work_order, updated_work_order) end)
           record_meter_readings(work_order, updated_work_order, prefix)
           calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
