@@ -46,10 +46,10 @@ defmodule Inconn2ServiceWeb.TransactionController do
     render(conn, "index.json", transactions: transactions)
   end
 
-  #change the function
+  #list transaction pending approvals
   def transactions_with_pending_approval_for_teams(conn, _params) do
-    transactions = InventoryManagement.list_transactions_to_be_approved_grouped(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", transactions: transactions)
+    transactions = InventoryManagement.list_pending_transactions_approval_for_my_teams(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "transaction_grouped.json", transactions: transactions)
   end
 
   def create(conn, %{"transaction" => transaction_params}) do
