@@ -3,6 +3,7 @@ defmodule Inconn2Service.Report do
   import Inconn2Service.Util.HelpersFunctions
 
   # alias Inconn2Service.AssetConfig.AssetCategory
+  alias Inconn2Service.InventoryManagement
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -567,7 +568,7 @@ defmodule Inconn2Service.Report do
 
     summary_headers =["Store Location", "Count of Receive Transactions", "Count of Issue Transactions"]
 
-    summary = summary_for_inventory_report(result)
+    summary = summary_for_inventory_report(result, prefix)
 
     filters = filter_data(query_params, prefix)
 
@@ -583,11 +584,11 @@ defmodule Inconn2Service.Report do
     end
   end
 
-  def summary_for_inventory_report(result) do
+  def summary_for_inventory_report(result, prefix) do
     Enum.group_by(result, &(&1.store_id))
     |> Enum.map(fn {_k, v} ->
       %{
-        store_location: List.first(v).store_id,
+        store_location: InventoryManagement.get_store!(List.first(v).store_id, prefix).name,
         count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
         count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count()
       }
