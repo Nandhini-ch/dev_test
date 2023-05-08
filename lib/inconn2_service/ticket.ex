@@ -207,7 +207,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   def filter_for_workrequest_approval_in_team(work_requests, team_user_ids) do
-    Enum.reject(work_requests, fn wr -> is_nil(wr.approvals_reuqired) end)
+    Enum.reject(work_requests, fn wr -> is_nil(wr.approvals_required) end)
     |> Enum.filter(fn wr ->
         boolean_list = Enum.map(team_user_ids, fn user_id -> user_id in wr.approvals_required end)
         true in boolean_list

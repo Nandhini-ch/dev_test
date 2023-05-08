@@ -768,21 +768,24 @@ defmodule Inconn2Service.Report do
             {nil, nil}
           end
 
-        {response_tat_met, resolution_tat_met} =
-          if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
-            cond do
-              wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
-                {"yes", "yes"}
+          response_tat_met = check_response_tat(ticket_response_tat, wr.response_tat)
+          resolution_tat_met = check_resolution_tat(ticket_resolution_tat, wr.resolution_tat)
 
-                wr.response_tat <= ticket_response_tat ->
-                {"yes", nil}
+        # {response_tat_met, resolution_tat_met} =
+        #   if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
+        #     cond do
+        #       wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
+        #         {"Yes", "Yes"}
 
-              true ->
-                {"no", "no"}
-            end
-          else
-            {nil, nil}
-          end
+        #         wr.response_tat <= ticket_response_tat ->
+        #         {"Yes", nil}
+
+        #       true ->
+        #         {"No", "No"}
+        #     end
+        #   else
+        #     {nil, nil}
+        #   end
 
         time_taken_to_close =
           if wr.resolution_tat != nil do
@@ -836,6 +839,24 @@ defmodule Inconn2Service.Report do
         {result, summary}
     end
   end
+
+  defp check_resolution_tat(expected_resolution_tat, actual_resolution_tat) when not is_nil(expected_resolution_tat) and not is_nil(actual_resolution_tat) do
+    if actual_resolution_tat <= expected_resolution_tat do
+      "Yes"
+    else
+      "No"
+    end
+  end
+  defp check_resolution_tat(_expected_resolution_tat, _actual_resolution_tat), do: "-"
+
+  defp check_response_tat(expected_response_tat, actual_response_tat) when not is_nil(expected_response_tat) and not is_nil(actual_response_tat) do
+    if actual_response_tat <= expected_response_tat do
+      "Yes"
+    else
+      "No"
+    end
+  end
+  defp check_response_tat(_expected_response_tat, _actual_response_tat), do: "-"
 
   defp calculate_times_from_minutes(minutes) do
     [hours, rest] = get_hours(minutes)
