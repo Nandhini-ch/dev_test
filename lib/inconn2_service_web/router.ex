@@ -547,9 +547,9 @@ defmodule Inconn2ServiceWeb.Router do
       get "/:team_id/attendances", AttendanceController, :index_for_team
       get "/work_orders", WorkOrderController, :work_orders_for_teams
       get "/work_requests", WorkRequestController, :index_for_team
-      get "/workorder_pending_approvals", WorkOrderController, :work_orders_with_pending_approval_for_teams
-      get "/transactions_pending_approvals", TransactionController, :transactions_with_pending_approval_for_teams
-      get "/work_requests_pending_approvals", WorkRequestController, :work_requests_with_pending_approval_for_teams
+      get "/workorder_pending_approval", WorkOrderController, :work_orders_with_pending_approval_for_teams
+      get "/transactions_pending_approval", TransactionController, :transactions_with_pending_approval_for_teams
+      get "/work_requests_pending_approval", WorkRequestController, :work_requests_with_pending_approval_for_teams
       get "/transactions", TransactionController, :index_grouped_team
     end
 
