@@ -880,8 +880,8 @@ defmodule Inconn2Service.Report do
       %{
         ticket_category: List.first(v).ticket_category,
         count: Enum.count(v),
-        resolved_count: Enum.filter(v, fn a -> a.status == "CL" end) |> Enum.count(),
-        open_count: Enum.filter(v, fn a -> a.status != "CL" end) |> Enum.count()
+        resolved_count: Enum.filter(v, fn a -> a.status in ["CL", "CP", "CS"] end) |> Enum.count(),
+        open_count: Enum.filter(v, fn a -> a.status not in ["CL", "CP", "CS"] end) |> Enum.count()
       }
     end)
   end
