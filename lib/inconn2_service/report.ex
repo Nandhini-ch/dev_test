@@ -446,8 +446,10 @@ defmodule Inconn2Service.Report do
           workorder_template_id: wo.workorder_template_id,
           assigned_to: name,
           manhours_consumed: convert_man_hours_consumed(manhours_consumed),
-          scheduled_date: convert_date_format(wo.scheduled_date),
-          scheduled_time: convert_time_format(wo.scheduled_time),
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          converted_scheduled_date: convert_date_format(wo.scheduled_date),
+          converted_scheduled_time: convert_time_format(wo.scheduled_time),
           start_date: convert_date_format(wo.start_date),
           start_time: convert_time_format(wo.start_time),
           completed_date: convert_date_format(wo.completed_date),
@@ -861,12 +863,6 @@ defmodule Inconn2Service.Report do
         open_count: Enum.filter(v, fn a -> a.status != "CL" end) |> Enum.count()
       }
     end)
-  end
-
-
-  defp get_site_date_time(site) do
-    date_time = DateTime.now!(site.time_zone)
-    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
   def asset_status_report(prefix, query_params) do
@@ -2370,12 +2366,12 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.scheduled_date
+          rbj.converted_scheduled_date
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.scheduled_time
+          rbj.converted_scheduled_time
         ],
         [
           :td,
@@ -2485,7 +2481,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_workorder_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
-        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
+        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.converted_scheduled_date, d.converted_scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
     summary =
