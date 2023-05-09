@@ -18,15 +18,15 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def list_reassign_reschedule_requests_to_be_approved(prefix, user, query_params) do
-    employee = Staff.get_employee_from_user(user.employee_id, prefix)
-    case employee do
+    # employee = Staff.get_employee_from_user(user.employee_id, prefix)
+    case user.employee_id do
       nil -> []
-      obj -> get_reassign_reschedule_requests_to_be_approved(obj, query_params, prefix)
+      _ -> get_reassign_reschedule_requests_to_be_approved(user, query_params, prefix)
     end
   end
 
-  defp get_reassign_reschedule_requests_to_be_approved(employee, query_params, prefix) do
-    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^employee.id and rrr.status != "AP")
+  defp get_reassign_reschedule_requests_to_be_approved(user, query_params, prefix) do
+    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status != "AP")
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn rrr -> set_asset_name(rrr, prefix) end)
@@ -90,11 +90,20 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
+   result =
     %ReassignRescheduleRequest{}
     |> ReassignRescheduleRequest.changeset(Map.put(attrs, "requester_user_id", user.id))
     |> add_reports_to(prefix)
     |> check_next_occurrence_for_reschedule(prefix)
     |> Repo.insert(prefix: prefix)
+
+    case result do
+      {:ok, request} ->
+        {:ok, preload_functions(request, prefix)}
+
+      _->
+        result
+    end
   end
 
   defp check_next_occurrence_for_reschedule(cs, prefix) do
@@ -181,12 +190,19 @@ defmodule Inconn2Service.Reapportion do
   defp update_work_order({:ok, request}, prefix, user, type) do
     work_order = Workorder.get_work_order!(request.work_order_id, prefix)
     Workorder.reassign_work_order(work_order, get_attrs_on_type(type, request), prefix, user)
-    {:ok, request}
+    {:ok, request |> preload_functions(prefix)}
+  end
+
+  def preload_functions(request, prefix) do
+    set_asset_name(request, prefix)
+    |> get_requester_name(prefix)
+    |> get_reports_name(prefix)
+    |> get_reassign_name(prefix)
   end
 
   defp get_user_from_changeset(nil, _prefix), do: nil
   defp get_user_from_changeset(user_id, prefix), do: Staff.get_user(user_id, prefix)
 
   defp get_attrs_on_type("REAS", request), do: %{"user_id" => request.reassign_to_user_id}
-  defp get_attrs_on_type("RESC", request), do: %{"scheduled_date" => request.reschedue_date, "scheduled_time" => request.reschedule_time}
+  defp get_attrs_on_type("RESC", request), do: %{"scheduled_date" => request.reschedule_date, "scheduled_time" => request.reschedule_time}
 end
