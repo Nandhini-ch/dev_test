@@ -812,6 +812,7 @@ defmodule Inconn2Service.Report do
           assigned_to: assigned_to,
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
+          backend_status: wr.status,
           status: match_work_request_status(wr.status),
           time_taken_to_close: convert_man_hours_consumed(time_taken_to_close),
           date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
@@ -880,8 +881,8 @@ defmodule Inconn2Service.Report do
       %{
         ticket_category: List.first(v).ticket_category,
         count: Enum.count(v),
-        resolved_count: Enum.count(v, fn a -> a.status in ["CL", "CP", "CS"] end),
-        open_count: Enum.count(v, fn a -> a.status not in ["CL", "CP", "CS"] end)
+        resolved_count: Enum.count(v, fn a -> a.backend_status in ["CL", "CP", "CS"] end),
+        open_count: Enum.count(v, fn a -> a.backend_status not in ["CL", "CP", "CS"] end)
       }
     end)
   end
