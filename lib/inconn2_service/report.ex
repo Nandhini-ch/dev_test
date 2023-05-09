@@ -3,7 +3,6 @@ defmodule Inconn2Service.Report do
   import Inconn2Service.Util.HelpersFunctions
 
   # alias Inconn2Service.AssetConfig.AssetCategory
-  alias Inconn2Service.InventoryManagement
   alias Inconn2Service.Repo
   alias Inconn2Service.{Account, AssetConfig}
   alias Inconn2Service.AssetConfig.{Equipment, Site}
@@ -566,9 +565,9 @@ defmodule Inconn2Service.Report do
       |> filter_by_site(rectified_query_params["site_id"])
       |> filter_by_asset_category(rectified_query_params["asset_category_id"], prefix)
 
-    summary_headers =["Store Location", "Count of Receive Transactions", "Count of Issue Transactions", "MSL Breach Item Count"]
+    summary_headers =["Store Location", "Count of Receive Transactions", "Count of Issue Transactions"]
 
-    summary = summary_for_inventory_report(result, prefix)
+    summary = summary_for_inventory_report(result)
 
     filters = filter_data(query_params, prefix)
 
@@ -584,34 +583,15 @@ defmodule Inconn2Service.Report do
     end
   end
 
-  def summary_for_inventory_report(result, prefix) do
+  def summary_for_inventory_report(result) do
     Enum.group_by(result, &(&1.store_id))
     |> Enum.map(fn {_k, v} ->
-      store_id = List.first(v).store_id
       %{
-        store_location: InventoryManagement.get_store!(store_id, prefix).name,
+        store_location: List.first(v).store_id,
         count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
-        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count(),
-        msl_breach_count: msl_breach_count_for_store(store_id, prefix)
+        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count()
       }
     end)
-  end
-
-  def msl_breach_count_for_store(store_id, prefix) do
-    from(st in Stock, where: st.store_id == ^store_id,
-    join: i in InventoryItem, on: i.id == st.inventory_item_id,
-    select: %{
-      quantity: st.quantity,
-      minimum_stock_level: i.minimum_stock_level,
-      item_id: i.id
-    })
-    |> Repo.all(prefix: prefix)
-    |> Enum.group_by(&(&1.item_id))
-    |> Enum.map(fn {_k, item_list} ->
-        quantity = Enum.reduce(item_list, 0, fn item, acc -> acc + item.quantity end)
-        quantity < List.first(item_list).minimum_stock_level
-    end)
-    |> Enum.count(fn boolean -> boolean end)
   end
 
   def filter_by_site(list, nil), do: list
@@ -832,6 +812,7 @@ defmodule Inconn2Service.Report do
           assigned_to: assigned_to,
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
+          backend_status: wr.status,
           status: match_work_request_status(wr.status),
           time_taken_to_close: convert_man_hours_consumed(time_taken_to_close),
           date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
@@ -900,8 +881,8 @@ defmodule Inconn2Service.Report do
       %{
         ticket_category: List.first(v).ticket_category,
         count: Enum.count(v),
-        resolved_count: Enum.filter(v, fn a -> a.status == "CL" end) |> Enum.count(),
-        open_count: Enum.filter(v, fn a -> a.status != "CL" end) |> Enum.count()
+        resolved_count: Enum.count(v, fn a -> a.backend_status in ["CL", "CP", "CS"] end),
+        open_count: Enum.count(v, fn a -> a.backend_status not in ["CL", "CP", "CS"] end)
       }
     end)
   end
@@ -1774,11 +1755,6 @@ defmodule Inconn2Service.Report do
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.count_of_issue
         ],
-        [
-          :td,
-          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          s.msl_breach_count
-        ]
       ]
     end)
   end
@@ -2546,7 +2522,7 @@ defmodule Inconn2Service.Report do
 
     summary =
       Enum.map(summary, fn d ->
-        [d.store_location, d.count_of_receive, d.count_of_issue, d.msl_breach_count]
+        [d.store_location, d.count_of_receive, d.count_of_issue]
       end)
 
     [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
