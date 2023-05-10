@@ -90,9 +90,12 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
+   user = Staff.get_user!(user.id, prefix)
+   reports_to_user = Staff.get_user_from_employee(user.employee.reports_to, prefix)
+   attrs = Map.merge(attrs, %{"requester_user_id" => user.id, "reports_to_user_id" => reports_to_user.id})
    result =
     %ReassignRescheduleRequest{}
-    |> ReassignRescheduleRequest.changeset(Map.put(attrs, "requester_user_id", user.id))
+    |> ReassignRescheduleRequest.changeset(attrs)
     |> add_reports_to(prefix)
     |> check_next_occurrence_for_reschedule(prefix)
     |> Repo.insert(prefix: prefix)
