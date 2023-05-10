@@ -96,7 +96,7 @@ defmodule Inconn2Service.Reapportion do
    result =
     %ReassignRescheduleRequest{}
     |> ReassignRescheduleRequest.changeset(attrs)
-    |> add_reports_to(prefix)
+    # |> add_reports_to(prefix)
     |> check_next_occurrence_for_reschedule(prefix)
     |> Repo.insert(prefix: prefix)
 
