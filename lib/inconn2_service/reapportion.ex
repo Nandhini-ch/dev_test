@@ -26,7 +26,7 @@ defmodule Inconn2Service.Reapportion do
   end
 
   defp get_reassign_reschedule_requests_to_be_approved(user, query_params, prefix) do
-    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status != "AP")
+    from(rrr in ReassignRescheduleRequest, where: rrr.reports_to_user_id == ^user.id and rrr.status == "PD")
     |> reassign_reschedule_query(query_params)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn rrr -> set_asset_name(rrr, prefix) end)
