@@ -1782,9 +1782,9 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def reassign_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
+  def reassign_reschedule_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
     work_order
-    |> WorkOrder.reassign_changeset(attrs)
+    |> WorkOrder.reassign_reschedule_changeset(attrs)
     |> Repo.update(prefix: prefix)
     |> create_status_track_for_reapportion(prefix, user)
   end

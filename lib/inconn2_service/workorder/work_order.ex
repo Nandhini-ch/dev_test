@@ -72,10 +72,9 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   end
 
 
-  def reassign_changeset(work_order, attrs) do
+  def reassign_reschedule_changeset(work_order, attrs) do
     work_order
-    |> cast(attrs, [:user_id])
-    |> validate_required([:user_id])
+    |> cast(attrs, [:user_id, :scheduled_date, :scheduled_time])
   end
 
   defp validate_start_date_time(cs) do
