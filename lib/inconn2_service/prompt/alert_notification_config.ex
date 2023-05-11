@@ -3,8 +3,6 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
   import Ecto.Changeset
 
   schema "alert_notification_configs" do
-    field :addressed_to_user_ids, {:array, :integer}
-    field :escalated_to_user_ids, {:array, :integer}
     field :alert_notification_reserve_id, :integer
     field :is_escalation_required, :boolean, default: false
     field :escalation_time_in_minutes, :integer
@@ -21,8 +19,8 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
   @doc false
   def changeset(alert_notification_config, attrs) do
     alert_notification_config
-    |> cast(attrs, [:alert_notification_reserve_id, :addressed_to_user_ids, :site_id, :is_escalation_required, :escalation_time_in_minutes, :escalated_to_user_ids, :addressed_to_users, :escalated_to_users, :is_sms_required, :is_email_required])
-    |> validate_required([:alert_notification_reserve_id, :addressed_to_user_ids, :is_escalation_required, :site_id])
+    |> cast(attrs, [:alert_notification_reserve_id, :site_id, :is_escalation_required, :escalation_time_in_minutes, :addressed_to_users, :escalated_to_users, :is_sms_required, :is_email_required])
+    |> validate_required([:alert_notification_reserve_id, :is_escalation_required, :site_id])
     |> validate_escalation_time_and_user_ids()
   end
 

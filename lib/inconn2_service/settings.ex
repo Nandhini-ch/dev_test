@@ -191,7 +191,8 @@ defmodule Inconn2Service.Settings do
     Holiday.changeset(holiday, attrs)
   end
 
-  def push_alert_notification_for_new_shift(site_id, prefix) do
-    generate_alert_notification("NSHAD", site_id, ["site_name"], [], [], prefix)
-  end
+  # def push_alert_notification_for_new_shift(site_id, prefix) do
+  #   generate_alert_notification("NSHAD", site_id, ["site_name"], [], [], prefix)
+  # end
 end
+

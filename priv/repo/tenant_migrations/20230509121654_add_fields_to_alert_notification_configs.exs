@@ -3,6 +3,8 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigs do
 
   def change do
     alter table("alert_notification_configs") do
+      remove :addressed_to_user_ids, {:array, :integer}
+      remove :escalated_to_user_ids, {:array, :integer}
       add :addressed_to_users, {:array, :map}
       add :escalated_to_users, {:array, :map}
       add :is_sms_required, :boolean

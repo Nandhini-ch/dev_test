@@ -930,7 +930,7 @@ defmodule Inconn2Service.Assignment do
     ManualAttendance.changeset(manual_attendance, attrs)
   end
 
-  def push_alert_notification_for_new_roster(site_id, prefix) do
-    generate_alert_notification("NRSAD", site_id, ["shift_name"], [], [], prefix)
-  end
+  # def push_alert_notification_for_new_roster(site_id, prefix) do
+  #   generate_alert_notification("NRSAD", site_id, ["shift_name"], [], [], prefix)
+  # end
 end

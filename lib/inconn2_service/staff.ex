@@ -1318,11 +1318,11 @@ defmodule Inconn2Service.Staff do
     |> Enum.filter(fn u -> !is_nil(u) end)
   end
 
-  def push_alert_notification_for_new_user(user, site_id, prefix) do
-    generate_alert_notification("NUADD", site_id, [user.username, "org_unit"], [], [], prefix)
-  end
+  # def push_alert_notification_for_new_user(user, site_id, prefix) do
+  #   generate_alert_notification("NUADD", site_id, [user.username, "org_unit"], [], [], prefix)
+  # end
 
-  def push_alert_notification_for_new_org_unit(site_id, prefix) do
-    generate_alert_notification("NORGA", site_id, ["org_unit"], [], [], prefix)
-  end
+  # def push_alert_notification_for_new_org_unit(site_id, prefix) do
+  #   generate_alert_notification("NORGA", site_id, ["org_unit"], [], [], prefix)
+  # end
 end

@@ -182,7 +182,7 @@ defmodule Inconn2Service.Prompt do
   defp preload_site({:ok, config}, prefix), do: {:ok, preload_site(config, prefix)}
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
 
-  def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, prefix) do
+  def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
     an_reserve = Common.get_alert_by_code(code)
     an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.alert_id, site_id, prefix)
 
@@ -192,9 +192,12 @@ defmodule Inconn2Service.Prompt do
       specific_user_maps ++
       Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
 
+    escalation_user_maps =
+      escalation_user_maps ++
+      Enum.map(an_config.escalated_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
 
     Enum.map(user_maps, fn user_map ->
-      trigger_alert_notification(message, an_reserve, site_id, user_map["user_id"], prefix)
+      trigger_alert_notification(message, an_reserve, site_id, user_map["user_id"], an_config, escalation_user_maps, prefix)
     end)
 
     if an_config.is_sms_required do
@@ -215,16 +218,30 @@ defmodule Inconn2Service.Prompt do
 
   end
 
-  defp trigger_alert_notification(message, an_reserve, site_id, user_id, prefix) do
+  defp trigger_alert_notification(message, an_reserve, site_id, user_id, an_config, escalation_user_maps, prefix) do
+    alert_identifier_date_time = NaiveDateTime.utc_now()
     %{
       "alert_notification_id" => an_reserve.id,
-      "alert_identifier_date_time" => NaiveDateTime.utc_now(),
+      "alert_identifier_date_time" => alert_identifier_date_time,
       "type" => an_reserve.type,
       "site_id" => site_id,
       "user_id" => user_id,
-      "description" => message
+      "description" => message,
+      "escalated_to_users" => escalation_user_maps
     }
     |> create_user_alert_notification(prefix)
+
+    if an_reserve.type == "al" and an_config.is_escalation_required do
+      %{
+        "alert_code" => an_reserve.code,
+        "alert_identifier_date_time" => alert_identifier_date_time,
+        "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, an_config.escalation_time_in_minutes * 60),
+        "escalated_to_users" => an_config.escalated_to_users,
+        "site_id" => site_id,
+        "prefix" => prefix
+      }
+      |> Common.create_alert_notification_scheduler()
+    end
   end
 
 end
