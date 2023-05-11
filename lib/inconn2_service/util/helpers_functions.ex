@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Util.HelpersFunctions do
 
   import Ecto.Query, warn: false
+  alias Inconn2Service.Staff
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
 
@@ -267,6 +268,12 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
     EEx.eval_string(message_template, key_value)
 
+  end
+
+  def get_display_name_for_user_id(nil, _prefix), do: ""
+  def get_display_name_for_user_id(user_id, prefix) do
+    user = Staff.get_user!(user_id, prefix)
+    "#{user.first_name} #{user.last_name}"
   end
 
 end

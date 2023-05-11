@@ -2,6 +2,7 @@ defmodule Inconn2Service.Workorder do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
@@ -1461,99 +1462,135 @@ defmodule Inconn2Service.Workorder do
           record_meter_readings(work_order, updated_work_order, prefix)
           calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
-          Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order, updated_work_order, user, prefix) end)
           wo = get_work_order!(updated_work_order.id, prefix)
+          Elixir.Task.start(fn -> push_alert_notification_for_work_order(updated_work_order.site_id, work_order, updated_work_order, user, prefix) end)
           {:ok, put_approval_user(wo, wo.status, prefix)}
       _ ->
         result
     end
   end
 
-  def push_alert_notification_for_work_order(existing_work_order, updated_work_order, current_user, prefix) do
+  def push_alert_notification_for_work_order(site_id, existing_work_order, updated_work_order, current_user, prefix) do
     workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
-    {asset, _workorder_schedule} = get_asset_from_work_order(updated_work_order, prefix)
+    date_time = get_site_date_now(site_id, prefix)
     cond do
+      #workorder assigned
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        date_time = get_site_date_now(updated_work_order.site_id, prefix)
-        description = ~s(Work Order #{updated_work_order.id} assigned at #{date_time})
-        create_work_order_alert_notification("WOAS", existing_work_order, updated_work_order, description, "assigned_work_order", prefix)
+        generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix), prefix)
 
+      #workpermit approval required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
-        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
-        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
-        description = ~s(#{check_list.name} by #{employee} requires approval)
-        create_work_order_alert_notification("WPAR", existing_work_order, updated_work_order, description, "workpermit_approval_required",prefix)
+        check_list = CheckListConfig.get_check_list!(workorder_template.workpermit_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids(updated_work_order.workpermit_approval_user_ids, prefix)
+        generate_alert_notification("WPAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
 
+      #workpermit approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
-        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
-        employee = get_employee_from_user_id((updated_work_order.workpermit_approval_user_ids -- updated_work_order.workpermit_obtained_from_user_ids) |> List.first(), prefix)
-        description = ~s(#{check_list.name} approved by #{employee})
-        create_work_order_alert_notification("WPAP", existing_work_order, updated_work_order, description, "workpermit_approved", prefix)
+        check_list = CheckListConfig.get_check_list!(workorder_template.workpermit_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        approver = get_display_name_for_user_id(current_user.id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("WPAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
 
-      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltp" ->
-        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
-        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
-        description = ~s(#{check_list.name} for #{updated_work_order.id} requested by #{employee})
-        create_work_order_alert_notification("LTAR", existing_work_order, updated_work_order, description, "loto_required", prefix)
+      #loto lock approval pending
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltlp" ->
+        check_list = CheckListConfig.get_check_list!(workorder_template.loto_lock_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.loto_checker_user_id], prefix)
+        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
 
-      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "lta" ->
-        check_list = CheckListConfig.get_check_list!(updated_work_order.loto_lock_check_list_id, prefix)
-        employee = get_employee_from_user_id(updated_work_order.loto_checker_user_id, prefix)
-        description = ~s(#{check_list.name} approved by #{employee})
-        create_work_order_alert_notification("LTAP", existing_work_order, updated_work_order, description, "loto_approved", prefix)
+      #loto lock approved
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status in ["ltlap", "ltla"] ->
+        check_list = CheckListConfig.get_check_list!(workorder_template.loto_lock_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        approver = get_display_name_for_user_id(updated_work_order.loto_checker_user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
 
+      #loto release approval pending
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltrp" ->
+        check_list = CheckListConfig.get_check_list!(workorder_template.loto_release_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.loto_checker_user_id], prefix)
+        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+
+      #loto release approved
+      existing_work_order.status != updated_work_order.status  && updated_work_order.status in ["ltrap", "ltra"] ->
+        check_list = CheckListConfig.get_check_list!(workorder_template.loto_release_check_list_id, prefix)
+        name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
+        approver = get_display_name_for_user_id(updated_work_order.loto_checker_user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+
+      # workorder approval required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woap" ->
-        employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
-        description = ~s(Workorder Approval resuested for #{updated_work_order.id} by #{employee})
-        create_work_order_alert_notification("WOAR", existing_work_order, updated_work_order, description, "work_order_approval_required", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_approval_user_id], prefix)
+        generate_alert_notification("WOAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
 
+      # workorder approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woaa" ->
-        employee = get_employee_from_user_id(updated_work_order.workorder_approval_user_id, prefix)
-        description = ~s(Workorder #{updated_work_order.id} for #{asset.name} approved by #{employee})
-        create_work_order_alert_notification("WOAP", existing_work_order, updated_work_order, description, "work_order_approved", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        approver = get_display_name_for_user_id(updated_work_order.workorder_approval_user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("WOAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
 
+      # workorder acknowledgement required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
-        employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder #{updated_work_order.id} to be acknowledged by #{employee})
-        create_work_order_alert_notification("WACR", existing_work_order, updated_work_order, description, "work_order_acknowledge_pending", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_acknowledgement_user_id], prefix)
+        generate_alert_notification("WOCAR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
 
+      # workorder acknowledged
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
-        employee = get_employee_from_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
-        description = ~s(Workorder #{updated_work_order.id} has been acknowledged by #{employee})
-        create_work_order_alert_notification("WACK", existing_work_order, updated_work_order, description, "work_order_acknowledged", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        approver = get_display_name_for_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("WOCAC", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
 
+      # workorder to hold
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
-        employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder #{updated_work_order.id} has been put on hold by #{employee})
-        date_time = get_site_date_now(updated_work_order.site_id, prefix)
-        create_work_order_alert_notification("WOHL", existing_work_order, updated_work_order, description, "work_order_hold", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        user = get_display_name_for_user_id(current_user.id, prefix)
+        asset = AssetConfig.get_asset_by_asset_id(updated_work_order.asset_id, updated_work_order.asset_type, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+        generate_alert_notification("WOSCH", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, prefix)
 
+      # workorder cancelled
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
-        employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder #{updated_work_order.id} has been cancelled by #{employee})
-        create_work_order_alert_notification("WOCL", existing_work_order, updated_work_order, description, "work_order_cancelled", prefix)
+        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+        user = get_display_name_for_user_id(current_user.id, prefix)
+        asset = AssetConfig.get_asset_by_asset_id(updated_work_order.asset_id, updated_work_order.asset_type, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+        generate_alert_notification("WOCAN", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, prefix)
 
-      (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
-        employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder #{updated_work_order.id} has been rescheduled by #{employee})
-        create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
+      # (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
+      #   employee = get_employee_name_from_current_user(current_user)
+      #   description = ~s(Workorder #{updated_work_order.id} has been rescheduled by #{employee})
+      #   create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_rescheduled", prefix)
 
-      existing_work_order.user_id != updated_work_order.user_id ->
-        employee = get_employee_name_from_current_user(current_user)
-        description = ~s(Workorder #{updated_work_order.id} has been re-assigned by #{employee})
-        create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
+      # existing_work_order.user_id != updated_work_order.user_id ->
+      #   employee = get_employee_name_from_current_user(current_user)
+      #   description = ~s(Workorder #{updated_work_order.id} has been re-assigned by #{employee})
+      #   create_work_order_alert_notification("WORE", existing_work_order, updated_work_order, description, "work_order_reassigned", prefix)
 
-      (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
-        expected_date_time = NaiveDateTime.new!(updated_work_order.scheduled_date, updated_work_order.scheduled_time)
-                             |> NaiveDateTime.add(workorder_template.estimated_time * 60)
-        completed_date_time = NaiveDateTime.new!(updated_work_order.completed_date, updated_work_order.completed_time)
-        if completed_date_time >= expected_date_time do
-          employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
-          description = ~s(Workorder for #{asset.name} is not completed by expected time #{employee})
-          create_work_order_alert_notification("WONC", existing_work_order, updated_work_order, description, "work_order_not_completed_by_time", prefix)
-        else
-          {:ok, updated_work_order}
-        end
+      # (nil not in [updated_work_order.completed_date, updated_work_order.completed_time]) && ((existing_work_order.completed_date != updated_work_order.completed_date) || (existing_work_order.completed_time != updated_work_order.completed_time)) ->
+      #   expected_date_time = NaiveDateTime.new!(updated_work_order.scheduled_date, updated_work_order.scheduled_time)
+      #                        |> NaiveDateTime.add(workorder_template.estimated_time * 60)
+      #   completed_date_time = NaiveDateTime.new!(updated_work_order.completed_date, updated_work_order.completed_time)
+      #   if completed_date_time >= expected_date_time do
+      #     employee = get_employee_from_user_id(updated_work_order.user_id, prefix)
+      #     description = ~s(Workorder for #{asset.name} is not completed by expected time #{employee})
+      #     create_work_order_alert_notification("WONC", existing_work_order, updated_work_order, description, "work_order_not_completed_by_time", prefix)
+      #   else
+      #     {:ok, updated_work_order}
+      #   end
 
       true ->
         {:ok, updated_work_order}
