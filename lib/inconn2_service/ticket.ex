@@ -4,7 +4,7 @@ defmodule Inconn2Service.Ticket do
   import Ecto.Changeset
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
-  # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.HelpersFunctions
   import Inconn2Service.Prompt
   import Inconn2Service.Staff
 
@@ -307,7 +307,7 @@ defmodule Inconn2Service.Ticket do
     case created_work_request do
       {:ok, work_request} ->
         create_status_track(work_request, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_ticket(nil, work_request, prefix, user) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_ticket(work_request, prefix, work_request.site_id) end)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -436,9 +436,8 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         {:ok, status_track} = update_status_track(updated_work_request, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket(updated_work_request.asset_id, updated_work_request.asset_type, updated_work_request.workrequest_category_id, work_request, updated_work_request, prefix, updated_work_request.site_id) end)
         update_status_track(updated_work_request, prefix)
-        # push_alert_notification_for_ticket(work_request, updated_work_request, prefix, user)
         Elixir.Task.start(fn -> send_completed_email(work_request, updated_work_request, status_track, prefix) end)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
@@ -665,6 +664,12 @@ defmodule Inconn2Service.Ticket do
     |> Repo.sort_by_id()
   end
 
+  def group_helpdesk_users_by_workrequest_category_id(workrequest_category_id, site_id, prefix) do
+    from(ch in CategoryHelpdesk, where: ch.workrequest_category_id == ^workrequest_category_id and ch.site_id == ^site_id)
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn a -> a.user_id end)
+  end
+
   def create_category_helpdesk(attrs \\ %{}, prefix) do
     result = %CategoryHelpdesk{}
               |> CategoryHelpdesk.changeset(attrs)
@@ -883,7 +888,7 @@ defmodule Inconn2Service.Ticket do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workrequest_subcategory} ->
-        # push_alert_notification_for_ticket_category(workrequest_subcategory, prefix)
+        # push_alert_notification_for_ticket_category(workrequest_subcategory, site_id, user, prefix)
         {:ok, workrequest_subcategory }
       _ -> result
     end
@@ -910,42 +915,53 @@ defmodule Inconn2Service.Ticket do
     WorkrequestSubcategory.changeset(workrequest_subcategory, attrs)
   end
 
-  def push_alert_notification_for_ticket_category(_category, site_id, prefix) do
-    # description = ~s(A ticket category/sub category has been created)
-    generate_alert_notification("TNCSC", site_id, ["user"], [], [], prefix)
+  def push_alert_notification_for_ticket_category(_category, site_id, user, prefix) do
+    user = get_display_name_for_user_id(user.id, prefix)
+    generate_alert_notification("TNCSC", site_id, [user], [], [], prefix)
   end
 
-  def push_alert_notification_for_ticket(nil, updated_work_request, prefix, nil) do
+  def push_alert_notification_for_new_ticket(work_request, prefix, site_id) do
+    helpdesk_users = group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, site_id, prefix)
+    workrequest_category = get_workrequest_category!(work_request.workrequest_category_id, prefix)
+    date_time = get_site_date_time_now(site_id, prefix)
     work_request_type =
-      case updated_work_request.request_type do
+      case work_request.request_type do
         "CO" -> "Complaint"
         "RE" -> "Request"
       end
 
-    description = ~s(#{work_request_type} #{updated_work_request.id} created by external user at #{updated_work_request.raised_date_time})
-    create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
+    requested_user = get_display_name_for_user_id(work_request.requested_user_id, prefix)
+    user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
+
+    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [workrequest_category.name, work_request.id, requested_user, date_time], user_maps, prefix)
+
   end
 
-  def push_alert_notification_for_ticket(nil, updated_work_request, prefix, _user) do
-    work_request_type =
-      case updated_work_request.request_type do
-        "CO" -> "Complaint"
-        "RE" -> "Request"
-      end
+  # def push_alert_notification_for_ticket(nil, updated_work_request, prefix, _user) do
+  #   work_request_type =
+  #     case updated_work_request.request_type do
+  #       "CO" -> "Complaint"
+  #       "RE" -> "Request"
+  #     end
 
-    requested_user = Staff.get_user!(updated_work_request.requested_user_id, prefix)
+  #   requested_user = Staff.get_user!(updated_work_request.requested_user_id, prefix)
 
-    user =
-      case requested_user.employee do
-        nil -> requested_user.username
-        _ -> requested_user.employee.first_name
-      end
+  #   user =
+  #     case requested_user.employee do
+  #       nil -> requested_user.username
+  #       _ -> requested_user.employee.first_name
+  #     end
 
-    description = ~s(#{work_request_type} #{updated_work_request.id} created by #{user} at #{updated_work_request.raised_date_time})
-    create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
-  end
+  #   description = ~s(#{work_request_type} #{updated_work_request.id} created by #{user} at #{updated_work_request.raised_date_time})
+  #   create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
 
-  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix, site_id, user) do
+  # end
+
+  def push_alert_notification_for_ticket(asset_id, asset_type, workrequest_category_id, existing_work_request, updated_work_request, prefix, site_id) do
+    helpdesk_users = group_helpdesk_users_by_workrequest_category_id(workrequest_category_id, site_id, prefix)
+    asset = AssetConfig.get_asset_by_asset_id(asset_id, asset_type, prefix)
+    date_time = get_site_date_time_now(site_id, prefix)
+    assigned_user = get_display_name_for_user_id(updated_work_request.assigned_user_id, prefix)
     work_request_type =
       case updated_work_request.request_type do
         "CO" -> "Complaint"
@@ -964,49 +980,40 @@ defmodule Inconn2Service.Ticket do
         "CP" -> "Completed"
       end
 
-    user =
-      cond do
-        is_nil(user) -> "external user"
-        is_nil(user.employee) -> user.username
-        true -> user.employee.first_name
-      end
+    # user =
+    #   cond do
+    #     is_nil(user) -> "external user"
+    #     is_nil(user.employee) -> user.username
+    #     true -> user.employee.first_name
+    #   end
 
     cond do
       existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
-        # description = ~s(Ticket #{updated_work_request.id} status changed to assigned by #{user})
-        # create_ticket_alert_notification("WRAR", description, updated_work_request, "new ticket assigned", prefix)
-        generate_alert_notification("NTASS", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, existing_work_request.assigned_user_id], [existing_work_request.requested_user_id], prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
+        generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
+
+      existing_work_request.status != updated_work_request.status and updated_work_request.status in ["AP", "RJ"] ->
+        user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
+        generate_alert_notification("TAPSC", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
 
 
-      updated_work_request.status in ["AP", "RJ"] ->
-        # description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
-        # create_ticket_alert_notification("WRAR", description, updated_work_request, "ticket approved/rejected", prefix)
-        generate_alert_notification("TAPSC", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
+      existing_work_request.status != updated_work_request.status and updated_work_request.status == "CP" ->
+        user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
+        generate_alert_notification("TCKCP", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
 
+      existing_work_request.status != updated_work_request.status and updated_work_request.status == "CL" ->
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
+        generate_alert_notification("TCKCN", site_id, [work_request_type, updated_work_request.id, assigned_user, date_time], [updated_work_request.workrequest_category_id.name, updated_work_request.id, assigned_user, date_time], user_maps, prefix)
 
-      updated_work_request.status == "CP" ->
-        # description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
-        # create_ticket_alert_notification("WRCP", description, updated_work_request, "ticket completed", prefix)
-        generate_alert_notification("TCKCP", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
-
-      updated_work_request.status == "CL" ->
-        # status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "CL")
-        #                |> Repo.one(prefix: prefix)
-        # description = ~s(#{work_request_type} #{updated_work_request.id} cancelled by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
-        # create_ticket_alert_notification("WRCL", description, updated_work_request, "ticket cancelled", prefix)
-        generate_alert_notification("TCKCP", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
-
-      updated_work_request.status == "ROP" ->
-        status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "ROP")
-                       |> Repo.one(prefix: prefix)
-
-        description = ~s(Ticket #{updated_work_request.id} reopened by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
-        create_ticket_alert_notification("WRRO", description, updated_work_request, "ticket reopened", prefix)
+      existing_work_request.status != updated_work_request.status and updated_work_request.status == "ROP" ->
+        user_ids = [updated_work_request.assigned_user_id, asset.asset_manager_id] ++ helpdesk_users
+        user_maps = form_user_maps_by_user_ids(user_ids, prefix)
+        generate_alert_notification("TCKRO", site_id, [updated_work_request.id, assigned_user, date_time], [updated_work_request.id, assigned_user, date_time], user_maps,  prefix)
 
 
       existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
-        description = ~s(Ticket #{updated_work_request.id} reassigned by #{user})
-        create_ticket_alert_notification("WRRE", description, updated_work_request, "ticket reassigned", prefix)
+        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], [], prefix)
+
 
       true ->
         {:ok, updated_work_request}

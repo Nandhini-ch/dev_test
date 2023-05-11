@@ -5,6 +5,7 @@ defmodule Inconn2Service.Staff do
   import Inconn2Service.Util.DeleteManager
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -1315,5 +1316,13 @@ defmodule Inconn2Service.Staff do
     |> Enum.uniq()
     |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
     |> Enum.filter(fn u -> !is_nil(u) end)
+  end
+
+  def push_alert_notification_for_new_user(user, site_id, prefix) do
+    generate_alert_notification("NUADD", site_id, [user.username, "org_unit"], [], [], prefix)
+  end
+
+  def push_alert_notification_for_new_org_unit(site_id, prefix) do
+    generate_alert_notification("NORGA", site_id, ["org_unit"], [], [], prefix)
   end
 end
