@@ -9,6 +9,10 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
     field :is_escalation_required, :boolean, default: false
     field :escalation_time_in_minutes, :integer
     field :active, :boolean, default: true
+    field :addressed_to_users, {:array, :map}
+    field :escalated_to_users, {:array, :map}
+    field :is_sms_required, :boolean, default: false
+    field :is_email_required, :boolean, default: false
     belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()
@@ -17,7 +21,7 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
   @doc false
   def changeset(alert_notification_config, attrs) do
     alert_notification_config
-    |> cast(attrs, [:alert_notification_reserve_id, :addressed_to_user_ids, :site_id, :is_escalation_required, :escalation_time_in_minutes, :escalated_to_user_ids])
+    |> cast(attrs, [:alert_notification_reserve_id, :addressed_to_user_ids, :site_id, :is_escalation_required, :escalation_time_in_minutes, :escalated_to_user_ids, :addressed_to_users, :escalated_to_users, :is_sms_required, :is_email_required])
     |> validate_required([:alert_notification_reserve_id, :addressed_to_user_ids, :is_escalation_required, :site_id])
     |> validate_escalation_time_and_user_ids()
   end

@@ -5,6 +5,8 @@ defmodule Inconn2Service.AssetConfig do
   import Inconn2Service.Util.DeleteManager
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
+  import Inconn2Service.Staff
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -716,7 +718,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, location, "L", prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, location, location.site_id, prefix) end)
         result
       _ ->
         result
@@ -789,7 +791,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_location} ->
         update_status_track_for_asset(updated_location, location.status, "L", user, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(location, updated_location, "L", prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(location, updated_location, location.site_id, prefix) end)
         result
       _ ->
         result
@@ -965,7 +967,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_location, nil, "L", updated_location.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_location, nil, updated_location.site_id, prefix) end)
         {:deleted, "Location was deleted"}
     end
   end
@@ -1266,7 +1268,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, equipment, "E", prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, equipment, equipment.site_id, prefix) end)
         result
       _ ->
         result
@@ -1353,7 +1355,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, updated_equipment} ->
         update_status_track_for_asset(updated_equipment, equipment.status, "E", user, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(equipment, updated_equipment, "E", prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(equipment, updated_equipment, equipment.site_id, prefix) end)
         result
       _ ->
         result
@@ -1466,7 +1468,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_equipment, nil, "E", updated_equipment.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_equipment, nil, updated_equipment.site_id, prefix) end)
         {:deleted, "Equipment was deleted"}
     end
   end
@@ -1499,36 +1501,36 @@ defmodule Inconn2Service.AssetConfig do
     Equipment.changeset(equipment, attrs)
   end
 
-  def push_alert_notification_for_asset(existing_asset, nil, asset_type, site_id, prefix) do
-    description = ~s(#{existing_asset.name} has been deleted)
-    create_asset_alert_notification("ASRA", description, nil, asset_type, site_id, false, prefix)
+  def push_alert_notification_for_asset(_existing_asset, nil, _site_id, _prefix) do
+    # date_time = get_site_date_time_now(site_id, prefix)
+    # generate_alert_notification("REAST", site_id, [existing_asset.name, date_time], [existing_asset.name, date_time], specific_user_maps, prefix)
     {:ok, nil}
   end
 
-  def push_alert_notification_for_asset(nil, updated_asset, asset_type, prefix) do
-    description = ~s(New Asset, #{updated_asset.name} has been added)
-    create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
+  def push_alert_notification_for_asset(nil, updated_asset, _site_id, _prefix) do
+    # description = ~s(New Asset, #{updated_asset.name} has been added)
+    # create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
     {:ok, updated_asset}
   end
 
-  def push_alert_notification_for_asset(existing_asset, updated_asset, asset_type, prefix) do
+  def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
+    date_time = get_site_date_time_now(site_id, prefix)
     cond do
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
-        description = ~s(#{updated_asset.name}'s status has been changed to Breakdown)
-        create_asset_alert_notification("ASSB", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
+        generate_alert_notification("ASTCB", site_id, [existing_asset.name, date_time], [existing_asset.name, date_time], [], prefix)
 
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
-        description = ~s(#{updated_asset.name}'s status has been changed to #{updated_asset.status})
-        create_asset_alert_notification("ASST", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
+        generate_alert_notification("ASTCO", site_id, [existing_asset.name, existing_asset.status, date_time], [], [], prefix)
 
+      existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
+        generate_alert_notification("ASTCT", site_id, [existing_asset.name, date_time], [], [form_user_maps_by_user_ids(existing_asset.asset_manager_id, prefix)], prefix)
 
-      existing_asset.parent_id != updated_asset.parent_id ->
-        description = ~s(#{updated_asset.name}'s hierarchy has been changed)
-        create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
+      # existing_asset.parent_id != updated_asset.parent_id ->
+        # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
+        # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
       existing_asset != updated_asset ->
-        description = ~s(#{updated_asset.name} has been modified)
-        create_asset_alert_notification("ASED", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
+        generate_alert_notification("EDASD", site_id, [existing_asset.name], [], [], prefix)
 
       true ->
         {:ok, updated_asset}
@@ -1537,82 +1539,82 @@ defmodule Inconn2Service.AssetConfig do
     {:ok, updated_asset}
   end
 
-  defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
-    alert = Common.get_alert_by_code(alert_code)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
-    alert_identifier_date_time = NaiveDateTime.utc_now()
-    case alert_config do
-      nil ->
-        {:not_found, "Alert Not Configured"}
+  # defp create_asset_alert_notification(alert_code, description, nil, asset_type, site_id, email_required, prefix) do
+  #   alert = Common.get_alert_by_code(alert_code)
+  #   alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, site_id, prefix)
+  #   alert_identifier_date_time = NaiveDateTime.utc_now()
+  #   case alert_config do
+  #     nil ->
+  #       {:not_found, "Alert Not Configured"}
 
-      _ ->
-        attrs = %{
-          "alert_notification_id" => alert.id,
-          "asset_id" => nil,
-          "asset_type" => asset_type,
-          "type" => alert.type,
-          "site_id" => site_id,
-          "alert_identifier_date_time" => alert_identifier_date_time,
-          "description" => description
-        }
+  #     _ ->
+  #       attrs = %{
+  #         "alert_notification_id" => alert.id,
+  #         "asset_id" => nil,
+  #         "asset_type" => asset_type,
+  #         "type" => alert.type,
+  #         "site_id" => site_id,
+  #         "alert_identifier_date_time" => alert_identifier_date_time,
+  #         "description" => description
+  #       }
 
-        Enum.map(alert_config.addressed_to_user_ids, fn id ->
-          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
-          if email_required do
-            user = Inconn2Service.Staff.get_user!(id, prefix)
-            Inconn2Service.Email.send_alert_email(user, description)
-          end
-        end)
+  #       Enum.map(alert_config.addressed_to_user_ids, fn id ->
+  #         Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+  #         if email_required do
+  #           user = Inconn2Service.Staff.get_user!(id, prefix)
+  #           Inconn2Service.Email.send_alert_email(user, description)
+  #         end
+  #       end)
 
-       if alert.type == "al" and alert_config.is_escalation_required do
-        Common.create_alert_notification_scheduler(%{
-          "alert_code" => alert.code,
-          "alert_identifier_date_time" => alert_identifier_date_time,
-          "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-          "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
-          "site_id" => site_id,
-          "prefix" => prefix
-        })
-       end
-    end
-  end
+  #      if alert.type == "al" and alert_config.is_escalation_required do
+  #       Common.create_alert_notification_scheduler(%{
+  #         "alert_code" => alert.code,
+  #         "alert_identifier_date_time" => alert_identifier_date_time,
+  #         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+  #         "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+  #         "site_id" => site_id,
+  #         "prefix" => prefix
+  #       })
+  #      end
+  #   end
+  # end
 
-  defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
-    alert = Common.get_alert_by_code(alert_code)
-    IO.inspect(alert)
-    alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
-    alert_identifier_date_time = NaiveDateTime.utc_now()
-    case alert_config do
-      nil ->
-        {:ok, updated_asset}
+  # defp create_asset_alert_notification(alert_code, description, updated_asset, asset_type, site_id, _email_required, prefix) do
+  #   alert = Common.get_alert_by_code(alert_code)
+  #   IO.inspect(alert)
+  #   alert_config = Prompt.get_alert_notification_config_by_alert_id_and_site_id(alert.id, updated_asset.site_id, prefix)
+  #   alert_identifier_date_time = NaiveDateTime.utc_now()
+  #   case alert_config do
+  #     nil ->
+  #       {:ok, updated_asset}
 
-      _ ->
-        attrs = %{
-          "alert_notification_id" => alert.id,
-          "asset_id" => updated_asset.id,
-          "asset_type" => asset_type,
-          "type" => alert.type,
-          "alert_identifier_date_time" => alert_identifier_date_time,
-          "description" => description,
-          "site_id" => site_id
-        }
+  #     _ ->
+  #       attrs = %{
+  #         "alert_notification_id" => alert.id,
+  #         "asset_id" => updated_asset.id,
+  #         "asset_type" => asset_type,
+  #         "type" => alert.type,
+  #         "alert_identifier_date_time" => alert_identifier_date_time,
+  #         "description" => description,
+  #         "site_id" => site_id
+  #       }
 
-        Enum.map(alert_config.addressed_to_user_ids, fn id ->
-          Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
-        end)
+  #       Enum.map(alert_config.addressed_to_user_ids, fn id ->
+  #         Prompt.create_user_alert_notification(Map.put_new(attrs, "user_id", id), prefix)
+  #       end)
 
-        if alert.type == "al" and alert_config.is_escalation_required do
-          Common.create_alert_notification_scheduler(%{
-            "alert_code" => alert.code,
-            "alert_identifier_date_time" => alert_identifier_date_time,
-            "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
-            "site_id" => site_id,
-            "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-            "prefix" => prefix
-          })
-        end
-    end
-  end
+  #       if alert.type == "al" and alert_config.is_escalation_required do
+  #         Common.create_alert_notification_scheduler(%{
+  #           "alert_code" => alert.code,
+  #           "alert_identifier_date_time" => alert_identifier_date_time,
+  #           "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+  #           "site_id" => site_id,
+  #           "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
+  #           "prefix" => prefix
+  #         })
+  #       end
+  #   end
+  # end
 
 
   def get_asset_from_qr_code(qr_code, prefix) do

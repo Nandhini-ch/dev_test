@@ -467,8 +467,10 @@ defmodule Inconn2Service.Common do
       [%AlertNotificationReserve{}, ...]
 
   """
-  def list_alert_notification_reserves do
-    Repo.all(AlertNotificationReserve)
+  def list_alert_notification_reserves(module) do
+    AlertNotificationReserve
+    |> where(module: ^module)
+    |> Repo.all()
   end
 
   @doc """

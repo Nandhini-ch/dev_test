@@ -4,15 +4,20 @@ defmodule Inconn2Service.Prompt do
   """
   # import Inconn2Service.Util.DeleteManager
   import Ecto.Query, warn: false
+  import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
 
   alias Inconn2Service.{AssetConfig, Common}
   alias Inconn2Service.Prompt.{AlertNotificationConfig, UserAlertNotification}
   alias Inconn2Service.Workorder
+  alias Inconn2Service.Communication
+  alias Inconn2Service.Email
+  alias Inconn2Service.Staff
 
-  def list_alert_notification_configs(prefix) do
+  def list_alert_notification_configs(site_id, prefix) do
     AlertNotificationConfig
     |> Repo.add_active_filter()
+    |> where(site_id: ^site_id)
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn c -> preload_alert_notification_reserve(c) end)
     |> Enum.map(fn c -> preload_site(c, prefix) end)
@@ -27,6 +32,10 @@ defmodule Inconn2Service.Prompt do
 
   def get_alert_notification_config_by_alert_id_and_site_id(alert_id, site_id, prefix) do
     Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
+  end
+
+  def get_alert_notification_config_by_reserve_and_site(alert_id, site_id, prefix) do
+    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix)
   end
 
   def create_alert_notification_config(attrs \\ %{}, prefix) do
@@ -172,4 +181,50 @@ defmodule Inconn2Service.Prompt do
   defp preload_site({:error, changeset}, _prefix), do: {:error, changeset}
   defp preload_site({:ok, config}, prefix), do: {:ok, preload_site(config, prefix)}
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
+
+  def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, prefix) do
+    an_reserve = Common.get_alert_by_code(code)
+    an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.alert_id, site_id, prefix)
+
+    message = form_message_text_from_template(an_reserve.text_template, an_arguments_list)
+
+    user_maps =
+      specific_user_maps ++
+      Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
+
+
+    Enum.map(user_maps, fn user_map ->
+      trigger_alert_notification(message, an_reserve, site_id, user_map["user_id"], prefix)
+    end)
+
+    if an_config.is_sms_required do
+      user_maps
+      |> Enum.reject(fn user_map -> is_nil(user_map["mobile_no"]) end)
+      |> Enum.map(fn user_map ->
+        Communication.form_and_send_sms(an_reserve.sms_code, "91" <> user_map["mobile_no"], [user_map["display_name"] | sms_arguements_list], prefix)
+      end)
+    end
+
+    if an_config.is_email_required do
+      user_maps
+      |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
+      |> Enum.map(fn user_map ->
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", message)
+      end)
+    end
+
+  end
+
+  defp trigger_alert_notification(message, an_reserve, site_id, user_id, prefix) do
+    %{
+      "alert_notification_id" => an_reserve.id,
+      "alert_identifier_date_time" => NaiveDateTime.utc_now(),
+      "type" => an_reserve.type,
+      "site_id" => site_id,
+      "user_id" => user_id,
+      "description" => message
+    }
+    |> create_user_alert_notification(prefix)
+  end
+
 end

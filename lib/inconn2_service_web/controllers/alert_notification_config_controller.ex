@@ -6,8 +6,8 @@ defmodule Inconn2ServiceWeb.AlertNotificationConfigController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    alert_notification_configs = Prompt.list_alert_notification_configs(conn.assigns.sub_domain_prefix)
+  def index(conn, %{"site_id" => site_id}) do
+    alert_notification_configs = Prompt.list_alert_notification_configs(site_id, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", alert_notification_configs: alert_notification_configs)
   end
 

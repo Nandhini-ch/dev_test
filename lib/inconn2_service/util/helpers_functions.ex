@@ -258,4 +258,15 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> Enum.map(&(String.to_integer/1))
   end
 
+  def form_message_text_from_template(message_template, list_of_values) do
+    key_value =
+      Enum.reduce(list_of_values, [], fn value, acc ->
+        [{"var#{length(acc) + 1}" |> String.to_atom, value} | acc]
+      end)
+      IO.inspect(key_value)
+
+    EEx.eval_string(message_template, key_value)
+
+  end
+
 end

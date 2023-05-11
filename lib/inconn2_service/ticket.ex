@@ -5,6 +5,8 @@ defmodule Inconn2Service.Ticket do
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
+  import Inconn2Service.Staff
 
   alias Inconn2Service.Email
   alias Inconn2Service.Ticket.{WorkrequestCategory, WorkrequestStatusTrack}
@@ -908,9 +910,9 @@ defmodule Inconn2Service.Ticket do
     WorkrequestSubcategory.changeset(workrequest_subcategory, attrs)
   end
 
-  def push_alert_notification_for_ticket_category(_category, prefix) do
-    description = ~s(A ticket category/sub category has been created)
-    create_ticket_alert_notification("WRCN", description, nil, "category/sub_category created", prefix)
+  def push_alert_notification_for_ticket_category(_category, site_id, prefix) do
+    # description = ~s(A ticket category/sub category has been created)
+    generate_alert_notification("TNCSC", site_id, ["user"], [], [], prefix)
   end
 
   def push_alert_notification_for_ticket(nil, updated_work_request, prefix, nil) do
@@ -943,7 +945,7 @@ defmodule Inconn2Service.Ticket do
     create_ticket_alert_notification("WRNW", description, updated_work_request, "new ticket raised", prefix)
   end
 
-  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix, user) do
+  def push_alert_notification_for_ticket(existing_work_request, updated_work_request, prefix, site_id, user) do
     work_request_type =
       case updated_work_request.request_type do
         "CO" -> "Complaint"
@@ -971,23 +973,28 @@ defmodule Inconn2Service.Ticket do
 
     cond do
       existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
-        description = ~s(Ticket #{updated_work_request.id} status changed to assigned by #{user})
-        create_ticket_alert_notification("WRAR", description, updated_work_request, "new ticket assigned", prefix)
+        # description = ~s(Ticket #{updated_work_request.id} status changed to assigned by #{user})
+        # create_ticket_alert_notification("WRAR", description, updated_work_request, "new ticket assigned", prefix)
+        generate_alert_notification("NTASS", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, existing_work_request.assigned_user_id], [existing_work_request.requested_user_id], prefix)
+
 
       updated_work_request.status in ["AP", "RJ"] ->
-        description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
-        create_ticket_alert_notification("WRAR", description, updated_work_request, "ticket approved/rejected", prefix)
+        # description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
+        # create_ticket_alert_notification("WRAR", description, updated_work_request, "ticket approved/rejected", prefix)
+        generate_alert_notification("TAPSC", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
+
 
       updated_work_request.status == "CP" ->
-        description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
-        create_ticket_alert_notification("WRCP", description, updated_work_request, "ticket completed", prefix)
+        # description = ~s(Ticket #{updated_work_request.id} status changed to #{status} by #{user})
+        # create_ticket_alert_notification("WRCP", description, updated_work_request, "ticket completed", prefix)
+        generate_alert_notification("TCKCP", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
 
       updated_work_request.status == "CL" ->
-        status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "CL")
-                       |> Repo.one(prefix: prefix)
-
-        description = ~s(#{work_request_type} #{updated_work_request.id} cancelled by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
-        create_ticket_alert_notification("WRCL", description, updated_work_request, "ticket cancelled", prefix)
+        # status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "CL")
+        #                |> Repo.one(prefix: prefix)
+        # description = ~s(#{work_request_type} #{updated_work_request.id} cancelled by #{user} at #{status_track.status_update_date}#{status_track.status_update_time})
+        # create_ticket_alert_notification("WRCL", description, updated_work_request, "ticket cancelled", prefix)
+        generate_alert_notification("TCKCP", site_id, [existing_work_request.id, existing_work_request.status, "user"], [existing_work_request.id, existing_work_request.status, "user"], ["helpdesk_id"], prefix)
 
       updated_work_request.status == "ROP" ->
         status_track = from(wrst in WorkrequestStatusTrack, where: wrst.work_request_id == ^updated_work_request.id and wrst.status == "ROP")

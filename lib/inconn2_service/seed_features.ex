@@ -1,5 +1,5 @@
 defmodule Inconn2Service.SeedFeatures do
-  alias Inconn2Service.SeedFeatures
+  # alias Inconn2Service.SeedFeatures
   alias Inconn2Service.Communication
   alias Inconn2Service.{Common, Staff, Account}
 
@@ -196,9 +196,19 @@ defmodule Inconn2Service.SeedFeatures do
     end)
   end
 
-  def seed_data() do
-    SeedFeatures.seed_features()
-    SeedFeatures.seed_message_templates()
-    SeedFeatures.seed_public_uom()
+  def seed_alert_and_notifications_reserve() do
+    Application.app_dir(:inconn2_service, "priv/features/alert.json")
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn attrs ->
+      Common.create_alert_notification_reserve(attrs)
+    end)
   end
+
+  # def seed_data() do
+  #   SeedFeatures.seed_features()
+  #   SeedFeatures.seed_message_templates()
+  #   SeedFeatures.seed_public_uom()
+  #   SeedFeatures.seed_alert_and_notifications()
+  # end
 end

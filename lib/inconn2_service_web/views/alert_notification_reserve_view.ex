@@ -11,11 +11,19 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveView do
   end
 
   def render("alert_notification_reserve.json", %{alert_notification_reserve: alert_notification_reserve}) do
-    %{id: alert_notification_reserve.id,
+    %{
+      id: alert_notification_reserve.id,
       module: alert_notification_reserve.module,
       description: alert_notification_reserve.description,
       type: alert_notification_reserve.type,
-      code: alert_notification_reserve.code}
+      code: alert_notification_reserve.code,
+      sms_code: alert_notification_reserve.sms_code,
+      text_template: alert_notification_reserve.text_template,
+      is_sms_required: alert_notification_reserve.is_sms_required,
+      is_email_required: alert_notification_reserve.is_email_required,
+      is_escalation_required: alert_notification_reserve.is_escalation_required,
+      escalation_time_in_minutes: alert_notification_reserve.escalation_time_in_minutes
+    }
   end
 
   def render("success.json", %{alert_notification_reserve: alert_notification_reserve}) do
