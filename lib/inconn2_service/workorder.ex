@@ -1375,7 +1375,7 @@ defmodule Inconn2Service.Workorder do
   defp get_asset_name(nil), do: nil
   defp get_asset_name(asset), do: asset.name
 
-  defp add_overdue_flag(work_order, prefix) do
+  def add_overdue_flag(work_order, prefix) do
     site = AssetConfig.get_site!(work_order.site_id, prefix)
     site_dt = DateTime.now!(site.time_zone)
     site_dt = DateTime.to_naive(site_dt)
@@ -1457,7 +1457,7 @@ defmodule Inconn2Service.Workorder do
       {:ok, updated_work_order} ->
           # auto_update_workorder_task(work_order, prefix)
           create_status_track(work_order, user, prefix)
-          delete_workorder_in_alert_notification_generator(work_order, updated_work_order)
+          Elixir.Task.start(fn -> delete_workorder_in_alert_notification_generator(work_order, updated_work_order) end)
           record_meter_readings(work_order, updated_work_order, prefix)
           calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
@@ -1782,9 +1782,9 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def reassign_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
+  def reassign_reschedule_work_order(%WorkOrder{} = work_order, attrs, prefix, user) do
     work_order
-    |> WorkOrder.reassign_changeset(attrs)
+    |> WorkOrder.reassign_reschedule_changeset(attrs)
     |> Repo.update(prefix: prefix)
     |> create_status_track_for_reapportion(prefix, user)
   end
