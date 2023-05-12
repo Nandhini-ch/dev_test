@@ -917,7 +917,7 @@ defmodule Inconn2Service.Ticket do
 
   def push_alert_notification_for_ticket_category(_category, site_id, user, prefix) do
     user = get_display_name_for_user_id(user.id, prefix)
-    generate_alert_notification("TNCSC", site_id, [user], [], [], prefix)
+    generate_alert_notification("TNCSC", site_id, [user], [], [], [], prefix)
   end
 
   def push_alert_notification_for_new_ticket(work_request, prefix, site_id) do
@@ -933,7 +933,7 @@ defmodule Inconn2Service.Ticket do
     requested_user = get_display_name_for_user_id(work_request.requested_user_id, prefix)
     user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
 
-    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [workrequest_category.name, work_request.id, requested_user, date_time], user_maps, prefix)
+    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [workrequest_category.name, work_request.id, requested_user, date_time], user_maps, [], prefix)
 
   end
 
@@ -988,32 +988,38 @@ defmodule Inconn2Service.Ticket do
     #   end
 
     cond do
+      #new ticket assigned
       existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
-        generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
+        generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
 
+      #ticket approval status change
       existing_work_request.status != updated_work_request.status and updated_work_request.status in ["AP", "RJ"] ->
         user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
-        generate_alert_notification("TAPSC", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
+        generate_alert_notification("TAPSC", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
 
-
+      #ticket completed
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CP" ->
         user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
-        generate_alert_notification("TCKCP", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, prefix)
+        generate_alert_notification("TCKCP", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
 
+      #ticket cancelled
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CL" ->
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
-        generate_alert_notification("TCKCN", site_id, [work_request_type, updated_work_request.id, assigned_user, date_time], [updated_work_request.workrequest_category_id.name, updated_work_request.id, assigned_user, date_time], user_maps, prefix)
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+        generate_alert_notification("TCKCN", site_id, [work_request_type, updated_work_request.id, assigned_user, date_time], [updated_work_request.workrequest_category_id.name, updated_work_request.id, assigned_user, date_time], user_maps, escalation_user_maps, prefix)
 
+      #ticket reopened
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "ROP" ->
         user_ids = [updated_work_request.assigned_user_id, asset.asset_manager_id] ++ helpdesk_users
         user_maps = form_user_maps_by_user_ids(user_ids, prefix)
-        generate_alert_notification("TCKRO", site_id, [updated_work_request.id, assigned_user, date_time], [updated_work_request.id, assigned_user, date_time], user_maps,  prefix)
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+        generate_alert_notification("TCKRO", site_id, [updated_work_request.id, assigned_user, date_time], [updated_work_request.id, assigned_user, date_time], user_maps,  escalation_user_maps, prefix)
 
-
+      #ticket reassigned
       existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
-        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], [], prefix)
-
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], [], escalation_user_maps, prefix)
 
       true ->
         {:ok, updated_work_request}

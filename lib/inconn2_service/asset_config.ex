@@ -6,18 +6,15 @@ defmodule Inconn2Service.AssetConfig do
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
   import Inconn2Service.Prompt
-  import Inconn2Service.Staff
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.Staff
   alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site, Zone}
   alias Inconn2Service.AssetConfig.AssetCategory
   alias Inconn2Service.Custom.CustomFields
-  alias Inconn2Service.{Common, Prompt}
   alias Inconn2Service.Util.HierarchyManager
-  alias Inconn2Service.Common
-  alias Inconn2Service.Prompt
   alias Inconn2Service.AssetConfig.Party
   alias Inconn2Service.ContractManagement.{Contract, Scope}
 
@@ -1516,21 +1513,27 @@ defmodule Inconn2Service.AssetConfig do
   def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
     date_time = get_site_date_time_now(site_id, prefix)
     cond do
+      #asset status to breakdown
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
-        generate_alert_notification("ASTCB", site_id, [existing_asset.name, date_time], [existing_asset.name, date_time], [], prefix)
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+        generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], [], escalation_user_maps, prefix)
 
+      #asset status to on/off
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
-        generate_alert_notification("ASTCO", site_id, [existing_asset.name, existing_asset.status, date_time], [], [], prefix)
+        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], [], [], [], prefix)
 
+      #asset status to transit
       existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
-        generate_alert_notification("ASTCT", site_id, [existing_asset.name, date_time], [], [form_user_maps_by_user_ids(existing_asset.asset_manager_id, prefix)], prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+        generate_alert_notification("ASTCT", site_id, [updated_asset.name, date_time], [], user_maps, [], prefix)
 
       # existing_asset.parent_id != updated_asset.parent_id ->
         # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
         # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
 
+      #asset details edited
       existing_asset != updated_asset ->
-        generate_alert_notification("EDASD", site_id, [existing_asset.name], [], [], prefix)
+        generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
 
       true ->
         {:ok, updated_asset}

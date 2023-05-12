@@ -34,8 +34,8 @@ defmodule Inconn2Service.Prompt do
     Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
   end
 
-  def get_alert_notification_config_by_reserve_and_site(alert_id, site_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix)
+  def get_alert_notification_config_by_reserve_and_site(alert_notification_reserve_id, site_id, prefix) do
+    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_notification_reserve_id, site_id: site_id], prefix: prefix)
   end
 
   def create_alert_notification_config(attrs \\ %{}, prefix) do
@@ -184,7 +184,7 @@ defmodule Inconn2Service.Prompt do
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
     an_reserve = Common.get_alert_by_code(code)
-    an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.alert_id, site_id, prefix)
+    an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
 
     message = form_message_text_from_template(an_reserve.text_template, an_arguments_list)
 
@@ -226,22 +226,61 @@ defmodule Inconn2Service.Prompt do
       "type" => an_reserve.type,
       "site_id" => site_id,
       "user_id" => user_id,
-      "description" => message,
-      "escalated_to_users" => escalation_user_maps
+      "description" => message
     }
     |> create_user_alert_notification(prefix)
 
-    if an_reserve.type == "al" and an_config.is_escalation_required do
+    if an_reserve.type == "al" and an_config.is_escalation_required and length(escalation_user_maps) != 0 do
       %{
         "alert_code" => an_reserve.code,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, an_config.escalation_time_in_minutes * 60),
-        "escalated_to_users" => an_config.escalated_to_users,
+        "escalated_to_users" => escalation_user_maps,
         "site_id" => site_id,
         "prefix" => prefix
       }
       |> Common.create_alert_notification_scheduler()
     end
+  end
+
+  def generate_alert_escalation(alert, escalation_scheduler, prefix) do
+    an_reserve = Common.get_alert_by_code(escalation_scheduler.alert_code)
+    an_config = get_alert_notification_config_by_reserve_and_site(alert.alert_notification_id, alert.site_id, prefix)
+    user_maps = escalation_scheduler.escalated_to_users
+
+    Enum.map(user_maps, fn user_map ->
+      trigger_alert_escalation(alert.description, alert, alert.site_id, user_map["user_id"], prefix)
+    end)
+
+    if an_config.is_sms_required do
+      user_maps
+      |> Enum.reject(fn user_map -> is_nil(user_map["mobile_no"]) end)
+      |> Enum.map(fn user_map ->
+        Communication.form_and_send_sms(an_reserve.sms_code, "91" <> user_map["mobile_no"], [user_map["display_name"] | []], prefix)
+      end)
+    end
+
+    if an_config.is_email_required do
+      user_maps
+      |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
+      |> Enum.map(fn user_map ->
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", alert.description)
+      end)
+    end
+  end
+
+  defp trigger_alert_escalation(message, alert, site_id, user_id, prefix) do
+    alert_identifier_date_time = NaiveDateTime.utc_now()
+    %{
+      "alert_notification_id" => alert.alert_notification_id,
+      "alert_identifier_date_time" => alert_identifier_date_time,
+      "type" => alert.type,
+      "site_id" => site_id,
+      "user_id" => user_id,
+      "description" => message,
+      "escalation" => true
+    }
+    |> create_user_alert_notification(prefix)
   end
 
 end

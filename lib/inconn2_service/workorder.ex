@@ -200,18 +200,21 @@ defmodule Inconn2Service.Workorder do
 
 
   def push_alert_notification_for_workorder_template(updated_template, prefix, "modified", user) do
-    description = ~s(Workorder Template #{updated_template.name} modified by #{get_employee_name_from_current_user(user)})
-    create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
+    # description = ~s(Workorder Template #{updated_template.name} modified by #{get_employee_name_from_current_user(user)})
+    # create_notification_for_workorder_template("WOTE", description, updated_template, prefix)
+    # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
   end
 
   def push_alert_notification_for_workorder_template(updated_template, prefix, "new", _user) do
-    description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix).name})
-    create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
+    # description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix).name})
+    # create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
+    # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
   end
 
   def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted", user) do
-    description = ~s(Workorder Template #{updated_template.name} deleted  by #{get_employee_name_from_current_user(user)})
-    create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
+    # description = ~s(Workorder Template #{updated_template.name} deleted  by #{get_employee_name_from_current_user(user)})
+    # create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
+    # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
   end
 
   def create_notification_for_workorder_template(alert_code, description, updated_template, prefix) do
@@ -237,12 +240,6 @@ defmodule Inconn2Service.Workorder do
         {:ok, updated_template}
     end
   end
-
-  # def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
-  #   Repo.delete(workorder_template, prefix: prefix)
-  #   push_alert_notification_for_workorder_template(workorder_template, prefix, "deleted", user)
-  #   {:ok, nil}
-  # end
 
   def delete_workorder_template(%WorkorderTemplate{} = workorder_template, prefix, user) do
     cond do
@@ -313,9 +310,9 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def update_workorder_schedules(attrs \\ %{}, prefix) do
+  def update_workorder_schedules(attrs \\ %{}, user, prefix) do
     workorder_schedule_ids = attrs["workorder_schedule_ids"]
-    result = update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix)
+    result = update_individual_workorder_schedules(attrs, workorder_schedule_ids, user, prefix)
 
     failures = get_success_or_failure_list(result, :error)
     case length(failures) do
@@ -333,9 +330,9 @@ defmodule Inconn2Service.Workorder do
     |> Elixir.Task.await_many(:infinity)
   end
 
-  defp update_individual_workorder_schedules(attrs, workorder_schedule_ids, prefix) do
+  defp update_individual_workorder_schedules(attrs, workorder_schedule_ids, user, prefix) do
     get_workorder_schedules_by_ids(workorder_schedule_ids, prefix)
-    |> Enum.map(&Elixir.Task.async(fn -> update_workorder_schedule(&1, attrs, prefix) end))
+    |> Enum.map(&Elixir.Task.async(fn -> update_workorder_schedule(&1, attrs, user, prefix) end))
     |> Elixir.Task.await_many(:infinity)
   end
 
@@ -484,7 +481,7 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def update_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, prefix) do
+  def update_workorder_schedule(%WorkorderSchedule{} = workorder_schedule, attrs, user, prefix) do
     result = workorder_schedule
               |> WorkorderSchedule.changeset(attrs)
               |> validate_asset_id(prefix)
@@ -494,7 +491,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.update(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
-          Elixir.Task.start(fn -> push_alert_notification_for_workorder_schedule(workorder_schedule, prefix, "modified") end)
+          Elixir.Task.start(fn -> push_alert_notification_for_workorder_schedule(workorder_schedule, user, prefix, "modified") end)
           zone = get_time_zone(workorder_schedule, prefix)
           work_scheduler = Repo.get_by(WorkScheduler, [workorder_schedule_id: workorder_schedule.id, prefix: prefix])
           case work_scheduler do
@@ -574,10 +571,11 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def push_alert_notification_for_workorder_schedule(updated_schedule, prefix, "modified") do
-    asset = get_asset_from_workorder_schedule(updated_schedule, prefix)
-    description = ~s(Workorder Schedule for #{asset.name} has been modified)
-    create_notification_for_workorder_schedule("WOSE", description, updated_schedule, prefix)
+  def push_alert_notification_for_workorder_schedule(updated_schedule, user, prefix, "modified") do
+    asset = AssetConfig.get_asset_by_asset_id(updated_schedule.asset_id, updated_schedule.asset_type, prefix)
+    date_time = get_site_date_now(asset.site_id, prefix)
+    user_display_name = get_display_name_for_user_id(user.id, prefix)
+    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], [], [], prefix)
   end
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
@@ -1476,7 +1474,8 @@ defmodule Inconn2Service.Workorder do
     cond do
       #workorder assigned
       is_nil(existing_work_order.user_id) && !is_nil(updated_work_order.user_id) ->
-        generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix), prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+        generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
 
       #workpermit approval required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpp" ->
@@ -1484,7 +1483,7 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids(updated_work_order.workpermit_approval_user_ids, prefix)
-        generate_alert_notification("WPAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+        generate_alert_notification("WPAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
 
       #workpermit approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "wpa" ->
@@ -1492,7 +1491,7 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         approver = get_display_name_for_user_id(current_user.id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        generate_alert_notification("WPAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+        generate_alert_notification("WPAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, [], prefix)
 
       #loto lock approval pending
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltlp" ->
@@ -1500,7 +1499,7 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.loto_checker_user_id], prefix)
-        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
 
       #loto lock approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status in ["ltlap", "ltla"] ->
@@ -1508,7 +1507,7 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         approver = get_display_name_for_user_id(updated_work_order.loto_checker_user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, [], prefix)
 
       #loto release approval pending
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ltrp" ->
@@ -1516,7 +1515,7 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.loto_checker_user_id], prefix)
-        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+        generate_alert_notification("LAPRE", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
 
       #loto release approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status in ["ltrap", "ltra"] ->
@@ -1524,35 +1523,35 @@ defmodule Inconn2Service.Workorder do
         name_and_ref = "#{check_list.name} & #{updated_work_order.id}"
         approver = get_display_name_for_user_id(updated_work_order.loto_checker_user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+        generate_alert_notification("LCHAP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, [], prefix)
 
       # workorder approval required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woap" ->
         name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_approval_user_id], prefix)
-        generate_alert_notification("WOAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+        generate_alert_notification("WOAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
 
       # workorder approved
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "woaa" ->
         name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         approver = get_display_name_for_user_id(updated_work_order.workorder_approval_user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        generate_alert_notification("WOAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+        generate_alert_notification("WOAPP", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, [], prefix)
 
       # workorder acknowledgement required
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackp" ->
         name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_acknowledgement_user_id], prefix)
-        generate_alert_notification("WOCAR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, prefix)
+        generate_alert_notification("WOCAR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
 
       # workorder acknowledged
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "ackr" ->
         name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         approver = get_display_name_for_user_id(updated_work_order.workorder_acknowledgement_user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        generate_alert_notification("WOCAC", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, prefix)
+        generate_alert_notification("WOCAC", site_id, [name_and_ref, approver], [name_and_ref, approver], user_maps, [], prefix)
 
       # workorder to hold
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "hl" ->
@@ -1560,7 +1559,7 @@ defmodule Inconn2Service.Workorder do
         user = get_display_name_for_user_id(current_user.id, prefix)
         asset = AssetConfig.get_asset_by_asset_id(updated_work_order.asset_id, updated_work_order.asset_type, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
-        generate_alert_notification("WOSCH", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, prefix)
+        generate_alert_notification("WOSCH", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, [], prefix)
 
       # workorder cancelled
       existing_work_order.status != updated_work_order.status  && updated_work_order.status == "cn" ->
@@ -1568,7 +1567,7 @@ defmodule Inconn2Service.Workorder do
         user = get_display_name_for_user_id(current_user.id, prefix)
         asset = AssetConfig.get_asset_by_asset_id(updated_work_order.asset_id, updated_work_order.asset_type, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
-        generate_alert_notification("WOCAN", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, prefix)
+        generate_alert_notification("WOCAN", site_id, [name_and_ref, user, date_time], [name_and_ref, user, date_time], user_maps, [], prefix)
 
       # (existing_work_order.scheduled_date != updated_work_order.scheduled_date) or (existing_work_order.scheduled_time != updated_work_order.scheduled_time) ->
       #   employee = get_employee_name_from_current_user(current_user)

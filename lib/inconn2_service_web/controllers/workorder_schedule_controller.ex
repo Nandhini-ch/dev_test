@@ -45,14 +45,14 @@ defmodule Inconn2ServiceWeb.WorkorderScheduleController do
   def update(conn, %{"id" => id, "workorder_schedules" => workorder_schedule_params}) do
     workorder_schedule = Workorder.get_workorder_schedule!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.update_workorder_schedule(workorder_schedule, workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, %WorkorderSchedule{} = workorder_schedule} <- Workorder.update_workorder_schedule(workorder_schedule, workorder_schedule_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
       workorder_schedule = get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
       render(conn, "show.json", workorder_schedule: workorder_schedule)
     end
   end
 
   def update_multiple(conn, %{"workorder_schedules" => workorder_schedule_params}) do
-    with {:ok, workorder_schedules} <- Workorder.update_workorder_schedules(workorder_schedule_params, conn.assigns.sub_domain_prefix) do
+    with {:ok, workorder_schedules} <- Workorder.update_workorder_schedules(workorder_schedule_params, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
       workorder_schedules = Enum.map(workorder_schedules, fn workorder_schedule ->
         get_asset_and_site(workorder_schedule, conn.assigns.sub_domain_prefix)
       end)

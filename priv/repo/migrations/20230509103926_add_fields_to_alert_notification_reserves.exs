@@ -10,5 +10,10 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationReserves do
       add :is_escalation_required, :boolean
       add :escalation_time_in_minutes, :integer
     end
+
+    alter table("alert_notification_schedulers") do
+      remove :escalated_to_user_ids, {:array, :integer}
+      add :escalated_to_users, {:array, :map}
+    end
   end
 end
