@@ -1,14 +1,14 @@
 defmodule Inconn2Service.Util.IndexQueries do
   import Ecto.Query, warn: false
-  alias Inconn2Service.Repo
 
-  alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.AssetConfig
 
   def site_query(query, query_params, prefix) do
     Enum.reduce(query_params, query, fn
+      {"zone_id", nil}, query ->
+          query
       {"zone_id", zone_id}, query ->
-          zone_ids = get_subtree_zone_ids(zone_id, prefix)
+          zone_ids = AssetConfig.get_zone_subtree_ids(zone_id, prefix)
           from q in query, where: q.zone_id in ^zone_ids
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
       _, query -> from q in query, where: q.active
@@ -124,14 +124,6 @@ defmodule Inconn2Service.Util.IndexQueries do
       {"type", "ao"}, query -> from q in query, where: q.party_type == "AO"
       _, query -> from q in query, where: q.active
     end)
-  end
-
-  defp get_subtree_zone_ids(zone_id, prefix) do
-    subtree_query = AssetConfig.get_zone!(zone_id, prefix)
-                    |> HierarchyManager.subtree()
-
-    from(q in subtree_query, select: q.id)
-    |> Repo.all(prefix: prefix)
   end
 
   def org_unit_query(query, query_params) do

@@ -28,6 +28,20 @@ defmodule Inconn2Service.AssetConfig do
 
   def get_zone!(id, prefix), do: Repo.get!(Zone, id, prefix: prefix)
 
+  def get_zone_subtree_ids(nil, prefix) do
+    list_zones(prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
+  def get_zone_subtree_ids(zone_id, prefix) do
+    zone_id
+    |> get_zone!(prefix)
+    |> HierarchyManager.subtree()
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
   def create_zone(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 
@@ -301,8 +315,6 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
   def get_loc_and_eqp_subtree_ids(_asset_id, _asset_type, _prefix), do: []
-
-
 
   def list_asset_categories_for_location(location_id, prefix) do
     {locations, equipments} = get_assets_for_location(location_id, prefix)
