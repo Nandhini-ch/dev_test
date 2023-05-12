@@ -9,7 +9,9 @@ use Mix.Config
 
 config :inconn2_service,
   ecto_repos: [Inconn2Service.Repo],
-  environment: Mix.env()
+  environment: :dev
+  # environment: :pre_prod
+  # environment: :prod
 
 config :inconn2_service, Inconn2Service.Guardian,
   issuer: "inconn2_service",

@@ -108,13 +108,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   defp get_individual_energy_consumption_data(date, params, prefix) do
+    {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     value =
       NumericalData.get_energy_consumption_for_assets(
                       energy_main_meters,
-                      NaiveDateTime.new!(date, ~T[00:00:00]),
-                      NaiveDateTime.new!(date, ~T[23:59:59]),
+                      NaiveDateTime.new!(date, from_time),
+                      NaiveDateTime.new!(date, to_time),
                       prefix)
       |> change_nil_to_zero()
 
@@ -680,18 +681,25 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   end
 
   defp calculate_datasets(work_orders, "workorder_status") do
+    open = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @open_workorders end)
+    completed = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @completed_workorders end)
+    in_progress = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status not in @open_workorders ++ @completed_workorders end)
+    total = open + completed + in_progress
     [
       %{
         name: "Open",
-        value: Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @open_workorders end)
+        value: open,
+        hover_value: calculate_percentage(open, total)
       },
       %{
         name: "Completed",
-        value: Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @completed_workorders end)
+        value: completed,
+        hover_value: calculate_percentage(completed, total)
       },
       %{
         name: "In Progress",
-        value: Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status not in @open_workorders ++ @completed_workorders end)
+        value: in_progress,
+        hover_value: calculate_percentage(in_progress, total)
       }
     ]
   end
@@ -699,17 +707,17 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp calculate_datasets(work_orders, "scheduled/completed") do
     completed_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status in @completed_workorders end)
     incomplete_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count(fn wo -> wo.status not in @completed_workorders end)
-    total_count = Enum.count(work_orders) |> change_nil_to_one()
+    total_count = Stream.reject(work_orders, &(is_nil(&1))) |> Enum.count() |> change_nil_to_one()
 
     [
       %{
         name: "Not Completed",
-        count: incomplete_count,
+        hover_value: incomplete_count,
         value: calculate_percentage(incomplete_count, total_count)
       },
       %{
         name: "Completed",
-        count: completed_count,
+        hover_value: completed_count,
         value: calculate_percentage(completed_count, total_count)
       }
     ]
@@ -722,25 +730,32 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     [
       %{
         name: "Workorders",
-        count: inprogress_count,
+        hover_value: inprogress_count,
         value: calculate_percentage(inprogress_count, total_count)
       }
     ]
   end
 
   defp calculate_datasets(work_requests, "open/ip/ticket") do
+    open = Stream.filter(work_requests, fn wr -> wr.status in ["RS", "ROP"] end) |> Enum.count()
+    in_progress = Stream.filter(work_requests, fn wr -> wr.status not in ["RS", "ROP", "CP"] end) |> Enum.count()
+    completed = Stream.filter(work_requests, fn wr -> wr.status in ["CP"] end) |> Enum.count()
+    total = open + in_progress + completed
     [
       %{
         name: "Open",
-        value: Stream.filter(work_requests, fn wr -> wr.status in ["RS", "ROP"] end) |> Enum.count()
+        value: open,
+        hover_value: calculate_percentage(open, total)
       },
       %{
         name: "In Progress",
-        value: Stream.filter(work_requests, fn wr -> wr.status not in ["RS", "ROP", "CP"] end) |> Enum.count()
+        value: in_progress,
+        hover_value: calculate_percentage(in_progress, total)
       },
       %{
         name: "Completed",
-        value: Stream.filter(work_requests, fn wr -> wr.status in ["CP"] end) |> Enum.count()
+        value: completed,
+        hover_value: calculate_percentage(completed, total)
       }
     ]
   end
@@ -853,6 +868,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     Enum.sort_by(breach_data, &(&1.breached_date_time), NaiveDateTime)
     |> Enum.filter(fn x -> x.is_msl_breached == "YES" end)
     |> List.first()
+  end
+
+  defp process_wo_for_date(work_orders, nil, prefix) do
+    process_wo_for_date(work_orders, "L", prefix) ++ process_wo_for_date(work_orders, "E", prefix)
   end
 
   defp process_wo_for_date(work_orders, asset_type, prefix) do

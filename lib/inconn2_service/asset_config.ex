@@ -372,6 +372,13 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  def get_asset_count_by_asset_category(asset_category_id, asset_type, prefix) do
+       case asset_type do
+        "L" -> from(l in Location, where: l.asset_category_id == ^asset_category_id and l.active, select: count(l.id)) |> Repo.one(prefix: prefix)
+        "E" -> from(e in Equipment, where: e.asset_category_id == ^asset_category_id and e.active, select: count(e.id)) |> Repo.one(prefix: prefix)
+       end
+  end
+
   def create_asset_category(attrs \\ %{}, prefix) do
     parent_id = Map.get(attrs, "parent_id", nil)
 

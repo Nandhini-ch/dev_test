@@ -240,7 +240,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("People Report", filters, result, report_headers, "PPL", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_people_report(report_headers, result), summary}
+        {csv_for_people_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -299,10 +299,15 @@ defmodule Inconn2Service.Report do
       from(a in Attendance, where: a.employee_id == ^record.employee_id and a.in_time >= ^from_datetime and a.in_time <= ^to_datetime)
       |> Repo.all(prefix: prefix)
 
-
-    work_done_time =
-      Stream.map(actual_attendance, fn at -> NaiveDateTime.diff(at.out_time, at.in_time) end)
-      |> Enum.sum()
+      work_done_time =
+            Stream.map(actual_attendance, fn at ->
+                if at.out_time != nil do
+                  NaiveDateTime.diff(at.out_time, at.in_time)
+                else
+                  0
+                end
+              end)
+            |> Enum.sum()
 
     Map.put(record, :attendance_percentage, div(length(actual_attendance), change_nil_to_one(expected_attendance_count)) * 100)
     |> Map.put(:work_done_time, convert_man_hours_consumed(work_done_time))
@@ -433,6 +438,7 @@ defmodule Inconn2Service.Report do
 
         %{
           id: wo.id,
+          site_id: wo.site_id,
           asset_name: asset_name,
           asset_code: asset_code,
           type: match_workorder_type(wo.type),
@@ -440,8 +446,10 @@ defmodule Inconn2Service.Report do
           workorder_template_id: wo.workorder_template_id,
           assigned_to: name,
           manhours_consumed: convert_man_hours_consumed(manhours_consumed),
-          scheduled_date: convert_date_format(wo.scheduled_date),
-          scheduled_time: convert_time_format(wo.scheduled_time),
+          scheduled_date: wo.scheduled_date,
+          scheduled_time: wo.scheduled_time,
+          converted_scheduled_date: convert_date_format(wo.scheduled_date),
+          converted_scheduled_time: convert_time_format(wo.scheduled_time),
           start_date: convert_date_format(wo.start_date),
           start_time: convert_time_format(wo.start_time),
           completed_date: convert_date_format(wo.completed_date),
@@ -455,14 +463,14 @@ defmodule Inconn2Service.Report do
 
     summary = get_summary_of_maintainance(result, prefix)
 
-    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO"]
+    summary_headers = ["Asset Category", "Count of Assets", "Total WO", "Completed WO", "Pending WO", "Overdue"]
 
     case query_params["type"] do
       "pdf" ->
         {convert_to_pdf("Work Order Report", filters, result, report_headers, "WO", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_workorder_report(report_headers, result), summary}
+        {csv_for_workorder_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -473,20 +481,33 @@ defmodule Inconn2Service.Report do
     result
     |> Enum.map(fn wo ->
       workorder_template = Inconn2Service.Workorder.get_workorder_template(wo.workorder_template_id, prefix)
-      Map.put(wo, :asset_category_id, workorder_template.asset_category_id) |> Map.put(:asset_category, Inconn2Service.AssetConfig.get_asset_category!(workorder_template.asset_category_id, prefix))
+      Map.put(wo, :asset_category_id, workorder_template.asset_category_id)
+      |> Map.put(:asset_category, Inconn2Service.AssetConfig.get_asset_category!(workorder_template.asset_category_id, prefix)
+      |> Map.put(:estimated_time, workorder_template.estimated_time))
     end)
     |> Enum.group_by(&(&1.asset_category_id))
     |> Enum.map(fn {_k, v} ->
       total_workorder = length(v)
       completed_workorder = Enum.filter(v, fn a -> a.status == "cp" end) |> Enum.count()
       pending_workorder = total_workorder - completed_workorder
+      asset_category = List.first(v).asset_category
       %{
-        asset_category: List.first(v).asset_category.name,
+        asset_category: asset_category.name,
+        count_of_assets: AssetConfig.get_asset_count_by_asset_category(asset_category.id, asset_category.asset_type, prefix),
         total_workorder: length(v),
         completed_workorder: "Completed Workorder: #{completed_workorder}",
         pending_workorder: "Pending Workorder: #{pending_workorder}",
+        overdue_percentage: "#{calculate_overdue(v, prefix)} %"
       }
     end)
+  end
+
+  def calculate_overdue(wo_list, prefix) do
+    pending_list = Enum.filter(wo_list, fn a -> a.status != "cp" end)
+    overdue_count =
+      Enum.map(pending_list, fn wo -> Workorder.add_overdue_flag(wo, prefix) end)
+     |> Enum.count(fn wo -> wo.overdue end)
+    calculate_percentage(overdue_count, length(pending_list))
   end
 
   defp convert_to_positive(number) do
@@ -527,6 +548,7 @@ defmodule Inconn2Service.Report do
     headers = ["Date", "Name", "Type", "Store", "Transaction Type", "Quantity", "Reorder Level", "UOM", "Aisle", "Row", "Bin", "Cost", "Supplier"]
     query_with_params =
       Enum.reduce(rectified_query_params, query, fn
+        {"transaction_type", ""}, query -> query
         {"transaction_type", transaction_type}, query -> from q in query, where: q.transaction_type == ^transaction_type
         {"item_id", item_id}, query -> from q in query, where: q.inventory_item_id == ^item_id
         {"store_id", store_id}, query -> from q in query, where: q.store_id == ^store_id
@@ -536,14 +558,14 @@ defmodule Inconn2Service.Report do
     {from_date, to_date} = get_dates_for_query(rectified_query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
     date_applied_query = from q in query_with_params, where: q.transaction_date >= ^from_date and q.transaction_date <= ^to_date
 
-    # IO.inspect(Repo.all(date_applied_query, prefix: prefix))
+    IO.inspect(Repo.all(date_applied_query, prefix: prefix))
 
     result =
       Repo.all(date_applied_query, prefix: prefix)
       |> filter_by_site(rectified_query_params["site_id"])
       |> filter_by_asset_category(rectified_query_params["asset_category_id"], prefix)
 
-    summary_headers =["Store Location", "Count of receive Tx", "Count of issue Tx"]
+    summary_headers =["Store Location", "Count of Receive Transactions", "Count of Issue Transactions"]
 
     summary = summary_for_inventory_report(result)
 
@@ -554,7 +576,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Inventory Report", filters, result, headers, "IN", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_inventory_report(headers, result), summary}
+        {csv_for_inventory_report(headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
@@ -745,21 +767,24 @@ defmodule Inconn2Service.Report do
             {nil, nil}
           end
 
-        {response_tat_met, resolution_tat_met} =
-          if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
-            cond do
-              wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
-                {"yes", "yes"}
+          response_tat_met = check_response_tat(ticket_response_tat, wr.response_tat)
+          resolution_tat_met = check_resolution_tat(ticket_resolution_tat, wr.resolution_tat)
 
-                wr.response_tat <= ticket_response_tat ->
-                {"yes", nil}
+        # {response_tat_met, resolution_tat_met} =
+        #   if ticket_response_tat != nil && wr.response_tat != nil || ticket_resolution_tat != nil &&  wr.resolution_tat != nil do
+        #     cond do
+        #       wr.response_tat <= ticket_response_tat &&  wr.resolution_tat <= ticket_resolution_tat  ->
+        #         {"Yes", "Yes"}
 
-              true ->
-                {"no", "no"}
-            end
-          else
-            {nil, nil}
-          end
+        #         wr.response_tat <= ticket_response_tat ->
+        #         {"Yes", nil}
+
+        #       true ->
+        #         {"No", "No"}
+        #     end
+        #   else
+        #     {nil, nil}
+        #   end
 
         time_taken_to_close =
           if wr.resolution_tat != nil do
@@ -787,6 +812,7 @@ defmodule Inconn2Service.Report do
           assigned_to: assigned_to,
           response_tat: response_tat_met,
           resolution_tat: resolution_tat_met,
+          backend_status: wr.status,
           status: match_work_request_status(wr.status),
           time_taken_to_close: convert_man_hours_consumed(time_taken_to_close),
           date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
@@ -795,7 +821,7 @@ defmodule Inconn2Service.Report do
       end)
 
     report_headers = ["Asset Name", "Date", "Time", "Ticket Type", "Ticket Category", "Ticket Subcategory", "Description", "Raised By", "Assigned To", "Response TAT", "Resolution TAT", "Status", "Time Taken to Complete"]
-    summary_headers =["Ticket Category", "Count", "Resolved Count", "Open Count"]
+    summary_headers =["Ticket Category", "Count of tickets", "Resolved Count", "Open Count"]
 
     filters = filter_data(query_params, prefix)
 
@@ -807,12 +833,30 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Ticket Report", filters, result, report_headers, "WR", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_workrequest_report(report_headers, result), summary}
+        {csv_for_workrequest_report(report_headers, result, summary, summary_headers), summary}
 
       _ ->
         {result, summary}
     end
   end
+
+  defp check_resolution_tat(expected_resolution_tat, actual_resolution_tat) when not is_nil(expected_resolution_tat) and not is_nil(actual_resolution_tat) do
+    if actual_resolution_tat <= expected_resolution_tat do
+      "Yes"
+    else
+      "No"
+    end
+  end
+  defp check_resolution_tat(_expected_resolution_tat, _actual_resolution_tat), do: "-"
+
+  defp check_response_tat(expected_response_tat, actual_response_tat) when not is_nil(expected_response_tat) and not is_nil(actual_response_tat) do
+    if actual_response_tat <= expected_response_tat do
+      "Yes"
+    else
+      "No"
+    end
+  end
+  defp check_response_tat(_expected_response_tat, _actual_response_tat), do: "-"
 
   defp calculate_times_from_minutes(minutes) do
     [hours, rest] = get_hours(minutes)
@@ -837,16 +881,10 @@ defmodule Inconn2Service.Report do
       %{
         ticket_category: List.first(v).ticket_category,
         count: Enum.count(v),
-        resolved_count: Enum.filter(v, fn a -> a.status == "cl" end) |> Enum.count(),
-        open_count: Enum.filter(v, fn a -> a.status != "cl" end) |> Enum.count()
+        resolved_count: Enum.count(v, fn a -> a.backend_status in ["CL", "CP", "CS"] end),
+        open_count: Enum.count(v, fn a -> a.backend_status not in ["CL", "CP", "CS"] end)
       }
     end)
-  end
-
-
-  defp get_site_date_time(site) do
-    date_time = DateTime.now!(site.time_zone)
-    NaiveDateTime.new!(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute, date_time.second)
   end
 
   def asset_status_report(prefix, query_params) do
@@ -875,7 +913,7 @@ defmodule Inconn2Service.Report do
         {convert_to_pdf("Asset Status Report", filters, equipments_data ++ locations_data, report_headers, "AST", summary, summary_headers), summary}
 
       "csv" ->
-        {csv_for_asset_status_report(report_headers, equipments_data ++ locations_data), summary}
+        {csv_for_asset_status_report(report_headers, equipments_data ++ locations_data, summary, summary_headers), summary}
 
       _ ->
         {equipments_data ++ locations_data, summary}
@@ -912,7 +950,7 @@ defmodule Inconn2Service.Report do
     get_calculated_compliance_value(length(work_orders), completed_workorders)
   end
 
-  defp get_calculated_compliance_value(0, _), do: 0
+  defp get_calculated_compliance_value(0, _), do: "0" <> "%"
   defp get_calculated_compliance_value(total, completed), do: completed/total * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
 
   defp filter_wo_by_site(work_orders, nil), do: work_orders
@@ -1043,7 +1081,7 @@ defmodule Inconn2Service.Report do
       completion_percentage =
         if length(ppm_work_orders) != 0 do
           # IO.inspect("Dsadfsdgredfcvsgefd")
-          (completed_ppm/length(ppm_work_orders)) * 100 |> Float.ceil(2) |> to_string |> Kernel.<>("%")
+          (completed_ppm/length(ppm_work_orders)) * 100.00
         else
           0.0
         end
@@ -1058,7 +1096,7 @@ defmodule Inconn2Service.Report do
         criticality: (if e.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: up_time,
         utilized_time: utilized_time,
-        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2) |> to_string |> Kernel.<>("%")
       }
     end)
   end
@@ -1587,6 +1625,11 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.count_of_assets
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.total_workorder
         ],
         [
@@ -1598,6 +1641,11 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           s.pending_workorder
+        ],
+        [
+          :td,
+          %{style: style(%{"text-align" => "center", "font-weight" => "bold", "border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          s.overdue_percentage
         ]
       ]
     end)
@@ -1711,7 +1759,7 @@ defmodule Inconn2Service.Report do
     end)
   end
 
-  def create_report_structure(report_title, filters, data, _report_headers, "WOE") do
+  def create_report_structure(report_title, filters, data, _report_headers, "WOE", _summary, _summary_headers) do
     string =
       Sneeze.render(
         [
@@ -1730,24 +1778,28 @@ defmodule Inconn2Service.Report do
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
-              end
-            ],
-            [
               :h2,
               if filters.site != nil do
                 "Site: #{filters.site.name}"
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.to_date != nil do
-                "To Date: #{filters.to_date}"
-              end
+              :div,
+              %{style: style(%{"font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
             ],
           [
             :div,
@@ -1758,6 +1810,66 @@ defmodule Inconn2Service.Report do
             %{style: style(%{"float" => "right", "font-style" => "italic"})},
             "Powered By Inconn"
           ],
+        ]
+      )
+    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
+    {:ok, pdf_content} = File.read(filename)
+    pdf_content
+  end
+
+  def create_report_structure(report_title, filters, data, report_headers, "WOEM", _summary, _summary_headers) do
+    string =
+      Sneeze.render(
+        [
+          :div,
+          [
+            :h1,
+            %{
+              style: style(%{"text-align" => "center"})
+            },
+            "#{report_title}"
+          ],
+            [
+              :h2,
+              if filters.licensee != nil do
+                "#{filters.licensee.company_name}"
+              end
+            ],
+            [
+              :h2,
+              if filters.site != nil do
+                "Site: #{filters.site.name}"
+              end
+            ],
+            [
+              :div,
+              %{style: style(%{"font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
+            ],
+          [
+            :table,
+            %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+            create_report_headers(report_headers),
+            create_table_body(data, "WOEM")
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "right", "font-style" => "italic"})},
+            "Powered By Inconn"
+          ]
         ]
       )
     {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
@@ -1784,30 +1896,39 @@ defmodule Inconn2Service.Report do
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.from_date != nil do
-                "From Date: #{filters.from_date}"
-              end
-            ],
-            [
               :h2,
               if filters.site != nil do
                 "Site: #{filters.site.name}"
               end
             ],
             [
-              :span,
-              %{style: style(%{"float" => "right", "font-size" => "20px"})},
-              if filters.to_date != nil do
-                "To Date: #{filters.to_date}"
-              end
+              :div,
+              %{style: style(%{"font-size" => "20px"})},
+              [
+                :div,
+                %{style: style(%{"float" => "left", "font-size" => "20px"})},
+                if filters.from_date != nil do
+                  "From Date: #{filters.from_date}"
+                end,
+              ],
+              [
+                :div,
+                %{style: style(%{"float" => "right", "font-size" => "20px"})},
+                if filters.to_date != nil do
+                  "To Date: #{filters.to_date}"
+                end
+              ]
             ],
           [
             :table,
             %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
             create_report_headers(report_headers),
             create_table_body(data, report_for)
+          ],
+          [
+            :h3,
+            %{style: style(%{"float" => "left"})},
+            "Summary"
           ],
           [
             :div,
@@ -2209,17 +2330,17 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.bin
-        ],
-        [
-          :td,
-          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           rbj.row
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.cost
+          rbj.bin
+        ],
+        [
+          :td,
+          %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+          convert_float_to_binary(rbj.cost)
         ],
         [
           :td,
@@ -2267,12 +2388,12 @@ defmodule Inconn2Service.Report do
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.scheduled_date
+          rbj.converted_scheduled_date
         ],
         [
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-          rbj.scheduled_time
+          rbj.converted_scheduled_time
         ],
         [
           :td,
@@ -2379,49 +2500,75 @@ defmodule Inconn2Service.Report do
     [report_headers] ++ body
   end
 
-  defp csv_for_workorder_report(report_headers, data) do
+  defp csv_for_workorder_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
-        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.scheduled_date, d.scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
+        [d.id, d.asset_name, d.asset_code, d.type, match_work_order_status(d.status), d.assigned_to, d.converted_scheduled_date, d.converted_scheduled_time, d.start_date, d.start_time, d.completed_date, d.completed_time, d.manhours_consumed]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.asset_category, d.count_of_assets, d.total_workorder, d.completed_workorder, d.pending_workorder, d.overdue_percentage]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
-  defp csv_for_inventory_report(report_headers, data) do
+  defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.bin, d.row, d.cost, d.supplier]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.store_location, d.count_of_receive, d.count_of_issue]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
-  defp csv_for_workrequest_report(report_headers, data) do
+  defp csv_for_workrequest_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.date, d.time, d.ticket_type, d.ticket_category, d.ticket_subcategory, d.description, d.raised_by, d.assigned_to, d.response_tat, d.resolution_tat, d.status, d.time_taken_to_close]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.ticket_category, d.count, d.resolved_count, d.open_count]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+
   end
 
-  defp csv_for_asset_status_report(report_headers, data) do
+  defp csv_for_asset_status_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.asset_name, d.asset_code, d.asset_category, d.asset_type, d.status, d.criticality, d.up_time, d.utilized_time, d.ppm_completion_percentage]
       end)
 
-    [report_headers] ++ body
+    summary =
+      Enum.map(summary, fn d ->
+        [d.asset_category, d.count, d.count_by_status, d.ppm_completion]
+      end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
-  defp csv_for_people_report(report_headers, data) do
+  defp csv_for_people_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
         [d.first_name, d.last_name, d.designation, d.department, d.emp_code, d.attendance_percentage, d.work_done_time]
       end)
 
-    [report_headers] ++ body
+      summary =
+        Enum.map(summary, fn d ->
+          [d.department, d.shift_coverage, d.work_done]
+        end)
+
+    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   # defp match_work_order_type(type) do

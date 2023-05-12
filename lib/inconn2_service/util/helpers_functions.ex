@@ -127,6 +127,14 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_from_time_to_time_from_iso(nil, nil), do: {~T[00:00:00], ~T[23:59:59]}
+  def get_from_time_to_time_from_iso(from_time, to_time) do
+    {
+      Time.from_iso8601!(from_time),
+      Time.from_iso8601!(to_time)
+    }
+  end
+
   def get_from_and_to_date_time(nil, nil), do: {nil, nil}
   def get_from_and_to_date_time(from_date, to_date) do
     {from_date_as_date, to_date_as_date} = get_from_date_to_date_from_iso(from_date, to_date)
@@ -237,20 +245,33 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   def get_backend_url(sub_domain) do
     case Application.get_env(:inconn2_service, :environment) do
       :prod -> "https://#{sub_domain}.inconn.io:4001"
-      :dev -> "http://#{sub_domain}.inconn.com:4000"
+      :pre_prod -> "https://#{sub_domain}.inconn.com:4001"
+      :dev -> "http://#{sub_domain}.inconn.in:4000"
     end
   end
 
   def get_frontend_url(sub_domain) do
     case Application.get_env(:inconn2_service, :environment) do
       :prod -> "https://#{sub_domain}.inconn.io:443"
-      :dev -> "http://#{sub_domain}.inconn.com:8080"
+      :pre_prod -> "https://#{sub_domain}.inconn.com:443"
+      :dev -> "http://#{sub_domain}.inconn.in:8080"
     end
   end
 
   def convert_to_ceil_float(value) when is_float(value), do: Float.ceil(value, 2)
 
   def convert_to_ceil_float(value), do: value
+
+  def convert_float_to_binary(value) when is_float(value), do: Float.ceil(value) |> :erlang.float_to_binary([ decimals: 2])
+
+  def convert_float_to_binary(value), do: value
+
+  def naming_conversion(nil), do: ""
+  def naming_conversion(string) do
+    string
+    |> String.replace(~r/\s+/, "_")
+    |> String.downcase()
+  end
 
   def convert_list_from_query_params(nil), do: []
   def convert_list_from_query_params(string) do

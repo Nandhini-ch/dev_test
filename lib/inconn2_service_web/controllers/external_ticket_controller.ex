@@ -9,17 +9,19 @@ defmodule Inconn2ServiceWeb.ExternalTicketController do
 
 def get_equipment_ticket_qr(conn, %{"id" => id}) do
   equipment = AssetConfig.get_equipment!(id, conn.assigns.sub_domain_prefix)
-  png = ExternalTicket.generate_equipment_ticket_qr(equipment, conn.assigns.sub_domain_prefix)
+  {name, png} = ExternalTicket.generate_equipment_ticket_qr(equipment, conn.assigns.sub_domain_prefix)
   conn
     |> put_resp_content_type("image/jpeg")
+    |> put_resp_header("content-disposition", "attachment; filename=\"#{name}.jpeg\"")
     |> send_resp(200, png)
 end
 
 def get_location_ticket_qr(conn, %{"id" => id}) do
   location = AssetConfig.get_location!(id, conn.assigns.sub_domain_prefix)
-  png = ExternalTicket.generate_location_ticket_qr(location, conn.assigns.sub_domain_prefix)
+  {name, png} = ExternalTicket.generate_location_ticket_qr(location, conn.assigns.sub_domain_prefix)
   conn
     |> put_resp_content_type("image/jpeg")
+    |> put_resp_header("content-disposition", "attachment; filename=\"#{name}.jpeg\"")
     |> send_resp(200, png)
 end
 

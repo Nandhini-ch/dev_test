@@ -209,10 +209,11 @@ defmodule Inconn2Service.Ticket do
   end
 
   def filter_for_workrequest_approval_in_team(work_requests, team_user_ids) do
-    Enum.filter(work_requests, fn wr ->
-      boolean_list = Enum.map(team_user_ids, fn user_id -> user_id in wr.approvals_required end)
-      true in boolean_list
-    end)
+    Enum.reject(work_requests, fn wr -> is_nil(wr.approvals_required) end)
+    |> Enum.filter(fn wr ->
+        boolean_list = Enum.map(team_user_ids, fn user_id -> user_id in wr.approvals_required end)
+        true in boolean_list
+      end)
   end
 
   defp exclude_work_request_approved(work_request, current_user, prefix) do
@@ -905,10 +906,17 @@ defmodule Inconn2Service.Ticket do
   end
 
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
+    cond do
+      has_work_request?(workrequest_subcategory, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Ticket associated with it"
+         }
+       true ->
         update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
           {:deleted,
              "The Workrequest Subcategory was disabled"
            }
+    end
   end
 
   def change_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs \\ %{}) do

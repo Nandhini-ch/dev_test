@@ -6,8 +6,18 @@ defmodule Inconn2Service.ExternalTicket do
   def generate_equipment_ticket_qr_as_pdf(equipment, prefix), do: render_string(equipment, split_prefix(prefix), "equipments") |> convert_string_to_pdf(equipment)
   def generate_location_ticket_qr_as_pdf(location, prefix), do: render_string(location, split_prefix(prefix), "locations") |> convert_string_to_pdf(location)
 
-  def generate_location_ticket_qr(asset, prefix), do: EQRCode.encode(generate_asset_base_url(asset, "L", prefix)) |> EQRCode.png
-  def generate_equipment_ticket_qr(asset, prefix), do: EQRCode.encode(generate_asset_base_url(asset, "E", prefix)) |> EQRCode.png
+  def generate_location_ticket_qr(asset, prefix) do
+    {
+      naming_conversion(asset.name),
+      EQRCode.encode(generate_asset_base_url(asset, "L", prefix)) |> EQRCode.png
+    }
+  end
+  def generate_equipment_ticket_qr(asset, prefix) do
+    {
+      naming_conversion(asset.name),
+      EQRCode.encode(generate_asset_base_url(asset, "E", prefix)) |> EQRCode.png
+    }
+  end
 
   defp put_location_id(asset, "E"), do: "location_id=#{asset.location_id}"
   defp put_location_id(asset, "L"), do: "location_id=#{asset.id}"
@@ -32,7 +42,7 @@ defmodule Inconn2Service.ExternalTicket do
   defp convert_string_to_pdf(string, asset) do
     {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
     {:ok, pdf_content} = File.read(filename)
-    {asset.name, pdf_content}
+    {naming_conversion(asset.name), pdf_content}
   end
 
   defp render_string(asset, sub_domain, asset_type) do

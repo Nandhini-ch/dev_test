@@ -11,15 +11,6 @@ defmodule Inconn2Service.Common do
   alias Inconn2Service.Prompt.UserAlertNotification
   alias Inconn2Service.Common.PublicUom
 
-  @doc """
-  Returns the list of timezones.
-
-  ## Examples
-
-      iex> list_timezones()
-      [%Timezone{}, ...]
-
-  """
   def list_timezones do
     from(t in Timezone, order_by: [asc: t.utc_offset_seconds])
     |> Repo.all()
@@ -36,83 +27,24 @@ defmodule Inconn2Service.Common do
     end
   end
 
-  @doc """
-  Gets a single timezone.
-
-  Raises `Ecto.NoResultsError` if the Timezone does not exist.
-
-  ## Examples
-
-      iex> get_timezone!(123)
-      %Timezone{}
-
-      iex> get_timezone!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_timezone!(id), do: Repo.get!(Timezone, id)
 
-  @doc """
-  Creates a timezone.
-
-  ## Examples
-
-      iex> create_timezone(%{field: value})
-      {:ok, %Timezone{}}
-
-      iex> create_timezone(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_timezone(attrs \\ %{}) do
     %Timezone{}
     |> Timezone.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a timezone.
-
-  ## Examples
-
-      iex> update_timezone(timezone, %{field: new_value})
-      {:ok, %Timezone{}}
-
-      iex> update_timezone(timezone, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_timezone(%Timezone{} = timezone, attrs) do
     timezone
     |> Timezone.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a timezone.
-
-  ## Examples
-
-      iex> delete_timezone(timezone)
-      {:ok, %Timezone{}}
-
-      iex> delete_timezone(timezone)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_timezone(%Timezone{} = timezone) do
     Repo.delete(timezone)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking timezone changes.
-
-  ## Examples
-
-      iex> change_timezone(timezone)
-      %Ecto.Changeset{data: %Timezone{}}
-
-  """
   def change_timezone(%Timezone{} = timezone, attrs \\ %{}) do
     Timezone.changeset(timezone, attrs)
   end
@@ -266,192 +198,57 @@ defmodule Inconn2Service.Common do
 
   alias Inconn2Service.Common.IotMetering
 
-  @doc """
-  Returns the list of iot_meterings.
-
-  ## Examples
-
-      iex> list_iot_meterings()
-      [%IotMetering{}, ...]
-
-  """
   def list_iot_meterings do
     Repo.all(IotMetering)
   end
 
-  @doc """
-  Gets a single iot_metering.
-
-  Raises `Ecto.NoResultsError` if the Iot metering does not exist.
-
-  ## Examples
-
-      iex> get_iot_metering!(123)
-      %IotMetering{}
-
-      iex> get_iot_metering!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_iot_metering!(id), do: Repo.get!(IotMetering, id)
 
-  @doc """
-  Creates a iot_metering.
-
-  ## Examples
-
-      iex> create_iot_metering(%{field: value})
-      {:ok, %IotMetering{}}
-
-      iex> create_iot_metering(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_iot_metering(attrs \\ %{}) do
     %IotMetering{}
     |> IotMetering.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a iot_metering.
-
-  ## Examples
-
-      iex> update_iot_metering(iot_metering, %{field: new_value})
-      {:ok, %IotMetering{}}
-
-      iex> update_iot_metering(iot_metering, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_iot_metering(%IotMetering{} = iot_metering, attrs) do
     iot_metering
     |> IotMetering.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a iot_metering.
-
-  ## Examples
-
-      iex> delete_iot_metering(iot_metering)
-      {:ok, %IotMetering{}}
-
-      iex> delete_iot_metering(iot_metering)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_iot_metering(%IotMetering{} = iot_metering) do
     Repo.delete(iot_metering)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking iot_metering changes.
 
-  ## Examples
-
-      iex> change_iot_metering(iot_metering)
-      %Ecto.Changeset{data: %IotMetering{}}
-
-  """
   def change_iot_metering(%IotMetering{} = iot_metering, attrs \\ %{}) do
     IotMetering.changeset(iot_metering, attrs)
   end
 
   alias Inconn2Service.Common.ListOfValue
 
-  @doc """
-  Returns the list of list_of_values.
-
-  ## Examples
-
-      iex> list_list_of_values()
-      [%ListOfValue{}, ...]
-
-  """
   def list_list_of_values(prefix) do
     Repo.all(ListOfValue, prefix: prefix)
   end
 
-  @doc """
-  Gets a single list_of_value.
-
-  Raises `Ecto.NoResultsError` if the List of value does not exist.
-
-  ## Examples
-
-      iex> get_list_of_value!(123)
-      %ListOfValue{}
-
-      iex> get_list_of_value!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_list_of_value!(id, prefix), do: Repo.get!(ListOfValue, id, prefix: prefix)
 
-  @doc """
-  Creates a list_of_value.
-
-  ## Examples
-
-      iex> create_list_of_value(%{field: value})
-      {:ok, %ListOfValue{}}
-
-      iex> create_list_of_value(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_list_of_value(attrs \\ %{}, prefix) do
     %ListOfValue{}
     |> ListOfValue.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a list_of_value.
-
-  ## Examples
-
-      iex> update_list_of_value(list_of_value, %{field: new_value})
-      {:ok, %ListOfValue{}}
-
-      iex> update_list_of_value(list_of_value, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_list_of_value(%ListOfValue{} = list_of_value, attrs, prefix) do
     list_of_value
     |> ListOfValue.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a list_of_value.
-
-  ## Examples
-
-      iex> delete_list_of_value(list_of_value)
-      {:ok, %ListOfValue{}}
-
-      iex> delete_list_of_value(list_of_value)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_list_of_value(%ListOfValue{} = list_of_value, prefix) do
     Repo.delete(list_of_value, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking list_of_value changes.
-
-  ## Examples
-
-      iex> change_list_of_value(list_of_value)
-      %Ecto.Changeset{data: %ListOfValue{}}
-
-  """
   def change_list_of_value(%ListOfValue{} = list_of_value, attrs \\ %{}) do
     ListOfValue.changeset(list_of_value, attrs)
   end
@@ -473,20 +270,10 @@ defmodule Inconn2Service.Common do
     |> Repo.all()
   end
 
-  @doc """
-  Gets a single alert_notification_reserve.
+  # def list_alert_notification_reserves do
+  #   Repo.all(AlertNotificationReserve)
+  # end
 
-  Raises `Ecto.NoResultsError` if the Alert notification reserve does not exist.
-
-  ## Examples
-
-      iex> get_alert_notification_reserve!(123)
-      %AlertNotificationReserve{}
-
-      iex> get_alert_notification_reserve!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_alert_notification_reserve!(0), do: nil
   def get_alert_notification_reserve!(id), do: Repo.get!(AlertNotificationReserve, id)
 
@@ -494,264 +281,83 @@ defmodule Inconn2Service.Common do
 
   def get_alert_by_code_and_site_id(code, site_id), do: Repo.get_by(AlertNotificationReserve, [code: code, site_id: site_id])
 
-
-  @doc """
-  Creates a alert_notification_reserve.
-
-  ## Examples
-
-      iex> create_alert_notification_reserve(%{field: value})
-      {:ok, %AlertNotificationReserve{}}
-
-      iex> create_alert_notification_reserve(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_alert_notification_reserve(attrs \\ %{}) do
     %AlertNotificationReserve{}
     |> AlertNotificationReserve.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a alert_notification_reserve.
-
-  ## Examples
-
-      iex> update_alert_notification_reserve(alert_notification_reserve, %{field: new_value})
-      {:ok, %AlertNotificationReserve{}}
-
-      iex> update_alert_notification_reserve(alert_notification_reserve, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve, attrs) do
     alert_notification_reserve
     |> AlertNotificationReserve.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a alert_notification_reserve.
-
-  ## Examples
-
-      iex> delete_alert_notification_reserve(alert_notification_reserve)
-      {:ok, %AlertNotificationReserve{}}
-
-      iex> delete_alert_notification_reserve(alert_notification_reserve)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve) do
     Repo.delete(alert_notification_reserve)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking alert_notification_reserve changes.
-
-  ## Examples
-
-      iex> change_alert_notification_reserve(alert_notification_reserve)
-      %Ecto.Changeset{data: %AlertNotificationReserve{}}
-
-  """
   def change_alert_notification_reserve(%AlertNotificationReserve{} = alert_notification_reserve, attrs \\ %{}) do
     AlertNotificationReserve.changeset(alert_notification_reserve, attrs)
   end
 
   alias Inconn2Service.Common.AlertNotificationGenerator
 
-  @doc """
-  Returns the list of alert_notification_generators.
-
-  ## Examples
-
-      iex> list_alert_notification_generators()
-      [%AlertNotificationGenerator{}, ...]
-
-  """
   def list_alert_notification_generators do
     Repo.all(AlertNotificationGenerator)
   end
 
-  @doc """
-  Gets a single alert_notification_generator.
-
-  Raises `Ecto.NoResultsError` if the Alert notification generator does not exist.
-
-  ## Examples
-
-      iex> get_alert_notification_generator!(123)
-      %AlertNotificationGenerator{}
-
-      iex> get_alert_notification_generator!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_alert_notification_generator!(id), do: Repo.get!(AlertNotificationGenerator, id)
 
   def get_generator_by_reference_id_and_code(reference_id, code) do
     from(an in AlertNotificationGenerator, where: an.reference_id == ^reference_id and an.code == ^code)
     |> Repo.one()
   end
-  @doc """
-  Creates a alert_notification_generator.
 
-  ## Examples
-
-      iex> create_alert_notification_generator(%{field: value})
-      {:ok, %AlertNotificationGenerator{}}
-
-      iex> create_alert_notification_generator(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_alert_notification_generator(attrs \\ %{}) do
     %AlertNotificationGenerator{}
     |> AlertNotificationGenerator.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a alert_notification_generator.
-
-  ## Examples
-
-      iex> update_alert_notification_generator(alert_notification_generator, %{field: new_value})
-      {:ok, %AlertNotificationGenerator{}}
-
-      iex> update_alert_notification_generator(alert_notification_generator, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs) do
     alert_notification_generator
     |> AlertNotificationGenerator.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a alert_notification_generator.
-
-  ## Examples
-
-      iex> delete_alert_notification_generator(alert_notification_generator)
-      {:ok, %AlertNotificationGenerator{}}
-
-      iex> delete_alert_notification_generator(alert_notification_generator)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator) do
     Repo.delete(alert_notification_generator)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking alert_notification_generator changes.
-
-  ## Examples
-
-      iex> change_alert_notification_generator(alert_notification_generator)
-      %Ecto.Changeset{data: %AlertNotificationGenerator{}}
-
-  """
   def change_alert_notification_generator(%AlertNotificationGenerator{} = alert_notification_generator, attrs \\ %{}) do
     AlertNotificationGenerator.changeset(alert_notification_generator, attrs)
   end
 
   alias Inconn2Service.Common.AlertNotificationScheduler
 
-  @doc """
-  Returns the list of alert_notification_schedulers.
-
-  ## Examples
-
-      iex> list_alert_notification_schedulers()
-      [%AlertNotificationScheduler{}, ...]
-
-  """
   def list_alert_notification_schedulers do
     Repo.all(AlertNotificationScheduler)
   end
 
-  @doc """
-  Gets a single alert_notification_scheduler.
-
-  Raises `Ecto.NoResultsError` if the Alert notification scheduler does not exist.
-
-  ## Examples
-
-      iex> get_alert_notification_scheduler!(123)
-      %AlertNotificationScheduler{}
-
-      iex> get_alert_notification_scheduler!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_alert_notification_scheduler!(id), do: Repo.get!(AlertNotificationScheduler, id)
 
-  @doc """
-  Creates a alert_notification_scheduler.
-
-  ## Examples
-
-      iex> create_alert_notification_scheduler(%{field: value})
-      {:ok, %AlertNotificationScheduler{}}
-
-      iex> create_alert_notification_scheduler(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_alert_notification_scheduler(attrs \\ %{}) do
     %AlertNotificationScheduler{}
     |> AlertNotificationScheduler.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a alert_notification_scheduler.
-
-  ## Examples
-
-      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: new_value})
-      {:ok, %AlertNotificationScheduler{}}
-
-      iex> update_alert_notification_scheduler(alert_notification_scheduler, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs) do
     alert_notification_scheduler
     |> AlertNotificationScheduler.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a alert_notification_scheduler.
-
-  ## Examples
-
-      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
-      {:ok, %AlertNotificationScheduler{}}
-
-      iex> delete_alert_notification_scheduler(alert_notification_scheduler)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler) do
     Repo.delete(alert_notification_scheduler)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking alert_notification_scheduler changes.
-
-  ## Examples
-
-      iex> change_alert_notification_scheduler(alert_notification_scheduler)
-      %Ecto.Changeset{data: %AlertNotificationScheduler{}}
-
-  """
   def change_alert_notification_scheduler(%AlertNotificationScheduler{} = alert_notification_scheduler, attrs \\ %{}) do
     AlertNotificationScheduler.changeset(alert_notification_scheduler, attrs)
   end
@@ -829,111 +435,34 @@ defmodule Inconn2Service.Common do
 
   alias Inconn2Service.Common.Feature
 
-  @doc """
-  Returns the list of features.
-
-  ## Examples
-
-      iex> list_features()
-      [%Feature{}, ...]
-
-  """
   def list_features do
     Repo.all(Feature)
   end
 
-  @doc """
-  Gets a single feature.
-
-  Raises `Ecto.NoResultsError` if the Feature does not exist.
-
-  ## Examples
-
-      iex> get_feature!(123)
-      %Feature{}
-
-      iex> get_feature!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_feature!(id), do: Repo.get!(Feature, id)
 
-  @doc """
-  Creates a feature.
-
-  ## Examples
-
-      iex> create_feature(%{field: value})
-      {:ok, %Feature{}}
-
-      iex> create_feature(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_feature(attrs \\ %{}) do
     %Feature{}
     |> Feature.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a feature.
-
-  ## Examples
-
-      iex> update_feature(feature, %{field: new_value})
-      {:ok, %Feature{}}
-
-      iex> update_feature(feature, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_feature(%Feature{} = feature, attrs) do
     feature
     |> Feature.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a feature.
-
-  ## Examples
-
-      iex> delete_feature(feature)
-      {:ok, %Feature{}}
-
-      iex> delete_feature(feature)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_feature(%Feature{} = feature) do
     Repo.delete(feature)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking feature changes.
-
-  ## Examples
-
-      iex> change_feature(feature)
-      %Ecto.Changeset{data: %Feature{}}
-
-  """
   def change_feature(%Feature{} = feature, attrs \\ %{}) do
     Feature.changeset(feature, attrs)
   end
 
   alias Inconn2Service.Common.AdminUser
 
-  @doc """
-  Returns the list of admin_user.
-
-  ## Examples
-
-      iex> list_admin_user()
-      [%AdminUser{}, ...]
-
-  """
   def list_admin_user do
     Repo.all(AdminUser)
   end
