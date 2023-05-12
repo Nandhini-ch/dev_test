@@ -899,10 +899,17 @@ defmodule Inconn2Service.Ticket do
   end
 
   def delete_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, prefix) do
+    cond do
+      has_work_request?(workrequest_subcategory, prefix) ->
+         {:could_not_delete,
+           "Cannot be deleted as there are Ticket associated with it"
+         }
+       true ->
         update_workrequest_subcategory(workrequest_subcategory, %{"active" => false}, prefix)
           {:deleted,
              "The Workrequest Subcategory was disabled"
            }
+    end
   end
 
   def change_workrequest_subcategory(%WorkrequestSubcategory{} = workrequest_subcategory, attrs \\ %{}) do
