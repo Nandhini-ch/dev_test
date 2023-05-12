@@ -47,9 +47,20 @@ defmodule Inconn2Service.Dashboards.Helpers do
 
   def get_sub_meter_assets(config, meter_type, prefix) do
     asset_category_id = config[match_ac_type_and_config_key(meter_type)]
-    main_meter_ids = config[match_main_meters_type_and_config_key(meter_type)] |> convert_nil_to_list()
+    main_meter_ids = config[match_main_meters_type_and_config_key(meter_type)] |> convert_nil_to_list() |> convert_config_main_meters()
     AssetConfig.list_equipments_of_asset_category_and_not_in_given_ids(asset_category_id, main_meter_ids, prefix)
   end
+
+  defp convert_config_main_meters(meters) do
+    Enum.map(meters, fn meter ->
+      if is_map(meter) do
+        meter["id"]
+      else
+        meter
+      end
+    end)
+  end
+
 
   def get_assets_and_energy_list(assets, from_dt, to_dt, prefix) do
     assets

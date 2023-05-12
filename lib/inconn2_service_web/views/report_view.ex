@@ -3,7 +3,6 @@ defmodule Inconn2ServiceWeb.ReportView do
   alias Inconn2ServiceWeb.{ReportView, WorkorderTaskView}
 
   def render("work_order_report.json", %{work_order_info: work_order_info, summary: summary}) do
-    IO.inspect("213683704238")
 
     %{
       data: work_order_info,

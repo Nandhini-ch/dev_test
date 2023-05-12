@@ -213,7 +213,9 @@ defmodule Inconn2Service.Util.IndexQueries do
       {"workrequest_category_ids", []}, query -> query
       {"workrequest_category_id", workrequest_category_id}, query -> from q in query, where: q.workrequest_category_id == ^workrequest_category_id
       {"workrequest_category_ids", workrequest_category_ids}, query -> from q in query, where: q.workrequest_category_ids == ^workrequest_category_ids
+      {"workrequest_subcategory_id", workrequest_subcategory_id}, query -> from q in query, where: q.workrequest_subcategory_id == ^workrequest_subcategory_id
       {"priority", priority}, query -> from q in query, where: q.priority == ^priority
+      {"not_statuses", not_statuses}, query -> from q in query, where: q.status not in ^not_statuses
       _, query -> query
     end)
   end
