@@ -10,5 +10,9 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigs do
       add :is_sms_required, :boolean
       add :is_email_required, :boolean
     end
+
+    alter table("locations") do
+      add :asset_manager_id, :integer
+    end
   end
 end
