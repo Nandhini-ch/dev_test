@@ -675,7 +675,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(fn { _asset_category_id, tickets } ->
         %{
           label: List.first(tickets).workrequest_category.name,
-          dataSets: calculate_datasets(work_requests, organize_for)
+          dataSets: calculate_datasets(tickets, organize_for)
         }
     end)
   end
