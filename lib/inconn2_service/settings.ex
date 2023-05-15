@@ -5,6 +5,7 @@ defmodule Inconn2Service.Settings do
 
   import Ecto.Query, warn: false
   import Inconn2Service.Util.DeleteManager
+  import Inconn2Service.Prompt
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Repo
@@ -194,4 +195,9 @@ defmodule Inconn2Service.Settings do
   def change_holiday(%Holiday{} = holiday, attrs \\ %{}) do
     Holiday.changeset(holiday, attrs)
   end
+
+  # def push_alert_notification_for_new_shift(site_id, prefix) do
+  #   generate_alert_notification("NSHAD", site_id, ["site_name"], [], [], prefix)
+  # end
 end
+

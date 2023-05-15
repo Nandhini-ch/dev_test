@@ -105,7 +105,7 @@ defmodule Inconn2ServiceWeb.UserController do
     case Staff.get_user_by_username_for_otp(credentials["username"], conn.assigns.sub_domain_prefix) do
       {:ok, user} ->
         otp = Enum.random(1000..9999)
-        Communication.form_and_send_sms("FOTP", "91" <> user.mobile_no, [user.first_name, otp], conn.assigns.sub_domain_prefix)
+        Communication.form_and_send_sms("FGOTP", "91" <> user.mobile_no, [user.first_name, otp], conn.assigns.sub_domain_prefix)
         Confirmation.create_forgot_password_otp(
           %{
             "user_id" => user.id,

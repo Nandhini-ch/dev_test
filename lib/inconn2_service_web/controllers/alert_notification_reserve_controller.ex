@@ -6,8 +6,8 @@ defmodule Inconn2ServiceWeb.AlertNotificationReserveController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    alert_notification_reserves = Common.list_alert_notification_reserves()
+  def index(conn, %{"module" => module}) do
+    alert_notification_reserves = Common.list_alert_notification_reserves(module)
     render(conn, "index.json", alert_notification_reserves: alert_notification_reserves)
   end
 

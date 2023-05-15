@@ -96,7 +96,7 @@ defmodule Inconn2Service.ExternalTicket do
       {:ok, work_request} ->
         Email.send_ticket_reg_email(work_request.id, work_request.external_email, work_request.external_name)
         Ticket.create_status_track(work_request, prefix)
-        Ticket.push_alert_notification_for_ticket(nil, work_request, prefix, nil)
+        # Ticket.push_alert_notification_for_ticket(nil, work_request, prefix, nil)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory])}
 
       _ ->
@@ -115,7 +115,7 @@ defmodule Inconn2Service.ExternalTicket do
     case result do
       {:ok, updated_work_request} ->
         Ticket.update_status_track(updated_work_request, prefix)
-        Ticket.push_alert_notification_for_ticket(work_request, updated_work_request, prefix, nil)
+        # Ticket.push_alert_notification_for_ticket(work_request, updated_work_request, prefix, nil)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory], force: true)}
 
       _ ->

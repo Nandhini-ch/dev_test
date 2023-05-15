@@ -5,6 +5,7 @@ defmodule Inconn2Service.Staff do
   import Inconn2Service.Util.DeleteManager
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
 
   alias Ecto.Multi
   alias Inconn2Service.Repo
@@ -662,6 +663,23 @@ defmodule Inconn2Service.Staff do
     |> Repo.sort_by_id()
   end
 
+  def form_user_maps_by_user_ids(user_ids, prefix) do
+    users = from(u in User, where: u.id in ^user_ids) |> Repo.all(prefix: prefix)
+    Enum.map(users, fn user ->
+      %{
+        "user_id" => user.id,
+        "display_name" => "#{user.first_name} #{user.last_name}",
+        "mobile_no" => user.mobile_no,
+        "email" => user.email
+      }
+    end)
+  end
+
+  def add_display_name_to_user_map(user_map, prefix) do
+    user = Repo.get!(User, user_map["user_id"], prefix: prefix)
+    Map.put(user_map, "display_name", "#{user.first_name} #{user.last_name}")
+  end
+
   def get_reportee_users(user, _prefix) when is_nil(user.employee_id), do: []
   def get_reportee_users(user, prefix) when not is_nil(user.employee_id) do
     from(e in Employee, where: e.reports_to == ^user.employee_id and e.active,
@@ -1304,4 +1322,12 @@ defmodule Inconn2Service.Staff do
     |> Stream.map(fn e -> get_user_from_employee(e.employee_id, prefix) end)
     |> Enum.filter(fn u -> !is_nil(u) end)
   end
+
+  # def push_alert_notification_for_new_user(user, site_id, prefix) do
+  #   generate_alert_notification("NUADD", site_id, [user.username, "org_unit"], [], [], prefix)
+  # end
+
+  # def push_alert_notification_for_new_org_unit(site_id, prefix) do
+  #   generate_alert_notification("NORGA", site_id, ["org_unit"], [], [], prefix)
+  # end
 end

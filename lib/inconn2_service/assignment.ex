@@ -7,6 +7,7 @@ defmodule Inconn2Service.Assignment do
   import Ecto.Changeset
   import Inconn2Service.Util.IndexQueries
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Prompt
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Assignment.EmployeeRoster
@@ -928,4 +929,8 @@ defmodule Inconn2Service.Assignment do
   def change_manual_attendance(%ManualAttendance{} = manual_attendance, attrs \\ %{}) do
     ManualAttendance.changeset(manual_attendance, attrs)
   end
+
+  # def push_alert_notification_for_new_roster(site_id, prefix) do
+  #   generate_alert_notification("NRSAD", site_id, ["shift_name"], [], [], prefix)
+  # end
 end
