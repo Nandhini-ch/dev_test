@@ -255,9 +255,24 @@ defmodule Inconn2Service.Common do
 
   alias Inconn2Service.Common.AlertNotificationReserve
 
-  def list_alert_notification_reserves do
-    Repo.all(AlertNotificationReserve)
+  @doc """
+  Returns the list of alert_notification_reserves.
+
+  ## Examples
+
+      iex> list_alert_notification_reserves()
+      [%AlertNotificationReserve{}, ...]
+
+  """
+  def list_alert_notification_reserves(module) do
+    AlertNotificationReserve
+    |> where(module: ^module)
+    |> Repo.all()
   end
+
+  # def list_alert_notification_reserves do
+  #   Repo.all(AlertNotificationReserve)
+  # end
 
   def get_alert_notification_reserve!(0), do: nil
   def get_alert_notification_reserve!(id), do: Repo.get!(AlertNotificationReserve, id)
@@ -365,7 +380,7 @@ defmodule Inconn2Service.Common do
         delete_escalation_scheduler(escalation_scheduler)
 
       [alert | _] ->
-        create_alert_escalation(alert, escalation_scheduler)
+        Prompt.generate_alert_escalation(alert, escalation_scheduler, escalation_scheduler.prefix)
         delete_escalation_scheduler(escalation_scheduler)
 
     end
@@ -383,27 +398,6 @@ defmodule Inconn2Service.Common do
 
   defp delete_escalation_scheduler(escalation_scheduler) do
     delete_alert_notification_scheduler(escalation_scheduler)
-  end
-
-  defp create_alert_escalation(alert, escalation_scheduler) do
-    Enum.map(escalation_scheduler.escalated_to_user_ids, fn user_id ->
-      create_individual_escalation(alert, user_id, escalation_scheduler.prefix)
-    end)
-  end
-
-  defp create_individual_escalation(alert, user_id, prefix) do
-    Prompt.create_user_alert_notification(
-      %{
-        "alert_notification_id" => alert.alert_notification_id,
-        "type" => "al",
-        "asset_id" => alert.asset_id,
-        "asset_type" => alert.asset_type,
-        "site_id" => alert.site_id,
-        "user_id" => user_id,
-        "description" => alert.description,
-        "escalation" => true
-      }, prefix
-    )
   end
 
   alias Inconn2Service.Common.Widget

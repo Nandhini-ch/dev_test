@@ -1,6 +1,21 @@
 defmodule Inconn2Service.Email do
   import Swoosh.Email
   import Inconn2Service.Util.HelpersFunctions
+  alias Inconn2Service.Communication.EmailSender
+
+  def send_alert_notification_email(recipient, username, subject_string, message) do
+    body_string = ~s(
+      Dear #{username},
+
+        This is to "notify/ alert" you that #{message}
+
+      Regards,
+      InConn team
+
+      Note:	This is a system generated email from an unmonitored mailbox. Kindly do not reply. To contact us, kindly  call xxxxxxxxxx or email to us at xxxxxx@xxx.xxx
+    )
+    EmailSender.send_email(recipient, subject_string, body_string)
+  end
 
   def send_ticket_complete_email(id, email, name, remarks, date_time, prefix) do
     new()

@@ -1,6 +1,7 @@
 defmodule Inconn2Service.Util.HelpersFunctions do
 
   import Ecto.Query, warn: false
+  alias Inconn2Service.Staff
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
 
@@ -277,6 +278,23 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     string
     |> String.split(",")
     |> Enum.map(&(String.to_integer/1))
+  end
+
+  def form_message_text_from_template(message_template, list_of_values) do
+    key_value =
+      Enum.reduce(list_of_values, [], fn value, acc ->
+        [{"var#{length(acc) + 1}" |> String.to_atom, value} | acc]
+      end)
+      IO.inspect(key_value)
+
+    EEx.eval_string(message_template, key_value)
+
+  end
+
+  def get_display_name_for_user_id(nil, _prefix), do: ""
+  def get_display_name_for_user_id(user_id, prefix) do
+    user = Staff.get_user!(user_id, prefix)
+    "#{user.first_name} #{user.last_name}"
   end
 
 end
