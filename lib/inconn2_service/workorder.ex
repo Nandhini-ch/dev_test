@@ -818,9 +818,9 @@ defmodule Inconn2Service.Workorder do
   def get_work_order_in_approval_for_teams(user, prefix) when not is_nil(user.employee_id) do
     teams = Staff.get_team_ids_for_user(user, prefix)
     team_user_ids = Staff.get_team_users(teams, prefix) |> Enum.map(fn u -> u.id end)
-    from(wo in WorkOrder, where: wo.workorder_approval_user_id in ^team_user_ids or
+    from(wo in WorkOrder, where: (wo.workorder_approval_user_id in ^team_user_ids or
                                  wo.loto_checker_user_id in ^team_user_ids or
-                                 wo.workorder_acknowledgement_user_id in ^team_user_ids and
+                                 wo.workorder_acknowledgement_user_id in ^team_user_ids) and
                                  not wo.is_deactivated and
                                  wo.status not in ["cp", "cn"])
     |> Repo.all(prefix: prefix)
