@@ -66,12 +66,10 @@ defmodule Inconn2Service.Measurements do
   end
 
   def insert_metering_values(work_order, workorder_task, prefix) do
-    # uom = String.downcase(workorder_task.unit_of_measurement)
-
     query = from mr in MeterReading,
               where: [asset_id: ^work_order.asset_id,
                       asset_type: ^work_order.asset_type,
-                      # unit_of_measurement: ^uom,
+                      unit_of_measurement: ^workorder_task.unit_of_measurement,
                       meter_type: ^workorder_task.meter_type],
               order_by: [desc: :recorded_date_time],
               limit: 1
