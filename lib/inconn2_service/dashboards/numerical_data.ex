@@ -26,6 +26,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
         query = from mr in MeterReading,
                   where: mr.asset_id in ^assets and
                         mr.asset_type == "E" and
+                        mr.unit_of_measurement == "Kwh" and
                         mr.meter_type == "E" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
@@ -51,6 +52,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id == ^asset_map["id"] and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
+                        mr.unit_of_measurement == "Kwh" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -65,6 +67,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id in ^asset_ids and
                         mr.asset_type == "E" and
                         mr.meter_type == "W" and
+                        mr.unit_of_measurement == "KL" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -77,6 +80,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id in ^asset_ids and
                         mr.asset_type == "E" and
                         mr.meter_type == "F" and
+                        mr.unit_of_measurement == "KL" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -88,6 +92,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id == ^asset and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
+                        mr.unit_of_measurement == "Kwh" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -102,6 +107,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                 where: mr.asset_id == ^asset["id"] and
                       mr.asset_type == "E" and
                       mr.meter_type == "E" and
+                      mr.unit_of_measurement == "Kwh" and
                       mr.recorded_date_time >= ^from_dt and
                       mr.recorded_date_time <= ^to_dt,
                 select: sum(mr.absolute_value)
@@ -114,6 +120,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id == ^asset_id and
                         mr.asset_type == "E" and
                         mr.meter_type == "W" and
+                        mr.unit_of_measurement == "KL" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -126,6 +133,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id == ^asset_id and
                         mr.asset_type == "E" and
                         mr.meter_type == "F" and
+                        mr.unit_of_measurement == "KL" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -137,6 +145,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.site_id == ^site_id and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
+                        mr.unit_of_measurement == "Kwh" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -149,6 +158,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                         mr.asset_id not in ^exclude_asset_ids and
                         mr.asset_type == "E" and
                         mr.meter_type == "E" and
+                        mr.unit_of_measurement == "Kwh" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)

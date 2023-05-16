@@ -66,12 +66,10 @@ defmodule Inconn2Service.Measurements do
   end
 
   def insert_metering_values(work_order, workorder_task, prefix) do
-    # uom = String.downcase(workorder_task.unit_of_measurement)
-
     query = from mr in MeterReading,
               where: [asset_id: ^work_order.asset_id,
                       asset_type: ^work_order.asset_type,
-                      # unit_of_measurement: ^uom,
+                      unit_of_measurement: ^workorder_task.unit_of_measurement,
                       meter_type: ^workorder_task.meter_type],
               order_by: [desc: :recorded_date_time],
               limit: 1
@@ -100,7 +98,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => workorder_task.recorded_value,
       "cumulative_value" => cumulative_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }
@@ -121,7 +119,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => absolute_value,
       "cumulative_value" => workorder_task.recorded_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }
