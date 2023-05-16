@@ -17,6 +17,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         dt_tuple_list = form_date_time_list_tuple_from_time_range_from_iso(params["from_time"], params["to_time"], params["from_date"])
 
         dt_tuple_list
+        |> IO.inspect()
         |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data_for_time(&1, params, prefix) end))
         |> Enum.map(&Task.await/1)
 
@@ -35,6 +36,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end
 
         date_list
+        |> IO.inspect()
         |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
         |> Enum.map(&Task.await/1)
     end
