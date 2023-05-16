@@ -153,6 +153,36 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_date_time_range_for_date_and_time_range(date, from_time, to_time) do
+    case Time.compare(from_time, to_time) do
+      :gt ->
+        { NaiveDateTime.new!(date, from_time), NaiveDateTime.new!(Date.add(date, 1), to_time) }
+
+      _ ->
+        { NaiveDateTime.new!(date, from_time), NaiveDateTime.new!(date, to_time) }
+
+    end
+  end
+
+  def form_time_list_from_iso(from_time, to_time) do
+    form_time_list(
+      Time.from_iso8601!(from_time),
+      Time.from_iso8601!(to_time)
+    )
+  end
+
+  def form_time_list(from_time, to_time) do
+    list = [from_time] |> List.flatten()
+    now_time = Date.add(List.last(list), 1)
+    case Date.compare(now_time, to_time) do
+      :gt ->
+            list
+      _ ->
+            list ++ [now_time]
+            |> form_time_list(to_time)
+    end
+  end
+
   def form_date_list_from_iso(nil, nil, site_id, prefix) do
     to_date = get_site_date_now(site_id, prefix)
     from_date = Date.add(to_date, -30)
