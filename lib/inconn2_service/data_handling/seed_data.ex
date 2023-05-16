@@ -1,5 +1,5 @@
-defmodule Inconn2Service.SeedFeatures do
-  # alias Inconn2Service.SeedFeatures
+defmodule Inconn2Service.DataHandling.SeedData do
+  alias Inconn2Service.DataHandling.SeedData
   alias Inconn2Service.Communication
   alias Inconn2Service.{Common, Staff, Account}
 
@@ -11,6 +11,7 @@ defmodule Inconn2Service.SeedFeatures do
     {"Others", "OTHR"}
   ]
 
+  #file read and insert data
   def read_and_insert(file_path, entity) do
     {:ok, content} = File.read(file_path)
 
@@ -35,6 +36,7 @@ defmodule Inconn2Service.SeedFeatures do
     end
   end
 
+  #process individual data  in the features file and make a map %{"name" => name, "code" => code} like this
   defp process_individual(:features, string) do
     {name, code} =
       string
@@ -45,6 +47,7 @@ defmodule Inconn2Service.SeedFeatures do
 
   end
 
+  #process individual data  in the role_profile file and make a map  %{"feature_code" => code, "feature_name" => name, "access" => access=="Y"} like this
   defp process_individual(:role_profile, string) do
     {name, code, access} =
       string
@@ -55,6 +58,7 @@ defmodule Inconn2Service.SeedFeatures do
 
   end
 
+  #process individual data  in the public_uom file and make a map %{"uom_category" => uom_category, "uom_unit" => uom_unit, "description" => description} like this
   defp process_individual(:public_uom, string) do
     {uom_category, uom_unit, description} =
       string
@@ -83,6 +87,7 @@ defmodule Inconn2Service.SeedFeatures do
     |> Enum.map(&Task.await/1)
   end
 
+   #seed public uom...
   def seed_public_uom() do
     read_and_insert(Application.app_dir(:inconn2_service, "/priv/features/Uom.csv"), :public_uom)
     |> Enum.map(&(Common.create_public_uom(&1)))
@@ -166,6 +171,7 @@ defmodule Inconn2Service.SeedFeatures do
     Staff.update_role(role, %{"permissions" => rp.permissions}, prefix)
   end
 
+  #form an role profile map
   defp form_role_profile_map(name, code) do
     %{
       "name" => name,
@@ -175,6 +181,7 @@ defmodule Inconn2Service.SeedFeatures do
     }
   end
 
+  #role profile map
   defp role_profile_map() do
     %{
       "SuperAdmin" => 0,
@@ -186,6 +193,7 @@ defmodule Inconn2Service.SeedFeatures do
     }
   end
 
+  #seed message templates ...
   def seed_message_templates() do
     Application.app_dir(:inconn2_service, "priv/features/templates.json")
     |> File.read!()
@@ -196,6 +204,7 @@ defmodule Inconn2Service.SeedFeatures do
     end)
   end
 
+  #seed alert and notifications reserve ..
   def seed_alert_and_notifications_reserve() do
     Application.app_dir(:inconn2_service, "priv/features/alert.json")
     |> File.read!()
@@ -205,10 +214,12 @@ defmodule Inconn2Service.SeedFeatures do
     end)
   end
 
-  # def seed_data() do
-  #   SeedFeatures.seed_features()
-  #   SeedFeatures.seed_message_templates()
-  #   SeedFeatures.seed_public_uom()
-  #   SeedFeatures.seed_alert_and_notifications_reserve()
-  # end
+  #common function to seed all
+  def seed_data() do
+    SeedData.seed_features()
+    SeedData.seed_message_templates()
+    SeedData.seed_public_uom()
+    SeedData.seed_alert_and_notifications_reserve()
+  end
+
 end
