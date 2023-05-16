@@ -277,7 +277,13 @@ defmodule Inconn2Service.AssetConfig do
     from(a in AssetCategory, where: a.id in ^ids) |> Repo.all(prefix: prefix)
   end
 
-  def get_asset_category_subtree_ids(nil, _prefix), do: []
+  def get_asset_category_subtree_ids(nil, prefix) do
+    AssetCategory
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
   def get_asset_category_subtree_ids(asset_category_id, prefix) do
     asset_category_id
     |> get_asset_category!(prefix)
@@ -287,7 +293,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Enum.map(fn x -> Map.fetch!(x, :id) end)
   end
 
-  def get_location_subtree_ids(nil, _perfix), do: []
+  def get_location_subtree_ids(nil, prefix) do
+    Location
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
   def get_location_subtree_ids(location_id, prefix) do
     location_id
     |> get_location!(prefix)
@@ -297,7 +309,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Enum.map(fn x -> Map.fetch!(x, :id) end)
   end
 
-  def get_equipment_subtree_ids(nil, _perfix), do: []
+  def get_equipment_subtree_ids(nil, prefix) do
+    Equipment
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn x -> Map.fetch!(x, :id) end)
+  end
+
   def get_equipment_subtree_ids(equipment_id, prefix) do
     equipment_id
     |> get_equipment!(prefix)
