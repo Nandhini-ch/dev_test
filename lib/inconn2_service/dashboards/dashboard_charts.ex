@@ -197,6 +197,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
               end
             %{
               name: name,
+              id: asset_id,
               value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
