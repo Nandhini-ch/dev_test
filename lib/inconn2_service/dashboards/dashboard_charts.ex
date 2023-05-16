@@ -189,15 +189,15 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
-            name =
+            asset =
               if is_map(asset_id) do
-                AssetConfig.get_equipment!(asset_id["id"], prefix).name
+                AssetConfig.get_equipment!(asset_id["id"], prefix)
               else
-                AssetConfig.get_equipment!(asset_id, prefix).name
+                AssetConfig.get_equipment!(asset_id, prefix)
               end
             %{
-              name: name,
-              id: asset_id,
+              name: asset.name,
+              id: asset.id,
               value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
