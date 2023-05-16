@@ -823,7 +823,7 @@ defmodule Inconn2Service.Workorder do
                                  wo.loto_checker_user_id in ^team_user_ids or
                                  wo.workorder_acknowledgement_user_id in ^team_user_ids) and
                                  not wo.is_deactivated and
-                                 wo.status not in ["cp", "cn"])
+                                 wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"])
     |> Repo.all(prefix: prefix)
     |> filter_for_workpermit_approval_in_team(team_user_ids)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
