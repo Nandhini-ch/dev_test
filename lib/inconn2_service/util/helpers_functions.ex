@@ -88,6 +88,15 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_year_to_date_time(site_id, prefix) do
+    date = get_site_date_now(site_id, prefix)
+    year_start_date = Date.new!(date.year, 01, 01)
+    {
+      NaiveDateTime.new!(year_start_date, ~T[00:00:00]),
+      NaiveDateTime.new!(date, ~T[23:59:59])
+    }
+  end
+
   def get_month_date_time_till_now(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
     {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}

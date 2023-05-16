@@ -526,7 +526,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   end
 
   def get_mtbf(site_id, prefix) do
-    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    {from_dt, to_dt} = get_year_to_date_time(site_id, prefix)
     AssetConfig.list_equipments(site_id, prefix)
     |> Stream.map(&Task.async(fn -> NumericalData.get_mtbf_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
@@ -535,7 +535,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   end
 
   def get_mttr(site_id, prefix) do
-    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    {from_dt, to_dt} = get_year_to_date_time(site_id, prefix)
     AssetConfig.list_equipments(site_id, prefix)
     |> Stream.map(&Task.async(fn -> NumericalData.get_mttr_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
