@@ -88,6 +88,15 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     }
   end
 
+  def get_year_to_date_time(site_id, prefix) do
+    date = get_site_date_now(site_id, prefix)
+    year_start_date = Date.new!(date.year, 01, 01)
+    {
+      NaiveDateTime.new!(year_start_date, ~T[00:00:00]),
+      NaiveDateTime.new!(date, ~T[23:59:59])
+    }
+  end
+
   def get_month_date_time_till_now(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
     {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}
@@ -142,6 +151,36 @@ defmodule Inconn2Service.Util.HelpersFunctions do
       NaiveDateTime.new!(from_date_as_date, ~T[00:00:00]),
       NaiveDateTime.new!(to_date_as_date, ~T[00:00:00])
     }
+  end
+
+  def get_date_time_range_for_date_and_time_range(date, from_time, to_time) do
+    case Time.compare(from_time, to_time) do
+      :gt ->
+        { NaiveDateTime.new!(date, from_time), NaiveDateTime.new!(Date.add(date, 1), to_time) }
+
+      _ ->
+        { NaiveDateTime.new!(date, from_time), NaiveDateTime.new!(date, to_time) }
+
+    end
+  end
+
+  def form_time_list_from_iso(from_time, to_time) do
+    form_time_list(
+      Time.from_iso8601!(from_time),
+      Time.from_iso8601!(to_time)
+    )
+  end
+
+  def form_time_list(from_time, to_time) do
+    list = [from_time] |> List.flatten()
+    now_time = Date.add(List.last(list), 1)
+    case Date.compare(now_time, to_time) do
+      :gt ->
+            list
+      _ ->
+            list ++ [now_time]
+            |> form_time_list(to_time)
+    end
   end
 
   def form_date_list_from_iso(nil, nil, site_id, prefix) do

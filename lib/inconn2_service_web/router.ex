@@ -377,6 +377,8 @@ defmodule Inconn2ServiceWeb.Router do
     # get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
+    get "/latest_cumulative_value_for_asset", MeterReadingController, :get_latest_cumulative_value_for_asset
+
 
     get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]

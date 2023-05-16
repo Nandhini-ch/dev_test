@@ -11,11 +11,28 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   #Energy meters
   #Chart no 1
   def get_energy_consumption(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    # cond do
+    #   params["from_date"] == params["to_date"] ->
 
-    date_list
-    |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, prefix) end))
-    |> Enum.map(&Task.await/1)
+
+    #   true ->
+        date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+        {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
+
+        date_list =
+          case Time.compare(from_time, to_time) do
+            :gt ->
+              date_list |> Enum.sort() |> List.delete_at(length(date_list) - 1)
+
+            _ ->
+              date_list
+          end
+
+        date_list
+        |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
+        |> Enum.map(&Task.await/1)
+    # end
   end
 
   #Chart no 2
@@ -107,15 +124,17 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
-  defp get_individual_energy_consumption_data(date, params, prefix) do
-    {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
+  defp get_individual_energy_consumption_data(date, params, {from_time, to_time}, prefix) do
+
+    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time)
+
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     value =
       NumericalData.get_energy_consumption_for_assets(
                       energy_main_meters,
-                      NaiveDateTime.new!(date, from_time),
-                      NaiveDateTime.new!(date, to_time),
+                      from_date_time,
+                      to_date_time,
                       prefix)
       |> change_nil_to_zero()
 

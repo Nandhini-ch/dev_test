@@ -20,6 +20,11 @@ defmodule Inconn2ServiceWeb.MeterReadingController do
     end
   end
 
+  def get_latest_cumulative_value_for_asset(conn, %{"asset_id" => asset_id, "asset_type" => asset_type, "unit_of_measurement" => unit_of_measurement}) do
+    data = Measurements.get_last_cumulative_value(asset_id, asset_type, unit_of_measurement, conn.assigns.sub_domain_prefix)
+    render(conn, "data.json", data: data)
+  end
+
   # def show(conn, %{"id" => id}) do
   #   meter_reading = Measurements.get_meter_reading!(id)
   #   render(conn, "show.json", meter_reading: meter_reading)
