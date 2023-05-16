@@ -164,22 +164,73 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     end
   end
 
-  def form_time_list_from_iso(from_time, to_time) do
-    form_time_list(
-      Time.from_iso8601!(from_time),
-      Time.from_iso8601!(to_time)
-    )
+  def form_date_time_list_tuple_from_time_range_from_iso(nil, nil, date) do
+    form_date_time_list_tuple_from_time_range(
+      ~T[00:00:00],
+      ~T[23:59:59],
+      Date.from_iso8601!(date)
+      )
   end
 
-  def form_time_list(from_time, to_time) do
-    list = [from_time] |> List.flatten()
-    now_time = Date.add(List.last(list), 1)
-    case Date.compare(now_time, to_time) do
+  def form_date_time_list_tuple_from_time_range_from_iso(from_time, to_time, date) do
+    form_date_time_list_tuple_from_time_range(
+      Time.from_iso8601!(from_time),
+      Time.from_iso8601!(to_time),
+      Date.from_iso8601!(date)
+      )
+  end
+
+  def form_date_time_list_tuple_from_time_range(from_time, to_time, date) do
+    case Time.compare(from_time, to_time) do
+      :gt ->
+        from_dt = NaiveDateTime.new!(date, from_time)
+        to_dt = NaiveDateTime.new!(Date.add(date, 1), to_time)
+        form_date_time_tuple_list(from_dt, to_dt)
+
+      _ ->
+        from_dt = NaiveDateTime.new!(date, from_time)
+        to_dt = NaiveDateTime.new!(date, to_time)
+        form_date_time_tuple_list(from_dt, to_dt)
+
+    end
+  end
+
+  defp form_date_time_tuple_list(from_dt, to_dt) do
+    dt_list = form_naive_date_time_list(from_dt, to_dt) |> IO.inspect()
+    last_dt = Enum.at(dt_list, length(dt_list) - 1)
+    neg_diff = Time.diff(last_dt, to_dt)
+
+    tuple_list = Enum.map(dt_list, fn dt ->
+      {
+        NaiveDateTime.add(dt, -3599),
+        dt,
+        NaiveDateTime.to_time(dt)
+      }
+    end)
+
+    if neg_diff == 0 do
+      tuple_list
+    else
+      tuple_list ++
+      [
+        {
+          NaiveDateTime.add(to_dt, neg_diff + 1),
+          to_dt,
+          NaiveDateTime.to_time(to_dt)
+        }
+      ]
+    end
+  end
+
+  def form_naive_date_time_list(from_dt, to_dt) do
+    list = [from_dt] |> List.flatten()
+    now_dt = NaiveDateTime.add(List.last(list), 3600)
+    case NaiveDateTime.compare(now_dt, to_dt) do
       :gt ->
             list
       _ ->
-            list ++ [now_time]
-            |> form_time_list(to_time)
+            list ++ [now_dt]
+            |> form_naive_date_time_list(to_dt)
     end
   end
 
