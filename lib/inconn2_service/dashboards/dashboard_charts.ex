@@ -155,7 +155,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
   defp get_individual_energy_consumption_data(date, params, {from_time, to_time}, prefix) do
 
-    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time)
+    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time) |> IO.inspect()
 
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
