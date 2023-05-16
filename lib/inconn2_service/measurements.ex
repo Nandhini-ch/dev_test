@@ -98,7 +98,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => workorder_task.recorded_value,
       "cumulative_value" => cumulative_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }
@@ -119,7 +119,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => absolute_value,
       "cumulative_value" => workorder_task.recorded_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }
