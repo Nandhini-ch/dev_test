@@ -18,11 +18,12 @@ defmodule Inconn2Service.Measurements do
     |> Repo.insert(prefix: prefix)
   end
 
-  def get_last_cumulative_value(asset_id, asset_type, unit_of_measurement, prefix) do
+  def get_last_cumulative_value(asset_id, asset_type, unit_of_measurement, meter_type, prefix) do
     query =
       from(mr in MeterReading,
           where: mr.asset_id == ^asset_id and
                  mr.asset_type == ^asset_type and
+                 mr.meter_type == ^meter_type and
                  mr.unit_of_measurement == ^unit_of_measurement,
           order_by: [desc: mr.recorded_date_time],
           select: mr.cumulative_value,
