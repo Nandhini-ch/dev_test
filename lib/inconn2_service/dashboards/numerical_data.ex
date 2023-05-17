@@ -388,6 +388,22 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> Repo.all(prefix: prefix)
   end
 
+  def get_service_workorder_for_chart(site_id, from_date, to_date, prefix) do
+    wo_query = get_workorder_general_query(site_id, from_date, to_date)
+    from(q in wo_query,
+      join: wot in WorkorderTemplate, on: wot.id == wo.workorder_template_id, where: wot.adhoc)
+    |> add_status_filter_to_query(["cn"], "not")
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_breakdown_workorder_for_chart(site_id, from_date, to_date, prefix) do
+    wo_query = get_workorder_general_query(site_id, from_date, to_date)
+    from(q in wo_query,
+      join: wot in WorkorderTemplate, on: wot.id == wo.workorder_template_id, where: wot.breakdown)
+    |> add_status_filter_to_query(["cn"], "not")
+    |> Repo.all(prefix: prefix)
+  end
+
   def get_work_requests(site_id, params, from_datetime, to_datetime, statuses, inclusion, prefix) do
     get_work_request_general_query(site_id, from_datetime, to_datetime)
     |> work_request_query(params)

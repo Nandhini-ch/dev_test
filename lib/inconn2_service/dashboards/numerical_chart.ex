@@ -489,7 +489,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_ticket_workorder_status_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    total_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "TKT", prefix)
+    total_wo = NumericalData.get_service_workorder_for_chart(site_id, from_date, to_date, prefix)
     total_count = total_wo |> length() |> change_nil_to_one()
     open_count = Enum.count(total_wo, fn wo -> wo.status in @open_workorders end)
     completed_count = Enum.count(total_wo, fn wo -> wo.status in @completed_workorders end)
@@ -516,7 +516,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def get_breakdown_workorder_status_shcart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "BRK", prefix)
+    NumericalData.get_breakdown_workorder_for_chart(site_id, from_date, to_date, prefix)
     |> length()
   end
 
