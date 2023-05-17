@@ -123,6 +123,23 @@ defmodule Inconn2Service.WorkOrderConfig do
     end
   end
 
+  def create_task_list_for_bulk_upload(attrs \\ %{}, prefix) do
+    result = %TaskList{}
+              |> TaskList.changeset(attrs)
+              |> validate_asset_category_id(prefix)
+              |> Repo.insert(prefix: prefix)
+    case result do
+      {:ok, task_list} ->
+        Enum.with_index(attrs["tasks"])
+        |> Enum.map(fn {task_id, index} ->
+          create_task_tasklist_for_existing_task(task_id, index + 1, task_list.id, prefix)
+           end)
+        result
+        _ ->
+          result
+    end
+ end
+
   def create_task_list_with_tasks(attrs \\ %{}, prefix) do
     case task_list_transactions_for_create(attrs, prefix) do
       {:ok, %{create_or_update_task_list: task_list}} -> {:ok, task_list} |> preload_tasks(prefix)

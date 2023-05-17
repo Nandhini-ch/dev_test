@@ -149,6 +149,18 @@ defmodule Inconn2Service.FileLoader do
     # |> Map.put("tasks", Map.get(record, "Tasks"))
   end
 
+  def make_workorder_schedules(record) do
+    %{}
+    |> Map.put("workorder_template_id", Map.get(record, "Workorder Template Id"))
+    |> Map.put("asset_id", Map.get(record, "Asset Id"))
+    |> Map.put("asset_type", Map.get(record, "Asset Type"))
+    |> Map.put("holidays", Map.get(record, "Holidays"))
+    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
+    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
+    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
+    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
+  end
+
   def make_employees(record) do
     %{}
     |> Map.put("first_name", Map.get(record, "First Name"))
@@ -269,18 +281,6 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("name", "scope")
   end
 
-  def make_workorder_schedules(record) do
-    %{}
-    |> Map.put("workorder_template_id", Map.get(record, "Workorder Template Id"))
-    |> Map.put("asset_id", Map.get(record, "Asset Id"))
-    |> Map.put("asset_type", Map.get(record, "Asset Type"))
-    |> Map.put("holidays", Map.get(record, "Holidays"))
-    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
-    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
-    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
-    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
-  end
-
   def make_users(record) do
     %{}
     |> Map.put("username", Map.get(record, "UserName"))
@@ -389,7 +389,7 @@ defmodule Inconn2Service.FileLoader do
           new_map =
             if map[key_name] != "" &&  is_binary(map[key_name]) do
               [hh, mm, ss] = String.split(map[key_name], ":")
-              {:ok, time} = Time.from_iso8601("#{if String.to_integer(hh) < 10, do: "0#{hh}", else: hh}:#{mm}:#{ss}")
+              {:ok, time} = Time.from_iso8601("#{hh}:#{mm}:#{ss}")
               Map.put(map, key_name, time)
             else
               map
