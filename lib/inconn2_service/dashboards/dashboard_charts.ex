@@ -11,11 +11,17 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   #Energy meters
   #Chart no 1
   def get_energy_consumption(params, prefix) do
-    # cond do
-    #   params["from_date"] == params["to_date"] ->
+    cond do
+      params["from_date"] == params["to_date"] and not is_nil(params["from_date"]) ->
 
+        dt_tuple_list = form_date_time_list_tuple_from_time_range_from_iso(params["from_time"], params["to_time"], params["from_date"])
 
-    #   true ->
+        dt_tuple_list
+        |> IO.inspect()
+        |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data_for_time(&1, params, prefix) end))
+        |> Enum.map(&Task.await/1)
+
+      true ->
         date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
         {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
@@ -30,9 +36,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end
 
         date_list
+        |> IO.inspect()
         |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
         |> Enum.map(&Task.await/1)
-    # end
+    end
   end
 
   #Chart no 2
@@ -124,9 +131,31 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
+  defp get_individual_energy_consumption_data_for_time({from_dt, to_dt, time}, params, prefix) do
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
+    value =
+      NumericalData.get_energy_consumption_for_assets(
+                      energy_main_meters,
+                      from_dt,
+                      to_dt,
+                      prefix)
+      |> change_nil_to_zero()
+
+    %{
+      label: time,
+      dataSets: [
+        %{
+          name: "Energy Consumption",
+          value: convert_to_ceil_float(value)
+        }
+      ]
+    }
+  end
+
   defp get_individual_energy_consumption_data(date, params, {from_time, to_time}, prefix) do
 
-    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time)
+    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time) |> IO.inspect()
 
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
@@ -162,14 +191,15 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
-            name =
+            asset =
               if is_map(asset_id) do
-                AssetConfig.get_equipment!(asset_id["id"], prefix).name
+                AssetConfig.get_equipment!(asset_id["id"], prefix)
               else
-                AssetConfig.get_equipment!(asset_id, prefix).name
+                AssetConfig.get_equipment!(asset_id, prefix)
               end
             %{
-              name: name,
+              name: asset.name,
+              id: asset.id,
               value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
