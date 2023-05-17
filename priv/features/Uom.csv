@@ -6,9 +6,9 @@ Measurement,mm,Millilmetre
 Measurement,No,numbers
 Weights,Kg,Kilogram
 Weights,gm,Gram
-Technical - Electrical,Kwh,Real Power
-Technical - Electrical,Kvah,Apparent Power
-Technical - Electrical,Kvarh,Reactive Power
+Technical - Electrical,Kwh,Kwh - Real Power
+Technical - Electrical,Kvah,Kvah - Apparent Power
+Technical - Electrical,Kvarh,Kvarh - Reactive Power
 Technical - Electrical,Kw,Power
 Technical - Electrical,V,Voltage
 Technical - Electrical,KV,KiloVolt
