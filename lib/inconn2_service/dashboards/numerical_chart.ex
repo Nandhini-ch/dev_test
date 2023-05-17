@@ -454,7 +454,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     fuel_consumption = NumericalData.get_fuel_consumption_for_assets(generators, from_dt, to_dt, prefix)
                       |> change_nil_to_one()
 
-    calculate_percentage(energy_consumption, fuel_consumption)
+    energy_consumption / fuel_consumption
   end
 
   def get_ppm_compliance(site_id, prefix) do
