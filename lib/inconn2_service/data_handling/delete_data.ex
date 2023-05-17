@@ -3,7 +3,7 @@ defmodule Inconn2Service.DataHandling.DeleteData do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Account
-  alias Inconn2Service.Common.{AlertNotificationReserve, AlertNotificationScheduler, AlertNotificationGenerator}
+  alias Inconn2Service.Common.{AlertNotificationReserve, AlertNotificationScheduler, AlertNotificationGenerator, PublicUom}
 
   def delete_data_in_alert_notification_reserve() do
     AlertNotificationReserve
@@ -17,6 +17,11 @@ defmodule Inconn2Service.DataHandling.DeleteData do
 
   def delete_data_in_alert_notification_generator() do
     AlertNotificationGenerator
+    |> Repo.delete_all()
+  end
+
+  def delete_data_in_public_uom() do
+    PublicUom
     |> Repo.delete_all()
   end
 
