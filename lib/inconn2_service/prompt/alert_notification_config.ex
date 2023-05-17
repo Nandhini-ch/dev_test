@@ -26,7 +26,7 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
 
   def validate_escalation_time_and_user_ids(cs) do
     case get_field(cs, :is_escalation_required, nil) do
-      true -> validate_required(cs, [:escalation_time_in_minutes, :escalated_to_user_ids])
+      true -> validate_required(cs, [:escalation_time_in_minutes, :escalated_to_users])
       _ -> cs
     end
   end
