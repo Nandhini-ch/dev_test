@@ -161,7 +161,7 @@ defmodule Inconn2Service.Prompt do
         "site_id" => alert_config.site_id,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+        # "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
         "prefix" => prefix
       })
     end

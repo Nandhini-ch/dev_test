@@ -250,6 +250,122 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     |> filter_workorder_data_by_criticality(criticality)
   end
 
+  def get_service_breakdown_workorder_chart_data_for_site_asset_category(site_id, from_date, to_date, :service_wo, criticality, prefix) do
+    from(ac in AssetCategory,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(&(add_criticality_to_workorder_data(&1, prefix)))
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_site_asset_category(site_id, from_date, to_date, :breakdown_wo, criticality, prefix) do
+    from(ac in AssetCategory,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.breakdown,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(&(add_criticality_to_workorder_data(&1, prefix)))
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_site_asset(site_id, from_date, to_date, asset_type, :service_wo, criticality, prefix) do
+    asset_query = get_asset_query_for_site(site_id, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+          join: wot in WorkorderTemplate, where: wot.adhoc,
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            criticality: a.criticality,
+            work_order: wo
+          })
+    |> Repo.all(prefix: prefix)
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_site_asset(site_id, from_date, to_date, asset_type, :breakdown_wo, criticality, prefix) do
+    asset_query = get_asset_query_for_site(site_id, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+          join: wot in WorkorderTemplate, where: wot.breakdown,
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            criticality: a.criticality,
+            work_order: wo
+          })
+    |> Repo.all(prefix: prefix)
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_asset_categories(site_id, from_date, to_date, asset_category_ids, :service_wo, criticality, prefix) do
+    from(ac in AssetCategory, where: ac.id in ^asset_category_ids,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(&(add_criticality_to_workorder_data(&1, prefix)))
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_asset_categories(site_id, from_date, to_date, asset_category_ids, :breakdown_wo, criticality, prefix) do
+    from(ac in AssetCategory, where: ac.id in ^asset_category_ids,
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.breakdown,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         select: %{
+          asset_category_id: ac.id,
+          asset_category_name: ac.name,
+          work_order: wo
+         })
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(&(add_criticality_to_workorder_data(&1, prefix)))
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_assets(site_id, from_date, to_date, asset_ids, asset_type, :service_wo, criticality, prefix) do
+    asset_query = get_asset_query(asset_ids, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+          join: wot in WorkorderTemplate, where: wot.adhoc,
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            criticality: a.criticality,
+            work_order: wo
+          })
+    |> Repo.all(prefix: prefix)
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
+  def get_service_breakdown_workorder_chart_data_for_assets(site_id, from_date, to_date, asset_ids, asset_type, :breakdown_wo, criticality, prefix) do
+    asset_query = get_asset_query(asset_ids, asset_type)
+    from(from a in asset_query,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+          join: wot in WorkorderTemplate, where: wot.breakdown,
+          select: %{
+            asset_id: a.id,
+            asset_name: a.name,
+            criticality: a.criticality,
+            work_order: wo
+          })
+    |> Repo.all(prefix: prefix)
+    |> filter_workorder_data_by_criticality(criticality)
+  end
+
   def add_criticality_to_workorder_data(data, prefix) when not is_nil(data.work_order) do
       Map.put(
         data,
@@ -269,6 +385,22 @@ defmodule Inconn2Service.Dashboards.NumericalData do
     get_workorder_general_query(site_id, from_date, to_date)
     |> add_status_filter_to_query(["cn"], "not")
     |> add_workorder_type_filter_to_query(type)
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_service_workorder_for_chart(site_id, from_date, to_date, prefix) do
+    wo_query = get_workorder_general_query(site_id, from_date, to_date)
+    from(wo in wo_query,
+      join: wot in WorkorderTemplate, on: wot.id == wo.workorder_template_id, where: wot.adhoc)
+    |> add_status_filter_to_query(["cn"], "not")
+    |> Repo.all(prefix: prefix)
+  end
+
+  def get_breakdown_workorder_for_chart(site_id, from_date, to_date, prefix) do
+    wo_query = get_workorder_general_query(site_id, from_date, to_date)
+    from(wo in wo_query,
+      join: wot in WorkorderTemplate, on: wot.id == wo.workorder_template_id, where: wot.breakdown)
+    |> add_status_filter_to_query(["cn"], "not")
     |> Repo.all(prefix: prefix)
   end
 
