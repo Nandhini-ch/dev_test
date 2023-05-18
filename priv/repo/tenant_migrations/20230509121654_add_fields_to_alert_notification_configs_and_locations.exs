@@ -11,6 +11,8 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigsAndL
       add :is_email_required, :boolean
     end
 
+    drop_if_exists index("alert_notification_configs", [:site_id])
+
     alter table("locations") do
       add :asset_manager_id, :integer
     end
