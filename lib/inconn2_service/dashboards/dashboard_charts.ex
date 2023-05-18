@@ -11,11 +11,35 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   #Energy meters
   #Chart no 1
   def get_energy_consumption(params, prefix) do
-    date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    cond do
+      params["from_date"] == params["to_date"] and not is_nil(params["from_date"]) ->
 
-    date_list
-    |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, prefix) end))
-    |> Enum.map(&Task.await/1)
+        dt_tuple_list = form_date_time_list_tuple_from_time_range_from_iso(params["from_time"], params["to_time"], params["from_date"])
+
+        dt_tuple_list
+        |> IO.inspect()
+        |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data_for_time(&1, params, prefix) end))
+        |> Enum.map(&Task.await/1)
+
+      true ->
+        date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+        {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
+
+        date_list =
+          case Time.compare(from_time, to_time) do
+            :gt ->
+              date_list |> Enum.sort() |> List.delete_at(length(date_list) - 1)
+
+            _ ->
+              date_list
+          end
+
+        date_list
+        |> IO.inspect()
+        |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
+        |> Enum.map(&Task.await/1)
+    end
   end
 
   #Chart no 2
@@ -107,15 +131,39 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(&Task.await/1)
   end
 
-  defp get_individual_energy_consumption_data(date, params, prefix) do
-    {from_time, to_time} = get_from_time_to_time_from_iso(params["from_time"], params["to_time"])
+  defp get_individual_energy_consumption_data_for_time({from_dt, to_dt, time}, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
     value =
       NumericalData.get_energy_consumption_for_assets(
                       energy_main_meters,
-                      NaiveDateTime.new!(date, from_time),
-                      NaiveDateTime.new!(date, to_time),
+                      from_dt,
+                      to_dt,
+                      prefix)
+      |> change_nil_to_zero()
+
+    %{
+      label: time,
+      dataSets: [
+        %{
+          name: "Energy Consumption",
+          value: convert_to_ceil_float(value)
+        }
+      ]
+    }
+  end
+
+  defp get_individual_energy_consumption_data(date, params, {from_time, to_time}, prefix) do
+
+    {from_date_time, to_date_time} = get_date_time_range_for_date_and_time_range(date, from_time, to_time) |> IO.inspect()
+
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
+    value =
+      NumericalData.get_energy_consumption_for_assets(
+                      energy_main_meters,
+                      from_date_time,
+                      to_date_time,
                       prefix)
       |> change_nil_to_zero()
 
@@ -143,14 +191,15 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
-            name =
+            asset =
               if is_map(asset_id) do
-                AssetConfig.get_equipment!(asset_id["id"], prefix).name
+                AssetConfig.get_equipment!(asset_id["id"], prefix)
               else
-                AssetConfig.get_equipment!(asset_id, prefix).name
+                AssetConfig.get_equipment!(asset_id, prefix)
               end
             %{
-              name: name,
+              name: asset.name,
+              id: asset.id,
               value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
@@ -413,19 +462,19 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_ticket_workorder_status_chart(params, prefix) do
     cond do
       params["location"] == 0 and params["widget_x_axis"] == "asset_categories" ->
-        get_workorder_status_for_site(params, ["TKT"],  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :service_wo,  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["location"] == 0 and params["widget_x_axis"] == "assets" ->
-        get_workorder_status_for_site(params, ["TKT"],  :group_by_asset, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :service_wo,  :group_by_asset, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "asset_categories" and not is_nil(params["asset_category_ids"])->
-        get_workorder_status_for_asset_categories(params, ["TKT"], "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_asset_categories(params, :service_wo, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "assets" and not is_nil(params["assets"]) ->
-        get_workorder_status_for_assets(params, ["TKT"], "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_assets(params, :service_wo, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       true ->
-        get_workorder_status_for_site(params, ["TKT"],  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :service_wo,  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
     end
   end
 
@@ -433,19 +482,19 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_breakdown_workorder_status_chart(params, prefix) do
     cond do
       params["location"] == 0 and params["widget_x_axis"] == "asset_categories" ->
-        get_workorder_status_for_site(params, ["BRK"], :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :breakdown_wo,  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["location"] == 0 and params["widget_x_axis"] == "assets" ->
-        get_workorder_status_for_site(params, ["BRK"], :group_by_asset, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :breakdown_wo,  :group_by_asset, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "asset_categories" and not is_nil(params["asset_category_ids"])->
-        get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_asset_categories(params, :breakdown_wo, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "assets" and not is_nil(params["assets"]) ->
-        get_workorder_status_for_asset_categories(params, ["BRK"], "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_assets(params, :breakdown_wo, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
 
       true ->
-        get_workorder_status_for_site(params, ["BRK"], :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
+        get_service_and_breakdown_workorder_for_site(params, :breakdown_wo,  :group_by_asset_category, "workorder_status", prefix) |> Helpers.get_top_10_data("Open")
     end
   end
 
@@ -642,6 +691,84 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
         equipment_ids,
         "E",
         types,
+        params["criticality"],
+        prefix) |> group_by_asset(organize_for, "E", prefix)
+
+    location_workorders ++ equipment_workorders
+  end
+
+  defp get_service_and_breakdown_workorder_for_site(params, wo_type, :group_by_asset_category, organize_for, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    NumericalData.get_service_breakdown_workorder_chart_data_for_site_asset_category(
+            params["site_id"],
+            from_date,
+            to_date,
+            wo_type,
+            params["criticality"],
+            prefix) |> group_by_asset_category(organize_for)
+  end
+
+  defp get_service_and_breakdown_workorder_for_site(params, wo_type, :group_by_asset, organize_for, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+
+    location_workorders =
+      NumericalData.get_service_breakdown_workorder_chart_data_for_site_asset(
+        params["site_id"],
+        from_date,
+        to_date,
+        "L",
+        wo_type,
+        params["criticality"],
+        prefix) |> group_by_asset(organize_for, "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_service_breakdown_workorder_chart_data_for_site_asset(
+        params["site_id"],
+        from_date,
+        to_date,
+        "E",
+        wo_type,
+        params["criticality"],
+        prefix) |> group_by_asset(organize_for, "E", prefix)
+
+    location_workorders ++ equipment_workorders
+  end
+
+  defp get_service_and_breakdown_workorder_for_asset_categories(params, wo_type, organize_for, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    NumericalData.get_service_breakdown_workorder_chart_data_for_asset_categories(
+        params["site_id"],
+        from_date,
+        to_date,
+        params["asset_category_ids"],
+        wo_type,
+        params["criticality"],
+        prefix) |> group_by_asset_category(organize_for)
+  end
+
+  defp get_service_and_breakdown_workorder_for_assets(params, wo_type, organize_for, prefix) do
+    {from_date, to_date} = get_from_date_to_date_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    location_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "L" end) |> Enum.map(fn l -> l["id"] end)
+    equipment_ids = Stream.filter(params["assets"], fn obj ->  obj["type"] == "E" end) |> Enum.map(fn e -> e["id"] end)
+    location_workorders =
+      NumericalData.get_service_breakdown_workorder_chart_data_for_assets(
+        params["site_id"],
+        from_date,
+        to_date,
+        location_ids,
+        "L",
+        wo_type,
+        params["criticality"],
+        prefix) |> group_by_asset(organize_for, "L", prefix)
+
+    equipment_workorders =
+      NumericalData.get_service_breakdown_workorder_chart_data_for_assets(
+        params["site_id"],
+        from_date,
+        to_date,
+        equipment_ids,
+        "E",
+        wo_type,
         params["criticality"],
         prefix) |> group_by_asset(organize_for, "E", prefix)
 

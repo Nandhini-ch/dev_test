@@ -191,9 +191,13 @@ defmodule Inconn2Service.Reapportion do
   defp update_work_order({:error, changeset}, _prefix, _user, _type), do: {:error, changeset}
 
   defp update_work_order({:ok, request}, prefix, user, type) do
-    work_order = Workorder.get_work_order!(request.work_order_id, prefix)
-    Workorder.reassign_reschedule_work_order(work_order, get_attrs_on_type(type, request), prefix, user)
-    {:ok, request |> preload_functions(prefix)}
+    if request.status == "AP" do
+      work_order = Workorder.get_work_order!(request.work_order_id, prefix)
+      Workorder.reassign_reschedule_work_order(work_order, get_attrs_on_type(type, request), prefix, user)
+      {:ok, request |> preload_functions(prefix)}
+    else
+      {:ok, request |> preload_functions(prefix)}
+    end
   end
 
   def preload_functions(request, prefix) do

@@ -823,7 +823,7 @@ defmodule Inconn2Service.Workorder do
                                  wo.loto_checker_user_id in ^team_user_ids or
                                  wo.workorder_acknowledgement_user_id in ^team_user_ids) and
                                  not wo.is_deactivated and
-                                 wo.status not in ["cp", "cn"])
+                                 wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"])
     |> Repo.all(prefix: prefix)
     |> filter_for_workpermit_approval_in_team(team_user_ids)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
@@ -1703,7 +1703,7 @@ defmodule Inconn2Service.Workorder do
         "alert_code" => alert.code,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+        # "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
         "site_id" => updated_work_order.site_id,
         "prefix" => prefix
       })

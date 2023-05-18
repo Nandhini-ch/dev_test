@@ -454,7 +454,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     fuel_consumption = NumericalData.get_fuel_consumption_for_assets(generators, from_dt, to_dt, prefix)
                       |> change_nil_to_one()
 
-    calculate_percentage(energy_consumption, fuel_consumption)
+    energy_consumption / fuel_consumption
   end
 
   def get_ppm_compliance(site_id, prefix) do
@@ -489,7 +489,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_ticket_workorder_status_chart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
 
-    total_wo = NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "TKT", prefix)
+    total_wo = NumericalData.get_service_workorder_for_chart(site_id, from_date, to_date, prefix)
     total_count = total_wo |> length() |> change_nil_to_one()
     open_count = Enum.count(total_wo, fn wo -> wo.status in @open_workorders end)
     completed_count = Enum.count(total_wo, fn wo -> wo.status in @completed_workorders end)
@@ -516,7 +516,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   def get_breakdown_workorder_status_shcart(site_id, prefix) do
     {from_date, to_date} = get_month_date_till_now(site_id, prefix)
-    NumericalData.get_workorder_for_chart(site_id, from_date, to_date, "BRK", prefix)
+    NumericalData.get_breakdown_workorder_for_chart(site_id, from_date, to_date, prefix)
     |> length()
   end
 
@@ -526,7 +526,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   end
 
   def get_mtbf(site_id, prefix) do
-    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    {from_dt, to_dt} = get_year_to_date_time(site_id, prefix)
     AssetConfig.list_equipments(site_id, prefix)
     |> Stream.map(&Task.async(fn -> NumericalData.get_mtbf_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)
@@ -535,7 +535,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   end
 
   def get_mttr(site_id, prefix) do
-    {from_dt, to_dt} = get_yesterday_date_time(site_id, prefix)
+    {from_dt, to_dt} = get_year_to_date_time(site_id, prefix)
     AssetConfig.list_equipments(site_id, prefix)
     |> Stream.map(&Task.async(fn -> NumericalData.get_mttr_of_equipment(&1.id, from_dt, to_dt, prefix) end))
     |> Stream.map(&Task.await/1)

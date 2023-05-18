@@ -10,6 +10,10 @@ defmodule Inconn2ServiceWeb.MeterReadingView do
     %{data: render_one(meter_reading, MeterReadingView, "meter_reading.json")}
   end
 
+  def render("data.json", %{data: data}) do
+    %{data: data}
+  end
+
   def render("meter_reading.json", %{meter_reading: meter_reading}) do
     %{id: meter_reading.id,
       site_id: meter_reading.site_id,
