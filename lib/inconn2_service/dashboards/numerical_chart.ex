@@ -231,7 +231,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       unit: "kwhr/litr",
       type: 1,
       size: widget_config.size,
-      chart_data: get_segr_for_24_hours(site_id, config, prefix)
+      chart_data: get_segr_for_24_hours(site_id, config, prefix) |> convert_to_ceil_float()
     }
   end
 
