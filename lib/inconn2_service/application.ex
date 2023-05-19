@@ -18,7 +18,7 @@ defmodule Inconn2Service.Application do
       #Start the alert and notification GenServer
       # Inconn2Service.Batch.AlertNotificationGenServer,
       #Start the escalation GenServer
-      # Inconn2Service.Batch.AlertEscalationGenServer,
+      Inconn2Service.Batch.AlertEscalationGenServer,
       #Start the EmailSender GenServer
       # Inconn2Service.Communication.EmailSender,
       #Start the SmsSender GenServer
