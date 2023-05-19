@@ -36,7 +36,7 @@ defmodule Inconn2ServiceWeb.AlertNotificationConfigController do
   def delete(conn, %{"id" => id}) do
     alert_notification_config = Prompt.get_alert_notification_config!(id, conn.assigns.sub_domain_prefix)
 
-    with {:ok, %AlertNotificationConfig{}} <- Prompt.delete_alert_notification_config(alert_notification_config, conn.assigns.sub_domain_prefix) do
+    with {:deleted, %AlertNotificationConfig{}} <- Prompt.delete_alert_notification_config(alert_notification_config, conn.assigns.sub_domain_prefix) do
       send_resp(conn, :no_content, "")
     end
   end

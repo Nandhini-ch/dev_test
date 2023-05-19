@@ -19,9 +19,11 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
   @doc false
   def changeset(alert_notification_config, attrs) do
     alert_notification_config
-    |> cast(attrs, [:alert_notification_reserve_id, :site_id, :is_escalation_required, :escalation_time_in_minutes, :addressed_to_users, :escalated_to_users, :is_sms_required, :is_email_required])
+    |> cast(attrs, [:alert_notification_reserve_id, :site_id, :is_escalation_required, :escalation_time_in_minutes, :addressed_to_users, :escalated_to_users, :is_sms_required, :is_email_required, :active])
     |> validate_required([:alert_notification_reserve_id, :is_escalation_required, :site_id])
     |> validate_escalation_time_and_user_ids()
+    |> unique_constraint([:site_id, :alert_notification_reserve_id])
+    |> unique_constraint(:unique_alert_config, [name: :unique_alert_config, message: "Already configured for this site"])
   end
 
   def validate_escalation_time_and_user_ids(cs) do

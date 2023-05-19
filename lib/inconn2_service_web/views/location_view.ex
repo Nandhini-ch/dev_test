@@ -31,6 +31,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       criticality: location.criticality,
       asset_category_id: location.asset_category_id,
       qr_code: location.qr_code,
+      asset_manager_id: location.asset_manager_id,
       parent: (if is_nil(location.parent), do: nil, else: %{id: location.parent.id, name: location.parent.name})
     }
   end
@@ -56,7 +57,6 @@ defmodule Inconn2ServiceWeb.LocationView do
     }
   end
 
-  #arunvr@ardhika.com
 
   def render("location.json", %{location: location}) do
     %{
@@ -71,6 +71,7 @@ defmodule Inconn2ServiceWeb.LocationView do
       criticality: location.criticality,
       asset_category_id: location.asset_category_id,
       qr_code: location.qr_code,
+      asset_manager_id: location.asset_manager_id,
       parent_id: List.last(location.path)
     }
   end

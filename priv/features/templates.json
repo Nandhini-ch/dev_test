@@ -1,44 +1,7 @@
-[
-
-    {
-        "code": "SCHBR",
-        "template_name": "Asset Status Change to breakdown",
-        "message": "Dear  <%= var1 %>, <%= var2 %> status changed to breakdown at <%= var3 %>. Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635183114901",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "POFVD",
-        "template_name": "Asset parameter out of validation",
-        "message": "Dear <%= var1 %>, <%= var2 %> <%= var3 %> out of range Regards, Team Inconn - Wynwy",
-        "dlt_template_id ": " 1707167643783094640",
-        "telemarketer_id ": "1701166322207419896 "
-    },
-    {
-        "code": "ASSRM",
-        "template_name": "Remove asset",
-        "message": "Dear <%= var1 %>, <%= var2 %> removed from <%= var3 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635190630824",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
+[{
         "template_name": "WO assigned",
         "message": "Dear <%= var1 %>, Work order <%= var2 %> assigned at <%= var3 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167635184978593",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "WOSTD",
-        "template_name": "WO start over due by 10 mins",
-        "message": "Dear <%= var1 %>, Work order <%= var2 %> was scheduled at <%= var3 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635192947500",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "WNCST",
-        "template_name": "WO not completed by scheduled time",
-        "message": "Dear <%= var1 %>, Work order <%= var2 %> is overdue for completion Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635180492337",
         "telemarketer_id": "1701166322207419896"
     },
     {
@@ -50,44 +13,51 @@
     },
     {
         "code": "WOPAP",
-        "template_name ": "Work permit approved ",
+        "template_name": "Work permit approved ",
         "message": "Dear <%= var1 %>, <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636725844965",
         "telemarketer_id": "1701166322207419896"
     },
     {
+        "code": "LAPPR",
+        "template_name": "LOTO approval required",
+        "message": "Dear <%= var1 %>,  <%= var2 %> by <%= var3 %> requires approval Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636732975809",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "LOCAP",
+        "template_name": "LOTO Checked and approved",
+        "message": "Dear <%= var1 %>, <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636744173625",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOPRE",
+        "template_name": "WO approval required",
+        "message": "Dear <%= var1 %>, <%= var2 %> by <%= var3 %> requires approval Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636750296829",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOAPD",
+        "template_name": "WO approved",
+        "message": "Dear <%= var1 %>,  <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636754940568",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
         "code": "WOCAR",
-        "template_name": "WO completion acknowledgment required",
-        "message": "Dear <%= var1 %>, <%= var2 %> completion by {#var#} requires acknowledgement Regards, Team Inconn - Wynwy",
+        "template_name": "WO completion acknowledgement required",
+        "message": "Dear <%= var1 %>,  <%= var2 %> completion by <%= var3 %> requires acknowledgement Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636762778538",
         "telemarketer_id": "1701166322207419896"
     },
     {
         "code": "WOACK",
-        "template_name ": "WO completion acknowledged ",
-        "message": "Dear <%= var1 %>, <%= var2 %> completion acknowledged by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "template_name": "WO completion acknowledged",
+        "message": "Dear <%= var1 %>,  <%= var2 %> completion acknowledged by <%= var3 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636772427276",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "WSCGH",
-        "template_name": "WO status change to Hold",
-        "message": "Dear <%= var1 %>, <%= var2 %> Status changed to hold by <%= var3 %> at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636778080063",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "RERSW",
-        "template_name": "WO re-assigned/ re-scheduled",
-        "message": "Dear <%= var1 %>, work order <%= var2 %> <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167643786403861",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "WOKCL",
-        "template_name": "Work order cancelled",
-        "message": "Dear <%= var1 %>, <%= var2 %> cancelled by <%= var3 %> at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636791814071",
         "telemarketer_id": "1701166322207419896"
     },
     {
@@ -100,84 +70,29 @@
     {
         "code": "NTCKA",
         "template_name": "New ticket assigned",
-        "message": "Dear <%= var1 %>, Ticket <%= var1 %> status changed to <%= var1 %> by <%= var1 %> Regards, Team Inconn - Wynwy",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636821528600",
         "telemarketer_id": "1701166322207419896"
     },
     {
-        "code": "TKTEX",
-        "template_name": "Ticket TAT expired",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> <%= var3 %> expired at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636849649035",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
+        "code": "TCKCL",
         "template_name": "Ticket cancelled",
         "message": "Dear <%= var1 %>, <%= var2 %> Ticket <%= var3 %> cancelled by <%= var4 %> at <%= var5 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636854559034",
         "telemarketer_id": "1701166322207419896"
     },
     {
-        "code": "TCKCL",
-        "template_name": "Ticket re-asigned, re-scheduled",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636871993103",
+        "code": "TCKAP",
+        "template_name": "Ticket approval status change",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636826333670",
         "telemarketer_id": "1701166322207419896"
     },
     {
-        "code": "TCKRO",
-        "template_name": "Ticket re-opened",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> reopened by <%= var3 %> at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636885756430",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "SBROV",
-        "template_name": "stock below re-order value",
-        "message": "Dear <%= var1 %>, Item <%= var2 %> in stock value has gone below re-order levels Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636889867085",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "CSTBR",
-        "template_name": "Critical stock below re-order level",
-        "message": "Dear <%= var1 %>, Critical list item <%= var2 %> in stock value has gone below re-order levels Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635752903105",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "IAPPR",
-        "template_name": "Issue approval raised",
-        "message": "Dear <%= var1 %>, Approval request for issue <%= var2 %> raised by <%= var3 %> at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636796519058",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "ISSAP",
-        "template_name": "Issue approved",
-        "message": "Dear <%= var1 %>, Issue request <%= var2 %> approved by <%= var3 %> at <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167635733156534",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "ISRAC",
-        "template_name": "Issue receipt acknowledgement",
-        "message": "Dear <%= var1 %>, Receipt of items vide issue <%= var2 %> acknowledged by <%= var3 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636803181702",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "ISRNA",
-        "template_name": "Issue receipt not acknowledged",
-        "message": "Dear <%= var1 %>, Receipt of items vide issue <%= var2 %> disputed by <%= var3 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636808877041",
-        "telemarketer_id": "1701166322207419896"
-    },
-    {
-        "code": "EABIS",
-        "template_name": "Employee absent in shift",
-        "message": "Dear <%= var1 %>, <%= var2 %> is absent in <%= var3 %> for <%= var4 %> Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707167636814885664",
+        "code": "TCKCM",
+        "template_name": "Ticket completed",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636843577406",
         "telemarketer_id": "1701166322207419896"
     },
     {

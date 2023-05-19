@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigs do
+defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigsAndLocations do
   use Ecto.Migration
 
   def change do
@@ -10,6 +10,8 @@ defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigs do
       add :is_sms_required, :boolean
       add :is_email_required, :boolean
     end
+
+    drop_if_exists index("alert_notification_configs", [:site_id])
 
     alter table("locations") do
       add :asset_manager_id, :integer
