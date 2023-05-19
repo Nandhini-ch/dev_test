@@ -3,6 +3,8 @@ defmodule Inconn2Service.DataHandling.DeleteData do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Account
+  alias Inconn2Service.Prompt.AlertNotificationConfig
+  alias Inconn2Service.Prompt.UserAlertNotification
   alias Inconn2Service.Common.{AlertNotificationReserve, AlertNotificationScheduler, AlertNotificationGenerator, PublicUom}
 
   def delete_data_in_alert_notification_reserve() do
