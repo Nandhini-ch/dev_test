@@ -26,16 +26,23 @@ defmodule Inconn2Service.Prompt do
   def get_alert_notification_config!(id, prefix), do: Repo.get!(AlertNotificationConfig, id, prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
 
   def get_alert_notification_config_by_alert_id(alert_id, prefix) do
-    # Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id], prefix: prefix)
-    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id) |> Repo.all(prefix: prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def get_alert_notification_config_by_alert_id_and_site_id(alert_id, site_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id and anc.site_id == ^site_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> preload_alert_notification_reserve()
+    |> preload_site(prefix)
   end
 
   def get_alert_notification_config_by_reserve_and_site(alert_notification_reserve_id, site_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_notification_reserve_id, site_id: site_id], prefix: prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_notification_reserve_id and anc.site_id == ^site_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def create_alert_notification_config(attrs \\ %{}, prefix) do
@@ -54,8 +61,15 @@ defmodule Inconn2Service.Prompt do
     |> preload_site(prefix)
   end
 
+  # def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
+  #   Repo.delete(alert_notification_config, prefix: prefix)
+  # end
+
   def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
-    Repo.delete(alert_notification_config, prefix: prefix)
+    update_alert_notification_config(alert_notification_config, %{"active" => false}, prefix)
+         {:deleted,
+            "The Alert Notification Config Was Disabled"
+         }
   end
 
   def change_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, attrs \\ %{}) do
