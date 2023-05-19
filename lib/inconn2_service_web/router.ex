@@ -519,7 +519,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 
     post "/bulk_upload", DataUploadController, :upload_content
-    resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit, :create]
+    resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit]
 
     get "/download_zones", ReferenceDownloadController, :download_zones
     post "/upload_zones", ReferenceUploadController, :upload_zones
