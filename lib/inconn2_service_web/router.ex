@@ -1,5 +1,4 @@
 defmodule Inconn2ServiceWeb.Router do
-  # alias Inconn2ServiceWeb.LicenseeController
   use Inconn2ServiceWeb, :router
 
   pipeline :api do
@@ -48,6 +47,8 @@ defmodule Inconn2ServiceWeb.Router do
       get "/workrequest_categories", ExternalTicketController, :index_categories
       get "/workrequest_categories/:workrequest_category_id/workrequest_subcategories", ExternalTicketController, :index_subcategories_for_category
       resources "/work_request", ExternalTicketController, only: [:create, :show, :update]
+
+      resources "/workrequest_feedbacks", WorkrequestFeedbackController, only: [:create]
 
     end
 
@@ -518,7 +519,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 
     post "/bulk_upload", DataUploadController, :upload_content
-    resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit]
+    resources "/workrequest_feedbacks", WorkrequestFeedbackController, except: [:new, :edit, :create]
 
     get "/download_zones", ReferenceDownloadController, :download_zones
     post "/upload_zones", ReferenceUploadController, :upload_zones
