@@ -42,7 +42,7 @@ defmodule Inconn2Service.Prompt do
   def get_alert_notification_config_by_reserve_and_site(alert_notification_reserve_id, site_id, prefix) do
     from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_notification_reserve_id and anc.site_id == ^site_id)
     |> Repo.add_active_filter()
-    |> Repo.all(prefix: prefix)
+    |> Repo.one(prefix: prefix)
   end
 
   def create_alert_notification_config(attrs \\ %{}, prefix) do
@@ -198,7 +198,9 @@ defmodule Inconn2Service.Prompt do
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
     an_reserve = Common.get_alert_by_code(code)
-    an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
+    an_config =
+      get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
+      |> form_alert_notification_config(an_reserve)
 
     message = form_message_text_from_template(an_reserve.text_template, an_arguments_list)
 
@@ -232,6 +234,19 @@ defmodule Inconn2Service.Prompt do
 
   end
 
+  defp form_alert_notification_config(nil, an_reserve) do
+    %{
+      addressed_to_users: [],
+      escalated_to_users: [],
+      is_sms_required: an_reserve.is_sms_required,
+      is_email_required: an_reserve.is_email_required,
+      is_escalation_required: an_reserve.is_escalation_required,
+      escalation_time_in_minutes: an_reserve.escalation_time_in_minutes
+    }
+  end
+
+  defp form_alert_notification_config(an_config, _an_reserve), do: an_config
+
   defp trigger_alert_notification(message, an_reserve, site_id, user_id, an_config, escalation_user_maps, prefix) do
     alert_identifier_date_time = NaiveDateTime.utc_now()
     %{
@@ -259,7 +274,10 @@ defmodule Inconn2Service.Prompt do
 
   def generate_alert_escalation(alert, escalation_scheduler, prefix) do
     an_reserve = Common.get_alert_by_code(escalation_scheduler.alert_code)
-    an_config = get_alert_notification_config_by_reserve_and_site(alert.alert_notification_id, alert.site_id, prefix)
+    an_config =
+      get_alert_notification_config_by_reserve_and_site(alert.alert_notification_id, alert.site_id, prefix)
+      |> form_alert_notification_config(an_reserve)
+
     user_maps = escalation_scheduler.escalated_to_users
 
     Enum.map(user_maps, fn user_map ->
