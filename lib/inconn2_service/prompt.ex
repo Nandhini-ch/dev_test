@@ -65,6 +65,7 @@ defmodule Inconn2Service.Prompt do
   #   Repo.delete(alert_notification_config, prefix: prefix)
   # end
 
+  #soft delete for alert notification config
   def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
     update_alert_notification_config(alert_notification_config, %{"active" => false}, prefix)
          {:deleted,

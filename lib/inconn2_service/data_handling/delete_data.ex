@@ -7,31 +7,37 @@ defmodule Inconn2Service.DataHandling.DeleteData do
   alias Inconn2Service.Prompt.UserAlertNotification
   alias Inconn2Service.Common.{AlertNotificationReserve, AlertNotificationScheduler, AlertNotificationGenerator, PublicUom}
 
+  # Delete data in alert notification reserve table
   def delete_data_in_alert_notification_reserve() do
     AlertNotificationReserve
     |> Repo.delete_all()
   end
 
+  #delete data in alert notification scheduler table
   def delete_data_in_alert_notification_scheduler() do
     AlertNotificationScheduler
     |> Repo.delete_all()
   end
 
+  #delete data in alert notification generator table
   def delete_data_in_alert_notification_generator() do
     AlertNotificationGenerator
     |> Repo.delete_all()
   end
 
+  #delete data in public uom table
   def delete_data_in_public_uom() do
     PublicUom
     |> Repo.delete_all()
   end
 
+  #list prefixes
   def list_prefixes() do
     Account.list_licensees()
     |> Enum.map(fn licensee -> "inc_" <> licensee.sub_domain end)
   end
 
+  #delete data in alert notification config table
   def delete_data_in_alert_notification_config() do
     list_prefixes()
     |> Enum.each(fn prefix ->
@@ -40,6 +46,7 @@ defmodule Inconn2Service.DataHandling.DeleteData do
       end)
   end
 
+  #delete data in user alert notification table
   def delete_data_in_user_alert_notification() do
     list_prefixes()
     |> Enum.each(fn prefix ->
