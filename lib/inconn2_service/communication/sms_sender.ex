@@ -40,7 +40,6 @@ defmodule Inconn2Service.Communication.SmsSender do
       "senderid" => "WYNWYT",
       "DLTTemplateId" => dlt_template_id,
       "TelemarketerId" => telemarketer_id,
-      # "text" => "\"" <> text <> "\""
       "text" => text
     }
     # |> IO.inspect()
