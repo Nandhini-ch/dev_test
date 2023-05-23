@@ -65,6 +65,7 @@ defmodule Inconn2Service.Prompt do
   #   Repo.delete(alert_notification_config, prefix: prefix)
   # end
 
+  #soft delete for alert notification config
   def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
     update_alert_notification_config(alert_notification_config, %{"active" => false}, prefix)
          {:deleted,
@@ -228,7 +229,7 @@ defmodule Inconn2Service.Prompt do
       user_maps
       |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
       |> Enum.map(fn user_map ->
-        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", message)
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], an_reserve.type, message)
       end)
     end
 
@@ -296,7 +297,7 @@ defmodule Inconn2Service.Prompt do
       user_maps
       |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
       |> Enum.map(fn user_map ->
-        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", alert.description)
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], an_reserve.type, alert.description)
       end)
     end
   end

@@ -3,11 +3,23 @@ defmodule Inconn2Service.Email do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Communication.EmailSender
 
-  def send_alert_notification_email(recipient, username, subject_string, message) do
+  def send_alert_notification_email(recipient, username, type, message) do
+    subject_string =
+            case type do
+              "al" -> "Alert From Inconn"
+              "nt" -> "Notification From Inconn"
+            end
+
+    type_string =
+          case type do
+            "al" -> "alert"
+            "nt" -> "notification"
+          end
+
     body_string = ~s(
       Dear #{username},
 
-        This is to "notify/ alert" you that #{message}
+        This is to #{type_string} you that #{message}
 
       Regards,
       InConn team

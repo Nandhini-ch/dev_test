@@ -13,7 +13,7 @@
     },
     {
         "code": "WOPAP",
-        "template_name": "Work permit approved ",
+        "template_name": "Work permit approved",
         "message": "Dear <%= var1 %>, <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636725844965",
         "telemarketer_id": "1701166322207419896"
@@ -97,9 +97,9 @@
     },
     {
         "code": "FGOTP",
-        "template_name": "Forget password OTP updated",
-        "message": "Dear <%= var1 %>, (<%= var2 %>) is the OTP generated for the Inconn application of password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy",
-        "dlt_template_id": "1707168138155369140",
+        "template_name": "Forget Password OTP new",
+        "message": "Dear <%= var1 %>, (<%= var2 %>) is the OTP generated for the Inconn password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707168231718776291",
         "telemarketer_id": "1701166322207419896"
     }
 ]
