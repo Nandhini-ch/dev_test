@@ -1055,6 +1055,7 @@ defmodule Inconn2Service.AssetConfig do
 
   def list_equipments(prefix) do
     Equipment
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
   end
@@ -1331,14 +1332,18 @@ defmodule Inconn2Service.AssetConfig do
     ac_id = get_change(eq_cs, :asset_category_id, nil)
 
     if ac_id != nil do
-      asset_category = Repo.get(AssetCategory, ac_id, prefix: prefix)
+      case Repo.get(AssetCategory, ac_id, prefix: prefix) do
+        nil ->
+          add_error(eq_cs, :asset_category_id, "Asset category ID is invalid")
 
-      case asset_category.asset_type != "E" do
-        true ->
-          add_error(eq_cs, :asset_category_id, "Asset category should be equipment")
+        asset_category ->
+          case asset_category.asset_type != "E" do
+            true ->
+              add_error(eq_cs, :asset_category_id, "Asset category should be equipment")
 
-        false ->
-          eq_cs
+            false ->
+              eq_cs
+          end
       end
     else
       eq_cs

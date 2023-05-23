@@ -195,7 +195,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
       Enum.map(workorder_templates, fn r ->
         [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, r.estimated_time,
         r.scheduled, r.breakdown, r.audit, r.adhoc, r.amc,
-        r.repeat_every, r.repeat_unit, r.applicable_start, r.applicable_end, r.time_start, r.time_end, r.create_new, r.max_times,
+        r.repeat_every, r.repeat_unit, form_date(r.applicable_start), form_date(r.applicable_end), r.time_start, r.time_end, r.create_new, r.max_times,
         r.workorder_prior_time, r.is_workpermit_required, r.workpermit_check_list_id,  r.is_loto_required,  r.loto_lock_check_list_id,
         r.loto_release_check_list_id,  r.is_precheck_required, r.precheck_list_id,  r.is_workorder_approval_required, r.is_workorder_acknowledgement_required]
       end)
@@ -212,8 +212,8 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
   #   body =
   #     Enum.map(workorder_schedules, fn r ->
-  #       [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), r.first_occurrence_date, r.first_occurrence_time,
-  #       r.next_occurrence_date, r.next_occurrence_time]
+  #       [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), form_date(r.first_occurrence_date), r.first_occurrence_time,
+  #       form_date(r.next_occurrence_date), r.next_occurrence_time]
   #     end)
 
   #   final_report = header ++ body
@@ -230,7 +230,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.first_name, r.last_name, r.employment_start_date, r.employment_end_date,
+        [r.id, "", r.first_name, r.last_name, form_date(r.employment_start_date), form_date(r.employment_end_date),
         r.designation_id, r.email, r.employee_id, r.landline_no, r.mobile_no, r.salary, r.has_login_credentials, r.reports_to,
         convert_array_of_integers_to_string(r.skills), r.org_unit_id, r.party_id, r.role.id]
       end)
@@ -345,7 +345,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
    body =
      Enum.map(items, fn i ->
-       [ i.id, "", i.name, i.start_date, i.end_date, i.contract_type, i.is_effective_status, i.party_id
+       [ i.id, "", i.name, form_date(i.start_date), form_date(i.end_date), i.contract_type, i.is_effective_status, i.party_id
      ]
      end)
 
@@ -389,7 +389,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(check, fn r ->
-        [r.id, "", r.employee_id, r.site_id, r.shift_id, r.start_date, r.end_date]
+        [r.id, "", r.employee_id, r.site_id, r.shift_id, form_date(r.start_date), form_date(r.end_date)]
       end)
 
       final_report = header ++ body
@@ -417,7 +417,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(org_units, fn r ->
-        [r.id, "", r.name, r.start_date, r.end_date, r.site_id]
+        [r.id, "", r.name, form_date(r.start_date), form_date(r.end_date), r.site_id]
       end)
 
       final_report = header ++ body
@@ -433,7 +433,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     body =
       Enum.map(shifts, fn r ->
         [r.id, "", r.name, r.start_time, r.end_time, convert_array_of_integers_to_string(r.applicable_days),
-        r.start_date, r.end_date, r.site_id]
+        form_date(r.start_date), form_date(r.end_date), r.site_id]
       end)
 
       final_report = header ++ body
@@ -589,5 +589,14 @@ defmodule Inconn2Service.ReferenceDataDownloader do
   end
 
   # def convert_array_of_integers_to_string([]), do: []
+  defp form_date(date) do
+    if date do
+      month = if date.month < 10, do: "0#{date.month}", else: date.month
+      day = if date.day < 10, do: "0#{date.day}", else: date.day
 
+      "#{day}-#{month}-#{date.year}"
+    else
+      ""
+    end
+  end
 end
