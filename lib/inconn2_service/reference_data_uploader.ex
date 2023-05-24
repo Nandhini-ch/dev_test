@@ -448,8 +448,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
   end
 
   def upload_shifts(content, prefix) do
-    req_fields = ["id", "reference", "Name", "Start Time", "End Time", "Applicable Days", "Start Date", "Site Id"]
-    special_fields = [{"Applicable Days", "array_of_integers", []}, {"Applicable Days", "date", []}, {"Start Date", "date", []}]
+    req_fields = ["id", "reference", "Name", "Start Time", "End Time", "Applicable Days", "Start Date", "End Date", "Site Id"]
+    special_fields = [{"Applicable Days", "array_of_integers", []}, {"End Date", "date", []}, {"Start Date", "date", []}]
 
     upload_content(
       content,
