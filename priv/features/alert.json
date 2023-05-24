@@ -109,7 +109,7 @@
     },
     {
         "module": "Maintenance",
-        "description": "WO completion acknowledment required",
+        "description": "WO completion acknowledgement required",
         "type": "nt",
         "code": "WOCAR",
         "sms_code": "WACKR",

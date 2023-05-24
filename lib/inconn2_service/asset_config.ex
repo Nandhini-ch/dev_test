@@ -1535,15 +1535,15 @@ defmodule Inconn2Service.AssetConfig do
     Equipment.changeset(equipment, attrs)
   end
 
-  def push_alert_notification_for_asset(_existing_asset, nil, _site_id, _prefix) do
-    # date_time = get_site_date_time_now(site_id, prefix)
-    # generate_alert_notification("REAST", site_id, [existing_asset.name, date_time], [existing_asset.name, date_time], specific_user_maps, prefix)
-    {:ok, nil}
+  def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
+    escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+    generate_alert_notification("REAST", site_id, [existing_asset.name, existing_asset.parent_id], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
   end
 
-  def push_alert_notification_for_asset(nil, updated_asset, _site_id, _prefix) do
+  def push_alert_notification_for_new_asset(updated_asset, site_id, prefix) do
     # description = ~s(New Asset, #{updated_asset.name} has been added)
     # create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
+    generate_alert_notification("ADNAS", site_id, [updated_asset.name, updated_asset.parent_id],[], [], [], prefix)
     {:ok, updated_asset}
   end
 
@@ -1564,9 +1564,10 @@ defmodule Inconn2Service.AssetConfig do
         user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
         generate_alert_notification("ASTCT", site_id, [updated_asset.name, date_time], [], user_maps, [], prefix)
 
-      # existing_asset.parent_id != updated_asset.parent_id ->
+      existing_asset.parent_id != updated_asset.parent_id ->
         # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
         # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
+        generate_alert_notification("MASTH", site_id, [updated_asset.name], [], [], [], prefix)
 
       #asset details edited
       existing_asset != updated_asset ->
