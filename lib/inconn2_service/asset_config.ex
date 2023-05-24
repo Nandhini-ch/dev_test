@@ -2123,46 +2123,29 @@ defmodule Inconn2Service.AssetConfig do
     }
   end
 
-  # def list_users_for_party(query_params, prefix) do
-  #   query = from s in Scope
-  #   query = Enum.reduce(query_params, query, fn
-  #     {"site_id", site_id}, query ->
-  #       from q in query, where: q.site_id == ^site_id
-  #     {"location_id", location_id}, query ->
-  #       from q in query, where: q.location_id == ^location_id
-  #     {"asset_category_id", asset_category_id}, query ->
-  #       from q in query, where: q.asset_category_id == ^asset_category_id
+  def list_users_for_party(query_params, prefix) do
+    query =
+      from s in Scope,
+        join: c in Contract, on: s.contract_id == c.id,
+        join: p in Party, on: c.party_id == p.id
 
-  #     _ , query ->
-  #       query
-  #     end)
-  #   Repo.all(query, prefix: prefix)
-  # end
+    query =
+      Enum.reduce(query_params, query, fn
+        {"site_id", site_id}, acc ->
+          from q in acc,
+            where: q.site_id == ^site_id
+        {"location_id", location_id}, acc ->
+          from q in acc,
+            where: q.location_id == ^location_id
+        {"asset_category_id", asset_category_id}, acc ->
+          from q in acc,
+            where: q.asset_category_id == ^asset_category_id
+        _, query ->
+          query
+      end)
 
-  # def list_users_for_party(query_params, prefix) do
-  #   query = from s in Scope
-  #   query =
-  #     Enum.reduce(query_params, query, fn
-  #       {"site_id", site_id}, query ->
-  #         from q in query,
-  #           join: c in Contract, on: q.contract_id == c.id,
-  #           join: p in Party, on: c.party_id == p.id,
-  #           where: q.site_id == ^site_id
-  #       {"location_id", location_id}, query ->
-  #         from q in query,
-  #           join: c in Contract, on: q.contract_id == c.id,
-  #           join: p in Party, on: c.party_id == p.id,
-  #           where: q.location_id == ^location_id
-  #       {"asset_category_id", asset_category_id}, query ->
-  #         from q in query,
-  #           join: c in Contract, on: q.contract_id == c.id,
-  #           join: p in Party, on: c.party_id == p.id,
-  #           where: q.asset_category_id == ^asset_category_id
-  #       _, query ->
-  #         query
-  #     end)
-  #   Repo.all(query, prefix: prefix)
-  # end
+    Repo.all(query, prefix: prefix)
+  end
 
   defp validate_custom_field_type(cs, prefix, entity) do
     custom_field_values = get_field(cs, :custom, nil)

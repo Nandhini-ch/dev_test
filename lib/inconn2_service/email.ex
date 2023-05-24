@@ -5,16 +5,16 @@ defmodule Inconn2Service.Email do
 
   def send_alert_notification_email(recipient, username, type, message) do
     subject_string =
-            case type do
-              "al" -> "Alert From Inconn"
-              "nt" -> "Notification From Inconn"
-            end
+      case type do
+        "al" -> "Alert From Inconn"
+        "nt" -> "Notification From Inconn"
+      end
 
     type_string =
-          case type do
-            "al" -> "alert"
-            "nt" -> "notification"
-          end
+      case type do
+        "al" -> "alert"
+        "nt" -> "notify"
+      end
 
     body_string = ~s(
       Dear #{username},
