@@ -2546,7 +2546,7 @@ defmodule Inconn2Service.Report do
 
     summary =
       Enum.map(summary, fn d ->
-        [d.store_location, d.count_of_receive, d.count_of_issued, d.msl_breach_count]
+        [d.store_location, d.count_of_receive, d.count_of_issue, d.msl_breach_count]
       end)
 
     [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
