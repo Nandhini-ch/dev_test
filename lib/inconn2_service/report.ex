@@ -591,7 +591,7 @@ defmodule Inconn2Service.Report do
         store_location: store_id,
         count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
         count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count(),
-        msl_breach_count: msl_breach_count_for_store(store_id, prefix) |> Enum.count()
+        msl_breach_count: msl_breach_count_for_store(store_id, prefix)
       }
     end)
   end
