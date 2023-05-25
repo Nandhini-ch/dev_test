@@ -31,10 +31,10 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     render(conn, "high_level.json", data: data)
   end
 
-  # def get_multi_sites_dashboard_chart(conn, %{"site_ids" => sites_ids, "device" => device, "widget_code" => widget_code}) do
-  #   data = MultiSiteChart.get_multi_site_dashboard_chart(site_ids, "web", widget_code, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
-  #   render(conn, "high_level.json", data: data)
-  # end
+  def get_multi_sites_dashboard_chart(conn, %{"site_ids" => site_ids, "device" => device, "widget_code" => widget_code}) do
+    data = MultiSiteChart.get_multi_site_dashboard_chart(site_ids, device, widget_code, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "high_level.json", data: data)
+  end
 
   def get_energy_consumption(conn, params) do
     data = DashboardCharts.get_energy_consumption(params, conn.assigns.sub_domain_prefix)
