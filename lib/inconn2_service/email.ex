@@ -13,7 +13,7 @@ defmodule Inconn2Service.Email do
     type_string =
           case type do
             "al" -> "alert"
-            "nt" -> "notification"
+            "nt" -> "notify"
           end
 
     body_string = ~s(
@@ -24,7 +24,7 @@ defmodule Inconn2Service.Email do
       Regards,
       InConn team
 
-      Note:	This is a system generated email from an unmonitored mailbox. Kindly do not reply. To contact us, kindly  call xxxxxxxxxx or email to us at xxxxxx@xxx.xxx
+      Note:	This is a system generated email from an unmonitored mailbox. Kindly do not reply. To contact us, kindly call us on +91 7845043111 or email to us at support@inconn.com
     )
     EmailSender.send_email(recipient, subject_string, body_string)
   end

@@ -59,6 +59,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     |> Map.fetch!(:time_zone)
     |> DateTime.now!()
     |> DateTime.to_naive()
+    |> NaiveDateTime.truncate(:second)
   end
 
   def get_site_date_now(site_id, prefix) do
