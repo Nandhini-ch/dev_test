@@ -491,6 +491,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data_web
     get "/dashboards/mobile/high_level_data", DashboardsController, :get_high_level_data_mobile
+    get "/dashboards/multi_sites_dashboard_chart", DashboardsController, :get_multi_sites_dashboard_chart
 
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
     post "/dashboards/energy_cost", DashboardsController, :get_energy_cost

@@ -38,7 +38,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
   end
 
-  defp get_individual_data(widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, seven_days_range_tuple, user, prefix) do
+  def get_individual_data(widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, seven_days_range_tuple, user, prefix) do
     func = match_widget_codes()[widget_config.widget_code]
     args = match_arguments(widget_config.widget_code, energy_consumption, water_consumption, fuel_consumption, config, site_id, widget_config, seven_days_range_tuple, user, prefix)
     case func do
