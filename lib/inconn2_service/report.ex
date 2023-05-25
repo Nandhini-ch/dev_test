@@ -17,6 +17,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.{Inventory, Staff}
   alias Inconn2Service.Assignments.{Roster, MasterRoster}
   alias Inconn2Service.Assignment.Attendance
+  alias Inconn2Service.InventoryManagement
   # alias Inconn2Service.Measurements.MeterReading
   # alias Inconn2Service.Inventory.{Item, InventoryLocation, InventoryStock, Supplier, UOM, InventoryTransaction}
   alias Inconn2Service.InventoryManagement.{Transaction, InventoryItem, Stock, Store, UnitOfMeasurement, InventorySupplier}
@@ -588,7 +589,7 @@ defmodule Inconn2Service.Report do
     |> Enum.map(fn {_k, v} ->
       store_id = List.first(v).store_id
       %{
-        store_location: store_id,
+        store_location: InventoryManagement.get_store!(store_id, prefix).name,
         count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
         count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count(),
         msl_breach_count: msl_breach_count_for_store(store_id, prefix)
@@ -2541,7 +2542,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
-        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.bin, d.row, d.cost, d.supplier]
+        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.row, d.bin, d.cost, d.supplier]
       end)
 
     summary =
