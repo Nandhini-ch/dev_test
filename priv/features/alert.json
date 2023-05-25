@@ -343,7 +343,7 @@
         "type": "al",
         "code": "TCKRO",
         "sms_code": "TCKRP",
-        "text_template": "  Ticket <%= var1 %> reopned by <%= var2 %> at <%= var3 %>",
+        "text_template": "  Ticket <%= var1 %> reopened by <%= var2 %> at <%= var3 %>",
         "is_sms_required": true,
         "is_email_required": true,
         "is_escalation_required": true,
