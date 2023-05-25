@@ -3,7 +3,7 @@ defmodule Inconn2ServiceWeb.DashboardsController do
 
   alias Inconn2Service.Util.HierarchyManager
   alias Inconn2Service.AssetConfig
-  alias Inconn2Service.Dashboards.{NumericalChart, DashboardCharts, Helpers}
+  alias Inconn2Service.Dashboards.{NumericalChart, DashboardCharts, Helpers, MultiSiteChart}
   alias Inconn2ServiceWeb.AssetCategoryView
   action_fallback Inconn2ServiceWeb.FallbackController
 
@@ -28,6 +28,11 @@ defmodule Inconn2ServiceWeb.DashboardsController do
 
   def get_high_level_data_mobile(conn, %{"site_id" => site_id}) do
     data = NumericalChart.get_numerical_charts_for_24_hours(site_id, "mob", conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+    render(conn, "high_level.json", data: data)
+  end
+
+  def get_multi_sites_dashboard_chart(conn, %{"site_ids" => site_ids, "device" => device, "widget_code" => widget_code}) do
+    data = MultiSiteChart.get_multi_site_dashboard_chart(site_ids, device, widget_code, conn.assigns.current_user, conn.assigns.sub_domain_prefix)
     render(conn, "high_level.json", data: data)
   end
 

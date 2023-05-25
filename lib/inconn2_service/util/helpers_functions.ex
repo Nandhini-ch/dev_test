@@ -9,6 +9,12 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     Map.put(asset, :asset_type, asset_type)
   end
 
+  def convert_string_ids_to_list_of_ids(string_ids) do
+    string_ids
+    |> String.split(",")
+    |> Enum.map(&String.to_integer/1)
+  end
+
   def is_date?(date) do
     case Date.from_iso8601(date) do
       {:ok, _} -> true
