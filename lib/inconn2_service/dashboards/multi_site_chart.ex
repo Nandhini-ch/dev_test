@@ -54,7 +54,7 @@ defmodule Inconn2Service.Dashboards.MultiSiteChart do
         id: 0,
         key: widget_code,
         name: "All sites",
-        chart_data: data,
+        chart_data: convert_to_ceil_float(data),
         unit: one_widget.unit,
         size: 1,
         type: 1

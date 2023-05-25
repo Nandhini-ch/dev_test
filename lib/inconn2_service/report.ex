@@ -2541,7 +2541,7 @@ defmodule Inconn2Service.Report do
   defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
     body =
       Enum.map(data, fn d ->
-        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.bin, d.row, d.cost, d.supplier]
+        [d.date, d.item_name, d.item_type, d.store_name, d.transaction_type, d.transaction_quantity, d.reorder_level, d.uom, d.aisle, d.row, d.bin, d.cost, d.supplier]
       end)
 
     summary =
