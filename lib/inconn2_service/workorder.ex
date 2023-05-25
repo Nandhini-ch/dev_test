@@ -3670,18 +3670,18 @@ defmodule Inconn2Service.Workorder do
       |> Repo.update(prefix: prefix)
   end
 
-  defp calculate_cost(work_order, prefix) do
-    workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
-    [workorder_template.tools, workorder_template.spares, workorder_template.consumables, workorder_template.parts, workorder_template.measuring_instruments]
-    |> Enum.map(fn x -> get_prices_as_list(x, prefix) end)
-    |> List.flatten()
-    |> Enum.sum()
-  end
+  # defp calculate_cost(work_order, prefix) do
+  #   workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
+  #   [workorder_template.tools, workorder_template.spares, workorder_template.consumables, workorder_template.parts, workorder_template.measuring_instruments]
+  #   |> Enum.map(fn x -> get_prices_as_list(x, prefix) end)
+  #   |> List.flatten()
+  #   |> Enum.sum()
+  # end
 
-  defp get_prices_as_list(list, prefix) do
-    Enum.map(list, fn l ->
-      item = Inconn2Service.InventoryManagement.get_inventory_item!(list.item_id, prefix)
-      item.unit_price * l.quantity
-    end)
-  end
+  # defp get_prices_as_list(list, prefix) do
+  #   Enum.map(list, fn l ->
+  #     item = Inconn2Service.InventoryManagement.get_inventory_item!(list.item_id, prefix)
+  #     item.unit_price * l.quantity
+  #   end)
+  # end
 end
