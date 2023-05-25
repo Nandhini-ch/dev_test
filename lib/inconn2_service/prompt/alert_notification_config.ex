@@ -7,8 +7,8 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
     field :is_escalation_required, :boolean, default: false
     field :escalation_time_in_minutes, :integer
     field :active, :boolean, default: true
-    field :addressed_to_users, {:array, :map}
-    field :escalated_to_users, {:array, :map}
+    field :addressed_to_users, {:array, :map}, default: []
+    field :escalated_to_users, {:array, :map}, default: []
     field :is_sms_required, :boolean, default: false
     field :is_email_required, :boolean, default: false
     belongs_to :site, Inconn2Service.AssetConfig.Site
