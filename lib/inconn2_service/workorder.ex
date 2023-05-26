@@ -2265,7 +2265,10 @@ defmodule Inconn2Service.Workorder do
 
 
     Stream.map(work_orders, fn wo ->
-      wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+      wots =
+        list_workorder_tasks(prefix, wo.id)
+        |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+        |> Enum.map(fn wot -> add_previous_cumlative_value(wot, wo, prefix) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
     |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
@@ -2282,6 +2285,15 @@ defmodule Inconn2Service.Workorder do
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
     end)
+  end
+
+  defp add_previous_cumlative_value(workorder_task, work_order, prefix) do
+    if workorder_task.task.task_type == "MT" and workorder_task.task.config["type"] == "C" do
+      previous_value = Measurements.get_last_cumulative_value(work_order.asset_id, work_order.asset_type, workorder_task.task.config["UOM"], workorder_task.task.config["category"], prefix)
+      Map.put(workorder_task, :previous_value, previous_value)
+    else
+      Map.put(workorder_task, :previous_value, nil)
+    end
   end
 
   defp get_skills_with_subtree_asset_category(skills, prefix) do
