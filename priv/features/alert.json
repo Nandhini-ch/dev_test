@@ -2,7 +2,7 @@
         "module": "Asset",
         "description": "Asset status change to in transit",
         "type": "nt",
-        "code": "ASTCT ",
+        "code": "ASTCT",
         "sms_code": null,
         "text_template": "<%= var1 %> status changed to transit at <%= var2 %>",
         "is_sms_required": false,
