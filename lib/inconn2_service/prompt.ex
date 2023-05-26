@@ -198,20 +198,21 @@ defmodule Inconn2Service.Prompt do
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
-    an_reserve = Common.get_alert_by_code(code)
+    an_reserve = Common.get_alert_by_code(code) |> IO.inspect(label: "reserve")
     an_config =
       get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
       |> form_alert_notification_config(an_reserve)
+      |> IO.inspect(label: "config")
 
-    message = form_message_text_from_template(an_reserve.text_template, an_arguments_list)
+    message = form_message_text_from_template(an_reserve.text_template, an_arguments_list) |> IO.inspect(label: "message")
 
     user_maps =
       specific_user_maps ++
-      Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
+      Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end) |> IO.inspect(label: "user_maps")
 
     escalation_user_maps =
       escalation_user_maps ++
-      Enum.map(an_config.escalated_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
+      Enum.map(an_config.escalated_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end) |> IO.inspect(label: "escalation_maps")
 
     Enum.map(user_maps, fn user_map ->
       trigger_alert_notification(message, an_reserve, site_id, user_map["user_id"], an_config, escalation_user_maps, prefix)
@@ -258,7 +259,7 @@ defmodule Inconn2Service.Prompt do
       "user_id" => user_id,
       "description" => message
     }
-    |> create_user_alert_notification(prefix)
+    |> create_user_alert_notification(prefix)  |> IO.inspect(label: "al")
 
     if an_reserve.type == "al" and an_config.is_escalation_required and length(escalation_user_maps) != 0 do
       %{

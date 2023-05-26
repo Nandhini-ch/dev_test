@@ -39,7 +39,7 @@ defmodule Inconn2Service.Dashboards.MultiSiteChart do
     site = AssetConfig.get_site!(site_id, prefix)
 
     NumericalChart.get_individual_data(user_widget_config, energy_consumption, water_consumption, fuel_consumption, config, site_id, {seven_day_start, seven_day_end}, user, prefix)
-    |> Map.put(:name, site.name)
+    |> Map.merge(%{name: site.name, site_id: site.id})
   end
 
   defp add_and_form_multi_site_widget(individual_widgets, widget_code) do
