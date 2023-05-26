@@ -2315,7 +2315,7 @@ defmodule Inconn2Service.Workorder do
         site_id: s.id,
         site_name: s.name,
         asset_id: wo.asset_id,
-        asset_type: asset_type,
+        asset_type: wo.asset_type,
         work_request: wr,
         type: wo.type,
         scheduled_date: wo.scheduled_date,
