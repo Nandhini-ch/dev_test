@@ -1473,26 +1473,25 @@ defmodule Inconn2Service.Workorder do
   def push_alert_notification_for_work_order(site_id, nil, updated_work_order, _current_user, prefix) do
     workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
     date_time = get_site_date_now(site_id, prefix)
-    cond do
-      #workorder assigned
-      !is_nil(updated_work_order.user_id) ->
-        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        IO.inspect("Workorder assigned")
-        IO.inspect(user_maps)
-        generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
 
-      # workorder approval required
-      updated_work_order.status == "woap" ->
-        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+    #workorder assigned
+    if !is_nil(updated_work_order.user_id) do
+      user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+      IO.inspect("Workorder assigned")
+      IO.inspect(user_maps)
+      generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
+    end
+
+    # workorder approval required
+    if updated_work_order.status == "woap" do
+      name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_approval_user_id], prefix)
         IO.inspect("workorder approval required")
         IO.inspect(user_maps)
         generate_alert_notification("WOAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
-
-      true ->
-        {:ok, updated_work_order}
     end
+
     {:ok, updated_work_order}
   end
 
