@@ -18,6 +18,7 @@ defmodule Inconn2ServiceWeb.AttendanceView do
       longitude: attendance.longitude,
       site_id: attendance.site_id,
       shift_id: attendance.shift_id,
+      status: attendance.status,
       employee_id: attendance.employee_id,
       shift: render_one(attendance.shift, ShiftView, "shift.json"),
       employee: render_one(attendance.employee, EmployeeView, "employee_without_org_unit.json")

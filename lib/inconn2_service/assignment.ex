@@ -432,12 +432,39 @@ defmodule Inconn2Service.Assignment do
 
     case result do
       {:ok, attendance} ->
+           {:ok, attendance} = calculate_and_update_attendance_status(attendance, prefix)
               {:ok,
               preload_employee(attendance, prefix) |> preload_shift(prefix)
             }
       _ ->
           result
     end
+  end
+
+  defp calculate_and_update_attendance_status(attendance, prefix) do
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix)
+    shift = Settings.get_shift!(attendance.shift_id, prefix)
+    grace_period = Map.get(site_config.config, "grace_period_for_in_time", 0)
+    half_day_hours = Map.get(site_config.config, "half_day_work_hours", 0)
+    worked_hours = NaiveDateTime.diff(attendance.in_time, attendance.out_time) * 3600
+
+    status =
+      case NaiveDateTime.compare(attendance.in_time, NaiveDateTime.add(shift.start_time, grace_period, :minute)) do
+        :gt -> "LATE"
+        _ -> "ONTM"
+      end
+
+    status =
+      if worked_hours < half_day_hours do
+        "HFDY"
+      else
+        status
+      end
+
+    attendance
+    |> Attendance.changeset(%{"status" => status})
+    |> Repo.update(prefix: prefix)
+
   end
 
   def delete_attendance(%Attendance{} = attendance, prefix) do
