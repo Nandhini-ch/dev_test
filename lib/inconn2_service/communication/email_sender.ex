@@ -21,6 +21,7 @@ defmodule Inconn2Service.Communication.EmailSender do
       |> subject(subject_string)
       |> text_body(body_string)
       |> Inconn2Service.Mailer.deliver!()
+      |> IO.inspect()
 
     {:noreply, state}
   end
