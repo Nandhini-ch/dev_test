@@ -602,8 +602,8 @@ defmodule Inconn2Service.Report do
       store_id = List.first(v).store_id
       %{
         store_location: InventoryManagement.get_store!(store_id, prefix).name,
-        count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
-        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count(),
+        count_of_receive: Enum.filter(v, fn a -> a.transaction_type in ["IN"] end) |> Enum.count(),
+        count_of_issue: Enum.filter(v, fn a -> a.transaction_type in ["IS"] end) |> Enum.count(),
         msl_breach_count: msl_breach_count_for_store(store_id, prefix)
       }
     end)
