@@ -444,7 +444,7 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         {:ok, status_track} = update_status_track(updated_work_request, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_ticket(updated_work_request.asset_id, updated_work_request.asset_type, updated_work_request.workrequest_category_id, work_request, updated_work_request, prefix, updated_work_request.site_id) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket(updated_work_request.asset_id, updated_work_request.asset_type, updated_work_request.workrequest_category_id, work_request, updated_work_request, prefix, updated_work_request.site_id, user) end)
         update_status_track(updated_work_request, prefix)
         Elixir.Task.start(fn -> send_completed_email(work_request, updated_work_request, status_track, prefix) end)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
@@ -937,7 +937,7 @@ defmodule Inconn2Service.Ticket do
 
   def push_alert_notification_for_new_ticket(work_request, prefix, site_id) do
     helpdesk_users = group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, site_id, prefix)
-    workrequest_category = get_workrequest_category!(work_request.workrequest_category_id, prefix)
+    # workrequest_category = get_workrequest_category!(work_request.workrequest_category_id, prefix)
     date_time = get_site_date_time_now(site_id, prefix)
     work_request_type =
       case work_request.request_type do
@@ -948,7 +948,7 @@ defmodule Inconn2Service.Ticket do
     requested_user = get_display_name_for_user_id(work_request.requested_user_id, prefix)
     user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
 
-    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [workrequest_category.name, work_request.id, requested_user, date_time], user_maps, [], prefix)
+    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [work_request_type, work_request.id, requested_user, date_time], user_maps, [], prefix)
 
   end
 
@@ -972,11 +972,13 @@ defmodule Inconn2Service.Ticket do
 
   # end
 
-  def push_alert_notification_for_ticket(asset_id, asset_type, workrequest_category_id, existing_work_request, updated_work_request, prefix, site_id) do
+  def push_alert_notification_for_ticket(asset_id, asset_type, workrequest_category_id, existing_work_request, updated_work_request, prefix, site_id, user) do
     helpdesk_users = group_helpdesk_users_by_workrequest_category_id(workrequest_category_id, site_id, prefix)
     asset = AssetConfig.get_asset_by_asset_id(asset_id, asset_type, prefix)
     date_time = get_site_date_time_now(site_id, prefix)
     assigned_user = get_display_name_for_user_id(updated_work_request.assigned_user_id, prefix)
+    current_user = get_display_name_for_user_id(user.id, prefix)
+
     work_request_type =
       case updated_work_request.request_type do
         "CO" -> "Complaint"
@@ -1006,7 +1008,7 @@ defmodule Inconn2Service.Ticket do
       #new ticket assigned
       existing_work_request.assigned_user_id == nil && updated_work_request.assigned_user_id != nil ->
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
-        generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
+        generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, current_user], [updated_work_request.id, status, current_user], user_maps, [], prefix)
 
       #ticket approval status change
       existing_work_request.status != updated_work_request.status and updated_work_request.status in ["AP", "RJ"] ->
@@ -1016,7 +1018,7 @@ defmodule Inconn2Service.Ticket do
       #ticket completed
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CP" ->
         user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
-        generate_alert_notification("TCKCP", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
+        generate_alert_notification("TCKCP", site_id, [updated_work_request.id, status, current_user], [updated_work_request.id, status, current_user], user_maps, [], prefix)
 
       #ticket cancelled
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CL" ->
