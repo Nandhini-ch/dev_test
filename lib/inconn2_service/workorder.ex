@@ -576,7 +576,15 @@ defmodule Inconn2Service.Workorder do
     asset = AssetConfig.get_asset_by_asset_id(updated_schedule.asset_id, updated_schedule.asset_type, prefix)
     date_time = get_site_date_now(asset.site_id, prefix)
     user_display_name = get_display_name_for_user_id(user.id, prefix)
-    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], [], [], prefix)
+    asset_category_id = updated_schedule.workorder_template.asset_category_id
+
+    user_maps =
+    # %{"location_id" => updated_schedule.asset_type == "L", "asset_category_id" => asset_category_id}
+    %{"location_id" => "L", "asset_category_id" => asset_category_id}
+    |> AssetConfig.list_users_from_scope(prefix)
+    |> Staff.form_user_maps_by_user_ids(prefix)
+
+    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], user_maps, [], prefix)
   end
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do

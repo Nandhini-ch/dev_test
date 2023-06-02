@@ -10,6 +10,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.Staff.User
   alias Inconn2Service.Staff
   alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site, Zone}
   alias Inconn2Service.AssetConfig.AssetCategory
@@ -1536,19 +1537,54 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  #list assets by parent_id for both location and equipment
+  def get_assets_by_parent_id(parent_id, prefix) do
+    asset_category = get_asset_category!(parent_id, prefix)
+    case asset_category.asset_type do
+      "L" ->
+         Location |> where([parent_id: ^parent_id]) |> Repo.all(prefix: prefix)
+
+      "E" ->
+        Equipment |> where([parent_id: ^parent_id]) |> Repo.all(prefix: prefix)
+    end
+  end
+
   def change_equipment(%Equipment{} = equipment, attrs \\ %{}) do
     Equipment.changeset(equipment, attrs)
   end
 
-  def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
+  #remove asset
+  def push_alert_notification_for_remove_asset(existing_asset, updated_asset, site_id, prefix) do
     escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-    generate_alert_notification("REAST", site_id, [existing_asset.name, existing_asset.parent_id], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
+    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    exist_asset_name =
+    if existing_asset.parent_id == nil do
+      "root"
+    else
+      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    end
+
+    generate_alert_notification("REAST", site_id, ["#{existing_asset.name} removed from #{exist_asset_name}"], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
   end
 
-  def push_alert_notification_for_new_asset(updated_asset, site_id, prefix) do
-    # description = ~s(New Asset, #{updated_asset.name} has been added)
-    # create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
-    generate_alert_notification("ADNAS", site_id, [updated_asset.name, updated_asset.parent_id],[], [], [], prefix)
+  #add new asset
+  def push_alert_notification_for_new_asset(existing_asset, updated_asset, site_id, prefix) do
+    user_maps =
+          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          |> list_users_from_scope(prefix)
+          |> Staff.form_user_maps_by_user_ids(prefix)
+
+    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    exist_asset_name =
+    if existing_asset.parent_id == nil do
+      "root"
+    else
+      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    end
+
+    generate_alert_notification("ADNAS", site_id, ["#{updated_asset.name} added at #{exist_asset_name}"],[], user_maps, [], prefix)
     {:ok, updated_asset}
   end
 
@@ -1558,21 +1594,39 @@ defmodule Inconn2Service.AssetConfig do
       #asset status to breakdown
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
         escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-        generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], [], escalation_user_maps, prefix)
+
+        user_maps =
+          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          |> list_users_from_scope(prefix)
+          |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], user_maps, escalation_user_maps, prefix)
 
       #asset status to on/off
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
-        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], [], [], [], prefix)
+
+        user_maps =
+        %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+        |> list_users_from_scope(prefix)
+        |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], user_maps, [], [], prefix)
 
       #asset status to transit
       existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
         user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
         generate_alert_notification("ASTCT", site_id, [updated_asset.name, date_time], [], user_maps, [], prefix)
 
+      #modify asset tree hierarchy
       existing_asset.parent_id != updated_asset.parent_id ->
         # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
         # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
-        generate_alert_notification("MASTH", site_id, [updated_asset.name], [], [], [], prefix)
+        user_maps =
+        %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+        |> list_users_from_scope(prefix)
+        |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("MASTH", site_id, ["asset tree hierarchy of #{existing_asset.name} are modified"], [], user_maps, [], prefix)
 
       #asset details edited
       existing_asset != updated_asset ->
@@ -2129,28 +2183,32 @@ defmodule Inconn2Service.AssetConfig do
     }
   end
 
-  def list_users_for_party(query_params, prefix) do
-    query =
-      from s in Scope,
-        join: c in Contract, on: s.contract_id == c.id,
-        join: p in Party, on: c.party_id == p.id
+  def list_users_from_scope(query_params, prefix) do
+    query = from(s in Scope, where: s.active == true)
 
-    query =
+    scope_query =
       Enum.reduce(query_params, query, fn
         {"site_id", site_id}, acc ->
           from q in acc,
-            where: q.site_id == ^site_id
+          where: ^site_id == q.site_id
         {"location_id", location_id}, acc ->
           from q in acc,
-            where: q.location_id == ^location_id
+          where: ^location_id in q.location_ids
         {"asset_category_id", asset_category_id}, acc ->
           from q in acc,
-            where: q.asset_category_id == ^asset_category_id
+          where: ^asset_category_id in q.asset_category_ids
         _, query ->
           query
       end)
 
-    Repo.all(query, prefix: prefix)
+      party_ids =
+      from(s in scope_query,
+      join: c in Contract, on: s.contract_id == c.id, where: c.active == true,
+      join: p in Party, on: c.party_id == p.id, where: p.active == true,
+      select: p.id)
+      |> Repo.all(prefix: prefix)
+
+    from(u in User, where: u.party_id in ^party_ids and u.active == true, select: u.id) |> Repo.all()
   end
 
   defp validate_custom_field_type(cs, prefix, entity) do

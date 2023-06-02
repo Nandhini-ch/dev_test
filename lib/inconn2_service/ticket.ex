@@ -807,7 +807,15 @@ defmodule Inconn2Service.Ticket do
               |> set_approver_user_id(user)
               |> Repo.insert(prefix: prefix)
 
-    update_status_for_work_request(result, prefix)
+    case result do
+      {:ok, approval} ->
+        Elixir.Task.start(fn -> push_alert_notification_for_ticket_approval(approval.work_request_id, approval, prefix) end)
+        update_status_for_work_request(result, prefix)
+
+      _ ->
+        result
+
+    end
   end
 
 
@@ -875,6 +883,24 @@ defmodule Inconn2Service.Ticket do
 
   def change_approval(%Approval{} = approval, attrs \\ %{}) do
     Approval.changeset(approval, attrs)
+  end
+
+  #approval user
+  def push_alert_notification_for_ticket_approval(work_request_id, approval, prefix) do
+    work_request = Repo.get!(WorkRequest, work_request_id, prefix: prefix)
+    helpdesk_users = group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, work_request.site_id, prefix)
+    approved_user = get_display_name_for_user_id(approval.user_id, prefix)
+
+    status =
+    if approval.approved do
+      "Approved"
+    else
+      "Rejected"
+    end
+
+   #ticket approval status change
+    user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
+    generate_alert_notification("TAPSC", work_request.site_id, [work_request.id, status, approved_user], [work_request.id, status, approved_user], user_maps, [], prefix)
   end
 
   alias Inconn2Service.Ticket.WorkrequestSubcategory
@@ -1008,11 +1034,6 @@ defmodule Inconn2Service.Ticket do
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
         generate_alert_notification("NTASS", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
 
-      #ticket approval status change
-      existing_work_request.status != updated_work_request.status and updated_work_request.status in ["AP", "RJ"] ->
-        user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
-        generate_alert_notification("TAPSC", site_id, [updated_work_request.id, status, assigned_user], [updated_work_request.id, status, assigned_user], user_maps, [], prefix)
-
       #ticket completed
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CP" ->
         user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
@@ -1034,7 +1055,13 @@ defmodule Inconn2Service.Ticket do
       #ticket reassigned
       existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
-        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], [], escalation_user_maps, prefix)
+
+        user_maps =
+        %{"site_id" => updated_work_request.site_id}
+        |> AssetConfig.list_users_from_scope(prefix)
+        |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], user_maps, escalation_user_maps, prefix)
 
       true ->
         {:ok, updated_work_request}
