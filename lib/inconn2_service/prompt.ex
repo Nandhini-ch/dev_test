@@ -134,10 +134,10 @@ defmodule Inconn2Service.Prompt do
     UserAlertNotification.changeset(user_alert_notification, attrs)
   end
 
-  def generate_alert_notification(alert_notification) do
-    create_alert_notification(alert_notification.reference_id, alert_notification.code, alert_notification.prefix)
-    Common.delete_alert_notification_generator(alert_notification)
-  end
+  # def generate_alert_notification(alert_notification) do
+  #   create_alert_notification(alert_notification.reference_id, alert_notification.code, alert_notification.prefix)
+  #   Common.delete_alert_notification_generator(alert_notification)
+  # end
 
   defp create_alert_notification(work_order_id, "WOOD", prefix) do
     work_order = Workorder.get_work_order!(work_order_id, prefix)
