@@ -16,6 +16,8 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :scheduled_date, :date
     field :scheduled_time, :time
     field :start_date, :date
+    field :scheduled_end_date, :date
+    field :scheduled_end_time, :time
     field :created_user_id, :integer
     field :start_time, :time
     field :completed_date, :date
@@ -50,14 +52,14 @@ defmodule Inconn2Service.Workorder.WorkOrder do
   @doc false
   def changeset(work_order, attrs) do
     work_order
-    |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time, :assigned_date, :assigned_time,
-                    :scheduled_date, :scheduled_time, :start_date, :start_time, :completed_date, :completed_time, :created_user_id,
-                    :status, :workorder_template_id, :workorder_schedule_id, :work_request_id, :workorder_approval_user_id,
-                    :workpermit_approval_user_ids, :workpermit_obtained_from_user_ids, :is_workorder_approval_required,
-                    :is_workpermit_required, :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id,
-                    :is_loto_required, :loto_lock_check_list_id, :loto_release_check_list_id, :loto_checker_user_id,
-                    :is_deactivated, :deactivated_date_time, :pause_resume_times, :is_paused, :pre_check_required, :cost])
-    |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
+    |> cast(attrs, [:site_id, :asset_id, :user_id, :is_self_assigned, :type, :created_date, :created_time,
+                    :assigned_date, :assigned_time, :scheduled_date, :scheduled_time, :start_date, :start_time,
+                    :completed_date, :completed_time, :created_user_id, :status, :workorder_template_id,
+                    :workorder_schedule_id, :work_request_id, :workorder_approval_user_id, :workpermit_approval_user_ids,
+                    :workpermit_obtained_from_user_ids, :is_workorder_approval_required, :is_workpermit_required,
+                    :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id, :is_loto_required, :loto_lock_check_list_id,
+                    :loto_release_check_list_id, :loto_checker_user_id, :scheduled_end_date, :scheduled_end_time, :is_deactivated, :deactivated_date_time, :pause_resume_times, :is_paused, :pre_check_required, :cost])
+    |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :scheduled_end_date, :scheduled_end_date, :workorder_template_id])
     |> validate_inclusion(:type, ["PRV", "BRK", "TKT", "IOT"])
     |> validate_start_date_time()
     # |> validate_start_date()
