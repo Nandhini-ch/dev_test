@@ -1006,7 +1006,10 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     |> Enum.map(fn {k, v} ->
       %{
         name: get_asset(k, asset_type, prefix).name,
-        value: Enum.map(v, fn v -> v.cost end) |> Enum.sum()
+        value:
+          Enum.map(v, fn v -> v.cost end)
+          |> Enum.reject(&(is_nil(&1)))
+          |> Enum.sum()
       }
     end)
   end

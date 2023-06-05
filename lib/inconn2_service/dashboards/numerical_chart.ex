@@ -504,12 +504,12 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
       %{
         label: "In Progress",
         value: calculate_percentage(inprogress_count, total_count),
-        color: "#00ff00"
+        color: "#ffbf00"
       },
       %{
         label: "Closed",
         value: calculate_percentage(completed_count, total_count),
-        color: "#ffbf00"
+        color: "#00ff00"
       }
     ]
   end

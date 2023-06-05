@@ -44,9 +44,8 @@ defmodule Inconn2Service.Communication.SmsSender do
     }
     # |> IO.inspect()
     # IO.inspect(text)
-    IO.inspect("Dear USER, (1234) is the OTP generated for the Inconn application of password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy")
 
-    response = HTTPoison.get(url, headers, [params: params])
+    response = HTTPoison.get(url, headers, [params: params]) |> IO.inspect()
 
     case response do
       {:ok, %{body: body}} ->
