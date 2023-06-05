@@ -851,6 +851,7 @@ defmodule Inconn2Service.InventoryManagement do
       %Transaction{}
       |> Transaction.changeset(attrs)
       |> check_store_layout_config(prefix)
+      |> calculate_cost()
       |> convert_quantity(prefix)
       |> check_stock_upto_store(prefix)
       |> check_stock_upto_bin(prefix)
