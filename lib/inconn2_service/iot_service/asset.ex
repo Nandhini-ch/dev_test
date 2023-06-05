@@ -32,7 +32,11 @@ defmodule Inconn2Service.IotService.Asset do
   end
 
   defp update_iot_details_map(iot_details, {device_key, device_id}) do
-    ids = Map.get(iot_details, device_key, [])
+    ids =
+      iot_details
+      |> convert_nil_to_map()
+      |> Map.get(device_key, [])
+
     Map.put(iot_details, device_key, Enum.uniq([device_id | ids]))
   end
 end
