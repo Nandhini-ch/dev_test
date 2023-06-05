@@ -2810,6 +2810,28 @@ defmodule Inconn2Service.Workorder do
     |> Repo.one!(prefix: prefix)
   end
 
+  def check_out_of_validation_status!(workorder_task, prefix) do
+    task = WorkOrderConfig.get_task(workorder_task.task_id, prefix)
+
+    if task.task_type == "MT" do
+      answer = Map.get(workorder_task.response, "answers")
+      min_value = Map.get(task.config, "min_value")
+      max_value = Map.get(task.config, "max_value")
+      answer < min_value && answer > max_value
+    else
+      false
+    end
+  end
+
+  def push_alert_notification_for_out_of_validation(existing_asset, updated_asset, site_id, workorder_task, prefix) do
+    if check_out_of_validation_status!(workorder_task, prefix) do
+      user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+      escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+
+      generate_alert_notification("ASTCB", site_id, [existing_asset.name, "parameter_name"], [existing_asset.name, "parameter_name"], [user_maps], escalation_user_maps, prefix)
+    end
+  end
+
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}
         |> WorkorderTask.changeset(attrs)
@@ -2955,6 +2977,7 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
     case result do
         {:ok, workorder_task} ->
+              # Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(existing_asset, updated_asset, site_id, workorder_task, prefix)
               auto_update_workorder_status(workorder_task, prefix, user)
         _ ->
               result

@@ -134,10 +134,28 @@ defmodule Inconn2Service.Prompt do
     UserAlertNotification.changeset(user_alert_notification, attrs)
   end
 
-  def generate_alert_notification(alert_notification) do
-    create_alert_notification(alert_notification.reference_id, alert_notification.code, alert_notification.prefix)
-    Common.delete_alert_notification_generator(alert_notification)
-  end
+  # def generate_alert_notification(alert_notification) do
+  #   create_alert_notification(alert_notification.reference_id, alert_notification.code, alert_notification.prefix)
+  #   Common.delete_alert_notification_generator(alert_notification)
+  # end
+
+  # def generate_alert_notification_for_assets(alert_notification_generator) do
+  #   case alert_notification_generator.code do
+  #     "WOSDM" ->
+  #       work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, prefix)
+  #       user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], prefix)
+  #       Prompt.generate_alert_notification("WOSDM", work_order.site_id, [work_order.id, work_order.scheduled_time], user_maps, [], alert_notification_generator.prefix)
+
+  #     "WOSOD" ->
+  #       work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, prefix)
+  #       asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, prefix)
+  #       user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], prefix)
+
+  #       escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+
+  #       Prompt.generate_alert_notification("WOSOD", work_order.site_id, [work_order.id, work_order.scheduled_time], user_maps, escalated_user_maps, alert_notification_generator.prefix)
+  #   end
+  # end
 
   defp create_alert_notification(work_order_id, "WOOD", prefix) do
     work_order = Workorder.get_work_order!(work_order_id, prefix)
