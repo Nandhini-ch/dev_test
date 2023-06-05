@@ -25,6 +25,7 @@ defmodule Inconn2ServiceWeb.SiteView do
       site_code: site.site_code,
       party_id: site.party_id,
       zone_id: site.zone_id,
+      zone_name: site.zone.name,
       address: render_one(site.address, AddressContactView, "address.json"),
       contact: render_one(site.contact, AddressContactView, "contact.json")
     }

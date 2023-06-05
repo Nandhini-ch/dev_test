@@ -105,6 +105,7 @@ defmodule Inconn2Service.AssetConfig do
    |> site_query(query_params, prefix)
    |> Repo.add_active_filter()
    |> Repo.all(prefix: prefix)
+   |> Repo.preload([:zone])
    |> Repo.sort_by_id()
   end
 
