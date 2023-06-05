@@ -2353,11 +2353,11 @@ defmodule Inconn2Service.Workorder do
     Map.put_new(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
   end
 
-  def put_approval_user(work_order, "ltlap", prefix) do
+  def put_approval_user(work_order, "ltlp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
-  def put_approval_user(work_order, "ltrap", prefix) do
+  def put_approval_user(work_order, "ltrp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
