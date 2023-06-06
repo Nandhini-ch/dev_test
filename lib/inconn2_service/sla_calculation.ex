@@ -5,16 +5,17 @@ defmodule Inconn2Service.SlaCalculation do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Assignment.Attendance
   alias Inconn2Service.Assignments.MasterRoster
+  alias Inconn2Service.Assignments.Roster
   alias Inconn2Service.ContractManagement.ManpowerConfiguration
   alias Inconn2Service.Dashboards.NumericalData
   alias Inconn2Service.AssetConfig.Equipment
   alias Inconn2Service.Ticket.WorkrequestSubcategory
+  alias Inconn2Service.Ticket.WorkrequestStatusTrack
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.ContractManagement
-
 
   def get_scope_details_from_contract(contract_id, prefix) do
     initial_map = %{site_ids: [], location_ids: [], asset_category_ids: []}
@@ -140,7 +141,7 @@ defmodule Inconn2Service.SlaCalculation do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
 
     wo_list =
-      from(wt in WorkorderTemplate, where: wt.asset_catefory_id in ^scope_map.asset_category_ids,
+      from(wt in WorkorderTemplate, where: wt.asset_category_id in ^scope_map.asset_category_ids,
       join: wo in WorkOrder, on: wo.workorder_template_id == wt.id, where: wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and ^to_date >= wo.scheduled_end_date,
       select: wo
       )
@@ -158,7 +159,6 @@ defmodule Inconn2Service.SlaCalculation do
   end
 
   # 13 Shift coverage
-
   def shift_coverage(contract_id, from_date, to_date, prefix) do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
     from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
@@ -178,7 +178,6 @@ defmodule Inconn2Service.SlaCalculation do
   end
 
   # 14 On time reporting
-
   def on_time_reporting(contract_id, from_date, to_date, prefix) do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
     from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
@@ -191,13 +190,11 @@ defmodule Inconn2Service.SlaCalculation do
 
     count_of_manpower_within_time_config_limits =
       Enum.count(total_count_of_present, fn at -> at.status == "ONTM" end)
-      |> Repo.all(prefix: prefix)
 
-    calculate_percentage(Enum.count(count_of_manpower_within_time_config_limits), Enum.count(total_count_of_present))
+    calculate_percentage(count_of_manpower_within_time_config_limits, Enum.count(total_count_of_present))
   end
 
   # 15 Shift continuation
-
   def shift_continuation(contract_id, from_date, to_date, prefix) do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
     from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
@@ -213,7 +210,6 @@ defmodule Inconn2Service.SlaCalculation do
   end
 
   # 16 Deployment status
-
   def deployment_status(contract_id, from_date, to_date, prefix) do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
     from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
@@ -230,7 +226,7 @@ defmodule Inconn2Service.SlaCalculation do
       |> Repo.all(prefix: prefix)
       |> Enum.reduce(0, fn mpc, acc -> mpc.quantity + acc end)
 
-    calculate_percentage(count_of_manpower_rostered, Enum.count(total_manpower_as_per_service_contract_setup))
+    calculate_percentage(Enum.count(count_of_manpower_rostered), total_manpower_as_per_service_contract_setup)
   end
 
   # 17 Completion %
