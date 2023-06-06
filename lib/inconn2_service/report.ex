@@ -178,7 +178,7 @@ defmodule Inconn2Service.Report do
 
   def put_done_by_in_readings(reading, prefix) do
     work_order = Workorder.get_work_order!(reading.id, prefix)
-    user = Staff.get_user!(work_order.user_id, prefix)
+    user = Staff.get_user(work_order.user_id, prefix)
     Map.put(reading, :done_by, "#{user.first_name} #{user.last_name}")
   end
 
@@ -2426,7 +2426,7 @@ defmodule Inconn2Service.Report do
 
   defp csv_for_workorder_execution(data) do
     Enum.reduce(data, [], fn d, acc ->
-      head = [["WO Number: #{d.id}", "WO Status: #{d.status}", "Asset: #{d.asset_name}"]] ++ [[]]
+      head = [["WO Number: #{d.id}", "WO Status: #{match_work_order_status(d.status)}", "Asset: #{d.asset_name}"]] ++ [[]]
       task_head = [["Sl.No", "Description", "Response", "Remarks"]]
 
       body =
