@@ -4,6 +4,7 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   alias Inconn2Service.Staff
   alias Inconn2Service.Repo
   alias Inconn2Service.AssetConfig
+  alias Inconn2Service.AssetConfig.{Location, Equipment}
 
   def add_asset_type_to_asset(asset, asset_type) do
     Map.put(asset, :asset_type, asset_type)
@@ -397,4 +398,6 @@ defmodule Inconn2Service.Util.HelpersFunctions do
     "#{user.first_name} #{user.last_name}"
   end
 
+  def get_asset_code_from_asset_struct(%Location{} = _location), do: "L"
+  def get_asset_code_from_asset_struct(%Equipment{} = _equipment), do: "E"
 end

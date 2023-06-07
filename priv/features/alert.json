@@ -1,5 +1,30 @@
 [{
         "module": "Asset",
+        "description": "Asset Status Change to breakdown",
+        "type": "al",
+        "code": "ASTCB",
+        "sms_code": "SCHBR",
+        "text_template": "<%= var1 %> status changed to breakdown at <%= var2 %>",
+        "is_sms_required": true,
+        "is_email_required": true,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 10
+
+    },
+    {
+        "module": "Asset",
+        "description": "Asset Status change to on / off",
+        "type": "nt",
+        "code": "ASTCO ",
+        "sms_code": null,
+        "text_template": "<%= var1 %> switched <%= var2 %> at <%= var3 %> ",
+        "is_sms_required": false,
+        "is_email_required": false,
+        "is_escalation_required": false,
+        "escalation_time_in_min": null
+    },
+    {
+        "module": "Asset",
         "description": "Asset status change to in transit",
         "type": "nt",
         "code": "ASTCT",
@@ -8,6 +33,42 @@
         "is_sms_required": false,
         "is_email_required": false,
         "is_escalation_required": null,
+        "escalation_time_in_min": null
+    },
+    {
+        "module": "Asset",
+        "description": "Asset parameter out of validation",
+        "type": "al",
+        "code": "ASTCB",
+        "sms_code": "POFVD",
+        "text_template": "<%= var1 %> <%= var2 %> out of range",
+        "is_sms_required": true,
+        "is_email_required": false,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 30
+    },
+    {
+        "module": "Asset",
+        "description": "Add new asset",
+        "type": "nt",
+        "code": "ADNAS",
+        "sms_code": null,
+        "text_template": "<%= var1 %> added at <%= var2 %>",
+        "is_sms_required": false,
+        "is_email_required": false,
+        "is_escalation_required": false,
+        "escalation_time_in_min": null
+    },
+    {
+        "module": "Asset",
+        "description": "Modify asset tree heirachy",
+        "type": "nt",
+        "code": "MASTH",
+        "sms_code": null,
+        "text_template": "<%= var1 %> modified.",
+        "is_sms_required": false,
+        "is_email_required": false,
+        "is_escalation_required": false,
         "escalation_time_in_min": null
     },
     {
@@ -23,6 +84,18 @@
         "escalation_time_in_min": null
     },
     {
+        "module": "Asset",
+        "description": "Remove asset",
+        "type": "al",
+        "code": "REAST",
+        "sms_code": "ASSRM",
+        "text_template": "<%= var1 %> removed from <%= var2 %>",
+        "is_sms_required": true,
+        "is_email_required": true,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 10
+    },
+    {
         "module": "Maintenance",
         "description": "WO assigned",
         "type": "nt",
@@ -35,6 +108,43 @@
         "escalation_time_in_min": null
     },
     {
+
+        "module": "Maintenance",
+        "description": "WO start due 10 mins",
+        "type": "nt",
+        "code": "WOSDM",
+        "sms_code": null,
+        "text_template": "Work order <%= var1 %>  scheduled at <%= var2 %>",
+        "is_sms_required": false,
+        "is_email_required": false,
+        "is_escalation_required": false,
+        "escalation_time_in_min": null
+    },
+    {
+        "module": "Maintenance",
+        "description": "WO start over due by 10 mins",
+        "type": "al",
+        "code": "WOSOD",
+        "sms_code": "WOSTD",
+        "text_template": "Work order <%= var1 %> was scheduled at <%= var1 %>",
+        "is_sms_required": true,
+        "is_email_required": false,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 15
+    },
+    {
+        "module": "Maintenance",
+        "description": "WO not completed by scheduled time",
+        "type": "al",
+        "code": "WONCS",
+        "sms_code": "WNCST",
+        "text_template": "Work order <%= var1 %> is overdue for completion",
+        "is_sms_required": true,
+        "is_email_required": false,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 15
+    },
+    {
         "module": "Maintenance",
         "description": "Work permit approval required",
         "type": "nt",
@@ -42,6 +152,18 @@
         "sms_code": "WAPRR",
         "text_template": "<%= var1 %> by <%= var2 %> requires approval",
         "is_sms_required": true,
+        "is_email_required": false,
+        "is_escalation_required": false,
+        "escalation_time_in_min": null
+    },
+    {
+        "module": "Maintenance",
+        "description": "WO schedule modified",
+        "type": "nt",
+        "code": "WOSMO",
+        "sms_code": null,
+        "text_template": "Work order schedule for <%= var1 %> modified by <%= var2 %> at <%= var3 %>",
+        "is_sms_required": false,
         "is_email_required": false,
         "is_escalation_required": false,
         "escalation_time_in_min": null
@@ -181,6 +303,18 @@
     },
     {
         "module": "Ticketing",
+        "description": "Ticket TAT expired",
+        "type": "al",
+        "code": "TCKTE",
+        "sms_code": "TKTEX",
+        "text_template": "  Ticket <%= var1 %> <%= var2 %> expired at <%= var3 %>",
+        "is_sms_required": true,
+        "is_email_required": false,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 15
+    },
+    {
+        "module": "Ticketing",
         "description": "Ticket cancelled",
         "type": "al",
         "code": "TCKCN",
@@ -188,6 +322,18 @@
         "text_template": "<%= var1 %> <%= var2 %> cancelled by <%= var3 %> at <%= var4 %> ",
         "is_sms_required": true,
         "is_email_required": true,
+        "is_escalation_required": true,
+        "escalation_time_in_min": 10
+    },
+    {
+        "module": "Ticketing",
+        "description": "Ticket re-asigned, re-scheduled",
+        "type": "al",
+        "code": "TCKRR",
+        "sms_code": "TCKRS",
+        "text_template": "Ticket <%= var1 %> recheduled / reassigned by <%= var2 %>",
+        "is_sms_required": true,
+        "is_email_required": false,
         "is_escalation_required": true,
         "escalation_time_in_min": 10
     },

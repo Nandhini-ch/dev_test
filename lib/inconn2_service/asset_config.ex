@@ -10,6 +10,7 @@ defmodule Inconn2Service.AssetConfig do
   alias Ecto.Multi
   alias Inconn2Service.Repo
 
+  alias Inconn2Service.Staff.User
   alias Inconn2Service.Staff
   alias Inconn2Service.AssetConfig.{AssetStatusTrack, Equipment, Location, Site, Zone}
   alias Inconn2Service.AssetConfig.AssetCategory
@@ -752,7 +753,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, location, location.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, location, location.site_id, prefix) end)
         result
       _ ->
         result
@@ -1001,7 +1002,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_location} = update_location(location, %{"active" => false}, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_location, nil, updated_location.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_remove_asset(updated_location, nil, updated_location.site_id, prefix) end)
         {:deleted, "Location was deleted"}
     end
   end
@@ -1303,7 +1304,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(nil, equipment, equipment.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, equipment, equipment.site_id, prefix) end)
         result
       _ ->
         result
@@ -1507,7 +1508,7 @@ defmodule Inconn2Service.AssetConfig do
         }
       true ->
         {:ok, updated_equipment} = update_equipment(equipment, %{"active" => false}, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_asset(updated_equipment, nil, updated_equipment.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_remove_asset(updated_equipment, nil, updated_equipment.site_id, prefix) end)
         {:deleted, "Equipment was deleted"}
     end
   end
@@ -1536,19 +1537,54 @@ defmodule Inconn2Service.AssetConfig do
     end
   end
 
+  #list assets by parent_id for both location and equipment
+  def get_assets_by_parent_id(parent_id, prefix) do
+    asset_category = get_asset_category!(parent_id, prefix)
+    case asset_category.asset_type do
+      "L" ->
+         Location |> where([parent_id: ^parent_id]) |> Repo.all(prefix: prefix)
+
+      "E" ->
+        Equipment |> where([parent_id: ^parent_id]) |> Repo.all(prefix: prefix)
+    end
+  end
+
   def change_equipment(%Equipment{} = equipment, attrs \\ %{}) do
     Equipment.changeset(equipment, attrs)
   end
 
-  def push_alert_notification_for_asset(_existing_asset, nil, _site_id, _prefix) do
-    # date_time = get_site_date_time_now(site_id, prefix)
-    # generate_alert_notification("REAST", site_id, [existing_asset.name, date_time], [existing_asset.name, date_time], specific_user_maps, prefix)
-    {:ok, nil}
+  #remove asset
+  def push_alert_notification_for_remove_asset(existing_asset, updated_asset, site_id, prefix) do
+    escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    exist_asset_name =
+    if existing_asset.parent_id == nil do
+      "root"
+    else
+      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    end
+
+    generate_alert_notification("REAST", site_id, ["#{existing_asset.name} removed from #{exist_asset_name}"], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
   end
 
-  def push_alert_notification_for_asset(nil, updated_asset, _site_id, _prefix) do
-    # description = ~s(New Asset, #{updated_asset.name} has been added)
-    # create_asset_alert_notification("ASNW", description, updated_asset, asset_type, updated_asset.site_id, true, prefix)
+  #add new asset
+  def push_alert_notification_for_new_asset(existing_asset, updated_asset, site_id, prefix) do
+    user_maps =
+          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          |> list_users_from_scope(prefix)
+          |> Staff.form_user_maps_by_user_ids(prefix)
+
+    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    exist_asset_name =
+    if existing_asset.parent_id == nil do
+      "root"
+    else
+      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+    end
+
+    generate_alert_notification("ADNAS", site_id, [updated_asset.name, exist_asset_name],[], user_maps, [], prefix)
     {:ok, updated_asset}
   end
 
@@ -1562,20 +1598,52 @@ defmodule Inconn2Service.AssetConfig do
       #asset status to breakdown
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
         escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-        generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], [], escalation_user_maps, prefix)
+
+        user_maps =
+          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          |> list_users_from_scope(prefix)
+          |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], user_maps, escalation_user_maps, prefix)
+
+      #remove asset
+      escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+      asset_type = get_asset_code_from_asset_struct(updated_asset)
+      # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+      exist_asset_name =
+      if existing_asset.parent_id == nil do
+        "root"
+      else
+        get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+      end
+
+      generate_alert_notification("REAST", site_id, [existing_asset.name, exist_asset_name], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
 
       #asset status to on/off
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
-        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], [], [], [], prefix)
+
+        user_maps =
+        %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+        |> list_users_from_scope(prefix)
+        |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], user_maps, [], [], prefix)
 
       #asset status to transit
       existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
         user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
         generate_alert_notification("ASTCT", site_id, [updated_asset.name, date_time], [], user_maps, [], prefix)
 
-      # existing_asset.parent_id != updated_asset.parent_id ->
+      #modify asset tree hierarchy
+      existing_asset.parent_id != updated_asset.parent_id ->
         # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
         # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
+        user_maps =
+        %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+        |> list_users_from_scope(prefix)
+        |> Staff.form_user_maps_by_user_ids(prefix)
+
+        generate_alert_notification("MASTH", site_id, ["asset tree hierarchy of #{existing_asset.name} are modified"], [], user_maps, [], prefix)
 
       true ->
         {:ok, updated_asset}
@@ -2126,6 +2194,34 @@ defmodule Inconn2Service.AssetConfig do
       from(from q in common_query, limit: ^per_page, offset: ^offset),
       from(q in common_query, select: count(q.id))
     }
+  end
+
+  def list_users_from_scope(query_params, prefix) do
+    query = from(s in Scope, where: s.active == true)
+
+    scope_query =
+      Enum.reduce(query_params, query, fn
+        {"site_id", site_id}, acc ->
+          from q in acc,
+          where: ^site_id == q.site_id
+        {"location_id", location_id}, acc ->
+          from q in acc,
+          where: ^location_id in q.location_ids
+        {"asset_category_id", asset_category_id}, acc ->
+          from q in acc,
+          where: ^asset_category_id in q.asset_category_ids
+        _, query ->
+          query
+      end)
+
+      party_ids =
+      from(s in scope_query,
+      join: c in Contract, on: s.contract_id == c.id, where: c.active == true,
+      join: p in Party, on: c.party_id == p.id, where: p.active == true,
+      select: p.id)
+      |> Repo.all(prefix: prefix)
+
+    from(u in User, where: u.party_id in ^party_ids and u.active == true, select: u.id) |> Repo.all(prefix: prefix)
   end
 
   defp validate_custom_field_type(cs, prefix, entity) do
