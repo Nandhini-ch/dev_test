@@ -1606,7 +1606,7 @@ defmodule Inconn2Service.AssetConfig do
       get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
     end
 
-    generate_alert_notification("ADNAS", site_id, ["#{updated_asset.name} added at #{exist_asset_name}"],[], user_maps, [], prefix)
+    generate_alert_notification("ADNAS", site_id, [updated_asset.name, exist_asset_name],[], user_maps, [], prefix)
     {:ok, updated_asset}
 
     #remove asset
@@ -1620,7 +1620,7 @@ defmodule Inconn2Service.AssetConfig do
       get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
     end
 
-    generate_alert_notification("REAST", site_id, ["#{existing_asset.name} removed from #{exist_asset_name}"], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
+    generate_alert_notification("REAST", site_id, [existing_asset.name, exist_asset_name], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
 
     #asset edit
     generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
