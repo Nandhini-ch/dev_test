@@ -50,6 +50,8 @@ defmodule Inconn2Service.Reapportion do
     Map.put(request, :asset_name, work_order.asset_name)
     |> Map.put(:type, work_order.type)
     |> Map.put(:frequency, work_order.frequency)
+    |> Map.put(:scheduled_date, work_order.scheduled_date)
+    |> Map.put(:scheduled_time, work_order.scheduled_time)
   end
 
   defp get_requester_name(request, prefix) do
