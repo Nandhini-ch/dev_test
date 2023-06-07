@@ -907,7 +907,7 @@ defmodule Inconn2Service.Workorder do
           asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id) and q.scheduled_date in ^roster_dates,
+            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id) and wo.scheduled_date in ^roster_dates,
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
           |> filter_work_orders_based_on_rosters(rosters)
