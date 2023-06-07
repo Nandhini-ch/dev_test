@@ -2239,7 +2239,7 @@ defmodule Inconn2Service.AssetConfig do
       select: p.id)
       |> Repo.all(prefix: prefix)
 
-    from(u in User, where: u.party_id in ^party_ids and u.active == true, select: u.id) |> Repo.all()
+    from(u in User, where: u.party_id in ^party_ids and u.active == true, select: u.id) |> Repo.all(prefix: prefix)
   end
 
   defp validate_custom_field_type(cs, prefix, entity) do
