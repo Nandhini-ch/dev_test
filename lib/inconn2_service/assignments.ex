@@ -39,6 +39,18 @@ defmodule Inconn2Service.Assignments do
     |> group_rosters_by_date()
   end
 
+  def list_rosters_for_work_orders(employee_id, prefix) do
+    from(mr in MasterRoster, where: mr.active,
+      join: r in Roster, on: r.master_roster_id == mr.id, where: r.employee_id == ^employee_id and r.active,
+      join: sh in Shift, on: sh.id == r.shift_id, where: sh.active,
+      select: %{
+        date: r.date,
+        shift_start: sh.start_time,
+        shift_end: sh.end_time
+      })
+    |> Repo.all(prefix: prefix)
+  end
+
   defp group_rosters_by_date(rosters) do
     rosters
     |> Enum.group_by(&(&1.date))
