@@ -39,7 +39,7 @@
         "module": "Asset",
         "description": "Asset parameter out of validation",
         "type": "al",
-        "code": "ASTCB",
+        "code": "APOVL",
         "sms_code": "POFVD",
         "text_template": "<%= var1 %> <%= var2 %> out of range",
         "is_sms_required": true,
