@@ -5,6 +5,7 @@ defmodule Inconn2Service.Workorder do
   import Inconn2Service.Prompt
   alias Ecto.Multi
   alias Inconn2Service.Repo
+  alias Inconn2Service.Assignments
 
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
@@ -885,6 +886,13 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
+    rosters =
+      case employee do
+        nil -> []
+        _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
+      end
+
+    roster_dates = Enum.map(rosters, fn roster -> roster.date  end)
 
     query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
@@ -899,9 +907,10 @@ defmodule Inconn2Service.Workorder do
           asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
+            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id) and wo.scheduled_date in ^roster_dates,
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
+          |> filter_work_orders_based_on_rosters(rosters)
       end
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
@@ -2242,6 +2251,13 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
+    rosters =
+      case employee do
+        nil -> []
+        _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
+      end
+
+    roster_dates = Enum.map(rosters, fn roster -> roster.date  end)
 
     common_query = flutter_query()
 
@@ -2262,11 +2278,12 @@ defmodule Inconn2Service.Workorder do
             asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"] and q.scheduled_date in ^roster_dates, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
             Repo.all(asset_category_query, prefix: prefix)
+            |> filter_work_orders_based_on_rosters(rosters)
         end
 
     work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
@@ -2292,6 +2309,12 @@ defmodule Inconn2Service.Workorder do
             {asset, asset.equipment_code}
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
+    end)
+  end
+
+  defp filter_work_orders_based_on_rosters(work_orders, rosters) do
+    Enum.reduce(rosters, [], fn roster, acc ->
+      Enum.filter(work_orders, fn wo -> wo.scheduled_date == roster.date and wo.scheduled_time >= roster.shift_start and wo.scheduled_time <= roster.shift_end end) ++ acc
     end)
   end
 
