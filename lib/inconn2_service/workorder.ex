@@ -1421,23 +1421,33 @@ defmodule Inconn2Service.Workorder do
 
   defp create_workorder_in_alert_notification_generator(work_order, prefix) do
     zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
-    {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
-    utc = DateTime.add(utc, 600, :second)
-    attrs = %{
+    {:ok, start_utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
+
+    {:ok, end_utc} = Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
+
+    previous_utc = DateTime.add(utc, -600, :second)
+    after_utc = DateTime.add(utc, 600, :second)
+
+
+    [%{
       "code" => "WOOD",
       "prefix" => prefix,
       "reference_id" => work_order.id,
       "zone" => zone,
-      "utc_date_time" => utc
+      "utc_date_time" => previous_utc
     }
+
+  ]
     Common.create_alert_notification_generator(attrs)
   end
 
   defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
     cond do
       nil in [work_order.start_date, work_order.start_time] && nil not in [updated_work_order.start_date, updated_work_order.start_time] ->
-        Common.get_generator_by_reference_id_and_code(work_order.id, "WOOD")
+        Common.get_generator_by_reference_id_and_code(work_order.id, "")
         |> Common.delete_alert_notification_generator()
+
+      
 
       true ->
         {:ok, updated_work_order}
