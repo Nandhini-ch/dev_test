@@ -1,4 +1,108 @@
 [{
+        "template_name": "WO assigned",
+        "message": "Dear <%= var1 %>, Work order <%= var2 %> assigned at <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635184978593",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WAPRR",
+        "template_name": "Work permit approval required",
+        "message": "Dear <%= var1 %>, <%= var2 %> by <%= var3 %> requires approval Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636310916114",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOPAP",
+        "template_name": "Work permit approved",
+        "message": "Dear <%= var1 %>, <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636725844965",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "LAPPR",
+        "template_name": "LOTO approval required",
+        "message": "Dear <%= var1 %>,  <%= var2 %> by <%= var3 %> requires approval Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636732975809",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "LOCAP",
+        "template_name": "LOTO Checked and approved",
+        "message": "Dear <%= var1 %>, <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636744173625",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOPRE",
+        "template_name": "WO approval required",
+        "message": "Dear <%= var1 %>, <%= var2 %> by <%= var3 %> requires approval Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636750296829",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOAPD",
+        "template_name": "WO approved",
+        "message": "Dear <%= var1 %>,  <%= var2 %> approved by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636754940568",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOCAR",
+        "template_name": "WO completion acknowledgement required",
+        "message": "Dear <%= var1 %>,  <%= var2 %> completion by <%= var3 %> requires acknowledgement Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636762778538",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOACK",
+        "template_name": "WO completion acknowledged",
+        "message": "Dear <%= var1 %>,  <%= var2 %> completion acknowledged by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636772427276",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "NTCGN",
+        "template_name": "New ticket generated",
+        "message": "Dear <%= var1 %>, <%= var2 %> Ticket <%= var3 %> created by <%= var4 %> at <%= var5 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635714387603",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "NTCKA",
+        "template_name": "New ticket assigned",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636821528600",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "TCKCL",
+        "template_name": "Ticket cancelled",
+        "message": "Dear <%= var1 %>, <%= var2 %> Ticket <%= var3 %> cancelled by <%= var4 %> at <%= var5 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636854559034",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "TCKAP",
+        "template_name": "Ticket approval status change",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636826333670",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "TCKCM",
+        "template_name": "Ticket completed",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636843577406",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "FGOTP",
+        "template_name": "Forget Password OTP new",
+        "message": "Dear <%= var1 %>, (<%= var2 %>) is the OTP generated for the Inconn password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707168231718776291",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
         "code": "SCHBR",
         "template_name": "Asset Status Change to breakdown",
         "message": "Dear  <%= var1 %>, <%= var2 %> status changed to breakdown at <%= var3 %>. Regards, Team Inconn - Wynwy",
