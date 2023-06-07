@@ -1578,10 +1578,10 @@ defmodule Inconn2Service.AssetConfig do
     asset_type = get_asset_code_from_asset_struct(updated_asset)
     # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
     exist_asset_name =
-    if existing_asset.parent_id == nil do
+    if updated_asset.parent_id == nil do
       "root"
     else
-      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+      get_asset_by_type(updated_asset.parent_id, asset_type, prefix).name
     end
 
     generate_alert_notification("ADNAS", site_id, [updated_asset.name, exist_asset_name],[], user_maps, [], prefix)
