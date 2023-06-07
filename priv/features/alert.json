@@ -25,18 +25,6 @@
     },
     {
         "module": "Asset",
-        "description": "Asset status change to in transit",
-        "type": "nt",
-        "code": "ASTCT",
-        "sms_code": null,
-        "text_template": "<%= var1 %> status changed to transit at <%= var2 %>",
-        "is_sms_required": false,
-        "is_email_required": false,
-        "is_escalation_required": null,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Asset",
         "description": "Asset parameter out of validation",
         "type": "al",
         "code": "ASTCB",
@@ -73,18 +61,6 @@
     },
     {
         "module": "Asset",
-        "description": "Edit asset details",
-        "type": "nt",
-        "code": "EDASD",
-        "sms_code": null,
-        "text_template": "<%= var1 %> details edited",
-        "is_sms_required": false,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Asset",
         "description": "Remove asset",
         "type": "al",
         "code": "REAST",
@@ -94,18 +70,6 @@
         "is_email_required": true,
         "is_escalation_required": true,
         "escalation_time_in_min": 10
-    },
-    {
-        "module": "Maintenance",
-        "description": "WO assigned",
-        "type": "nt",
-        "code": "WOASS",
-        "sms_code": null,
-        "text_template": "Work order <%= var1 %> asigned at <%= var2 %>",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
     },
     {
 
@@ -146,18 +110,6 @@
     },
     {
         "module": "Maintenance",
-        "description": "Work permit approval required",
-        "type": "nt",
-        "code": "WPAPR",
-        "sms_code": "WAPRR",
-        "text_template": "<%= var1 %> by <%= var2 %> requires approval",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
         "description": "WO schedule modified",
         "type": "nt",
         "code": "WOSMO",
@@ -165,139 +117,6 @@
         "text_template": "Work order schedule for <%= var1 %> modified by <%= var2 %> at <%= var3 %>",
         "is_sms_required": false,
         "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "Work permit approved",
-        "type": "nt",
-        "code": "WPAPP",
-        "sms_code": "WOPAP",
-        "text_template": "<%= var1 %> approved by <%= var2 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "LOTO approval required",
-        "type": "nt",
-        "code": "LAPRE",
-        "sms_code": "LAPPR",
-        "text_template": "<%= var1 %> by <%= var2 %> requires approval",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-
-    },
-    {
-        "module": "Maintenance",
-        "description": "LOTO Checked and approved",
-        "type": "nt",
-        "code": "LCHAP",
-        "sms_code": "LOCAP",
-        "text_template": "<%= var1 %> approved by <%= var2 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "WO approval required",
-        "type": "nt",
-        "code": "WOAPR",
-        "sms_code": "WOPRE",
-        "text_template": "<%= var1 %> by <%= var2 %> requires approval",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "WO approved",
-        "type": "nt",
-        "code": "WOAPP",
-        "sms_code": "WOAPD",
-        "text_template": "<%= var1 %> approved by <%= var2 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "WO completion acknowledgement required",
-        "type": "nt",
-        "code": "WOCAR",
-        "sms_code": "WACKR",
-        "text_template": "<%= var1 %> completion by <%= var2 %> requires acknowledgement",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Maintenance",
-        "description": "WO completion acknowledged",
-        "type": "nt",
-        "code": "WOCAC",
-        "sms_code": "WOACK",
-        "text_template": "<%= var1 %> completion acknowledged by <%= var2 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Ticketing",
-        "description": "New ticket generated",
-        "type": "nt",
-        "code": "NTGEN",
-        "sms_code": "NTCGN",
-        "text_template": "<%= var1 %> <%= var2 %> created by <%= var3%> at <%= var4%>",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Ticketing",
-        "description": "New ticket assigned",
-        "type": "nt",
-        "code": "NTASS",
-        "sms_code": "NTCKA",
-        "text_template": "Ticket <%= var1 %> status changed to <%= var2 %> by <%= var3 %>",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Ticketing",
-        "description": "Ticket approval status change",
-        "type": "nt",
-        "code": "TAPSC",
-        "sms_code": "TCKAP",
-        "text_template": "Ticket <%= var1 %> status changed to <%= var2 %> by <%= var3 %>",
-        "is_sms_required": true,
-        "is_email_required": false,
-        "is_escalation_required": false,
-        "escalation_time_in_min": null
-    },
-    {
-        "module": "Ticketing",
-        "description": "Ticket completed",
-        "type": "nt",
-        "code": "TCKCP",
-        "sms_code": "TCKCM",
-        "text_template": "Ticket <%= var1 %> status changed to <%= var2 %> by <%= var3 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
         "is_escalation_required": false,
         "escalation_time_in_min": null
     },
@@ -315,18 +134,6 @@
     },
     {
         "module": "Ticketing",
-        "description": "Ticket cancelled",
-        "type": "al",
-        "code": "TCKCN",
-        "sms_code": "TCKCL",
-        "text_template": "<%= var1 %> <%= var2 %> cancelled by <%= var3 %> at <%= var4 %> ",
-        "is_sms_required": true,
-        "is_email_required": true,
-        "is_escalation_required": true,
-        "escalation_time_in_min": 10
-    },
-    {
-        "module": "Ticketing",
         "description": "Ticket re-asigned, re-scheduled",
         "type": "al",
         "code": "TCKRR",
@@ -334,18 +141,6 @@
         "text_template": "Ticket <%= var1 %> recheduled / reassigned by <%= var2 %>",
         "is_sms_required": true,
         "is_email_required": false,
-        "is_escalation_required": true,
-        "escalation_time_in_min": 10
-    },
-    {
-        "module": "Ticketing",
-        "description": "Ticket re-opened",
-        "type": "al",
-        "code": "TCKRO",
-        "sms_code": "TCKRP",
-        "text_template": "  Ticket <%= var1 %> reopened by <%= var2 %> at <%= var3 %>",
-        "is_sms_required": true,
-        "is_email_required": true,
         "is_escalation_required": true,
         "escalation_time_in_min": 10
     }
