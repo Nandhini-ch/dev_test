@@ -29,7 +29,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
   end
 
   def render("flutter.json", %{work_order: work_order}) do
-    workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_with_task.json")
+    workorder_tasks = if is_nil(work_order.workorder_tasks), do: nil, else: render_many(work_order.workorder_tasks, WorkorderTaskView, "workorder_task_for_flutter.json")
     %{id: work_order.id ,
       site_id: work_order.site_id,
       site_name: work_order.site_name,

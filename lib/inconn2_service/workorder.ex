@@ -1481,26 +1481,25 @@ defmodule Inconn2Service.Workorder do
   def push_alert_notification_for_work_order(site_id, nil, updated_work_order, _current_user, prefix) do
     workorder_template = get_workorder_template!(updated_work_order.workorder_template_id, prefix)
     date_time = get_site_date_now(site_id, prefix)
-    cond do
-      #workorder assigned
-      !is_nil(updated_work_order.user_id) ->
-        user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
-        IO.inspect("Workorder assigned")
-        IO.inspect(user_maps)
-        generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
 
-      # workorder approval required
-      updated_work_order.status == "woap" ->
-        name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
+    #workorder assigned
+    if !is_nil(updated_work_order.user_id) do
+      user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.user_id], prefix)
+      IO.inspect("Workorder assigned")
+      IO.inspect(user_maps)
+      generate_alert_notification("WOASS", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
+    end
+
+    # workorder approval required
+    if updated_work_order.status == "woap" do
+      name_and_ref = "#{workorder_template.name} & #{updated_work_order.id}"
         requester = get_display_name_for_user_id(updated_work_order.user_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_order.workorder_approval_user_id], prefix)
         IO.inspect("workorder approval required")
         IO.inspect(user_maps)
         generate_alert_notification("WOAPR", site_id, [name_and_ref, requester], [name_and_ref, requester], user_maps, [], prefix)
-
-      true ->
-        {:ok, updated_work_order}
     end
+
     {:ok, updated_work_order}
   end
 
@@ -2274,7 +2273,10 @@ defmodule Inconn2Service.Workorder do
 
 
     Stream.map(work_orders, fn wo ->
-      wots = list_workorder_tasks(prefix, wo.id) |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+      wots =
+        list_workorder_tasks(prefix, wo.id)
+        |> Enum.map(fn wot -> Map.put_new(wot, :task, WorkOrderConfig.get_task(wot.task_id, prefix)) end)
+        |> Enum.map(fn wot -> add_previous_cumlative_value(wot, wo, prefix) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
     |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
@@ -2291,6 +2293,15 @@ defmodule Inconn2Service.Workorder do
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
     end)
+  end
+
+  defp add_previous_cumlative_value(workorder_task, work_order, prefix) do
+    if workorder_task.task.task_type == "MT" and workorder_task.task.config["type"] == "C" do
+      previous_value = Measurements.get_last_cumulative_value(work_order.asset_id, work_order.asset_type, workorder_task.task.config["UOM"], workorder_task.task.config["category"], prefix)
+      Map.put(workorder_task, :previous_value, previous_value)
+    else
+      Map.put(workorder_task, :previous_value, nil)
+    end
   end
 
   defp get_skills_with_subtree_asset_category(skills, prefix) do
@@ -2312,6 +2323,7 @@ defmodule Inconn2Service.Workorder do
         site_id: s.id,
         site_name: s.name,
         asset_id: wo.asset_id,
+        asset_type: wo.asset_type,
         work_request: wr,
         type: wo.type,
         scheduled_date: wo.scheduled_date,
@@ -2349,11 +2361,11 @@ defmodule Inconn2Service.Workorder do
     Map.put_new(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
   end
 
-  def put_approval_user(work_order, "ltlap", prefix) do
+  def put_approval_user(work_order, "ltlp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
-  def put_approval_user(work_order, "ltrap", prefix) do
+  def put_approval_user(work_order, "ltrp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 

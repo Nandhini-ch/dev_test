@@ -95,7 +95,8 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_reports_to?(%Employee{} = employee, prefix), do: (reports_to_query(Repo.add_active_filter(Employee), %{"reports_to" => employee.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_alert_configuration?(%User{} = user, prefix), do: (alert_notification_configuration_query(Repo.add_active_filter(AlertNotificationConfig), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  # def has_alert_configuration?(%User{} = user, prefix), do: (alert_notification_configuration_query(Repo.add_active_filter(AlertNotificationConfig), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_alert_configuration?(%User{} = _user, _prefix), do: false
 
   def has_category_helpdesk?(%User{} = user, prefix), do: (category_helpdesk_query(Repo.add_active_filter(CategoryHelpdesk), %{"user_id" => user.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 

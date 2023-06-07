@@ -530,6 +530,18 @@ defmodule Inconn2Service.Report do
     hour_and_minute(hour) <> ":" <> hour_and_minute(minute)
   end
 
+  def convert_time_taken_to_close(nil) do
+    nil
+  end
+
+  def convert_time_taken_to_close(manhours_consumed) do
+    time = to_string(manhours_consumed/60) |> String.split(".")
+    hour = List.first(time)
+    float_string = "0." <> List.last(time)
+    minute = String.to_float(float_string) *60 |> Float.ceil() |> Kernel.trunc()  |> Integer.to_string()
+    hour_and_minute(hour) <> ":" <> hour_and_minute(minute)
+  end
+
   defp hour_and_minute(t) do
     case String.length(t) do
       1 -> "0" <> t
@@ -590,8 +602,8 @@ defmodule Inconn2Service.Report do
       store_id = List.first(v).store_id
       %{
         store_location: InventoryManagement.get_store!(store_id, prefix).name,
-        count_of_receive: Enum.filter(v, fn a -> a.status in ["IN"] end) |> Enum.count(),
-        count_of_issue: Enum.filter(v, fn a -> a.status in ["IS"] end) |> Enum.count(),
+        count_of_receive: Enum.filter(v, fn a -> a.transaction_type in ["IN"] end) |> Enum.count(),
+        count_of_issue: Enum.filter(v, fn a -> a.transaction_type in ["IS"] end) |> Enum.count(),
         msl_breach_count: msl_breach_count_for_store(store_id, prefix)
       }
     end)
@@ -834,7 +846,7 @@ defmodule Inconn2Service.Report do
           resolution_tat: resolution_tat_met,
           backend_status: wr.status,
           status: match_work_request_status(wr.status),
-          time_taken_to_close: convert_man_hours_consumed(time_taken_to_close),
+          time_taken_to_close: convert_time_taken_to_close(time_taken_to_close),
           date: "#{wr.raised_date_time.day}-#{wr.raised_date_time.month}-#{wr.raised_date_time.year}",
           time: "#{wr.raised_date_time.hour}:#{wr.raised_date_time.minute}"
         }

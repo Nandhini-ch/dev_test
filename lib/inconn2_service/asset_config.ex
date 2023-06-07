@@ -1590,6 +1590,10 @@ defmodule Inconn2Service.AssetConfig do
 
   def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
     date_time = get_site_date_time_now(site_id, prefix)
+
+    #asset edit
+    generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
+
     cond do
       #asset status to breakdown
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
@@ -1627,10 +1631,6 @@ defmodule Inconn2Service.AssetConfig do
         |> Staff.form_user_maps_by_user_ids(prefix)
 
         generate_alert_notification("MASTH", site_id, ["asset tree hierarchy of #{existing_asset.name} are modified"], [], user_maps, [], prefix)
-
-      #asset details edited
-      existing_asset != updated_asset ->
-        generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
 
       true ->
         {:ok, updated_asset}
