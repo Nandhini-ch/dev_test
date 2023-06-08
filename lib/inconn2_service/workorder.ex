@@ -585,7 +585,7 @@ defmodule Inconn2Service.Workorder do
     |> AssetConfig.list_users_from_scope(prefix)
     |> Staff.form_user_maps_by_user_ids(prefix)
 
-    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], user_maps, [], prefix)
+    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [asset.name, user_display_name], user_maps, [], prefix)
   end
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
@@ -1438,21 +1438,48 @@ defmodule Inconn2Service.Workorder do
   defp create_workorder_in_alert_notification_generator(work_order, prefix) do
     zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
     {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
-    utc = DateTime.add(utc, 600, :second)
-    attrs = %{
-      "code" => "WOOD",
-      "prefix" => prefix,
-      "reference_id" => work_order.id,
-      "zone" => zone,
-      "utc_date_time" => utc
-    }
-    Common.create_alert_notification_generator(attrs)
+    zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
+    {:ok, end_utc} = Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
+
+    previous_utc = DateTime.add(utc, -600, :second)
+    after_utc = DateTime.add(utc, 600, :second)
+
+      [%{
+          "code" => "WOSDM",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => previous_utc
+        },
+        %{
+          "code" => "WOSOD",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => after_utc
+        },
+        %{
+          "code" => "WONCS",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => end_utc
+
+        }
+      ]
+      |> Enum.map(fn attrs ->
+        Common.create_alert_notification_generator(attrs)
+      end)
   end
 
   defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
     cond do
       nil in [work_order.start_date, work_order.start_time] && nil not in [updated_work_order.start_date, updated_work_order.start_time] ->
-        Common.get_generator_by_reference_id_and_code(work_order.id, "WOOD")
+        Common.get_generator_by_reference_id_and_code(work_order.id, "WOSOD")
+        |> Common.delete_alert_notification_generator()
+
+      nil in [work_order.completed_date, work_order.completed_time] && nil not in [updated_work_order.completed_date, updated_work_order.completed_time] ->
+        Common.get_generator_by_reference_id_and_code(work_order.id, "WONCS")
         |> Common.delete_alert_notification_generator()
 
       true ->

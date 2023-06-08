@@ -150,5 +150,19 @@
         "message": "Dear <%= var1 %>, Ticket <%= var2 %> <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636871993103",
         "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WSHMD",
+        "template_name": "WO schedule modified",
+        "message": "Dear user, Work order schedule for the <%= var1 %> has been modified by the <%= var2 %>.Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707168572539943809",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "STOFC",
+        "template_name": "Asset Status change to on / off ",
+        "message": "Dear user, Asset status for the <%= var1 %> device has been switched from <%= var2 %>.Regards, Team Inconn - Wynwy ",
+        "dlt_template_id": "1707168551701406216",
+        "telemarketer_id": "1701166322207419896"
     }
 ]
