@@ -238,6 +238,7 @@ defmodule Inconn2Service.Prompt do
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
+    IO.inspect(code, label: "code")
     an_reserve = Common.get_alert_by_code(code) |> IO.inspect(label: "reserve")
     an_config =
       get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
