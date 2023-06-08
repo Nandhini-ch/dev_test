@@ -771,7 +771,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, location, location.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(location, location.site_id, prefix) end)
         result
       _ ->
         result
@@ -1322,7 +1322,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, equipment, equipment.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(equipment, equipment.site_id, prefix) end)
         result
       _ ->
         result
@@ -1587,7 +1587,7 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   #add new asset
-  def push_alert_notification_for_new_asset(existing_asset, updated_asset, site_id, prefix) do
+  def push_alert_notification_for_new_asset(asset, site_id, prefix) do
     user_maps =
           %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
           |> list_users_from_scope(prefix)
