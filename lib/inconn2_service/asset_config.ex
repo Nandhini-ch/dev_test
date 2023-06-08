@@ -1627,7 +1627,7 @@ defmodule Inconn2Service.AssetConfig do
         |> list_users_from_scope(prefix)
         |> Staff.form_user_maps_by_user_ids(prefix)
 
-        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], user_maps, [], [], prefix)
+        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], [], user_maps, [], prefix)
 
       #asset status to transit
       existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
