@@ -56,6 +56,7 @@ defmodule Inconn2Service.Util.IndexQueries do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
       {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
+      {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
       _, query -> from q in query, where: q.active
     end)
   end

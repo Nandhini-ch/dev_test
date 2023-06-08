@@ -2,6 +2,7 @@ defmodule Inconn2Service.SlaCalculation do
   import Ecto.Query, warn: false
 
   import Inconn2Service.Util.HelpersFunctions
+  import Inconn2Service.Util.IndexQueries
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Assignment.Attendance
   alias Inconn2Service.Assignments.MasterRoster
@@ -13,6 +14,7 @@ defmodule Inconn2Service.SlaCalculation do
   alias Inconn2Service.Ticket.WorkrequestStatusTrack
   alias Inconn2Service.Ticket.WorkRequest
   alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder.WorkorderSchedule
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.ContractManagement
@@ -156,6 +158,45 @@ defmodule Inconn2Service.SlaCalculation do
       end)
 
     calculate_percentage(completed_within_due_time, Enum.count(wo_list))
+  end
+
+  # 7 Manual WO completion ratio
+  def manual_wo_completion_ratio(contract_id, from_date, to_date, prefix) do
+    scope_map = get_scope_details_from_contract(contract_id, prefix)
+
+    total_count_of_manual_work_orders =
+      from(wt in WorkorderTemplate, where: wt.asset_category_id in ^scope_map.asset_category_ids,
+      join: wo in WorkOrder, on: wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and ^to_date >= wo.scheduled_end_date and wo.type == "MAN",
+      select: wo
+      )
+      |> Repo.all(prefix: prefix)
+
+    count_of_completed_manual_work_orders =
+      Enum.count(total_count_of_manual_work_orders, fn wo -> wo.status == "cp" end)
+
+    calculate_percentage(count_of_completed_manual_work_orders, Enum.count(total_count_of_manual_work_orders))
+  end
+
+  # 8 AMC schedule adherence
+
+  def amc_schedule_adherence(contract_id, from_date, to_date, prefix) do
+    scope_map = get_scope_details_from_contract(contract_id, prefix)
+
+    total_count_of_amc_wo =
+      from(wt in WorkorderTemplate, where: wt.asset_category_id in ^scope_map.asset_category_ids and wt.amc,
+      join: wo in WorkOrder, on: wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and ^to_date >= wo.scheduled_end_date,
+      select: wo
+      )
+      |> Repo.all(prefix: prefix)
+
+    count_of_instances_executed_within_scheduled_date =
+      Enum.count(total_count_of_amc_wo, fn wo ->
+        NaiveDateTime.compare(
+          NaiveDateTime.new!(wo.completed_date, wo.completed_time),
+          NaiveDateTime.new!(wo.scheduled_end_date, wo.scheduled_end_time)
+        ) != :gt end)
+
+    calculate_percentage(count_of_instances_executed_within_scheduled_date, Enum.count(total_count_of_amc_wo))
   end
 
   # 13 Shift coverage

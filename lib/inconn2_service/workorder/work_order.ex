@@ -60,7 +60,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
                     :is_workorder_acknowledgement_required, :workorder_acknowledgement_user_id, :is_loto_required, :loto_lock_check_list_id,
                     :loto_release_check_list_id, :loto_checker_user_id, :scheduled_end_date, :scheduled_end_time, :is_deactivated, :deactivated_date_time, :pause_resume_times, :is_paused, :pre_check_required, :cost])
     |> validate_required([:asset_id, :type, :scheduled_date, :scheduled_time, :workorder_template_id])
-    |> validate_inclusion(:type, ["PRV", "BRK", "TKT", "IOT"])
+    |> validate_inclusion(:type, ["PRV", "BRK", "TKT", "IOT", "MAN"])
     |> validate_start_date_time()
     # |> validate_start_date()
     # |> validate_start_time()
