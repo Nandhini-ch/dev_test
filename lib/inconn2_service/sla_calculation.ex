@@ -9,7 +9,7 @@ defmodule Inconn2Service.SlaCalculation do
   alias Inconn2Service.Assignments.Roster
   alias Inconn2Service.ContractManagement.ManpowerConfiguration
   alias Inconn2Service.Dashboards.NumericalData
-  alias Inconn2Service.AssetConfig.Equipment
+  alias Inconn2Service.AssetConfig.{Location, Equipment}
   alias Inconn2Service.Ticket.WorkrequestSubcategory
   alias Inconn2Service.Ticket.WorkrequestStatusTrack
   alias Inconn2Service.Ticket.WorkRequest
@@ -197,6 +197,29 @@ defmodule Inconn2Service.SlaCalculation do
         ) != :gt end)
 
     calculate_percentage(count_of_instances_executed_within_scheduled_date, Enum.count(total_count_of_amc_wo))
+  end
+
+   # 9 Planner
+   def planner(contract_id, from_date, to_date, prefix) do
+    scope_map = get_scope_details_from_contract(contract_id, prefix)
+    from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
+    to_dt = NaiveDateTime.new!(to_date, ~T[23:59:59])
+
+    count_of_assets_with_maintenance_planner_created =
+      from(wt in WorkorderTemplate, where: wt.asset_category_id in ^scope_map.asset_category_ids and ^from_dt <= wt.applicable_start and ^to_dt >= wt.applicable_end,
+      join: wos in WorkorderSchedule, on: wos.workorder_template_id == wt.id,
+      select: wos
+      )
+      |> Repo.all(prefix: prefix)
+      |> Enum.map(fn x -> "#{x.asset_id} #{x.asset_type}" end)
+      |> Enum.uniq()
+
+     eqp = equipment_query(Equipment, scope_map) |> Repo.all(prefix: prefix)
+     loc = location_query(Location, scope_map) |> Repo.all(prefix: prefix)
+
+     total_count = eqp ++ loc
+
+    calculate_percentage(Enum.count(count_of_assets_with_maintenance_planner_created), Enum.count(total_count))
   end
 
   # 13 Shift coverage
