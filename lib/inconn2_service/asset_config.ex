@@ -1589,21 +1589,21 @@ defmodule Inconn2Service.AssetConfig do
   #add new asset
   def push_alert_notification_for_new_asset(asset, site_id, prefix) do
     user_maps =
-          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          %{"site_id" => asset.site_id, "asset_category_id" => asset.asset_category_id}
           |> list_users_from_scope(prefix)
           |> Staff.form_user_maps_by_user_ids(prefix)
 
-    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    asset_type = get_asset_code_from_asset_struct(asset)
     # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
     exist_asset_name =
-    if updated_asset.parent_id == nil do
+    if asset.parent_id == nil do
       "root"
     else
-      get_asset_by_type(updated_asset.parent_id, asset_type, prefix).name
+      get_asset_by_type(asset.parent_id, asset_type, prefix).name
     end
 
-    generate_alert_notification("ADNAS", site_id, [updated_asset.name, exist_asset_name],[], user_maps, [], prefix)
-    {:ok, updated_asset}
+    generate_alert_notification("ADNAS", site_id, [asset.name, exist_asset_name],[], user_maps, [], prefix)
+    {:ok, asset}
   end
 
   def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
