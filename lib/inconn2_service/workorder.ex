@@ -1048,7 +1048,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
-        create_workorder_in_alert_notification_generator(work_order, prefix)
+        Elixir.Task.start(fn -> create_workorder_in_alert_notification_generator(work_order, prefix) end)
         create_status_track(work_order, user, prefix)
         auto_create_workorder_tasks_checks(work_order, prefix)
         Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
