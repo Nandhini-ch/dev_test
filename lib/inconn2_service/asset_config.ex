@@ -127,8 +127,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.sort_by_id()
   end
 
-  def get_site!(id, prefix), do: Repo.get!(Site, id, prefix: prefix)
-  def get_site(id, prefix), do: Repo.get(Site, id, prefix: prefix)
+  def get_site!(id, prefix) do
+    Repo.get!(Site, id, prefix: prefix) |> Repo.preload([:zone])
+  end
+  def get_site(id, prefix) do
+    Repo.get(Site, id, prefix: prefix) |> Repo.preload([:zone])
+  end
 
   def create_site(attrs \\ %{}, prefix) do
     # When create site is called with a party id then we
@@ -174,6 +178,7 @@ defmodule Inconn2Service.AssetConfig do
   def update_site(%Site{} = site, attrs, prefix) do
     site
     |> Site.changeset(attrs)
+    |> Repo.preload([:zone])
     |> Repo.update(prefix: prefix)
   end
 
