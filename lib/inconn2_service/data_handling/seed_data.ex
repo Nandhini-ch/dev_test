@@ -1,4 +1,7 @@
 defmodule Inconn2Service.DataHandling.SeedData do
+  alias Inconn2Service.Repo
+  alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2Service.Workorder
   alias Inconn2Service.DataHandling.SeedData
   alias Inconn2Service.Communication
   alias Inconn2Service.{Common, Staff, Account}
@@ -68,6 +71,17 @@ defmodule Inconn2Service.DataHandling.SeedData do
     |> Enum.map(fn attrs ->
       Common.create_alert_notification_reserve(attrs)
     end)
+  end
+
+  #update scheduled end date and time in workorders
+  def update_scheduled_end_in_work_orders() do
+    update_prefixes()
+    |> Enum.map(&(update_scheduled_end_in_work_orders_in_prefix(&1)))
+  end
+
+  defp update_scheduled_end_in_work_orders_in_prefix(prefix) do
+    Repo.all(WorkOrder, prefix: prefix)
+    |> Enum.map(&(Workorder.update_scheduled_end_date_time(&1, prefix)))
   end
 
   def update_hierarchy_id_in_role_profile(prefix) do

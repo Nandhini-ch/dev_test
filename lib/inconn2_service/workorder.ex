@@ -1053,12 +1053,21 @@ defmodule Inconn2Service.Workorder do
         auto_create_workorder_tasks_checks(work_order, prefix)
         Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
         Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order.site_id, nil, work_order, user, prefix) end)
+        update_scheduled_end_date_time(work_order, prefix)
         wo = get_work_order!(work_order.id, prefix)
         {:ok, put_approval_user(wo, wo.status, prefix)}
 
       _ ->
         result
     end
+  end
+
+  def update_scheduled_end_date_time(work_order, prefix) do
+    wt = get_workorder_template!(work_order.workorder_template_id, prefix)
+    scheduled_end_dt =
+      NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+      |> NaiveDateTime.add(wt.estimated_time * 60)
+    update_work_order_without_pipelines(work_order, %{"scheduled_end_date" => NaiveDateTime.to_date(scheduled_end_dt), "scheduled_end_time" => NaiveDateTime.to_time(scheduled_end_dt)}, prefix)
   end
 
   def check_work_order_for_ticket_status(cs, prefix) do
@@ -1478,6 +1487,9 @@ defmodule Inconn2Service.Workorder do
           calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           wo = get_work_order!(updated_work_order.id, prefix)
+          if work_order.scheduled_date != updated_work_order.scheduled_date or work_order.scheduled_time != updated_work_order.scheduled_time do
+            update_scheduled_end_date_time(updated_work_order, prefix)
+          end
           Elixir.Task.start(fn -> push_alert_notification_for_work_order(updated_work_order.site_id, work_order, updated_work_order, user, prefix) end)
           {:ok, put_approval_user(wo, wo.status, prefix)}
       _ ->
