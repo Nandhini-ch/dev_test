@@ -55,6 +55,11 @@ defmodule Inconn2Service.Common do
     DateTime.shift_zone(dt, "Etc/UTC", Tzdata.TimeZoneDatabase)
   end
 
+  def shift_to_utc(date_time, zone) do
+    {:ok, dt} = DateTime.from_naive(date_time, zone)
+    DateTime.shift_zone(dt, "Etc/UTC", Tzdata.TimeZoneDatabase)
+  end
+
   def shift_to_utc(date, time, zone, before_seconds) do
     {:ok, ndt} = NaiveDateTime.new(date, time)
     {:ok, dt} = DateTime.from_naive(ndt, zone)

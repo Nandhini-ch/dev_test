@@ -1435,10 +1435,23 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  # defp create_workorder_in_alert_notification_generator(work_order, prefix) do
+  #   zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
+  #   {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
+  #   utc = DateTime.add(utc, 600, :second)
+  #   attrs = %{
+  #     "code" => "WOOD",
+  #     "prefix" => prefix,
+  #     "reference_id" => work_order.id,
+  #     "zone" => zone,
+  #     "utc_date_time" => utc
+  #   }
+  #   Common.create_alert_notification_generator(attrs)
+  # end
+
   defp create_workorder_in_alert_notification_generator(work_order, prefix) do
     zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
     {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
-    zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
     {:ok, end_utc} = Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
 
     previous_utc = DateTime.add(utc, -600, :second)

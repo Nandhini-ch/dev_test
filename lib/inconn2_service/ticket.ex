@@ -314,6 +314,7 @@ defmodule Inconn2Service.Ticket do
 
     case created_work_request do
       {:ok, work_request} ->
+        Elixir.Task.start(fn -> create_ticket_in_alert_notification_generator(work_request, prefix) end)
         create_status_track(work_request, prefix)
         Elixir.Task.start(fn -> push_alert_notification_for_new_ticket(work_request, prefix, work_request.site_id) end)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
@@ -322,6 +323,52 @@ defmodule Inconn2Service.Ticket do
         created_work_request
 
     end
+  end
+
+  defp create_ticket_in_alert_notification_generator(work_request, prefix) do
+    zone = AssetConfig.get_site!(work_request.site_id, prefix).time_zone
+    {:ok, utc} = Common.shift_to_utc(work_request.raised_date_time, zone)
+    workrequest_subcategory = get_workrequest_subcategory(work_request.workrequest_subcategory_id, prefix)
+
+    response_tat = workrequest_subcategory.response_tat * 60
+    resolution_tat = workrequest_subcategory.resolution_tat * 60
+
+    response_utc = DateTime.add(utc, response_tat, :second)
+    resolution_utc = DateTime.add(utc, resolution_tat, :second)
+
+    attrs = [
+              %{
+                "code" => "TCKTET",
+                "prefix" => prefix,
+                "reference_id" => work_request.id,
+                "zone" => zone,
+                "utc_date_time" => resolution_utc
+              },
+              %{
+                "code" => "TCKTEP",
+                "prefix" => prefix,
+                "reference_id" => work_request.id,
+                "zone" => zone,
+                "utc_date_time" => response_utc
+              },
+           ]
+    Enum.map(attrs, fn v -> Common.create_alert_notification_generator(v) end)
+  end
+
+  def delete_work_request_in_alert_notification_generator(work_request, updated_work_request) do
+    cond do
+      is_nil (work_request.raised_date_time) && not is_nil (updated_work_request.raised_date_time) ->
+        Common.get_generator_by_reference_id_and_code(work_request.id, "TCKTET")
+        |> Common.delete_alert_notification_generator()
+
+      nil in [work_request.raised_date_time] && nil not in [updated_work_request.raised_date_time] ->
+        Common.get_generator_by_reference_id_and_code(work_request.id, "TCKTEP")
+        |> Common.delete_alert_notification_generator()
+
+      true ->
+        {:ok, updated_work_request}
+    end
+     {:ok, updated_work_request}
   end
 
   def auto_fill_wr_category(cs, prefix) do
@@ -444,6 +491,7 @@ defmodule Inconn2Service.Ticket do
     case result do
       {:ok, updated_work_request} ->
         {:ok, status_track} = update_status_track(updated_work_request, prefix)
+        Elixir.Task.start(fn -> delete_work_request_in_alert_notification_generator(work_request, updated_work_request) end)
         Elixir.Task.start(fn -> push_alert_notification_for_ticket(updated_work_request.asset_id, updated_work_request.asset_type, updated_work_request.workrequest_category_id, work_request, updated_work_request, prefix, updated_work_request.site_id, user) end)
         update_status_track(updated_work_request, prefix)
         Elixir.Task.start(fn -> send_completed_email(work_request, updated_work_request, status_track, prefix) end)
