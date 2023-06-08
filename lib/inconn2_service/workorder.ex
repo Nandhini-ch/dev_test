@@ -584,7 +584,7 @@ defmodule Inconn2Service.Workorder do
     |> AssetConfig.list_users_from_scope(prefix)
     |> Staff.form_user_maps_by_user_ids(prefix)
 
-    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], user_maps, [], prefix)
+    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [asset.name, user_display_name], user_maps, [], prefix)
   end
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
