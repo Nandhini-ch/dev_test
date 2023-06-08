@@ -77,6 +77,7 @@ defmodule Inconn2Service.Communication do
     MessageTemplates.changeset(message_templates, attrs)
   end
 
+  def form_and_send_sms(nil, _mobile_no, _list_of_values, _prefix), do: nil
   def form_and_send_sms(code, mobile_no, list_of_values, prefix) do
     message_templates = get_message_template_by_code(code)
     text = form_message_text(message_templates.message, list_of_values)
