@@ -892,8 +892,6 @@ defmodule Inconn2Service.Workorder do
         _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
       end
 
-    roster_dates = Enum.map(rosters, fn roster -> roster.date  end)
-
     query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
 
@@ -907,7 +905,7 @@ defmodule Inconn2Service.Workorder do
           asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
           query =
-            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id) and wo.scheduled_date in ^roster_dates,
+            from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
           |> filter_work_orders_based_on_rosters(rosters)
@@ -1055,12 +1053,21 @@ defmodule Inconn2Service.Workorder do
         auto_create_workorder_tasks_checks(work_order, prefix)
         Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
         Elixir.Task.start(fn -> push_alert_notification_for_work_order(work_order.site_id, nil, work_order, user, prefix) end)
+        update_scheduled_end_date_time(work_order, prefix)
         wo = get_work_order!(work_order.id, prefix)
         {:ok, put_approval_user(wo, wo.status, prefix)}
 
       _ ->
         result
     end
+  end
+
+  def update_scheduled_end_date_time(work_order, prefix) do
+    wt = get_workorder_template!(work_order.workorder_template_id, prefix)
+    scheduled_end_dt =
+      NaiveDateTime.new!(work_order.scheduled_date, work_order.scheduled_time)
+      |> NaiveDateTime.add(wt.estimated_time * 60)
+    update_work_order_without_pipelines(work_order, %{"scheduled_end_date" => NaiveDateTime.to_date(scheduled_end_dt), "scheduled_end_time" => NaiveDateTime.to_time(scheduled_end_dt)}, prefix)
   end
 
   def check_work_order_for_ticket_status(cs, prefix) do
@@ -1480,6 +1487,9 @@ defmodule Inconn2Service.Workorder do
           calculate_work_order_cost(updated_work_order, prefix)
           change_ticket_status(work_order, updated_work_order, user, prefix)
           wo = get_work_order!(updated_work_order.id, prefix)
+          if work_order.scheduled_date != updated_work_order.scheduled_date or work_order.scheduled_time != updated_work_order.scheduled_time do
+            update_scheduled_end_date_time(updated_work_order, prefix)
+          end
           Elixir.Task.start(fn -> push_alert_notification_for_work_order(updated_work_order.site_id, work_order, updated_work_order, user, prefix) end)
           {:ok, put_approval_user(wo, wo.status, prefix)}
       _ ->
@@ -2257,8 +2267,6 @@ defmodule Inconn2Service.Workorder do
         _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
       end
 
-    roster_dates = Enum.map(rosters, fn roster -> roster.date  end)
-
     common_query = flutter_query()
 
     assigned_query =
@@ -2278,7 +2286,7 @@ defmodule Inconn2Service.Workorder do
             asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"] and q.scheduled_date in ^roster_dates, join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"], join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
@@ -2312,6 +2320,7 @@ defmodule Inconn2Service.Workorder do
     end)
   end
 
+  defp filter_work_orders_based_on_rosters(work_orders, []), do: work_orders
   defp filter_work_orders_based_on_rosters(work_orders, rosters) do
     Enum.reduce(rosters, [], fn roster, acc ->
       Enum.filter(work_orders, fn wo -> wo.scheduled_date == roster.date and wo.scheduled_time >= roster.shift_start and wo.scheduled_time <= roster.shift_end end) ++ acc

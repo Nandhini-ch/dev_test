@@ -37,6 +37,8 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestView do
       reassigned_user: (if !is_nil(reassign_reschedule_request.reassigned_user) do "#{reassign_reschedule_request.reassigned_user.first_name} #{reassign_reschedule_request.reassigned_user.last_name}" else nil end),
       reschedule_date: reassign_reschedule_request.reschedule_date,
       reschedule_time: reassign_reschedule_request.reschedule_time,
+      schedule_date: reassign_reschedule_request.scheduled_date,
+      schedule_time: reassign_reschedule_request.scheduled_time,
       requested_datetime: reassign_reschedule_request.requested_datetime,
       request_for: reassign_reschedule_request.request_for,
       work_order_id: reassign_reschedule_request.work_order_id,

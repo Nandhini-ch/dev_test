@@ -41,6 +41,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       type: work_order.type,
       scheduled_date: work_order.scheduled_date,
       scheduled_time: work_order.scheduled_time,
+      scheduled_end_date: work_order.scheduled_end_date,
+      scheduled_end_time: work_order.scheduled_end_time,
       start_date: work_order.start_date,
       start_time: work_order.start_time,
       user: (if is_nil(work_order.user), do: nil, else: work_order.user.username),

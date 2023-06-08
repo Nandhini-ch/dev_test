@@ -8,7 +8,7 @@ defmodule Inconn2ServiceWeb.SiteController do
 
   def index(conn, _params) do
     sites = AssetConfig.list_sites(conn.query_params, conn.assigns.sub_domain_prefix)
-    render(conn, "index.json", sites: sites)
+    render(conn, "index_with_zone.json", sites: sites)
   end
 
   def index_for_user(conn, _params) do

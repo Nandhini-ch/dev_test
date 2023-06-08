@@ -179,7 +179,7 @@ defmodule Inconn2Service.Report do
 
   def put_done_by_in_readings(reading, prefix) do
     work_order = Workorder.get_work_order!(reading.id, prefix)
-    user = Staff.get_user!(work_order.user_id, prefix)
+    user = Staff.get_user(work_order.user_id, prefix)
     Map.put(reading, :done_by, "#{user.first_name} #{user.last_name}")
   end
 
@@ -2463,7 +2463,7 @@ defmodule Inconn2Service.Report do
 
   defp csv_for_workorder_execution(data) do
     Enum.reduce(data, [], fn d, acc ->
-      head = [["WO Number: #{d.id}", "WO Status: #{d.status}", "Asset: #{d.asset_name}"]] ++ [[]]
+      head = [["WO Number: #{d.id}", "WO Status: #{match_work_order_status(d.status)}", "Asset: #{d.asset_name}"]] ++ [[]]
       task_head = [["Sl.No", "Description", "Response", "Remarks"]]
 
       body =
@@ -2623,18 +2623,18 @@ defmodule Inconn2Service.Report do
       "as" -> "Assigned"
       "ip" -> "Inprogress"
       "incp" -> "Incomplete"
-      "cp" -> "Complete"
-      "cn" -> "Canceled"
+      "cp" -> "Completed"
+      "cn" -> "Cancelled"
       "ht" -> "Hold"
       "exec" -> "Ready for execution"
-      "woap" -> "Work order approvl pending"
+      "woap" -> "Work order approval pending"
       "wpap" -> "Work permit approval Application pending"
       "wpp" -> "Work permit pending"
       "wpa" -> "Work permit approved"
       "wpr" -> "Work permit rejected"
       "ltlap" -> "LOTO Lock application pending"
       "ltlp" -> "LOTO lock Pending"
-      "prep" -> "Pre pending"
+      "prep" -> "Precheck pending"
       "ltrap" -> "LOTO Release application pending"
       "ltrp" -> "LOTO release pending"
       "ackp" -> "Acknowledgement pending"
