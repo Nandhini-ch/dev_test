@@ -114,6 +114,12 @@ defmodule Inconn2Service.ContractManagement do
     list_scopes(params, prefix) |> Enum.map(fn x -> x.site end)
   end
 
+  def list_scopes_by_contract_id(contract_id, prefix) do
+      from(s in Scope, where: s.contract_id == ^contract_id)
+      |> Repo.add_active_filter()
+      |> Repo.all(prefix: prefix)
+  end
+
   def list_scopes(contract_id, params, prefix) do
     from(s in Scope, where: s.contract_id == ^contract_id)
     |> Repo.add_active_filter()

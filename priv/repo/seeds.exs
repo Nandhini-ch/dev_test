@@ -1,16 +1,16 @@
 # Build the tiezone DB only once in production
+alias Inconn2Service.ContractManagement
 alias Inconn2Service.Common
 Common.build_timezone_db()
 Inconn2Service.SeedFeatures.seed_features()
 
-alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Staff}
+alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Staff, ContractManagement}
 
 bt = %{"name" => "Shoe Retail"}
 {:ok, btrec} = Account.create_business_type(bt)
 
 bt2 = %{"name" => "Facility Management"}
 {:ok, btrec2} = Account.create_business_type(bt2)
-
 
 client = %{
   "company_name" => "Bata Shoe Company",
@@ -150,9 +150,8 @@ si_cf1 = %{
   "site_id" => sc.id,
   "type" => "ATT",
   "config" => %{
-    "preferred_total_work_hours" => 480,
     "half_day_work_hours" => 210,
-    "grace_period_for_in_time" => 15
+    "grace_period_in_minutes" => 15
   }
 }
 
@@ -436,3 +435,30 @@ org_ut4 = %{"name" => "Controllers", "party_id" => 1, "parent_id" => 3}
 {:ok, org_ut2c} = Staff.create_org_unit(org_ut2, "inc_bata")
 {:ok, org_ut3c} = Staff.create_org_unit(org_ut3, "inc_bata")
 {:ok, org_ut4c} = Staff.create_org_unit(org_ut4, "inc_bata")
+
+  com1 =
+        %{"name" => "Contract 1",
+          "contract_type" => "SFM",
+          "start_date" => "2023-02-01",
+          "end_date" => "2023-03-01",
+          "party_id" => 1,
+          "is_effective_status" => true,
+          "active" => true
+        }
+
+  {:ok, com1} = ContractManagement.create_contract(com1, "inc_bata")
+
+
+
+ scop1 =
+        %{"name" => "Scope 1",
+          "active" => true,
+          "site_id" => 1,
+          "contract_id" => 1,
+          "location_ids" => [1, 2],
+          "asset_category_ids" => [1, 2],
+          "is_applicable_to_all_location" => true,
+          "is_applicable_to_all_asset_category" => true
+        }
+
+{:ok, scop1} = ContractManagement.create_scope(scop1, "inc_bata")

@@ -1,5 +1,4 @@
 defmodule Inconn2ServiceWeb.Router do
-  # alias Inconn2ServiceWeb.LicenseeController
   use Inconn2ServiceWeb, :router
 
   pipeline :api do
@@ -48,6 +47,8 @@ defmodule Inconn2ServiceWeb.Router do
       get "/workrequest_categories", ExternalTicketController, :index_categories
       get "/workrequest_categories/:workrequest_category_id/workrequest_subcategories", ExternalTicketController, :index_subcategories_for_category
       resources "/work_request", ExternalTicketController, only: [:create, :show, :update]
+
+      resources "/workrequest_feedbacks", WorkrequestFeedbackController, only: [:create]
 
     end
 
@@ -377,6 +378,8 @@ defmodule Inconn2ServiceWeb.Router do
     # get "/dashboards/energy_meter_speedometer", DashboardController, :get_energy_meter_speedometer
     # resources "/meter_readings", MeterReadingController, except: [:new, :edit]
 
+    get "/latest_cumulative_value_for_asset", MeterReadingController, :get_latest_cumulative_value_for_asset
+
 
     get "/employees_for_attendance", EmployeeRosterController, :employees
     resources "/attendances", AttendanceController, only: [:index, :create, :show]
@@ -488,6 +491,7 @@ defmodule Inconn2ServiceWeb.Router do
 
     get "/dashboards/high_level_data", DashboardsController, :get_high_level_data_web
     get "/dashboards/mobile/high_level_data", DashboardsController, :get_high_level_data_mobile
+    get "/dashboards/multi_sites_dashboard_chart", DashboardsController, :get_multi_sites_dashboard_chart
 
     post "/dashboards/energy_consumption", DashboardsController, :get_energy_consumption
     post "/dashboards/energy_cost", DashboardsController, :get_energy_cost

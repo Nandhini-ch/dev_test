@@ -583,7 +583,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   #Context functions for Stock
   def list_stocks(query_params, prefix) do
-    stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:inventory_item, :store])
+    stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:store, inventory_item: :inventory_unit_of_measurement])
   end
 
   def list_stocks_for_storekeeper(user, prefix) do
@@ -1171,7 +1171,7 @@ defmodule Inconn2Service.InventoryManagement do
 
   defp preload_stuff_for_transaction({:error, changeset}), do: {:error, changeset}
   defp preload_stuff_for_transaction({:ok, transaction}), do: {:ok, preload_stuff_for_transaction(transaction)}
-  defp preload_stuff_for_transaction(transaction), do: transaction |> Repo.preload([:inventory_item, :unit_of_measurement, :store])
+  defp preload_stuff_for_transaction(transaction), do: transaction |> Repo.preload([:unit_of_measurement, :store, inventory_item: :inventory_unit_of_measurement])
 
   defp load_stock(inventory_item, nil),do: sum_stock_quantities(inventory_item.stocks)
   defp load_stock(inventory_item, store_id), do: Stream.filter(inventory_item.stocks, fn i -> i.store_id == store_id end) |> sum_stock_quantities()

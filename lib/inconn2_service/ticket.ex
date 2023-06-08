@@ -186,7 +186,7 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP", "ROP", "CS"]
+    query = from w in WorkRequest, where: ^current_user.id in w.approvals_required and w.status not in ["AP", "RJ", "CL", "CP", "CS"]
     Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
     |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
     |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
@@ -222,12 +222,19 @@ defmodule Inconn2Service.Ticket do
   end
 
   def list_work_requests_sent_for_approval(current_user, prefix) do
-    query = from w in WorkRequest, where: w.assigned_user_id == ^current_user.id and w.is_approvals_required and w.status in ["RS", "AS"]
-    Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
-    |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
-    |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
-    |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
-    |> Repo.sort_by_id()
+    helpdesk = get_category_helpdesk_by_user(current_user.id, prefix)
+    if helpdesk != [] do
+      workrequest_category_ids = Enum.map(helpdesk, fn x -> x.workrequest_category_id end)
+      site_ids = Enum.map(helpdesk, fn x -> x.site_id end)
+      query = from w in WorkRequest, where: w.workrequest_category_id in ^workrequest_category_ids and w.site_id in ^site_ids and w.is_approvals_required and w.status in ["RS", "AS"]
+      Repo.all(query, prefix: prefix) |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
+      |> Enum.filter(fn wr -> wr.status not in ["CS", "CL"] end)
+      |> Enum.map(fn wr ->  preload_to_approve_users(wr, prefix) end)
+      |> Enum.map(fn wr -> preload_asset(wr, prefix) end)
+      |> Repo.sort_by_id()
+    else
+      []
+    end
   end
 
   def list_work_requests_for_helpdesk_user(current_user, prefix) do
@@ -1139,7 +1146,7 @@ defmodule Inconn2Service.Ticket do
         "site_id" => alert_config.site_id,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+        # "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
         "prefix" => prefix
       })
     end

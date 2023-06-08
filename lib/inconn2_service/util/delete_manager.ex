@@ -101,7 +101,7 @@ defmodule Inconn2Service.Util.DeleteManager do
 
   def has_workrequest_subcategory?(%WorkrequestCategory{} = workrequest_category, prefix), do: (workrequest_subcategory_query(Repo.add_active_filter(WorkrequestSubcategory), %{"workrequest_category_id" => workrequest_category.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 
-  def has_work_request?(%WorkrequestSubcategory{} = workrequest_subcategory, prefix), do: (work_request_query(Repo.add_active_filter(WorkRequest), %{"workrequest_subcategory_id" => workrequest_subcategory.id, "not_statuses" => ["CL", "CS"]}) |> Repo.all(prefix: prefix) |> length()) > 0
+  def has_work_request?(%WorkrequestSubcategory{} = workrequest_subcategory, prefix), do: (work_request_query((WorkRequest), %{"workrequest_subcategory_id" => workrequest_subcategory.id, "not_statuses" => ["CL", "CS"]}) |> Repo.all(prefix: prefix) |> length()) > 0
 
   def has_task?(%MasterTaskType{} = master_task_type, prefix), do: (task_query(Repo.add_active_filter(Task), %{"master_task_type_id" => master_task_type.id}) |> Repo.all(prefix: prefix) |> length()) > 0
 

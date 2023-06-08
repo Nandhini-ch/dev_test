@@ -26,16 +26,23 @@ defmodule Inconn2Service.Prompt do
   def get_alert_notification_config!(id, prefix), do: Repo.get!(AlertNotificationConfig, id, prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
 
   def get_alert_notification_config_by_alert_id(alert_id, prefix) do
-    # Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id], prefix: prefix)
-    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id) |> Repo.all(prefix: prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
   end
 
   def get_alert_notification_config_by_alert_id_and_site_id(alert_id, site_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_id, site_id: site_id], prefix: prefix) |> preload_alert_notification_reserve() |> preload_site(prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_id and anc.site_id == ^site_id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> preload_alert_notification_reserve()
+    |> preload_site(prefix)
   end
 
   def get_alert_notification_config_by_reserve_and_site(alert_notification_reserve_id, site_id, prefix) do
-    Repo.get_by(AlertNotificationConfig, [alert_notification_reserve_id: alert_notification_reserve_id, site_id: site_id], prefix: prefix)
+    from(anc in AlertNotificationConfig, where: anc.alert_notification_reserve_id == ^alert_notification_reserve_id and anc.site_id == ^site_id)
+    |> Repo.add_active_filter()
+    |> Repo.one(prefix: prefix)
   end
 
   def create_alert_notification_config(attrs \\ %{}, prefix) do
@@ -54,8 +61,16 @@ defmodule Inconn2Service.Prompt do
     |> preload_site(prefix)
   end
 
+  # def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
+  #   Repo.delete(alert_notification_config, prefix: prefix)
+  # end
+
+  #soft delete for alert notification config
   def delete_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, prefix) do
-    Repo.delete(alert_notification_config, prefix: prefix)
+    update_alert_notification_config(alert_notification_config, %{"active" => false}, prefix)
+         {:deleted,
+            "The Alert Notification Config Was Disabled"
+         }
   end
 
   def change_alert_notification_config(%AlertNotificationConfig{} = alert_notification_config, attrs \\ %{}) do
@@ -161,7 +176,7 @@ defmodule Inconn2Service.Prompt do
         "site_id" => alert_config.site_id,
         "alert_identifier_date_time" => alert_identifier_date_time,
         "escalation_at_date_time" => NaiveDateTime.add(alert_identifier_date_time, alert_config.escalation_time_in_minutes * 60),
-        "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
+        # "escalated_to_user_ids" => alert_config.escalated_to_user_ids,
         "prefix" => prefix
       })
     end
@@ -183,18 +198,21 @@ defmodule Inconn2Service.Prompt do
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
-    an_reserve = Common.get_alert_by_code(code)
-    an_config = get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
+    an_reserve = Common.get_alert_by_code(code) |> IO.inspect(label: "reserve")
+    an_config =
+      get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)
+      |> form_alert_notification_config(an_reserve)
+      |> IO.inspect(label: "config")
 
-    message = form_message_text_from_template(an_reserve.text_template, an_arguments_list)
+    message = form_message_text_from_template(an_reserve.text_template, an_arguments_list) |> IO.inspect(label: "message")
 
     user_maps =
       specific_user_maps ++
-      Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
+      Enum.map(an_config.addressed_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end) |> IO.inspect(label: "user_maps")
 
     escalation_user_maps =
       escalation_user_maps ++
-      Enum.map(an_config.escalated_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end)
+      Enum.map(an_config.escalated_to_users, fn user_map -> Staff.add_display_name_to_user_map(user_map, prefix) end) |> IO.inspect(label: "escalation_maps")
 
     Enum.map(user_maps, fn user_map ->
       trigger_alert_notification(message, an_reserve, site_id, user_map["user_id"], an_config, escalation_user_maps, prefix)
@@ -212,11 +230,24 @@ defmodule Inconn2Service.Prompt do
       user_maps
       |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
       |> Enum.map(fn user_map ->
-        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", message)
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], an_reserve.type, message)
       end)
     end
 
   end
+
+  defp form_alert_notification_config(nil, an_reserve) do
+    %{
+      addressed_to_users: [],
+      escalated_to_users: [],
+      is_sms_required: an_reserve.is_sms_required,
+      is_email_required: an_reserve.is_email_required,
+      is_escalation_required: an_reserve.is_escalation_required,
+      escalation_time_in_minutes: an_reserve.escalation_time_in_minutes
+    }
+  end
+
+  defp form_alert_notification_config(an_config, _an_reserve), do: an_config
 
   defp trigger_alert_notification(message, an_reserve, site_id, user_id, an_config, escalation_user_maps, prefix) do
     alert_identifier_date_time = NaiveDateTime.utc_now()
@@ -228,7 +259,7 @@ defmodule Inconn2Service.Prompt do
       "user_id" => user_id,
       "description" => message
     }
-    |> create_user_alert_notification(prefix)
+    |> create_user_alert_notification(prefix)  |> IO.inspect(label: "al")
 
     if an_reserve.type == "al" and an_config.is_escalation_required and length(escalation_user_maps) != 0 do
       %{
@@ -245,7 +276,10 @@ defmodule Inconn2Service.Prompt do
 
   def generate_alert_escalation(alert, escalation_scheduler, prefix) do
     an_reserve = Common.get_alert_by_code(escalation_scheduler.alert_code)
-    an_config = get_alert_notification_config_by_reserve_and_site(alert.alert_notification_id, alert.site_id, prefix)
+    an_config =
+      get_alert_notification_config_by_reserve_and_site(alert.alert_notification_id, alert.site_id, prefix)
+      |> form_alert_notification_config(an_reserve)
+
     user_maps = escalation_scheduler.escalated_to_users
 
     Enum.map(user_maps, fn user_map ->
@@ -264,7 +298,7 @@ defmodule Inconn2Service.Prompt do
       user_maps
       |> Enum.reject(fn user_map -> is_nil(user_map["email"]) end)
       |> Enum.map(fn user_map ->
-        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], "", alert.description)
+        Email.send_alert_notification_email(user_map["email"], user_map["display_name"], an_reserve.type, alert.description)
       end)
     end
   end

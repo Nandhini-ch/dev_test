@@ -20,6 +20,7 @@ defmodule Inconn2ServiceWeb.InventoryItemView do
       remarks: inventory_item.remarks,
       attachment: inventory_item.attachment,
       uom_category_id: inventory_item.uom_category_id,
+      inventory_unit_of_measurement: render_one(inventory_item.inventory_unit_of_measurement, UnitOfMeasurementView, "unit_of_measurement_without_category.json"),
       unit_price: inventory_item.unit_price,
       is_approval_required: inventory_item.is_approval_required,
       approval_user_id: inventory_item.approval_user_id,
