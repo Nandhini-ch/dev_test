@@ -129,10 +129,10 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def get_site!(id, prefix) do
-    Repo.get!(Site, id, prefix: prefix) |> Repo.preload([:zone])
+    Repo.get!(Site, id, prefix: prefix)
   end
   def get_site(id, prefix) do
-    Repo.get(Site, id, prefix: prefix) |> Repo.preload([:zone])
+    Repo.get(Site, id, prefix: prefix)
   end
 
   def create_site(attrs \\ %{}, prefix) do
@@ -179,7 +179,6 @@ defmodule Inconn2Service.AssetConfig do
   def update_site(%Site{} = site, attrs, prefix) do
     site
     |> Site.changeset(attrs)
-    |> Repo.preload([:zone])
     |> Repo.update(prefix: prefix)
   end
 
