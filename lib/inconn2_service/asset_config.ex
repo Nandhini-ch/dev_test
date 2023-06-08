@@ -250,6 +250,12 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
+  def list_asset_categories_ids(prefix) do
+    from(ac in AssetCategory, where: ac.active,
+    select: ac.id)
+    |> Repo.all(prefix: prefix)
+ end
+
   def list_asset_categories(_query_params, prefix) do
     AssetCategory
     |> Repo.add_active_filter()
@@ -677,6 +683,13 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end
+
+  def list_location_ids_by_site_id(site_id, prefix) do
+    from(l in Location, where: l.site_id == ^site_id and l.active,
+    select: l.id)
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+ end
 
   def list_locations_tree(site_id, prefix) do
     list_locations(site_id, %{"active" => "true"}, prefix)
@@ -1560,6 +1573,10 @@ defmodule Inconn2Service.AssetConfig do
 
   def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
     date_time = get_site_date_time_now(site_id, prefix)
+
+    #asset edit
+    generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
+
     cond do
       #asset status to breakdown
       existing_asset.status != updated_asset.status && updated_asset.status == "BRK" ->
@@ -1578,10 +1595,6 @@ defmodule Inconn2Service.AssetConfig do
       # existing_asset.parent_id != updated_asset.parent_id ->
         # description = ~s(#{updated_asset.name}'s hierarchy has been changed)
         # create_asset_alert_notification("ASMH", description, updated_asset, asset_type, updated_asset.site_id, false, prefix)
-
-      #asset details edited
-      existing_asset != updated_asset ->
-        generate_alert_notification("EDASD", site_id, [updated_asset.name], [], [], [], prefix)
 
       true ->
         {:ok, updated_asset}

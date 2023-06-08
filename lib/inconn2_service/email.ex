@@ -3,16 +3,28 @@ defmodule Inconn2Service.Email do
   import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Communication.EmailSender
 
-  def send_alert_notification_email(recipient, username, subject_string, message) do
+  def send_alert_notification_email(recipient, username, type, message) do
+    subject_string =
+            case type do
+              "al" -> "Alert From Inconn"
+              "nt" -> "Notification From Inconn"
+            end
+
+    type_string =
+          case type do
+            "al" -> "alert"
+            "nt" -> "notify"
+          end
+
     body_string = ~s(
       Dear #{username},
 
-        This is to "notify/ alert" you that #{message}
+        This is to #{type_string} you that #{message}
 
       Regards,
       InConn team
 
-      Note:	This is a system generated email from an unmonitored mailbox. Kindly do not reply. To contact us, kindly  call xxxxxxxxxx or email to us at xxxxxx@xxx.xxx
+      Note:	This is a system generated email from an unmonitored mailbox. Kindly do not reply. To contact us, kindly call us on +91 7845043111 or email to us at support@inconn.com
     )
     EmailSender.send_email(recipient, subject_string, body_string)
   end
@@ -86,10 +98,10 @@ defmodule Inconn2Service.Email do
        #{remarks}
 
         Please click here to acknowledge your issue resolution -
-        https://#{sub_domain}.#{get_frontend_url(sub_domain)}/closedresponse?work_request_id=#{id}
+        #{get_frontend_url(sub_domain)}/closedresponse?work_request_id=#{id}
 
         If you are not happy with the solution offered, please click here to reopen -
-        https://#{sub_domain}.#{get_frontend_url(sub_domain)}/ticketreopening?ticketId=#{id}
+        #{get_frontend_url(sub_domain)}/ticketreopening?ticketId=#{id}
 
         Thank You,
         Regards

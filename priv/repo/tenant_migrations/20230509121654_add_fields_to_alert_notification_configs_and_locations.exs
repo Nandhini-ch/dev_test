@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigs do
+defmodule Inconn2Service.Repo.Migrations.AddFieldsToAlertNotificationConfigsAndLocations do
   use Ecto.Migration
 
   def change do

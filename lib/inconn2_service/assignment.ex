@@ -19,15 +19,6 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.ManualAttendance
 
-  @doc """
-  Returns the list of employee_rosters.
-
-  ## Examples
-
-      iex> list_employee_rosters()
-      [%EmployeeRoster{}, ...]
-
-  """
   def list_employee_rosters(prefix) do
     EmployeeRoster
     |> Repo.add_active_filter()
@@ -185,34 +176,8 @@ defmodule Inconn2Service.Assignment do
     |> (fn [year, month, day] -> Date.new(year, month, day) end).()
   end
 
-  @doc """
-  Gets a single employee_roster.
-
-  Raises `Ecto.NoResultsError` if the Employee roster does not exist.
-
-  ## Examples
-
-      iex> get_employee_roster!(123)
-      %EmployeeRoster{}
-
-      iex> get_employee_roster!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_employee_roster!(id, prefix), do: Repo.get!(EmployeeRoster, id, prefix: prefix) |> Repo.preload([:site, :shift, employee: :org_unit])
 
-  @doc """
-  Creates a employee_roster.
-
-  ## Examples
-
-      iex> create_employee_roster(%{field: value})
-      {:ok, %EmployeeRoster{}}
-
-      iex> create_employee_roster(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_employee_roster(attrs \\ %{}, prefix) do
     result = %EmployeeRoster{}
       |> EmployeeRoster.changeset(attrs)
@@ -287,18 +252,7 @@ defmodule Inconn2Service.Assignment do
       cs
     end
   end
-  @doc """
-  Updates a employee_roster.
 
-  ## Examples
-
-      iex> update_employee_roster(employee_roster, %{field: new_value})
-      {:ok, %EmployeeRoster{}}
-
-      iex> update_employee_roster(employee_roster, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_employee_roster(%EmployeeRoster{} = employee_roster, attrs, prefix) do
     result =
       employee_roster
@@ -315,18 +269,6 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
-  @doc """
-  Deletes a employee_roster.
-
-  ## Examples
-
-      iex> delete_employee_roster(employee_roster)
-      {:ok, %EmployeeRoster{}}
-
-      iex> delete_employee_roster(employee_roster)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_employee_roster(%EmployeeRoster{} = employee_roster, prefix) do
     update_employee_roster(employee_roster, %{"active" => false}, prefix)
        {:deleted,
@@ -334,15 +276,6 @@ defmodule Inconn2Service.Assignment do
        }
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking employee_roster changes.
-
-  ## Examples
-
-      iex> change_employee_roster(employee_roster)
-      %Ecto.Changeset{data: %EmployeeRoster{}}
-
-  """
   def change_employee_roster(%EmployeeRoster{} = employee_roster, attrs \\ %{}) do
     EmployeeRoster.changeset(employee_roster, attrs)
   end
@@ -499,12 +432,39 @@ defmodule Inconn2Service.Assignment do
 
     case result do
       {:ok, attendance} ->
+           {:ok, attendance} = calculate_and_update_attendance_status(attendance, prefix)
               {:ok,
               preload_employee(attendance, prefix) |> preload_shift(prefix)
             }
       _ ->
           result
     end
+  end
+
+  defp calculate_and_update_attendance_status(attendance, prefix) do
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix)
+    shift = Settings.get_shift!(attendance.shift_id, prefix)
+    grace_period = Map.get(site_config.config, "grace_period_for_in_time", 0)
+    half_day_hours = Map.get(site_config.config, "half_day_work_hours", 0)
+    worked_hours = NaiveDateTime.diff(attendance.in_time, attendance.out_time) * 3600
+
+    status =
+      case NaiveDateTime.compare(attendance.in_time, NaiveDateTime.add(shift.start_time, grace_period, :minute)) do
+        :gt -> "LATE"
+        _ -> "ONTM"
+      end
+
+    status =
+      if worked_hours < half_day_hours do
+        "HFDY"
+      else
+        status
+      end
+
+    attendance
+    |> Attendance.changeset(%{"status" => status})
+    |> Repo.update(prefix: prefix)
+
   end
 
   def delete_attendance(%Attendance{} = attendance, prefix) do
@@ -517,15 +477,6 @@ defmodule Inconn2Service.Assignment do
 
   alias Inconn2Service.Assignment.AttendanceReference
 
-  @doc """
-  Returns the list of attendance_references.
-
-  ## Examples
-
-      iex> list_attendance_references()
-      [%AttendanceReference{}, ...]
-
-  """
   def list_attendance_references(prefix) do
     Repo.all(AttendanceReference, prefix: prefix)
   end
@@ -534,34 +485,9 @@ defmodule Inconn2Service.Assignment do
     from(ar in AttendanceReference, where: ar.employee_id == ^query_params["employee_id"])
     |> Repo.all(prefix: prefix)
   end
-  @doc """
-  Gets a single attendance_reference.
 
-  Raises `Ecto.NoResultsError` if the Attendance reference does not exist.
-
-  ## Examples
-
-      iex> get_attendance_reference!(123)
-      %AttendanceReference{}
-
-      iex> get_attendance_reference!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_attendance_reference!(id, prefix), do: Repo.get!(AttendanceReference, id, prefix: prefix)
 
-  @doc """
-  Creates a attendance_reference.
-
-  ## Examples
-
-      iex> create_attendance_reference(%{field: value})
-      {:ok, %AttendanceReference{}}
-
-      iex> create_attendance_reference(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_attendance_reference(attrs \\ %{}, prefix, user) do
     # employee_id = get_employee_current_user(user.username, prefix).id
     %AttendanceReference{}
@@ -570,64 +496,22 @@ defmodule Inconn2Service.Assignment do
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a attendance_reference.
-
-  ## Examples
-
-      iex> update_attendance_reference(attendance_reference, %{field: new_value})
-      {:ok, %AttendanceReference{}}
-
-      iex> update_attendance_reference(attendance_reference, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_attendance_reference(%AttendanceReference{} = attendance_reference, attrs, prefix) do
     attendance_reference
     |> AttendanceReference.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a attendance_reference.
-
-  ## Examples
-
-      iex> delete_attendance_reference(attendance_reference)
-      {:ok, %AttendanceReference{}}
-
-      iex> delete_attendance_reference(attendance_reference)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_attendance_reference(%AttendanceReference{} = attendance_reference, prefix) do
     Repo.delete(attendance_reference, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking attendance_reference changes.
-
-  ## Examples
-
-      iex> change_attendance_reference(attendance_reference)
-      %Ecto.Changeset{data: %AttendanceReference{}}
-
-  """
   def change_attendance_reference(%AttendanceReference{} = attendance_reference, attrs \\ %{}) do
     AttendanceReference.changeset(attendance_reference, attrs)
   end
 
   alias Inconn2Service.Assignment.AttendanceFailureLog
 
-  @doc """
-  Returns the list of attendance_failure_logs.
-
-  ## Examples
-
-      iex> list_attendance_failure_logs()
-      [%AttendanceFailureLog{}, ...]
-
-  """
   def list_attendance_failure_logs(query_params, prefix) do
     query = from afl in AttendanceFailureLog
     query = Enum.reduce(query_params, query, fn
@@ -640,34 +524,8 @@ defmodule Inconn2Service.Assignment do
     Repo.all(query, prefix: prefix)
   end
 
-  @doc """
-  Gets a single attendance_failure_log.
-
-  Raises `Ecto.NoResultsError` if the Attendance failure log does not exist.
-
-  ## Examples
-
-      iex> get_attendance_failure_log!(123)
-      %AttendanceFailureLog{}
-
-      iex> get_attendance_failure_log!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_attendance_failure_log!(id, prefix), do: Repo.get!(AttendanceFailureLog, id, prefix: prefix)
 
-  @doc """
-  Creates a attendance_failure_log.
-
-  ## Examples
-
-      iex> create_attendance_failure_log(%{field: value})
-      {:ok, %AttendanceFailureLog{}}
-
-      iex> create_attendance_failure_log(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_attendance_failure_log(attrs \\ %{}, prefix, user) do
     # employee_id = get_employee_current_user(user.username, prefix).id
     %AttendanceFailureLog{}
@@ -676,63 +534,20 @@ defmodule Inconn2Service.Assignment do
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a attendance_failure_log.
-
-  ## Examples
-
-      iex> update_attendance_failure_log(attendance_failure_log, %{field: new_value})
-      {:ok, %AttendanceFailureLog{}}
-
-      iex> update_attendance_failure_log(attendance_failure_log, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs, prefix) do
     attendance_failure_log
     |> AttendanceFailureLog.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a attendance_failure_log.
-
-  ## Examples
-
-      iex> delete_attendance_failure_log(attendance_failure_log)
-      {:ok, %AttendanceFailureLog{}}
-
-      iex> delete_attendance_failure_log(attendance_failure_log)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, prefix) do
     Repo.delete(attendance_failure_log, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking attendance_failure_log changes.
-
-  ## Examples
-
-      iex> change_attendance_failure_log(attendance_failure_log)
-      %Ecto.Changeset{data: %AttendanceFailureLog{}}
-
-  """
   def change_attendance_failure_log(%AttendanceFailureLog{} = attendance_failure_log, attrs \\ %{}) do
     AttendanceFailureLog.changeset(attendance_failure_log, attrs)
   end
 
-
-  @doc """
-  Returns the list of manual_attendances.
-
-  ## Examples
-
-      iex> list_manual_attendances()
-      [%ManualAttendance{}, ...]
-
-  """
   def list_manual_attendances(prefix) do
     Repo.all(ManualAttendance, prefix: prefix)
     |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
@@ -749,34 +564,8 @@ defmodule Inconn2Service.Assignment do
     |> Enum.map(fn attendance -> preload_employee(attendance, prefix) end)
   end
 
-  @doc """
-  Gets a single manual_attendance.
-
-  Raises `Ecto.NoResultsError` if the Manual attendance does not exist.
-
-  ## Examples
-
-      iex> get_manual_attendance!(123)
-      %ManualAttendance{}
-
-      iex> get_manual_attendance!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_manual_attendance!(id, prefix), do: Repo.get!(ManualAttendance, id, prefix: prefix) |> preload_employee(prefix)
 
-  @doc """
-  Creates a manual_attendance.
-
-  ## Examples
-
-      iex> create_manual_attendance(%{field: value})
-      {:ok, %ManualAttendance{}}
-
-      iex> create_manual_attendance(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_manual_attendance(attrs \\ %{}, prefix, user \\ %{}) do
     result = %ManualAttendance{}
               |> ManualAttendance.changeset(attrs)
@@ -874,18 +663,6 @@ defmodule Inconn2Service.Assignment do
     |> Repo.one(prefix: prefix)
   end
 
-  @doc """
-  Updates a manual_attendance.
-
-  ## Examples
-
-      iex> update_manual_attendance(manual_attendance, %{field: new_value})
-      {:ok, %ManualAttendance{}}
-
-      iex> update_manual_attendance(manual_attendance, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_manual_attendance(%ManualAttendance{} = manual_attendance, attrs, prefix, user \\ %{}) do
     result = manual_attendance
               |> ManualAttendance.changeset(attrs)
@@ -901,31 +678,10 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
-  @doc """
-  Deletes a manual_attendance.
-
-  ## Examples
-
-      iex> delete_manual_attendance(manual_attendance)
-      {:ok, %ManualAttendance{}}
-
-      iex> delete_manual_attendance(manual_attendance)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_manual_attendance(%ManualAttendance{} = manual_attendance, prefix) do
     Repo.delete(manual_attendance, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking manual_attendance changes.
-
-  ## Examples
-
-      iex> change_manual_attendance(manual_attendance)
-      %Ecto.Changeset{data: %ManualAttendance{}}
-
-  """
   def change_manual_attendance(%ManualAttendance{} = manual_attendance, attrs \\ %{}) do
     ManualAttendance.changeset(manual_attendance, attrs)
   end

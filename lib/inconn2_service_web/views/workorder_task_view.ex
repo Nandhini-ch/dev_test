@@ -33,6 +33,22 @@ defmodule Inconn2ServiceWeb.WorkorderTaskView do
       actual_end_time: workorder_task.actual_end_time}
   end
 
+  def render("workorder_task_for_flutter.json", %{workorder_task: workorder_task}) do
+    %{id: workorder_task.id,
+      task_id: workorder_task.task_id,
+      sequence: workorder_task.sequence,
+      work_order_id: workorder_task.work_order_id,
+      response: workorder_task.response,
+      remarks: workorder_task.remarks,
+      previous_value: workorder_task.previous_value,
+      date_time: workorder_task.date_time,
+      task: render_one(workorder_task.task, TaskView, "task.json"),
+      expected_start_time: workorder_task.expected_start_time,
+      expected_end_time: workorder_task.expected_end_time,
+      actual_start_time: workorder_task.actual_start_time,
+      actual_end_time: workorder_task.actual_end_time}
+  end
+
   def render("workorder_task.json", %{workorder_task: workorder_task}) do
     %{id: workorder_task.id,
       task_id: workorder_task.task_id,

@@ -1,8 +1,4 @@
 defmodule Inconn2Service.Measurements do
-  @moduledoc """
-  The Measurements context.
-  """
-
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
@@ -10,96 +6,42 @@ defmodule Inconn2Service.Measurements do
   alias Inconn2Service.Workorder.WorkorderTask
   alias Inconn2Service.Measurements.MeterReading
 
-  @doc """
-  Returns the list of meter_readings.
-
-  ## Examples
-
-      iex> list_meter_readings()
-      [%MeterReading{}, ...]
-
-  """
   def list_meter_readings(prefix) do
     Repo.all(MeterReading, prefix: prefix)
   end
 
-  @doc """
-  Gets a single meter_reading.
-
-  Raises `Ecto.NoResultsError` if the Meter reading does not exist.
-
-  ## Examples
-
-      iex> get_meter_reading!(123)
-      %MeterReading{}
-
-      iex> get_meter_reading!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_meter_reading!(id, prefix), do: Repo.get!(MeterReading, id, prefix: prefix)
 
-  @doc """
-  Creates a meter_reading.
-
-  ## Examples
-
-      iex> create_meter_reading(%{field: value})
-      {:ok, %MeterReading{}}
-
-      iex> create_meter_reading(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_meter_reading(attrs \\ %{}, prefix) do
     %MeterReading{}
     |> MeterReading.changeset(attrs)
     |> Repo.insert(prefix: prefix)
   end
 
-  @doc """
-  Updates a meter_reading.
+  def get_last_cumulative_value(asset_id, asset_type, unit_of_measurement, meter_type, prefix) do
+    query =
+      from(mr in MeterReading,
+          where: mr.asset_id == ^asset_id and
+                 mr.asset_type == ^asset_type and
+                 mr.meter_type == ^meter_type and
+                 mr.unit_of_measurement == ^unit_of_measurement,
+          order_by: [desc: mr.recorded_date_time],
+          select: mr.cumulative_value,
+          limit: 1)
 
-  ## Examples
+    Repo.one(query, prefix: prefix)
+  end
 
-      iex> update_meter_reading(meter_reading, %{field: new_value})
-      {:ok, %MeterReading{}}
-
-      iex> update_meter_reading(meter_reading, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_meter_reading(%MeterReading{} = meter_reading, attrs, prefix) do
     meter_reading
     |> MeterReading.changeset(attrs)
     |> Repo.update(prefix: prefix)
   end
 
-  @doc """
-  Deletes a meter_reading.
-
-  ## Examples
-
-      iex> delete_meter_reading(meter_reading)
-      {:ok, %MeterReading{}}
-
-      iex> delete_meter_reading(meter_reading)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_meter_reading(%MeterReading{} = meter_reading, prefix) do
     Repo.delete(meter_reading, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking meter_reading changes.
-
-  ## Examples
-
-      iex> change_meter_reading(meter_reading)
-      %Ecto.Changeset{data: %MeterReading{}}
-
-  """
   def change_meter_reading(%MeterReading{} = meter_reading, attrs \\ %{}) do
     MeterReading.changeset(meter_reading, attrs)
   end
@@ -125,12 +67,10 @@ defmodule Inconn2Service.Measurements do
   end
 
   def insert_metering_values(work_order, workorder_task, prefix) do
-    # uom = String.downcase(workorder_task.unit_of_measurement)
-
     query = from mr in MeterReading,
               where: [asset_id: ^work_order.asset_id,
                       asset_type: ^work_order.asset_type,
-                      # unit_of_measurement: ^uom,
+                      unit_of_measurement: ^workorder_task.unit_of_measurement,
                       meter_type: ^workorder_task.meter_type],
               order_by: [desc: :recorded_date_time],
               limit: 1
@@ -159,7 +99,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => workorder_task.recorded_value,
       "cumulative_value" => cumulative_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }
@@ -180,7 +120,7 @@ defmodule Inconn2Service.Measurements do
       "recorded_date_time" => workorder_task.recorded_date_time,
       "absolute_value" => absolute_value,
       "cumulative_value" => workorder_task.recorded_value,
-      "unit_of_measurement" => String.downcase(workorder_task.unit_of_measurement),
+      "unit_of_measurement" => workorder_task.unit_of_measurement,
       "meter_type" => workorder_task.meter_type,
       "work_order_id" => work_order.id
     }

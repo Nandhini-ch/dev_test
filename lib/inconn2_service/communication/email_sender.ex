@@ -3,7 +3,7 @@ defmodule Inconn2Service.Communication.EmailSender do
   import Swoosh.Email
 
   def start_link(_args) do
-    GenServer.start_link(__MODULE__, [])
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def send_email(recipients, subject_string, body_string) do
@@ -21,6 +21,7 @@ defmodule Inconn2Service.Communication.EmailSender do
       |> subject(subject_string)
       |> text_body(body_string)
       |> Inconn2Service.Mailer.deliver!()
+      |> IO.inspect()
 
     {:noreply, state}
   end
