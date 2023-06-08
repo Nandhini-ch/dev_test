@@ -141,42 +141,42 @@ defmodule Inconn2Service.Prompt do
   # end
 
 
-  # def generate_alert_notification_for_assets(alert_notification_generator) do
-  #   case alert_notification_generator.code do
-  #     "WOSDM" ->
-  #       work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
-  #       user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
-  #       generate_alert_notification("WOSDM", work_order.site_id, [work_order.id, work_order.scheduled_time], [],user_maps, [], alert_notification_generator.prefix)
+  def generate_alert_notification_for_assets(alert_notification_generator) do
+    case alert_notification_generator.code do
+      "WOSDM" ->
+        work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
+        generate_alert_notification("WOSDM", work_order.site_id, [work_order.id, work_order.scheduled_time], [],user_maps, [], alert_notification_generator.prefix)
 
-  #     "WOSOD" ->
-  #       work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
-  #       asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, alert_notification_generator.prefix)
-  #       user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
-  #       date_time = get_site_date_now(work_order.site_id, alert_notification_generator.prefix)
-  #       escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
+      "WOSOD" ->
+        work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, alert_notification_generator.prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
+        date_time = get_site_date_now(work_order.site_id, alert_notification_generator.prefix)
+        escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
 
-  #       generate_alert_notification("WOSOD", work_order.site_id, [work_order.id, work_order.scheduled_time], [work_order.id, date_time], user_maps, escalated_user_maps, alert_notification_generator.prefix)
+        generate_alert_notification("WOSOD", work_order.site_id, [work_order.id, work_order.scheduled_time], [work_order.id, date_time], user_maps, escalated_user_maps, alert_notification_generator.prefix)
 
-  #     "WONCS" ->
-  #       work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
-  #       asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, alert_notification_generator.prefix)
-  #       user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
-  #       escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
+      "WONCS" ->
+        work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, alert_notification_generator.prefix)
+        user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
+        escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
 
-  #       generate_alert_notification("WONCS", work_order.site_id, [work_order.id], [work_order.id], user_maps, escalated_user_maps, alert_notification_generator.prefix)
+        generate_alert_notification("WONCS", work_order.site_id, [work_order.id], [work_order.id], user_maps, escalated_user_maps, alert_notification_generator.prefix)
 
-  #     "TCKTE" ->
-  #       work_request = Ticket.get_work_request!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
-  #       date_time = get_site_date_now(work_request.site_id, alert_notification_generator.prefix)
-  #       asset = AssetConfig.get_asset_by_asset_id(work_request.asset_id, work_request.asset_type, alert_notification_generator.prefix)
-  #       user = Staff.form_user_maps_by_user_ids([work_request.assigned_user_id], alert_notification_generator.prefix)
-  #       helpdesk_users = Ticket.group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, work_request.site_id, alert_notification_generator.prefix)
-  #       user_maps = user ++ helpdesk_users
-  #       escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
+      "TCKTE" ->
+        work_request = Ticket.get_work_request!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        date_time = get_site_date_now(work_request.site_id, alert_notification_generator.prefix)
+        asset = AssetConfig.get_asset_by_asset_id(work_request.asset_id, work_request.asset_type, alert_notification_generator.prefix)
+        user = Staff.form_user_maps_by_user_ids([work_request.assigned_user_id], alert_notification_generator.prefix)
+        helpdesk_users = Ticket.group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, work_request.site_id, alert_notification_generator.prefix)
+        user_maps = user ++ helpdesk_users
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
 
-  #       generate_alert_notification("TCKTE", work_request.site_id, [work_request.id, "resolution tat", date_time], [work_request.id, "resolution tat", date_time], user_maps, escalation_user_maps, alert_notification_generator.prefix)
-  #   end
-  # end
+        generate_alert_notification("TCKTE", work_request.site_id, [work_request.id, "resolution tat", date_time], [work_request.id, "resolution tat", date_time], user_maps, escalation_user_maps, alert_notification_generator.prefix)
+    end
+  end
 
 
   defp create_alert_notification(work_order_id, "WOOD", prefix) do
@@ -238,6 +238,7 @@ defmodule Inconn2Service.Prompt do
   defp preload_site(config, prefix), do: Map.put(config, :site, AssetConfig.get_site(config.site_id, prefix))
 
   def generate_alert_notification(code, site_id, an_arguments_list, sms_arguements_list, specific_user_maps, escalation_user_maps, prefix) do
+    IO.inspect(code, label: "code")
     an_reserve = Common.get_alert_by_code(code) |> IO.inspect(label: "reserve")
     an_config =
       get_alert_notification_config_by_reserve_and_site(an_reserve.id, site_id, prefix)

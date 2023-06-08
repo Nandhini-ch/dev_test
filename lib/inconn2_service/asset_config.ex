@@ -771,7 +771,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, location} ->
         create_track_for_asset_status(location, "L", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, location, location.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(location, location.site_id, prefix) end)
         result
       _ ->
         result
@@ -1322,7 +1322,7 @@ defmodule Inconn2Service.AssetConfig do
     case result do
       {:ok, equipment} ->
         create_track_for_asset_status(equipment, "E", prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(nil, equipment, equipment.site_id, prefix) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_asset(equipment, equipment.site_id, prefix) end)
         result
       _ ->
         result
@@ -1587,23 +1587,23 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   #add new asset
-  def push_alert_notification_for_new_asset(existing_asset, updated_asset, site_id, prefix) do
+  def push_alert_notification_for_new_asset(asset, site_id, prefix) do
     user_maps =
-          %{"site_id" => updated_asset.site_id, "asset_category_id" => updated_asset.asset_category_id}
+          %{"site_id" => asset.site_id, "asset_category_id" => asset.asset_category_id}
           |> list_users_from_scope(prefix)
           |> Staff.form_user_maps_by_user_ids(prefix)
 
-    asset_type = get_asset_code_from_asset_struct(updated_asset)
+    asset_type = get_asset_code_from_asset_struct(asset)
     # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
     exist_asset_name =
-    if updated_asset.parent_id == nil do
+    if asset.parent_id == nil do
       "root"
     else
-      get_asset_by_type(updated_asset.parent_id, asset_type, prefix).name
+      get_asset_by_type(asset.parent_id, asset_type, prefix).name
     end
 
-    generate_alert_notification("ADNAS", site_id, [updated_asset.name, exist_asset_name],[], user_maps, [], prefix)
-    {:ok, updated_asset}
+    generate_alert_notification("ADNAS", site_id, [asset.name, exist_asset_name],[], user_maps, [], prefix)
+    {:ok, asset}
   end
 
   def push_alert_notification_for_asset(existing_asset, updated_asset, site_id, prefix) do
@@ -1645,7 +1645,7 @@ defmodule Inconn2Service.AssetConfig do
         |> list_users_from_scope(prefix)
         |> Staff.form_user_maps_by_user_ids(prefix)
 
-        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], user_maps, [], [], prefix)
+        generate_alert_notification("ASTCO", site_id, [updated_asset.name, updated_asset.status, date_time], [updated_asset.name, "#{existing_asset.status} to #{updated_asset.status}"], user_maps, [], prefix)
 
       #asset status to transit
       existing_asset.status != updated_asset.status && updated_asset.status == "TRN"  ->
