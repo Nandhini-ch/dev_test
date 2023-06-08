@@ -18,7 +18,7 @@ defmodule Inconn2Service.SlaCalculation do
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.ContractManagement
-  alias Inconn2Service.InventoryManagement.Stock
+  alias Inconn2Service.InventoryManagement.{Transaction, Store, Stock}
 
 
   def get_scope_details_from_contract(contract_id, prefix) do
@@ -231,10 +231,11 @@ defmodule Inconn2Service.SlaCalculation do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
 
     # count_of_items_whose_stock_level_lesser_msl
-      from(s in Stock, where: s.site_id in ^scope_map.site_ids and s.location_id in ^scope_map.location_ids,
-      join: t in Transaction, on: t.store_id == s.store_id, where: t.status == "CP" and t.is_minimum_stock_level_breached and ^from_date <= t.transaction_date and ^to_date >= t.transaction_date,
+      from(s in Store, where: s.site_id in ^scope_map.site_ids and s.location_id in ^scope_map.location_ids,
+      join: t in Transaction, on: t.store_id == s.id, where: t.status == "CP" and t.is_minimum_stock_level_breached and ^from_date <= t.transaction_date and ^to_date >= t.transaction_date,
       select: t)
-      |> Repo.all(prefix: prefix) |> Enum.count()
+      |> Repo.all(prefix: prefix)
+      |> Enum.count()
   end
 
   # 12 Zero stock level
@@ -243,8 +244,8 @@ defmodule Inconn2Service.SlaCalculation do
     scope_map = get_scope_details_from_contract(contract_id, prefix)
 
     # count_of_items_whose_stock_level_equal_to_zero
-      from(s in Stock, where: s.site_id in ^scope_map.site_ids and s.location_id in ^scope_map.location_ids,
-      join: t in Transaction, on: t.store_id == s.store_id, where: t.status == "CP" and ^from_date <= t.transaction_date and ^to_date >= t.transaction_date,
+      from(s in Store, where: s.site_id in ^scope_map.site_ids and s.location_id in ^scope_map.location_ids,
+      join: t in Transaction, on: t.store_id == s.id, where: t.status == "CP" and ^from_date <= t.transaction_date and ^to_date >= t.transaction_date,
       select: t)
       |> Repo.all(prefix: prefix)
       |> Enum.count(fn x -> x.total_stock - x.quantity == 0 end)
