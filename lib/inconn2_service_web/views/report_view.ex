@@ -55,6 +55,10 @@ defmodule Inconn2ServiceWeb.ReportView do
       workorder_template: wo.workorder_template.name,
       asset: wo.asset_name,
       status: wo.status,
+      type: wo.type_name,
+      range: wo.range,
+      done_by: wo.done_by,
+      schedule_time: "#{wo.scheduled_date} #{wo.scheduled_time}",
       tasks: render_many(wo.tasks, WorkorderTaskView, "workorder_task_with_task.json")
     }
   end
