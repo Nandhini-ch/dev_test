@@ -6,7 +6,7 @@ defmodule Inconn2Service.Workorder do
   alias Ecto.Multi
   alias Inconn2Service.Repo
   alias Inconn2Service.Assignments
-
+  alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.{AssetConfig, WorkOrderConfig}
@@ -2264,6 +2264,39 @@ defmodule Inconn2Service.Workorder do
     |> put_asset_for_flutter_template(prefix)
   end
 
+  def raise_ticket_for_failed_task(workorder_task, prefix) do
+    task = WorkOrderConfig.get_task!(workorder_task.task_id, prefix)
+    if task.task_type in ["IO", "IM"] do
+      answer = workorder_task.response["answers"]
+      options = task.config["options"]
+      filtered_value = Enum.filter(options, fn x -> x["value"] == answer end) |> List.first()
+      if filtered_value["raise_ticket"] && filtered_value["workrequest_category_id"] && filtered_value["workrequest_subcategory_id"] do
+        raise_ticket(workorder_task, task, filtered_value, prefix)
+      end
+    else
+      []
+    end
+  end
+
+  defp raise_ticket(workorder_task, task, filtered_value, prefix) do
+    wo = get_work_order!(workorder_task.work_order_id, prefix)
+    %{
+      "site_id" => wo.site_id,
+      "location_id" => get_location_id_from_asset(wo.asset_id, wo.asset_type, prefix),
+      "asset_id" => wo.asset_id,
+      "asset_type" => wo.asset_type,
+      "description" => task.label,
+      "workrequest_subcategory_id" => filtered_value["workrequest_subcategory_id"],
+      "request_type" => "CO"
+    }
+    |> Ticket.create_work_request(prefix)
+  end
+
+  defp get_location_id_from_asset(asset_id, "L", _prefix), do: asset_id
+  defp get_location_id_from_asset(asset_id, "E", prefix) do
+    AssetConfig.get_equipment!(asset_id, prefix).location_id
+  end
+
   def put_asset_for_flutter_template(wo, prefix) do
     {asset, code} =
       case wo.workorder_template.asset_type do
@@ -3049,6 +3082,7 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
     case result do
         {:ok, workorder_task} ->
+              Elixir.Task.start(fn -> raise_ticket_for_failed_task(workorder_task, prefix) end)
               # Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(task, existing_asset, updated_asset, site_id, workorder_task, prefix)
               auto_update_workorder_status(workorder_task, prefix, user)
         _ ->
