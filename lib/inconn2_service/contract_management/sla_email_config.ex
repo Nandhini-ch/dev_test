@@ -1,4 +1,4 @@
-defmodule Inconn2Service.SlaEmailConfig do
+defmodule Inconn2Service.ContractManagement.SlaEmailConfig do
   use Ecto.Schema
   import Ecto.Changeset
 

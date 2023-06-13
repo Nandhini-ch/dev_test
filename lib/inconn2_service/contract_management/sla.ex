@@ -1,4 +1,4 @@
-defmodule Inconn2Service.Sla do
+defmodule Inconn2Service.ContractManagement.Sla do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -19,6 +19,7 @@ defmodule Inconn2Service.Sla do
     field :exception, :boolean, default: false
     field :exception_value, :integer
     field :justification, :string
+    field :status, :string
 
     timestamps()
   end
@@ -42,9 +43,17 @@ defmodule Inconn2Service.Sla do
       :cycle,
       :exception,
       :exception_value,
-      :justification
+      :justification,
+      :status
     ])
     |> validate_required([:category, :criteria, :type, :weightage, :approver])
-    |> validate_inclusion(:category, ["asset", "maintenance", "inventory", "people", "ticketing", "manual"])
+    |> validate_inclusion(:category, [
+      "asset",
+      "maintenance",
+      "inventory",
+      "people",
+      "ticketing",
+      "manual"
+    ])
   end
 end

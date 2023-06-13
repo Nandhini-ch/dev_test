@@ -14,8 +14,8 @@ defmodule Inconn2Service.ContractManagement do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Staff
-  alias Inconn2Service.Sla
-  alias Inconn2Service.SlaEmailConfig
+  alias Inconn2Service.ContractManagement.Sla
+  alias Inconn2Service.ContractManagement.SlaEmailConfig
 
   def list_contracts(params, prefix) do
     Contract

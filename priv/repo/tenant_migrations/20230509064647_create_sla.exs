@@ -6,7 +6,7 @@ defmodule Inconn2Service.Repo.Migrations.CreateSla do
       add :category, :string
       add :criteria, :string
       add :calculation, :string
-      add :kpi, :string
+      add :kpi, :text
       add :type, :string
       add :weightage, :integer
       add :max_score, :integer
@@ -16,10 +16,11 @@ defmodule Inconn2Service.Repo.Migrations.CreateSla do
       add :count_list, {:array, :map}
       add :contract_id, references(:contracts, on_delete: :nothing)
       add :active, :boolean
+      add :cycle, :string
       add :exception, :boolean
       add :exception_value, :integer
-      add :justification, :string
-      add :cycle, :string
+      add :justification, :text
+      add :status, :string
 
       timestamps()
     end

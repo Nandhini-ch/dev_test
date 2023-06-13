@@ -2,7 +2,7 @@ defmodule Inconn2ServiceWeb.SlaEmailConfigController do
   use Inconn2ServiceWeb, :controller
 
   alias Inconn2Service.ContractManagement
-  alias Inconn2Service.SlaEmailConfig
+  alias Inconn2Service.ContractManagement.SlaEmailConfig
 
   action_fallback Inconn2ServiceWeb.FallbackController
 

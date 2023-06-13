@@ -2,7 +2,7 @@ defmodule Inconn2ServiceWeb.SlaController do
   use Inconn2ServiceWeb, :controller
 
   alias Inconn2Service.ContractManagement
-  alias Inconn2Service.Sla
+  alias Inconn2Service.ContractManagement.Sla
   alias Inconn2Service.SlaCalculation
 
   action_fallback Inconn2ServiceWeb.FallbackController
