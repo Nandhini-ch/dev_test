@@ -24,146 +24,142 @@ defmodule Inconn2Service.Report do
 
   def execution_data(prefix, query_params) do
     {workorders, filters} = work_order_execution_report(prefix, query_params)
-     case query_params["task_type"] do
+
+    case query_params["task_type"] do
       "mt" ->
         work_order_execution_report_metering(workorders, filters, query_params, prefix)
-         _ ->
-          all_work_order_execution_report(workorders, filters, query_params, prefix)
-     end
+
+      _ ->
+        all_work_order_execution_report(workorders, filters, query_params, prefix)
+    end
   end
 
-  def all_work_order_execution_report(work_orders, filters, query_params, prefix) do
-   readings =
-     work_orders |> Enum.map(fn wo -> get_work_order_tasks(wo, prefix) end) |> Enum.sort_by(&(&1.id), :desc)
-   case query_params["type"] do
-    "pdf" ->
-      convert_to_pdf("Work Order Execution Report", filters, readings, [], "WOE")
-    "csv" ->
-        csv_for_workorder_execution(readings)
-    _ ->
-    readings
-   end
+  def work_order_execution_report(prefix, query_params) do
+    query_params = rectify_query_params(query_params)
+    filters = filter_data(query_params, prefix)
+    main_query = from(wo in WorkOrder)
+
+    dynamic_query =
+      Enum.reduce(query_params, main_query, fn
+        {"site_id", site_id}, main_query ->
+          from q in main_query, where: q.site_id == ^site_id
+
+        {"asset_type", asset_type}, main_query ->
+          from q in main_query, where: q.asset_type == ^asset_type
+
+        {"asset_id", asset_id}, main_query ->
+          from q in main_query,
+            where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
+
+        {"status", "incp"}, main_query ->
+          from q in main_query, where: q.status not in ["cp", "cn"]
+
+        {"status", status}, main_query ->
+          from q in main_query, where: q.status == ^status
+
+        {"user_id", user_id}, main_query ->
+          from q in main_query, where: q.user_id == ^user_id
+
+        _, main_query ->
+          main_query
+      end)
+
+    {from_date, to_date} =
+      get_dates_for_query(
+        query_params["from_date"],
+        query_params["to_date"],
+        query_params["site_id"],
+        prefix
+      )
+
+    query_with_dates =
+      from(dq in dynamic_query,
+        where: dq.scheduled_date >= ^from_date and dq.scheduled_date <= ^to_date
+      )
+
+    work_orders =
+      Repo.all(query_with_dates, prefix: prefix)
+      |> Stream.map(fn wo -> get_work_order_site(wo, prefix) end)
+      |> Stream.map(fn wo -> put_asset_for_metering(wo, prefix) end)
+      |> Enum.map(fn wo -> get_workorder_template_for_work_order(wo, prefix) end)
+      |> filter_by_asset_categories(query_params["asset_category_id"])
+
+    {work_orders, filters}
   end
 
   def work_order_execution_report_metering(workorders, filters, query_params, prefix) do
-   report_headers = ["Date", "WO Number", "Asset Name", "Asset Code", "Measured Value", "Unit of measurement",  "Within Range", "Done by"]
+    report_headers = [
+      "Date",
+      "WO Number",
+      "Asset Name",
+      "Asset Code",
+      "Measured Value",
+      "Unit of measurement",
+      "Within Range",
+      "Done by"
+    ]
 
-   readings =
-    Enum.reduce(workorders, [], fn wo, acc ->
-      acc ++ get_metering_work_order_tasks(wo, prefix, query_params["uom"])
-    end)
-    |> Enum.map(fn wo -> put_done_by_in_readings(wo, prefix) end)
-    |> Enum.sort_by(&(&1.id), :desc)
+    readings =
+      Enum.reduce(workorders, [], fn wo, acc ->
+        acc ++ get_metering_work_order_tasks(wo, prefix, query_params["uom"])
+      end)
+      |> Enum.map(fn wo -> put_done_by_in_readings(wo, prefix) end)
+      |> Enum.sort_by(& &1.id, :desc)
 
-   case query_params["type"] do
-    "pdf" ->
-      convert_to_pdf(
-        "Work Order Execution Report for metering",
-        filters,
-        readings,
-        report_headers,
-        "WOEM"
-      )
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf(
+          "Work Order Execution Report for metering",
+          filters,
+          readings,
+          report_headers,
+          "WOEM"
+        )
 
       "csv" ->
         csv_for_workorder_execution_metering(report_headers, readings)
 
-    _ ->
-      readings
-   end
+      _ ->
+        readings
+    end
   end
 
-  def work_order_execution_report(prefix, query_params) do
-   query_params = rectify_query_params(query_params)
-   filters = filter_data(query_params, prefix)
-   main_query = from(wo in WorkOrder)
+  def all_work_order_execution_report(work_orders, filters, query_params, prefix) do
+    readings =
+      work_orders
+      |> Enum.map(fn wo -> get_work_order_tasks(wo, prefix) end)
+      |> Stream.map(fn wo -> put_done_by_type_name_and_range(wo, prefix) end)
+      |> Enum.sort_by(& &1.id, :desc)
 
-   dynamic_query =
-    Enum.reduce(query_params, main_query, fn
-      {"site_id", site_id}, main_query ->
-        from q in main_query, where: q.site_id == ^site_id
+    case query_params["type"] do
+      "pdf" ->
+        convert_to_pdf("Work Order Execution Report", filters, readings, [], "WOE")
 
-      {"asset_type", asset_type}, main_query ->
-        from q in main_query, where: q.asset_type == ^asset_type
+      "csv" ->
+        csv_for_workorder_execution(readings)
 
-      {"asset_id", asset_id}, main_query ->
-        from q in main_query,
-          where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
-
-      {"status", "incp"}, main_query ->
-        from q in main_query, where: q.status not in ["cp", "cn"]
-
-      {"status", status}, main_query ->
-        from q in main_query, where: q.status == ^status
-
-      {"user_id", user_id}, main_query ->
-        from q in main_query, where: q.user_id == ^user_id
-
-      _, main_query ->
-        main_query
-    end)
-
-   {from_date, to_date} =
-    get_dates_for_query(
-      query_params["from_date"],
-      query_params["to_date"],
-      query_params["site_id"],
-      prefix
-    )
-
-   query_with_dates =
-    from(dq in dynamic_query,
-      where: dq.scheduled_date >= ^from_date and dq.scheduled_date <= ^to_date
-    )
-
-   work_orders =
-    Repo.all(query_with_dates, prefix: prefix)
-    |> Stream.map(fn wo -> get_work_order_site(wo, prefix) end)
-    |> Stream.map(fn wo -> put_asset_for_metering(wo, prefix) end)
-    |> Enum.map(fn wo -> get_workorder_template_for_work_order(wo, prefix) end)
-    |> filter_by_asset_categories(query_params["asset_category_id"])
-
-   {work_orders, filters}
+      _ ->
+        readings
+    end
   end
 
-  # def work_order_execution_report_metering(prefix, query_params) do
-  #   query_params = rectify_query_params(query_params)
-  #   filters = filter_data(query_params, prefix)
-  #   {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
-  #   {from_date_time, to_date_time} = get_from_and_to_date_time_in_report(from_date, to_date)
-  #   report_headers = ["Date", "Asset", "Asset Code", "Value", "Unit of measurement", "Done by", "Within Range"]
-  #   main_query = from(mr in MeterReading)
-  #   dynamic_query =
-  #     Enum.reduce(query_params, main_query, fn
-  #       {"site_id", site_id}, main_query ->
-  #         from q in main_query, where: q.site_id == ^site_id
+  def put_done_by_type_name_and_range(wo, prefix) do
+    range =
+      if wo.scheduled_end_date != nil and wo.scheduled_end_time != nil do
+        if Date.compare(wo.completed_date, wo.scheduled_end_date) in [:lt, :eq] &&
+             Time.compare(wo.completed_time, wo.scheduled_end_time) in [:lt, :eq] do
+          "In Time"
+        else
+          "Overdue"
+        end
+      else
+        ""
+      end
 
-  #       {"asset_type", asset_type}, main_query ->
-  #         from q in main_query, where: q.asset_type == ^asset_type
-
-  #       {"asset_id", asset_id}, main_query ->
-  #         from q in main_query, where: q.asset_id == ^asset_id and q.asset_type == ^query_params["asset_type"]
-
-  #       _, query ->
-  #         query
-  #     end)
-
-  #   query_with_date = from(dq in dynamic_query, where: dq.recorded_date_time >= ^from_date_time and dq.recorded_date_time <= ^to_date_time)
-
-  #   readings =
-  #     Repo.all(query_with_date, prefix: prefix)
-  #     |> Stream.map(fn wo -> get_work_order_site(wo, prefix) end)
-  #     |> Stream.map(fn wo -> put_asset_for_metering(wo, prefix) end)
-  #     |> Enum.map(fn wo -> put_done_by_in_readings(wo, prefix) end)
-
-  #   case query_params["type"] do
-  #     "pdf" ->
-  #       convert_to_pdf("Work Order Execution Report for metering", filters, readings, report_headers, "WOEM")
-
-  #     _ ->
-  #       readings
-  #   end
-  # end
+    Map.put(wo, :type_name, match_workorder_type(wo.type))
+    |> Map.put(:range, range)
+    |> put_done_by_in_readings(prefix)
+  end
 
   defp get_from_and_to_date_time_in_report(from_date, to_date), do: {NaiveDateTime.new!(from_date, ~T[00:00:00]), NaiveDateTime.new!(to_date, ~T[23:59:59])}
 
@@ -2043,7 +2039,7 @@ defmodule Inconn2Service.Report do
         [
           [
             :h1,
-            "##{rbj.id} - #{rbj.asset_name} - #{rbj.workorder_template.name}"
+            "##{rbj.id} - #{rbj.asset_name} - #{rbj.workorder_template.name} - #{rbj.site.name} - #{rbj.done_by} - #{rbj.scheduled_date} #{rbj.scheduled_time} - #{rbj.range}"
           ],
           [
             :div,
@@ -2463,7 +2459,9 @@ defmodule Inconn2Service.Report do
 
   defp csv_for_workorder_execution(data) do
     Enum.reduce(data, [], fn d, acc ->
-      head = [["WO Number: #{d.id}", "WO Status: #{match_work_order_status(d.status)}", "Asset: #{d.asset_name}"]] ++ [[]]
+      head = [["WO Number: #{d.id}", "Asset: #{d.asset_name}", "Template: #{d.workorder_template.name}", "Site: #{d.site.name}"]]
+      ++ [["Assigned To: #{d.done_by}", "Scheduled Date & Time: #{d.scheduled_date} #{d.scheduled_time}", "WO Status: #{match_work_order_status(d.range)}"]]
+      ++ [[]]
       task_head = [["Sl.No", "Description", "Response", "Remarks"]]
 
       body =
