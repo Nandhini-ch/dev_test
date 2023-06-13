@@ -14,6 +14,8 @@ defmodule Inconn2Service.ContractManagement do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Staff
+  alias Inconn2Service.Sla
+  alias Inconn2Service.SlaEmailConfig
 
   def list_contracts(params, prefix) do
     Contract
@@ -112,12 +114,6 @@ defmodule Inconn2Service.ContractManagement do
 
   def get_site_from_scopes(params, prefix) do
     list_scopes(params, prefix) |> Enum.map(fn x -> x.site end)
-  end
-
-  def list_scopes_by_contract_id(contract_id, prefix) do
-      from(s in Scope, where: s.contract_id == ^contract_id)
-      |> Repo.add_active_filter()
-      |> Repo.all(prefix: prefix)
   end
 
   def list_scopes(contract_id, params, prefix) do
@@ -349,4 +345,50 @@ defmodule Inconn2Service.ContractManagement do
     from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
     |> Repo.all(prefix: prefix)
   end
+
+  def create_sla(attrs \\ %{}, prefix) do
+    %Sla{}
+    |> Sla.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+
+    # |> preload_scopes(prefix)
+  end
+
+  def list_sla(prefix) do
+    Sla
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def update_sla(%Sla{} = sla, attrs, prefix) do
+    sla
+    |> Sla.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def get_sla!(id, prefix),
+    do: Repo.get!(Sla, id, prefix: prefix)
+
+  def create_sla_email_config(attrs \\ %{}, prefix) do
+    %SlaEmailConfig{}
+    |> SlaEmailConfig.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+
+    # |> preload_scopes(prefix)
+  end
+
+  def update_sla_email_config(%SlaEmailConfig{} = sla_email_config, attrs, prefix) do
+    sla_email_config
+    |> SlaEmailConfig.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def list_sla_email_config(prefix) do
+    SlaEmailConfig
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def get_sla_email_config!(id, prefix),
+    do: Repo.get!(SlaEmailConfig, id, prefix: prefix)
 end

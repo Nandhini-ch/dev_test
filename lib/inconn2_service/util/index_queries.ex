@@ -123,6 +123,12 @@ defmodule Inconn2Service.Util.IndexQueries do
     _, query -> from q in query, where: q.active end)
   end
 
+  def sla_query(query, contract_id) do
+    Enum.reduce(contract_id, query, fn
+    {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
+    _, query -> from q in query, where: q.active end)
+  end
+
   def party_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"type", "sp"}, query -> from q in query, where: q.party_type == "SP"
