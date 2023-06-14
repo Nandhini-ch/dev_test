@@ -359,10 +359,24 @@ defmodule Inconn2Service.ContractManagement do
     # |> preload_scopes(prefix)
   end
 
-  def list_sla(prefix) do
+  def list_sla(params \\ %{}, prefix) do
+    query_params = rectify_query_params(params)
     Sla
+    |> sla_query(query_params)
     |> Repo.all(prefix: prefix)
     |> Repo.sort_by_id()
+    |> Stream.map(fn data -> put_approver_name(data, prefix) end)
+  end
+
+  defp rectify_query_params(query_params) do
+    Enum.filter(query_params, fn {_key, value} ->
+      value != "null"
+      end) |> Enum.into(%{})
+  end
+
+  defp put_approver_name(reading, prefix) do
+    user = Staff.get_user(reading.approver, prefix)
+    Map.put(reading, :approver_name, user.email)
   end
 
   def update_sla(%Sla{} = sla, attrs, prefix) do

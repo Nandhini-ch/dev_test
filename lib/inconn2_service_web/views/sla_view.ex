@@ -30,7 +30,8 @@ defmodule Inconn2ServiceWeb.SlaView do
       exception_value: sla.exception_value,
       justification: sla.justification,
       cycle: sla.cycle,
-      status: sla.status
+      status: sla.status,
+      approver_name: sla.approver_name
     }
   end
 

@@ -123,10 +123,13 @@ defmodule Inconn2Service.Util.IndexQueries do
     _, query -> from q in query, where: q.active end)
   end
 
-  def sla_query(query, contract_id) do
-    Enum.reduce(contract_id, query, fn
+  def sla_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
     {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
-    _, query -> from q in query, where: q.active end)
+    {"status", status}, query -> from q in query, where: q.status == ^status
+    {"cycle", cycle}, query -> from q in query, where: q.cycle == ^cycle
+    {"active", active}, query -> from q in query, where: q.active == ^active
+    _, query -> query end)
   end
 
   def party_query(query, query_params) do
@@ -270,6 +273,7 @@ defmodule Inconn2Service.Util.IndexQueries do
        _ , query -> query
     end)
   end
+
 
   def manpower_configuration_query(query, query_params) do
     Enum.reduce(query_params, query, fn

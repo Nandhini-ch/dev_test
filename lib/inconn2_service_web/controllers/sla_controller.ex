@@ -7,8 +7,8 @@ defmodule Inconn2ServiceWeb.SlaController do
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
-  def index(conn, _params) do
-    sla = ContractManagement.list_sla(conn.assigns.sub_domain_prefix)
+  def index(conn, params) do
+    sla = ContractManagement.list_sla(params, conn.assigns.sub_domain_prefix)
     render(conn, "index.json", sla: sla)
   end
 
