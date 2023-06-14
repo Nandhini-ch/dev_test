@@ -939,6 +939,7 @@ defmodule Inconn2Service.Workorder do
 
   def list_work_order_for_team(_user, _prefix), do: []
 
+  def get_work_order!(nil, _prefix), do: nil
 
   def get_work_order!(id, prefix) do
     work_order = Repo.get!(WorkOrder, id, prefix: prefix)
@@ -3578,15 +3579,28 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
 
-  def get_workorder_file_upload_by_workorder_task_id(task_id, prefix) do
-    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^task_id)
-    |> Repo.get(prefix: prefix)
+  def get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
+    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^workorder_task_id)
+    |> Repo.one(prefix: prefix)
   end
 
   def create_workorder_file_upload(attrs \\ %{}, prefix) do
     %WorkorderFileUpload{}
-    |> WorkorderFileUpload.changeset(attrs)
+    |> WorkorderFileUpload.changeset(read_workorder_file_upload(attrs))
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp read_workorder_file_upload(attrs) do
+    file = Map.get(attrs, "file")
+    if file != nil and file != "" do
+      {:ok, file_content} = File.read(file.path)
+      file_type = file.content_type
+      attrs
+      |> Map.put("file", file_content)
+      |> Map.put("file_type", file_type)
+    else
+      attrs
+    end
   end
 
   alias Inconn2Service.Workorder.WorkorderApprovalTrack
