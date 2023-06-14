@@ -11,7 +11,32 @@ defmodule Inconn2ServiceWeb.WorkorderFileUploadController do
     render(conn, "index.json", workorder_file_uploads: workorder_file_uploads)
   end
 
-  def create(conn, %{"workorder_file_upload" => workorder_file_upload_params}) do
+  def index(conn, params) do
+    if Map.has_key?(params, "workorder_task_id") do
+      get_by_workorder_task_id(conn, params["workorder_task_id"])
+    else
+      list_for_workorder_task_file_upload(conn)
+    end
+  end
+
+  def get_by_workorder_task_id(conn, %{"id" => id}) do
+    workorder_file_upload = Workorder.get_workorder_file_upload_by_workorder_task_id(id, conn.assigns.sub_domain_prefix)
+    case workorder_file_upload do
+      nil ->
+        {:error, :not_found}
+      _ ->
+        conn
+        |> put_resp_content_type("image/png")
+        |> send_resp(200, workorder_file_upload.file)
+    end
+  end
+
+  def list_for_workorder_task_file_upload(conn) do
+    workorder_file_upload = WorkOrder.list_workorder_file_uploads()
+    render(conn, "index.json", workorder_file_upload: workorder_file_upload)
+  end
+
+  def create(conn, workorder_file_upload_params) do
     with {:ok, %WorkorderFileUpload{} = workorder_file_upload} <- Workorder.create_workorder_file_upload(workorder_file_upload_params, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
@@ -22,11 +47,6 @@ defmodule Inconn2ServiceWeb.WorkorderFileUploadController do
 
   def show(conn, %{"id" => id}) do
     workorder_file_upload = Workorder.get_workorder_file_upload!(id, conn.assigns.sub_domain_prefix)
-    render(conn, "show.json", workorder_file_upload: workorder_file_upload)
-  end
-
-  def get_by_workorder_task_id(conn, %{"id" => id}) do
-    workorder_file_upload = Workorder.get_workorder_file_upload_by_workorder_task_id(id, conn.assigns.sub_domain_prefix)
     render(conn, "show.json", workorder_file_upload: workorder_file_upload)
   end
 

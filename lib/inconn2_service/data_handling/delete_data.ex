@@ -5,6 +5,7 @@ defmodule Inconn2Service.DataHandling.DeleteData do
   alias Inconn2Service.Account
   alias Inconn2Service.Prompt.AlertNotificationConfig
   alias Inconn2Service.Prompt.UserAlertNotification
+  alias Inconn2Service.Communication
   alias Inconn2Service.Common.{AlertNotificationReserve, AlertNotificationScheduler, AlertNotificationGenerator, PublicUom}
 
   # Delete data in alert notification reserve table
@@ -53,6 +54,19 @@ defmodule Inconn2Service.DataHandling.DeleteData do
       UserAlertNotification
       |> Repo.delete_all(prefix: prefix)
    end)
+  end
+
+  #delete message template for the particular code
+  def delete_data_in_message_template_based_on_the_code(code) do
+    message_template =
+          Communication.get_message_template_by_code(code)
+
+    if message_template do
+      Repo.delete!(message_template)
+      {:ok, "Message template deleted successfully."}
+    else
+      {:error, "Message template not found."}
+    end
   end
 
 end

@@ -24,6 +24,6 @@ defmodule Inconn2Service.Batch.AlertNotificationGenServer do
   def generate_alert_notifications() do
     dt = DateTime.add(DateTime.utc_now, 60, :second)
     an = from(an in AlertNotificationGenerator, where: an.utc_date_time <= ^dt) |> Repo.all
-    Enum.map(an, fn x -> Prompt.generate_alert_notification(x) end)
+    Enum.map(an, fn x -> Prompt.generate_alert_notification_for_assets(x) end)
   end
 end

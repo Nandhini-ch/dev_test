@@ -107,6 +107,8 @@ defmodule Inconn2Service.Account do
                                         prefix)
         Staff.create_licensee_admin(%{
           "username" => licensee.contact.email,
+          "first_name" => licensee.contact.first_name,
+          "last_name" => licensee.contact.last_name,
           "email" => licensee.contact.email,
           "password" => licensee.contact.mobile,
           "mobile_no" => licensee.contact.mobile,

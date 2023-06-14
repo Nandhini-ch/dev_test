@@ -162,6 +162,7 @@ defmodule Inconn2Service.Util.IndexQueries do
   def user_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"party_id", party_id}, query -> from q in query, where: q.party_id == ^party_id
+      {"party_ids", party_ids}, query -> from q in query, where: q.party_id in ^party_ids
       {"employee_id", employee_id}, query -> from q in query, where: q.employee_id == ^employee_id
       {"role_id", role_id}, query -> from q in query, where: q.role_id == ^role_id
       _, query -> from q in query, where: q.active

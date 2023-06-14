@@ -80,7 +80,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id in ^asset_ids and
                         mr.asset_type == "E" and
                         mr.meter_type == "F" and
-                        mr.unit_of_measurement == "KL" and
+                        mr.unit_of_measurement == "L" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
@@ -133,7 +133,7 @@ defmodule Inconn2Service.Dashboards.NumericalData do
                   where: mr.asset_id == ^asset_id and
                         mr.asset_type == "E" and
                         mr.meter_type == "F" and
-                        mr.unit_of_measurement == "KL" and
+                        mr.unit_of_measurement == "L" and
                         mr.recorded_date_time >= ^from_dt and
                         mr.recorded_date_time <= ^to_dt,
                   select: sum(mr.absolute_value)
