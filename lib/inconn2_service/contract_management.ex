@@ -37,7 +37,6 @@ defmodule Inconn2Service.ContractManagement do
 
   def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix)  |> preload_service_provider(prefix)
 
-
   def create_contract(attrs \\ %{}, prefix) do
     %Contract{}
     |> Contract.changeset(attrs)
@@ -76,7 +75,6 @@ defmodule Inconn2Service.ContractManagement do
   #   end
   # end
 
-
   def delete_contract(%Contract{} = contract, prefix) do
    deactive_scope_for_contract(contract.id, prefix)
    deactive_manpower_configuration_for_contract(contract.id, prefix)
@@ -96,11 +94,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Repo.update_all([set: [active: false]], prefix: prefix)
   end
 
-
   def change_contract(%Contract{} = contract, attrs \\ %{}) do
     Contract.changeset(contract, attrs)
   end
-
 
   def list_scopes(params, prefix) do
     Scope
@@ -120,6 +116,15 @@ defmodule Inconn2Service.ContractManagement do
     from(s in Scope, where: s.contract_id == ^contract_id)
     |> Repo.add_active_filter()
     |> scope_query(params)
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn s -> preload_site(s, prefix) end)
+    |> Stream.map(fn s -> preload_locations(s, prefix) end)
+    |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
+  end
+
+  def list_scopes_by_contract_id(contract_id, prefix) do
+    from(s in Scope, where: s.contract_id == ^contract_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn s -> preload_site(s, prefix) end)
     |> Stream.map(fn s -> preload_locations(s, prefix) end)

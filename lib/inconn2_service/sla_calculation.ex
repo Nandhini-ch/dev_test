@@ -77,12 +77,11 @@ defmodule Inconn2Service.SlaCalculation do
 
   # 1 status - MTBF
   def get_mtbf_status(contract_id, from_date, to_date, prefix) do
-    IO.inspect("dsdsds")
     scope_map = get_scope_details_from_contract(contract_id, prefix)
     # from_dt = NaiveDateTime.new!(from_date, ~T[00:00:00])
     # to_dt = NaiveDateTime.new!(to_date, ~T[23:59:59])
     from_dt = NaiveDateTime.from_iso8601!(from_date <> " 00:00:00")
-    to_dt = NaiveDateTime.from_iso8601!(to_date <> " 00:00:00")
+    to_dt = NaiveDateTime.from_iso8601!(to_date <> " 23:59:59")
 
     from(e in Equipment,
       where:
