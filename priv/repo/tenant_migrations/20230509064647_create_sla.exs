@@ -21,6 +21,8 @@ defmodule Inconn2Service.Repo.Migrations.CreateSla do
       add :exception_value, :integer
       add :justification, :text
       add :status, :string
+      add :rejection_reason, :string
+      add :config_status, :string
 
       timestamps()
     end

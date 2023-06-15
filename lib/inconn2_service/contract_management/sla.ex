@@ -20,6 +20,8 @@ defmodule Inconn2Service.ContractManagement.Sla do
     field :exception_value, :integer
     field :justification, :string
     field :status, :string
+    field :rejection_reason, :string
+    field :config_status, :string
 
     timestamps()
   end
@@ -44,7 +46,9 @@ defmodule Inconn2Service.ContractManagement.Sla do
       :exception,
       :exception_value,
       :justification,
-      :status
+      :status,
+      :rejection_reason,
+      :config_status
     ])
     |> validate_required([:category, :criteria, :type, :weightage, :approver])
     |> validate_inclusion(:category, [

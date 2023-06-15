@@ -127,8 +127,10 @@ defmodule Inconn2Service.Util.IndexQueries do
     Enum.reduce(query_params, query, fn
     {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
     {"status", status}, query -> from q in query, where: q.status == ^status
+    {"config_status", config_status}, query -> from q in query, where: q.config_status == ^config_status
     {"cycle", cycle}, query -> from q in query, where: q.cycle == ^cycle
     {"active", active}, query -> from q in query, where: q.active == ^active
+    {"approver", approver}, query -> from q in query, where: q.approver == ^approver
     _, query -> query end)
   end
 
