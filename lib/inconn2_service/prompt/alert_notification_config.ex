@@ -11,6 +11,7 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
     field :escalated_to_users, {:array, :map}, default: []
     field :is_sms_required, :boolean, default: false
     field :is_email_required, :boolean, default: false
+    field :priority, :string, default: "medium"
     belongs_to :site, Inconn2Service.AssetConfig.Site
 
     timestamps()
@@ -24,6 +25,7 @@ defmodule Inconn2Service.Prompt.AlertNotificationConfig do
     |> validate_escalation_time_and_user_ids()
     |> unique_constraint([:site_id, :alert_notification_reserve_id])
     |> unique_constraint(:unique_alert_config, [name: :unique_alert_config, message: "Already configured for this site"])
+    |> validate_inclusion(:priority, ["medium", "high"])
   end
 
   def validate_escalation_time_and_user_ids(cs) do

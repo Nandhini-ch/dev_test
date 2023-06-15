@@ -7,8 +7,9 @@ defmodule Inconn2ServiceWeb.IotService.AlertController do
     render(conn, "alert.json", data: %{"result" => "success"})
   end
 
-  def send_sms(conn, %{"sms_params" => _sms_params}) do
-    render(conn, "alert.json", data: [])
+  def send_sms(conn, %{"sms_params" => sms_params}) do
+    Alert.send_sms_iot_alert(sms_params, conn.assigns.sub_domain_prefix)
+    render(conn, "alert.json", data: %{"result" => "success"})
   end
 
   def send_email(conn, %{"email_params" => email_params}) do
