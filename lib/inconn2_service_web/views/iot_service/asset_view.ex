@@ -13,7 +13,10 @@ defmodule Inconn2ServiceWeb.IotService.AssetView do
   def render("asset.json", %{asset: asset}) do
     %{id: asset.id,
       asset_type: asset.asset_type,
-      asset_name: asset.name}
+      asset_name: asset.name,
+      asset_code: asset.code,
+      asset_status: asset.status
+    }
   end
 
   def render("success.json", %{data: data}) do
