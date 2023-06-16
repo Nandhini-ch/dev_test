@@ -165,7 +165,7 @@ defmodule Inconn2Service.Prompt do
 
         generate_alert_notification("WONCS", work_order.site_id, [work_order.id], [work_order.id], user_maps, escalated_user_maps, alert_notification_generator.prefix)
 
-      "TCKTE" ->
+      "TCKTET" ->
         work_request = Ticket.get_work_request!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
         date_time = get_site_date_now(work_request.site_id, alert_notification_generator.prefix)
         asset = AssetConfig.get_asset_by_asset_id(work_request.asset_id, work_request.asset_type, alert_notification_generator.prefix)
@@ -175,6 +175,16 @@ defmodule Inconn2Service.Prompt do
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
 
         generate_alert_notification("TCKTE", work_request.site_id, [work_request.id, "resolution tat", date_time], [work_request.id, "resolution tat", date_time], user_maps, escalation_user_maps, alert_notification_generator.prefix)
+
+      "TCKTEP" ->
+        work_request = Ticket.get_work_request!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        date_time = get_site_date_now(work_request.site_id, alert_notification_generator.prefix)
+        asset = AssetConfig.get_asset_by_asset_id(work_request.asset_id, work_request.asset_type, alert_notification_generator.prefix)
+        user = Staff.form_user_maps_by_user_ids([work_request.assigned_user_id], alert_notification_generator.prefix)
+        helpdesk_users = Ticket.group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, work_request.site_id, alert_notification_generator.prefix)
+        user_maps = user ++ helpdesk_users
+        escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
+        generate_alert_notification("TCKTE", work_request.site_id, [work_request.id, "response tat", date_time], [work_request.id, "response tat", date_time], user_maps, escalation_user_maps, alert_notification_generator.prefix)
     end
   end
 
@@ -296,6 +306,7 @@ defmodule Inconn2Service.Prompt do
       "alert_notification_id" => an_reserve.id,
       "alert_identifier_date_time" => alert_identifier_date_time,
       "type" => an_reserve.type,
+      "priority" => an_reserve.priority,
       "site_id" => site_id,
       "user_id" => user_id,
       "description" => message
