@@ -91,7 +91,7 @@
     {
         "code": "TCKCM",
         "template_name": "Ticket completed",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636843577406",
         "telemarketer_id": "1701166322207419896"
     },
