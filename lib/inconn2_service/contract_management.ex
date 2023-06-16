@@ -14,6 +14,8 @@ defmodule Inconn2Service.ContractManagement do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.Settings
   alias Inconn2Service.Staff
+  alias Inconn2Service.ContractManagement.Sla
+  alias Inconn2Service.ContractManagement.SlaEmailConfig
 
   def list_contracts(params, prefix) do
     Contract
@@ -34,7 +36,6 @@ defmodule Inconn2Service.ContractManagement do
   end
 
   def get_contract!(id, prefix), do: Repo.get!(Contract, id, prefix: prefix)  |> preload_service_provider(prefix)
-
 
   def create_contract(attrs \\ %{}, prefix) do
     %Contract{}
@@ -74,7 +75,6 @@ defmodule Inconn2Service.ContractManagement do
   #   end
   # end
 
-
   def delete_contract(%Contract{} = contract, prefix) do
    deactive_scope_for_contract(contract.id, prefix)
    deactive_manpower_configuration_for_contract(contract.id, prefix)
@@ -94,11 +94,9 @@ defmodule Inconn2Service.ContractManagement do
     |> Repo.update_all([set: [active: false]], prefix: prefix)
   end
 
-
   def change_contract(%Contract{} = contract, attrs \\ %{}) do
     Contract.changeset(contract, attrs)
   end
-
 
   def list_scopes(params, prefix) do
     Scope
@@ -114,16 +112,19 @@ defmodule Inconn2Service.ContractManagement do
     list_scopes(params, prefix) |> Enum.map(fn x -> x.site end)
   end
 
-  def list_scopes_by_contract_id(contract_id, prefix) do
-      from(s in Scope, where: s.contract_id == ^contract_id)
-      |> Repo.add_active_filter()
-      |> Repo.all(prefix: prefix)
-  end
-
   def list_scopes(contract_id, params, prefix) do
     from(s in Scope, where: s.contract_id == ^contract_id)
     |> Repo.add_active_filter()
     |> scope_query(params)
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn s -> preload_site(s, prefix) end)
+    |> Stream.map(fn s -> preload_locations(s, prefix) end)
+    |> Stream.map(fn s -> preload_asset_categories(s, prefix) end)
+  end
+
+  def list_scopes_by_contract_id(contract_id, prefix) do
+    from(s in Scope, where: s.contract_id == ^contract_id)
+    |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn s -> preload_site(s, prefix) end)
     |> Stream.map(fn s -> preload_locations(s, prefix) end)
@@ -349,4 +350,64 @@ defmodule Inconn2Service.ContractManagement do
     from(q in query, where: q.id in ^list, select: %{id: q.id, name: q.name})
     |> Repo.all(prefix: prefix)
   end
+
+  def create_sla(attrs \\ %{}, prefix) do
+    %Sla{}
+    |> Sla.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+
+    # |> preload_scopes(prefix)
+  end
+
+  def list_sla(params \\ %{}, prefix) do
+    query_params = rectify_query_params(params)
+    Sla
+    |> sla_query(query_params)
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+    |> Stream.map(fn data -> put_approver_name(data, prefix) end)
+  end
+
+  defp rectify_query_params(query_params) do
+    Enum.filter(query_params, fn {_key, value} ->
+      value != "null"
+      end) |> Enum.into(%{})
+  end
+
+  defp put_approver_name(reading, prefix) do
+    user = Staff.get_user(reading.approver, prefix)
+    Map.put(reading, :approver_name, user.email)
+  end
+
+  def update_sla(%Sla{} = sla, attrs, prefix) do
+    sla
+    |> Sla.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def get_sla!(id, prefix),
+    do: Repo.get!(Sla, id, prefix: prefix)
+
+  def create_sla_email_config(attrs \\ %{}, prefix) do
+    %SlaEmailConfig{}
+    |> SlaEmailConfig.changeset(attrs)
+    |> Repo.insert(prefix: prefix)
+
+    # |> preload_scopes(prefix)
+  end
+
+  def update_sla_email_config(%SlaEmailConfig{} = sla_email_config, attrs, prefix) do
+    sla_email_config
+    |> SlaEmailConfig.changeset(attrs)
+    |> Repo.update(prefix: prefix)
+  end
+
+  def list_sla_email_config(prefix) do
+    SlaEmailConfig
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
+  def get_sla_email_config!(id, prefix),
+    do: Repo.get!(SlaEmailConfig, id, prefix: prefix)
 end

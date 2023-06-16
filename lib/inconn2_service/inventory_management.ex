@@ -586,6 +586,11 @@ defmodule Inconn2Service.InventoryManagement do
     stock_query(Stock, query_params ) |> Repo.all(prefix: prefix)|> Repo.preload([:store, inventory_item: :inventory_unit_of_measurement])
   end
 
+  def list_stock_by_item_and_store(inventory_item_id, store_id, prefix) do
+    from(s in Stock, where: s.inventory_item_id == ^inventory_item_id and s.store_id == ^store_id)
+    |> Repo.all(prefix: prefix)
+  end
+
   def list_stocks_for_storekeeper(user, prefix) do
     store_ids = list_stores(%{"storekeeper_user_id" => user.id}, prefix) |> Enum.map(fn s -> s.id end)
     list_stocks(%{"store_ids" => store_ids}, prefix)
@@ -858,7 +863,26 @@ defmodule Inconn2Service.InventoryManagement do
       |> check_for_approval_flow(prefix)
       |> Repo.insert(prefix: prefix)
       |> update_site_level_stock(prefix)
+      |> track_transaction_stock(prefix)
     end
+  end
+
+  defp track_transaction_stock({:error, changeset}, _prefix), do: {:error, changeset}
+  defp track_transaction_stock({:ok, transaction}, prefix) do
+    total_stock =
+      list_stock_by_item_and_store(transaction.inventory_item_id, transaction.store_id, prefix)
+      |> Enum.map(&(&1.quantity))
+      |> Enum.sum()
+
+    msl = get_inventory_item!(transaction.inventory_item_id, prefix).minimum_stock_level
+
+    after_stock = total_stock - transaction.quantity
+
+    is_msl_breached = (after_stock <= msl)
+
+    transaction
+    |> Transaction.update_changeset(%{"is_minimum_stock_level_breached" => is_msl_breached, "total_stock" => total_stock, "minimum_stock_level" => msl})
+    |> Repo.update(prefix: prefix)
   end
 
   defp calculate_cost(cs), do: change(cs, %{cost: get_field(cs, :unit_price) * get_field(cs, :quantity) })

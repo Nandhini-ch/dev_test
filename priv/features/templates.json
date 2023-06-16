@@ -91,7 +91,7 @@
     {
         "code": "TCKCM",
         "template_name": "Ticket completed",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636843577406",
         "telemarketer_id": "1701166322207419896"
     },
@@ -113,7 +113,7 @@
         "code": "POFVD",
         "template_name": "Asset parameter out of validation",
         "message": "Dear <%= var1 %>, <%= var2 %> <%= var3 %> out of range Regards, Team Inconn - Wynwy",
-        "dlt_template_id ": " 1707167643783094640",
+        "dlt_template_id ": "1707167643783094640",
         "telemarketer_id ": "1701166322207419896 "
     },
     {
@@ -160,8 +160,8 @@
     },
     {
         "code": "STOFC",
-        "template_name": "Asset Status change to on / off ",
-        "message": "Dear user, Asset status for the <%= var1 %> device has been switched from <%= var2 %>.Regards, Team Inconn - Wynwy ",
+        "template_name": "Asset Status change to on / off",
+        "message": "Dear user, Asset status for the <%= var1 %> device has been switched from <%= var2 %>.Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707168551701406216",
         "telemarketer_id": "1701166322207419896"
     }

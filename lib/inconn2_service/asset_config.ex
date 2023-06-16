@@ -1661,7 +1661,7 @@ defmodule Inconn2Service.AssetConfig do
         |> list_users_from_scope(prefix)
         |> Staff.form_user_maps_by_user_ids(prefix)
 
-        generate_alert_notification("MASTH", site_id, ["asset tree hierarchy of #{existing_asset.name} are modified"], [], user_maps, [], prefix)
+        generate_alert_notification("MASTH", site_id, ["asset tree hierarchy of #{existing_asset.name} are"], [], user_maps, [], prefix)
 
       true ->
         {:ok, updated_asset}

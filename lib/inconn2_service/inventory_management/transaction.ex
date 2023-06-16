@@ -13,6 +13,9 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
     field :quantity, :float
     field :remarks, :string
     field :row, :string
+    field :total_stock, :float
+    field :is_minimum_stock_level_breached, :boolean
+    field :minimum_stock_level, :float
     field :transaction_date, :date
     field :transaction_reference, :string
     field :transaction_time, :time
@@ -42,7 +45,7 @@ defmodule Inconn2Service.InventoryManagement.Transaction do
   @doc false
   def changeset(transaction, attrs) do
     transaction
-    |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :unit_of_measurement_id, :store_id,
+    |> cast(attrs, [:transaction_reference, :transaction_type, :inventory_item_id, :total_stock, :minimum_stock_level, :is_minimum_stock_level_breached, :unit_of_measurement_id, :store_id,
                               :transaction_user_id, :approver_user_id, :quantity, :unit_price, :aisle, :row, :bin, :cost, :remarks,
                               :is_approval_required, :is_approved, :inventory_supplier_id, :transaction_date, :transaction_time,
                               :dc_no, :dc_file, :requester_name, :emp_id, :authorized_by, :department, :status])

@@ -21,6 +21,7 @@ defmodule Inconn2ServiceWeb.AlertNotificationConfigView do
       escalated_to_users: alert_notification_config.escalated_to_users,
       is_sms_required: alert_notification_config.is_sms_required,
       is_email_required: alert_notification_config.is_email_required,
-      site: render_one(alert_notification_config.site, SiteView, "site.json")}
+      site: render_one(alert_notification_config.site, SiteView, "site.json"),
+      priority: alert_notification_config.priority}
   end
 end

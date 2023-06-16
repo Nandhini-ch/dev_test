@@ -545,6 +545,12 @@ defmodule Inconn2ServiceWeb.Router do
     get "/download_inventory_items", ReferenceDownloadController, :download_inventory_items
     post "/upload_inventory_items", ReferenceUploadController, :upload_inventory_items
 
+    resources "/sla", SlaController, except: [:new, :edit]
+    resources "/sla_email_config", SlaEmailConfigController, except: [:new, :edit]
+    get "/contracts/:contract_id/sla", SlaController, :index
+    put "/sla/:id/activate", SlaController, :activate_sla
+    put "/sla/:id/deactivate", SlaController, :deactivate_sla
+    get "/scorecard_calculation", SlaController, :scorecard_calculation
 
     scope "/my_teams" do
       get "/", TeamController, :index_for_user
@@ -576,9 +582,6 @@ defmodule Inconn2ServiceWeb.Router do
       post "/send_sms", AlertController, :send_sms
       post "/send_emails", AlertController, :send_email
       post "/create_work_orders", AlertController, :create_work_order
-      # resources "/send_sms", SendSmsController, except: [:new, :edit]
-      # resources "/message_templates", MessageTemplatesController, except: [:new, :edit]
-
     end
   end
 end

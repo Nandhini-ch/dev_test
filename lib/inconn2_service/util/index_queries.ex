@@ -42,8 +42,10 @@ defmodule Inconn2Service.Util.IndexQueries do
   def equipment_query(query, query_params) do
     Enum.reduce(query_params, query, fn
     {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+    {"site_ids", site_ids}, query -> from q in query, where: q.site_id == ^site_ids
     {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
     {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
+    {"location_ids", location_ids}, query -> from q in query, where: q.location_id in ^location_ids
     {"location_id", location_id}, query -> from q in query, where: q.location_id == ^location_id
     {"status", status}, query -> from q in query, where: q.status == ^status
     {"criticality", 0}, query -> query
@@ -55,8 +57,10 @@ defmodule Inconn2Service.Util.IndexQueries do
   def location_query(query, query_params) do
     Enum.reduce(query_params, query, fn
       {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
+      {"site_ids", site_ids}, query -> from q in query, where: q.site_id == ^site_ids
       {"asset_category_id", asset_category_id}, query -> from q in query, where: q.asset_category_id == ^asset_category_id
       {"asset_category_ids", asset_category_ids}, query -> from q in query, where: q.asset_category_id in ^asset_category_ids
+      {"location_ids", location_ids}, query -> from q in query, where: q.location_id in ^location_ids
       _, query -> from q in query, where: q.active
     end)
   end
@@ -117,6 +121,17 @@ defmodule Inconn2Service.Util.IndexQueries do
     {"site_id", site_id}, query -> from q in query, where: q.site_id == ^site_id
     {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
     _, query -> from q in query, where: q.active end)
+  end
+
+  def sla_query(query, query_params) do
+    Enum.reduce(query_params, query, fn
+    {"contract_id", contract_id}, query -> from q in query, where: q.contract_id == ^contract_id
+    {"status", status}, query -> from q in query, where: q.status == ^status
+    {"config_status", config_status}, query -> from q in query, where: q.config_status == ^config_status
+    {"cycle", cycle}, query -> from q in query, where: q.cycle == ^cycle
+    {"active", active}, query -> from q in query, where: q.active == ^active
+    {"approver", approver}, query -> from q in query, where: q.approver == ^approver
+    _, query -> query end)
   end
 
   def party_query(query, query_params) do
@@ -261,6 +276,7 @@ defmodule Inconn2Service.Util.IndexQueries do
        _ , query -> query
     end)
   end
+
 
   def manpower_configuration_query(query, query_params) do
     Enum.reduce(query_params, query, fn
