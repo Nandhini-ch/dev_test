@@ -2279,6 +2279,40 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def image_proccessing_in_woe(workorder_task, prefix) do
+    task = WorkOrderConfig.get_task!(workorder_task.task_id, prefix)
+    if task.task_type == "OB" do
+      process(workorder_task.id, prefix)
+    end
+  end
+
+  def process(workorder_task_id, prefix) do
+
+
+    case get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
+      nil ->
+        "#"
+
+      file_upload_struct ->
+        IO.inspect(file_upload_struct.file)
+        [_image, extension] = String.split(file_upload_struct.file_type, "/", parts: 2)
+
+        filename = "#{workorder_task_id}.#{extension}"
+
+        dir = System.tmp_dir!()
+        tmp_path = Path.join(dir, "test.png")
+        File.write!(tmp_path, file_upload_struct.file)
+
+        # tmp_path
+        # |> Image.open!()
+        # # |> Image.resize(300, 400)
+        # |> Image.write(tmp_path)
+        # # |> File.rm()
+        # Inconn2Service.Workorder.process(15, "inc_bata")
+
+    end
+  end
+
   defp raise_ticket(workorder_task, task, filtered_value, prefix) do
     wo = get_work_order!(workorder_task.work_order_id, prefix)
     %{
@@ -3578,6 +3612,8 @@ defmodule Inconn2Service.Workorder do
   end
 
   def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
+
+  def get_workorder_file_upload_by_workorder_task_id(nil, _prefix), do: nil
 
   def get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
     from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^workorder_task_id)

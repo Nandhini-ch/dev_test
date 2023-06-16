@@ -2023,6 +2023,14 @@ defmodule Inconn2Service.Report do
         ],
         [
           :td,
+          [
+
+            :img,
+            %{src: "https://www.w3schools.com/images/lamp.jpg", style: style(%{"height" => "200", "width" => "250"})}
+          ]
+        ],
+        [
+          :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           t.remarks
         ]
@@ -2054,22 +2062,27 @@ defmodule Inconn2Service.Report do
                 :tr,
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Task Name"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Task Type"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Response"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
+                  "Image"
+                ],
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Remarks"
                 ]
               ],

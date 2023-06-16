@@ -7,7 +7,7 @@ defmodule Inconn2Service.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      # compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -55,7 +55,8 @@ defmodule Inconn2Service.MixProject do
       {:sneeze, "~> 1.2"},
       {:swoosh, "~> 1.6"},
       {:gen_smtp, "~>  1.2"},
-      {:httpoison, "~> 2.0"}
+      {:httpoison, "~> 2.0"},
+      {:image, "~> 0.33.0"}
     ]
   end
 
