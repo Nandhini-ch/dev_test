@@ -55,7 +55,9 @@ defmodule Inconn2Service.MixProject do
       {:sneeze, "~> 1.2"},
       {:swoosh, "~> 1.6"},
       {:gen_smtp, "~>  1.2"},
-      {:httpoison, "~> 2.0"}
+      {:httpoison, "~> 2.0"},
+      {:image, "~> 0.33.0"},
+      {:briefly, "~> 0.4.0"}
     ]
   end
 

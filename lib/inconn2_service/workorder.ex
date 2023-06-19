@@ -2292,6 +2292,33 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  def image_proccessing_in_woe(workorder_task) do
+    if workorder_task.task.task_type == "OB" do
+      image_process(workorder_task.workorder_file_upload)
+    else
+      "#"
+    end
+  end
+
+  def image_process(nil), do: "#"
+  def image_process(workorder_file_upload) do
+    IO.inspect(workorder_file_upload.file)
+    [_image, ext] = String.split(workorder_file_upload.file_type, "/", parts: 2)
+    path = Briefly.create!(ext: ext) |> IO.inspect()
+    File.write!(path, workorder_file_upload.file)
+    path
+  end
+
+  def validate_workorder_file_upload_one_time(cs, prefix) do
+    workorder_task_id = get_field(cs, :workorder_task_id, nil)
+      case get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
+        nil ->
+            cs
+        _ ->
+            add_error(cs, :workorder_task_id, "already exists for this task")
+      end
+  end
+
   defp raise_ticket(workorder_task, task, filtered_value, prefix) do
     wo = get_work_order!(workorder_task.work_order_id, prefix)
     %{
@@ -3592,6 +3619,8 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
 
+  def get_workorder_file_upload_by_workorder_task_id(nil, _prefix), do: nil
+
   def get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
     from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^workorder_task_id)
     |> Repo.one(prefix: prefix)
@@ -3600,6 +3629,7 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_file_upload(attrs \\ %{}, prefix) do
     %WorkorderFileUpload{}
     |> WorkorderFileUpload.changeset(read_workorder_file_upload(attrs))
+    |> validate_workorder_file_upload_one_time(prefix)
     |> Repo.insert(prefix: prefix)
   end
 

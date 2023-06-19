@@ -9,7 +9,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.WorkOrderConfig
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule, Workorder_file_upload}
   alias Inconn2Service.Workorder
   # alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
@@ -205,7 +205,10 @@ defmodule Inconn2Service.Report do
 
   defp get_work_order_tasks(wo, prefix) do
     work_order_tasks = Workorder.list_workorder_tasks(prefix, wo.id)
-    |> Enum.map(fn wot -> Map.put(wot, :task, WorkOrderConfig.get_task!(wot.task_id, prefix)) end)
+    |> Enum.map(fn wot ->
+      Map.put(wot, :task, WorkOrderConfig.get_task!(wot.task_id, prefix))
+      |> Map.put(:workorder_file_upload, Workorder.get_workorder_file_upload_by_workorder_task_id(wot.id, prefix))
+    end)
     Map.put(wo, :tasks, work_order_tasks)
   end
 
@@ -1999,6 +2002,7 @@ defmodule Inconn2Service.Report do
 
   defp create_task_table(tasks) do
     # IO.inspect(tasks)
+    # IO.inspect("!!!!!!!!!!!@!@@!@!@!@!@!@!@!@!@!@!@!@!")
     Enum.map(tasks, fn t ->
       [
         :tr,
@@ -2016,6 +2020,19 @@ defmodule Inconn2Service.Report do
           :td,
           %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
           parse_task(t.task.task_type, t.response["answers"])
+        ],
+        [
+          :td,
+          case Workorder.image_proccessing_in_woe(t) do
+            "#" ->
+              "Not available"
+
+            image_path ->
+              [
+                :img,
+                %{src: Workorder.image_proccessing_in_woe(t), alt: "Image not available", style: style(%{"height" => "200", "width" => "250"})}
+              ]
+          end
         ],
         [
           :td,
@@ -2050,22 +2067,27 @@ defmodule Inconn2Service.Report do
                 :tr,
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Task Name"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Task Type"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Response"
                 ],
                 [
                   :th,
-                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
+                  "Image"
+                ],
+                [
+                  :th,
+                  %{style: style(%{"border" => "1 px solid black", "border-collapse" => "collapse", "text-align"=> "left", "padding" => "10px"})},
                   "Remarks"
                 ]
               ],
