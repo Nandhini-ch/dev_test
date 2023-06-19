@@ -2297,20 +2297,15 @@ defmodule Inconn2Service.Workorder do
     path
   end
 
-  # defp validate_workorder_file_upload_one_time(cs, prefix) do
-  #   file = get_field(cs, :file)
-  #   wot_id = get_workorder_task!(id, prefix)
-  #   if file != nil do
-  #     case get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
-  #       nil ->
-  #           cs
-  #       _ ->
-  #           add_error(cs, :file, "already exists for this Workorder")
-  #     end
-  #   else
-  #     cs
-  #   end
-  # end
+  def validate_workorder_file_upload_one_time(cs, prefix) do
+    workorder_task_id = get_field(cs, :workorder_task_id, nil)
+      case get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
+        nil ->
+            cs
+        _ ->
+            add_error(cs, :workorder_task_id, "already exists for this task")
+      end
+  end
 
   defp raise_ticket(workorder_task, task, filtered_value, prefix) do
     wo = get_work_order!(workorder_task.work_order_id, prefix)
@@ -3622,7 +3617,7 @@ defmodule Inconn2Service.Workorder do
   def create_workorder_file_upload(attrs \\ %{}, prefix) do
     %WorkorderFileUpload{}
     |> WorkorderFileUpload.changeset(read_workorder_file_upload(attrs))
-    # |> validate_workorder_file_upload_one_time(prefix)
+    |> validate_workorder_file_upload_one_time(prefix)
     |> Repo.insert(prefix: prefix)
   end
 
