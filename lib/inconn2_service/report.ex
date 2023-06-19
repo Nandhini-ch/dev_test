@@ -9,7 +9,7 @@ defmodule Inconn2Service.Report do
   alias Inconn2Service.AssetConfig.AssetStatusTrack
   alias Inconn2Service.AssetConfig.Location
   alias Inconn2Service.WorkOrderConfig
-  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule}
+  alias Inconn2Service.Workorder.{WorkOrder, WorkorderTemplate, WorkorderStatusTrack, WorkorderTask, WorkorderSchedule, Workorder_file_upload}
   alias Inconn2Service.Workorder
   # alias Inconn2Service.Ticket
   alias Inconn2Service.Ticket.{WorkRequest, WorkrequestStatusTrack}
@@ -209,7 +209,10 @@ defmodule Inconn2Service.Report do
 
   defp get_work_order_tasks(wo, prefix) do
     work_order_tasks = Workorder.list_workorder_tasks(prefix, wo.id)
-    |> Enum.map(fn wot -> Map.put(wot, :task, WorkOrderConfig.get_task!(wot.task_id, prefix)) end)
+    |> Enum.map(fn wot ->
+      Map.put(wot, :task, WorkOrderConfig.get_task!(wot.task_id, prefix))
+      |> Map.put(:workorder_file_upload, Workorder.get_workorder_file_upload_by_workorder_task_id(wot.id, prefix))
+    end)
     Map.put(wo, :tasks, work_order_tasks)
   end
 
@@ -2003,6 +2006,7 @@ defmodule Inconn2Service.Report do
 
   defp create_task_table(tasks) do
     # IO.inspect(tasks)
+    # IO.inspect("!!!!!!!!!!!@!@@!@!@!@!@!@!@!@!@!@!@!@!")
     Enum.map(tasks, fn t ->
       [
         :tr,
@@ -2026,7 +2030,7 @@ defmodule Inconn2Service.Report do
           [
 
             :img,
-            %{src: "https://www.w3schools.com/images/lamp.jpg", style: style(%{"height" => "200", "width" => "250"})}
+            %{src: Workorder.image_proccessing_in_woe(t), style: style(%{"height" => "200", "width" => "250"})}
           ]
         ],
         [
