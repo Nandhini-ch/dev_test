@@ -2027,11 +2027,16 @@ defmodule Inconn2Service.Report do
         ],
         [
           :td,
-          [
+          case Workorder.image_proccessing_in_woe(t) do
+            "#" ->
+              "Not available"
 
-            :img,
-            %{src: Workorder.image_proccessing_in_woe(t), style: style(%{"height" => "200", "width" => "250"})}
-          ]
+            image_path ->
+              [
+                :img,
+                %{src: Workorder.image_proccessing_in_woe(t), alt: "Image not available", style: style(%{"height" => "200", "width" => "250"})}
+              ]
+          end
         ],
         [
           :td,
