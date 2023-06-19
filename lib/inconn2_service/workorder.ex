@@ -2281,18 +2281,17 @@ defmodule Inconn2Service.Workorder do
 
   def image_proccessing_in_woe(workorder_task) do
     if workorder_task.task.task_type == "OB" do
-      process(workorder_task.workorder_file_upload)
+      image_process(workorder_task.workorder_file_upload)
     else
       "#"
     end
   end
 
-  def process(nil), do: "#"
-  def process(workorder_file_upload) do
+  def image_process(nil), do: "#"
+  def image_process(workorder_file_upload) do
     IO.inspect(workorder_file_upload.file)
     [_image, ext] = String.split(workorder_file_upload.file_type, "/", parts: 2)
     path = Briefly.create!(ext: ext) |> IO.inspect()
-    # path = "/tmp/test.png"
     File.write!(path, workorder_file_upload.file)
     path
   end
