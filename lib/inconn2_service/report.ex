@@ -1955,21 +1955,23 @@ defmodule Inconn2Service.Report do
                 end
               ]
             ],
-          [
-            :table,
-            %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
-            create_report_headers(report_headers),
-            create_table_body(data, report_for)
-          ],
+            [[:br]], [[:br]], [[:br]], [[:br]],
           [
             :h3,
-            %{style: style(%{"float" => "left"})},
+            %{style: style(%{"text-align" => "left"})},
             "Summary"
           ],
           [
             :div,
             %{style: style(%{"margin-top" => "20px"})},
             create_summary_table(summary, summary_headers, report_for),
+          ],
+          [[:br]], [[:br]], [[:br]], [[:br]],
+          [
+            :table,
+            %{style: style(%{"width" => "100%", "border" => "1px solid black", "border-collapse" => "collapse", "padding" => "10px"})},
+            create_report_headers(report_headers),
+            create_table_body(data, report_for)
           ],
           [
             :h3,
@@ -2566,7 +2568,8 @@ defmodule Inconn2Service.Report do
         [d.asset_category, d.count_of_assets, d.total_workorder, d.completed_workorder, d.pending_workorder, d.overdue_percentage]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+      [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]  ++ [[]] ++ [[]] ++  [report_headers] ++ body
+      # [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_inventory_report(report_headers, data, summary, summary_headers) do
@@ -2580,7 +2583,8 @@ defmodule Inconn2Service.Report do
         [d.store_location, d.count_of_receive, d.count_of_issue, d.msl_breach_count]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+      [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]  ++ [[]] ++ [[]] ++  [report_headers] ++ body
+      # [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_workrequest_report(report_headers, data, summary, summary_headers) do
@@ -2594,7 +2598,8 @@ defmodule Inconn2Service.Report do
         [d.ticket_category, d.count, d.resolved_count, d.open_count]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+      [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]  ++ [[]] ++ [[]] ++  [report_headers] ++ body
+      # [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
 
   end
 
@@ -2609,7 +2614,8 @@ defmodule Inconn2Service.Report do
         [d.asset_category, d.count, d.count_by_status, d.ppm_completion]
       end)
 
-    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+      [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]  ++ [[]] ++ [[]] ++  [report_headers] ++ body
+      # [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
   end
 
   defp csv_for_people_report(report_headers, data, summary, summary_headers) do
@@ -2623,7 +2629,7 @@ defmodule Inconn2Service.Report do
           [d.department, d.shift_coverage, d.work_done]
         end)
 
-    [report_headers] ++ body ++ [[]] ++ [[]] ++ [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]
+        [["Summary"]] ++ [[]] ++ [summary_headers] ++ summary ++ [[]]  ++ [[]] ++ [[]] ++  [report_headers] ++ body
   end
 
   # defp match_work_order_type(type) do
