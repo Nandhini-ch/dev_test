@@ -306,7 +306,7 @@ defmodule Inconn2Service.Prompt do
       "alert_notification_id" => an_reserve.id,
       "alert_identifier_date_time" => alert_identifier_date_time,
       "type" => an_reserve.type,
-      "priority" => an_reserve.priority,
+      "priority" => an_config.priority,
       "site_id" => site_id,
       "user_id" => user_id,
       "description" => message
