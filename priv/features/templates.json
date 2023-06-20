@@ -91,7 +91,7 @@
     {
         "code": "TCKCM",
         "template_name": "Ticket completed",
-        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var3 %> Regards, Team Inconn - Wynwy",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> status changed to <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707167636843577406",
         "telemarketer_id": "1701166322207419896"
     },
@@ -100,6 +100,69 @@
         "template_name": "Forget Password OTP new",
         "message": "Dear <%= var1 %>, (<%= var2 %>) is the OTP generated for the Inconn password reset. OTP will be valid for 15 minutes. Do not disclose to anyone Regards, Team Inconn - Wynwy",
         "dlt_template_id": "1707168231718776291",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "SCHBR",
+        "template_name": "Asset Status Change to breakdown",
+        "message": "Dear  <%= var1 %>, <%= var2 %> status changed to breakdown at <%= var3 %>. Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635183114901",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "POFVD",
+        "template_name": "Asset parameter out of validation",
+        "message": "Dear <%= var1 %>, <%= var2 %> <%= var3 %> out of range Regards, Team Inconn - Wynwy",
+        "dlt_template_id ": "1707167643783094640",
+        "telemarketer_id ": "1701166322207419896 "
+    },
+    {
+        "code": "ASSRM",
+        "template_name": "Remove asset",
+        "message": "Dear <%= var1 %>, <%= var2 %> removed from <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635190630824",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WOSTD",
+        "template_name": "WO start over due by 10 mins",
+        "message": "Dear <%= var1 %>, Work order <%= var2 %> was scheduled at <%= var3 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635192947500",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WNCST",
+        "template_name": "WO not completed by scheduled time",
+        "message": "Dear <%= var1 %>, Work order <%= var2 %> is overdue for completion Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167635180492337",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "TKTEX",
+        "template_name": "Ticket TAT expired",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> <%= var3 %> expired at <%= var4 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636849649035",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "TCKCL",
+        "template_name": "Ticket re-asigned, re-scheduled",
+        "message": "Dear <%= var1 %>, Ticket <%= var2 %> <%= var3 %> by <%= var4 %> Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707167636871993103",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "WSHMD",
+        "template_name": "WO schedule modified",
+        "message": "Dear user, Work order schedule for the <%= var1 %> has been modified by the <%= var2 %>.Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707168572539943809",
+        "telemarketer_id": "1701166322207419896"
+    },
+    {
+        "code": "STOFC",
+        "template_name": "Asset Status change to on / off",
+        "message": "Dear user, Asset status for the <%= var1 %> device has been switched from <%= var2 %>.Regards, Team Inconn - Wynwy",
+        "dlt_template_id": "1707168551701406216",
         "telemarketer_id": "1701166322207419896"
     }
 ]

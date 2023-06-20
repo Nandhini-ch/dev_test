@@ -15,6 +15,7 @@ defmodule Inconn2Service.Prompt.UserAlertNotification do
     field :acknowledged_date_time, :naive_datetime
     field :action_taken, :boolean, default: false
     field :escalation, :boolean, default: false
+    field :priority, :string, default: "normal"
 
     timestamps()
   end
@@ -23,8 +24,9 @@ defmodule Inconn2Service.Prompt.UserAlertNotification do
   def changeset(user_alert, attrs) do
     user_alert
     |> cast(attrs, [:alert_notification_id, :type, :user_id, :asset_id, :description, :remarks, :asset_type,
-                    :action_taken, :acknowledged_date_time, :alert_identifier_date_time, :site_id, :escalation])
+                    :action_taken, :acknowledged_date_time, :alert_identifier_date_time, :site_id, :escalation, :priority])
     |> validate_required([:alert_notification_id, :type, :user_id, :description])
     |> validate_inclusion(:type, ["al", "nt"])
+    |> validate_inclusion(:priority, ["normal", "high"])
   end
 end

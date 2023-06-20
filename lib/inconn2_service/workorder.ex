@@ -5,7 +5,8 @@ defmodule Inconn2Service.Workorder do
   import Inconn2Service.Prompt
   alias Ecto.Multi
   alias Inconn2Service.Repo
-
+  alias Inconn2Service.Assignments
+  alias Inconn2Service.WorkOrderConfig
   alias Inconn2Service.Common.WorkScheduler
   alias Inconn2Service.Workorder.WorkorderTemplate
   alias Inconn2Service.{AssetConfig, WorkOrderConfig}
@@ -576,7 +577,15 @@ defmodule Inconn2Service.Workorder do
     asset = AssetConfig.get_asset_by_asset_id(updated_schedule.asset_id, updated_schedule.asset_type, prefix)
     date_time = get_site_date_now(asset.site_id, prefix)
     user_display_name = get_display_name_for_user_id(user.id, prefix)
-    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [], [], [], prefix)
+    asset_category_id = updated_schedule.workorder_template.asset_category_id
+
+    user_maps =
+    # %{"location_id" => updated_schedule.asset_type == "L", "asset_category_id" => asset_category_id}
+    %{"location_id" => "L", "asset_category_id" => asset_category_id}
+    |> AssetConfig.list_users_from_scope(prefix)
+    |> Staff.form_user_maps_by_user_ids(prefix)
+
+    generate_alert_notification("WOSMO", asset.site_id, [asset.name, user_display_name, date_time], [asset.name, user_display_name], user_maps, [], prefix)
   end
 
   def create_notification_for_workorder_schedule(alert_code, description, updated_schedule, prefix) do
@@ -877,6 +886,11 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
+    rosters =
+      case employee do
+        nil -> []
+        _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
+      end
 
     query_for_assigned = from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status not in ["cp", "cn"]
     assigned_work_orders = Repo.all(query_for_assigned, prefix: prefix)
@@ -894,6 +908,7 @@ defmodule Inconn2Service.Workorder do
             from wo in WorkOrder, where: wo.status not in ["cp", "cn"] and is_nil(wo.user_id),
               join: wt in WorkorderTemplate, on: wt.id == wo.workorder_template_id and wt.asset_category_id in ^asset_category_ids
           Repo.all(query, prefix: prefix)
+          |> filter_work_orders_based_on_rosters(rosters)
       end
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
@@ -924,6 +939,7 @@ defmodule Inconn2Service.Workorder do
 
   def list_work_order_for_team(_user, _prefix), do: []
 
+  def get_work_order!(nil, _prefix), do: nil
 
   def get_work_order!(id, prefix) do
     work_order = Repo.get!(WorkOrder, id, prefix: prefix)
@@ -1033,7 +1049,7 @@ defmodule Inconn2Service.Workorder do
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, work_order} ->
-        create_workorder_in_alert_notification_generator(work_order, prefix)
+        Elixir.Task.start(fn -> create_workorder_in_alert_notification_generator(work_order, prefix) end)
         create_status_track(work_order, user, prefix)
         auto_create_workorder_tasks_checks(work_order, prefix)
         Elixir.Task.start(fn -> update_ticket(work_order, work_order.type, prefix, user) end)
@@ -1420,24 +1436,64 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
+  # defp create_workorder_in_alert_notification_generator(work_order, prefix) do
+  #   zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
+  #   {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
+  #   utc = DateTime.add(utc, 600, :second)
+  #   attrs = %{
+  #     "code" => "WOOD",
+  #     "prefix" => prefix,
+  #     "reference_id" => work_order.id,
+  #     "zone" => zone,
+  #     "utc_date_time" => utc
+  #   }
+  #   Common.create_alert_notification_generator(attrs)
+  # end
+
   defp create_workorder_in_alert_notification_generator(work_order, prefix) do
     zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
     {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
-    utc = DateTime.add(utc, 600, :second)
-    attrs = %{
-      "code" => "WOOD",
-      "prefix" => prefix,
-      "reference_id" => work_order.id,
-      "zone" => zone,
-      "utc_date_time" => utc
-    }
-    Common.create_alert_notification_generator(attrs)
+    {:ok, end_utc} = Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
+
+    previous_utc = DateTime.add(utc, -600, :second)
+    after_utc = DateTime.add(utc, 600, :second)
+
+      [%{
+          "code" => "WOSDM",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => previous_utc
+        },
+        %{
+          "code" => "WOSOD",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => after_utc
+        },
+        %{
+          "code" => "WONCS",
+          "prefix" => prefix,
+          "reference_id" => work_order.id,
+          "zone" => zone,
+          "utc_date_time" => end_utc
+
+        }
+      ]
+      |> Enum.map(fn attrs ->
+        Common.create_alert_notification_generator(attrs)
+      end)
   end
 
   defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
     cond do
       nil in [work_order.start_date, work_order.start_time] && nil not in [updated_work_order.start_date, updated_work_order.start_time] ->
-        Common.get_generator_by_reference_id_and_code(work_order.id, "WOOD")
+        Common.get_generator_by_reference_id_and_code(work_order.id, "WOSOD")
+        |> Common.delete_alert_notification_generator()
+
+      nil in [work_order.completed_date, work_order.completed_time] && nil not in [updated_work_order.completed_date, updated_work_order.completed_time] ->
+        Common.get_generator_by_reference_id_and_code(work_order.id, "WONCS")
         |> Common.delete_alert_notification_generator()
 
       true ->
@@ -2222,6 +2278,39 @@ defmodule Inconn2Service.Workorder do
     |> put_asset_for_flutter_template(prefix)
   end
 
+  def raise_ticket_for_failed_task(workorder_task, prefix) do
+    task = WorkOrderConfig.get_task!(workorder_task.task_id, prefix)
+    if task.task_type in ["IO", "IM"] do
+      answer = workorder_task.response["answers"]
+      options = task.config["options"]
+      filtered_value = Enum.filter(options, fn x -> x["value"] == answer end) |> List.first()
+      if filtered_value["raise_ticket"] && filtered_value["workrequest_category_id"] && filtered_value["workrequest_subcategory_id"] do
+        raise_ticket(workorder_task, task, filtered_value, prefix)
+      end
+    else
+      []
+    end
+  end
+
+  defp raise_ticket(workorder_task, task, filtered_value, prefix) do
+    wo = get_work_order!(workorder_task.work_order_id, prefix)
+    %{
+      "site_id" => wo.site_id,
+      "location_id" => get_location_id_from_asset(wo.asset_id, wo.asset_type, prefix),
+      "asset_id" => wo.asset_id,
+      "asset_type" => wo.asset_type,
+      "description" => task.label,
+      "workrequest_subcategory_id" => filtered_value["workrequest_subcategory_id"],
+      "request_type" => "CO"
+    }
+    |> Ticket.create_work_request(prefix)
+  end
+
+  defp get_location_id_from_asset(asset_id, "L", _prefix), do: asset_id
+  defp get_location_id_from_asset(asset_id, "E", prefix) do
+    AssetConfig.get_equipment!(asset_id, prefix).location_id
+  end
+
   def put_asset_for_flutter_template(wo, prefix) do
     {asset, code} =
       case wo.workorder_template.asset_type do
@@ -2246,6 +2335,11 @@ defmodule Inconn2Service.Workorder do
           Staff.get_employee!(id, prefix)
       end
 
+    rosters =
+      case employee do
+        nil -> []
+        _ -> Assignments.list_rosters_for_work_orders(employee.id, prefix)
+      end
 
     common_query = flutter_query()
 
@@ -2266,11 +2360,12 @@ defmodule Inconn2Service.Workorder do
             asset_category_ids = get_skills_with_subtree_asset_category(employee.preloaded_skills, prefix)
 
             asset_category_query =
-              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"] , join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
+              from q in common_query, where: is_nil(q.user_id) and q.status not in ^["cp", "cn", "ackp"], join: wt in WorkorderTemplate, on: q.workorder_template_id == wt.id and wt.asset_category_id in ^asset_category_ids,
               select_merge: %{
                 workorder_template: wt
               }
             Repo.all(asset_category_query, prefix: prefix)
+            |> filter_work_orders_based_on_rosters(rosters)
         end
 
     work_orders = assigned_work_orders ++ asset_category_work_orders |> Enum.uniq()
@@ -2296,6 +2391,13 @@ defmodule Inconn2Service.Workorder do
             {asset, asset.equipment_code}
         end
       Map.put_new(wo, :asset_name, asset.name) |> Map.put(:qr_code, asset.qr_code) |> Map.put(:asset_code, code)
+    end)
+  end
+
+  defp filter_work_orders_based_on_rosters(work_orders, []), do: work_orders
+  defp filter_work_orders_based_on_rosters(work_orders, rosters) do
+    Enum.reduce(rosters, [], fn roster, acc ->
+      Enum.filter(work_orders, fn wo -> wo.scheduled_date == roster.date and wo.scheduled_time >= roster.shift_start and wo.scheduled_time <= roster.shift_end end) ++ acc
     end)
   end
 
@@ -2365,11 +2467,11 @@ defmodule Inconn2Service.Workorder do
     Map.put_new(work_order, :approver, get_approval_user(work_order.workpermit_approval_user_ids -- work_order.workpermit_obtained_from_user_ids |> List.first(), prefix))
   end
 
-  def put_approval_user(work_order, "ltlap", prefix) do
+  def put_approval_user(work_order, "ltlp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
-  def put_approval_user(work_order, "ltrap", prefix) do
+  def put_approval_user(work_order, "ltrp", prefix) do
     Map.put_new(work_order, :approver, get_approval_user(work_order.loto_checker_user_id, prefix))
   end
 
@@ -2826,6 +2928,29 @@ defmodule Inconn2Service.Workorder do
     |> Repo.one!(prefix: prefix)
   end
 
+  def check_out_of_validation_status(workorder_task, prefix) do
+    task = WorkOrderConfig.get_task(workorder_task.task_id, prefix)
+
+    if task.task_type == "MT" do
+      answer = Map.get(workorder_task.response, "answers")
+      min_value = Map.get(task.config, "min_value")
+      max_value = Map.get(task.config, "max_value")
+      answer < min_value && answer > max_value
+    else
+      false
+    end
+  end
+
+  def push_alert_notification_for_out_of_validation(task, existing_asset, updated_asset, site_id, workorder_task, prefix) do
+    if check_out_of_validation_status(workorder_task, prefix) do
+      user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+      escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+      parameter_name = task.config["UOM"]
+
+      generate_alert_notification("ASTCB", site_id, [existing_asset.name, parameter_name], [existing_asset.name, parameter_name], [user_maps], escalation_user_maps, prefix)
+    end
+  end
+
   def create_workorder_task(attrs \\ %{}, prefix) do
     %WorkorderTask{}
         |> WorkorderTask.changeset(attrs)
@@ -2971,6 +3096,8 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
     case result do
         {:ok, workorder_task} ->
+              Elixir.Task.start(fn -> raise_ticket_for_failed_task(workorder_task, prefix) end)
+              # Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(task, existing_asset, updated_asset, site_id, workorder_task, prefix)
               auto_update_workorder_status(workorder_task, prefix, user)
         _ ->
               result
@@ -3465,15 +3592,28 @@ defmodule Inconn2Service.Workorder do
 
   def get_workorder_file_upload!(id, prefix), do: Repo.get!(WorkorderFileUpload, id, prefix: prefix)
 
-  def get_workorder_file_upload_by_workorder_task_id(task_id, prefix) do
-    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^task_id)
-    |> Repo.get(prefix: prefix)
+  def get_workorder_file_upload_by_workorder_task_id(workorder_task_id, prefix) do
+    from(wfu in WorkorderFileUpload, where: wfu.workorder_task_id == ^workorder_task_id)
+    |> Repo.one(prefix: prefix)
   end
 
   def create_workorder_file_upload(attrs \\ %{}, prefix) do
     %WorkorderFileUpload{}
-    |> WorkorderFileUpload.changeset(attrs)
+    |> WorkorderFileUpload.changeset(read_workorder_file_upload(attrs))
     |> Repo.insert(prefix: prefix)
+  end
+
+  defp read_workorder_file_upload(attrs) do
+    file = Map.get(attrs, "file")
+    if file != nil and file != "" do
+      {:ok, file_content} = File.read(file.path)
+      file_type = file.content_type
+      attrs
+      |> Map.put("file", file_content)
+      |> Map.put("file_type", file_type)
+    else
+      attrs
+    end
   end
 
   alias Inconn2Service.Workorder.WorkorderApprovalTrack
