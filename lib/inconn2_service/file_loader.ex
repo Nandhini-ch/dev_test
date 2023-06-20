@@ -97,10 +97,10 @@ defmodule Inconn2Service.FileLoader do
       %{}
       |> Map.put("UOM", Map.get(record, "UOM"))
       |> Map.put("category", Map.get(record, "Category"))
-      |> Map.put("max_length", Map.get(record, "Max Length"))
-      |> Map.put("min_length", Map.get(record, "Min Length"))
-      |> Map.put("max_value", Map.get(record, "Max Value"))
-      |> Map.put("min_value", Map.get(record, "Min Value"))
+      |> Map.put("max_length", form_nil(Map.get(record, "Max Length")))
+      |> Map.put("min_length", form_nil(Map.get(record, "Min Length")))
+      |> Map.put("max_value", form_nil(Map.get(record, "Max Value")))
+      |> Map.put("min_value", form_nil(Map.get(record, "Min Value")))
       |> Map.put("threshold_value", Map.get(record, "Threshold Value"))
       |> Map.put("type", Map.get(record, "Type"))
       |> Map.put("options", Map.get(record, "Options"))
@@ -432,14 +432,14 @@ defmodule Inconn2Service.FileLoader do
         else
           if map["Task Type"] == "MT" do
           new_map =
-          Map.put(map, "Max Value",  String.to_integer(Map.get(map, "Max Value")))
-          |> Map.put("Min Value",   String.to_integer(Map.get(map, "Min Value")))
+          Map.put(map, "Max Value",  string_to_integer(Map.get(map, "Max Value")))
+          |> Map.put("Min Value",   string_to_integer(Map.get(map, "Min Value")))
 
           convert_special_keys_to_required_type(tail, new_map)
           else
             new_map =
-             Map.put(map, "Max Length",   String.to_integer(Map.get(map, "Max Length")))
-             |> Map.put("Min Length",   String.to_integer(Map.get(map, "Min Length")))
+             Map.put(map, "Max Length",   string_to_integer(Map.get(map, "Max Length")))
+             |> Map.put("Min Length",   string_to_integer(Map.get(map, "Min Length")))
 
             convert_special_keys_to_required_type(tail, new_map)
           end
@@ -460,6 +460,12 @@ defmodule Inconn2Service.FileLoader do
          IO.puts("No Type Match")
     end
   end
+
+  defp form_nil(""), do: nil
+  defp form_nil(value), do: value
+
+  defp string_to_integer(""), do: ""
+  defp string_to_integer(value), do: String.to_integer(value)
 
   def get_records_as_map_for_csv(content, required_fields, array_keys \\ []) do
     {header, data_lines} = get_header_and_data_for_upload_csv(content)
