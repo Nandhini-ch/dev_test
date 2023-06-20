@@ -1091,7 +1091,7 @@ defmodule Inconn2Service.Ticket do
 
       #ticket cancelled
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "CL" ->
-        workrequest_category = Ticket.get_workrequest_category(updated_work_request.workrequest_category_id)
+        workrequest_category = get_workrequest_category!(updated_work_request.workrequest_category_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
         generate_alert_notification("TCKCN", site_id, [updated_work_request.request_type, updated_work_request.id, assigned_user, date_time], [workrequest_category.name, updated_work_request.id, assigned_user, date_time], user_maps, escalation_user_maps, prefix)
