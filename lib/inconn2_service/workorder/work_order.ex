@@ -38,7 +38,7 @@ defmodule Inconn2Service.Workorder.WorkOrder do
     field :loto_release_check_list_id, :integer
     field :pre_check_required, :boolean
     field :precheck_completed, :boolean
-    field :is_deactivated, :boolean, null: false, default: false
+    field :is_deactivated, :boolean, default: false
     field :deactivated_date_time, :naive_datetime
     has_many :workorder_tasks, Inconn2Service.Workorder.WorkorderTask
     field :loto_checker_user_id, :integer

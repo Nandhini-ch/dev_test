@@ -5,7 +5,7 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
 
   @dash_config [
     "energy_asset_category", "water_asset_category", "fuel_asset_category",
-    "energy_main_meters", "water_main_meters", "fuel_main_meters",
+    "energy_main_meters", "energy_non_main_meters", "water_main_meters", "fuel_main_meters",
     "energy_cost_per_unit", "water_cost_per_unit", "fuel_cost_per_unit",
     "generators", "area_in_sqft"
 ]

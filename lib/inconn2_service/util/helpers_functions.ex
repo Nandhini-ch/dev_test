@@ -6,8 +6,30 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.{Location, Equipment}
 
+  def add_asset_type_and_code_to_asset(asset, asset_type, prefix) do
+    parent_name =
+      case AssetConfig.preload_parent(asset, asset_type, prefix) do
+        nil -> nil
+        parent -> parent.name
+      end
+
+    asset
+    |> add_asset_type_to_asset(asset_type)
+    |> add_asset_code_to_asset(asset_type)
+    |> Map.put(:parent_name, parent_name)
+
+  end
+
   def add_asset_type_to_asset(asset, asset_type) do
     Map.put(asset, :asset_type, asset_type)
+  end
+
+  def add_asset_code_to_asset(asset, "L") do
+    Map.put(asset, :asset_code, asset.location_code)
+  end
+
+  def add_asset_code_to_asset(asset, "E") do
+    Map.put(asset, :asset_code, asset.equipment_code)
   end
 
   def convert_string_ids_to_list_of_ids(string_ids) do
