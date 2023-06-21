@@ -338,14 +338,11 @@ defmodule Inconn2Service.Workorder do
     |> Elixir.Task.await_many(:infinity)
   end
 
-  def create_workorder_schedule(attrs \\ %{}, prefix) do
+   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
-              |> validate_asset_id(prefix)
-              |> validate_unique_schedule(prefix)
-              |> validate_for_future_date(prefix)
-              |> validate_first_occurence_time(prefix)
-              |> calculate_next_occurrence(prefix)
+              |> validate_workorder_template(prefix)
+              |> validate_cs(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
@@ -355,6 +352,34 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp validate_cs(cs, prefix) do
+    if cs.valid? do
+      cs
+      |> validate_asset_id(prefix)
+      |> validate_unique_schedule(prefix)
+      |> validate_for_future_date(prefix)
+      |> validate_first_occurence_time(prefix)
+      |> calculate_next_occurrence(prefix)
+    else
+      cs
+    end
+  end
+
+  defp validate_workorder_template(cs, prefix) do
+    wot_id = get_field(cs, :workorder_template_id)
+
+    wo_template = get_workorder_template(wot_id, prefix)
+      if(wo_template != nil ) do
+        if (wo_template.scheduled) do
+         cs
+        else
+         add_error(cs, :workorder_template_id, "Template is not scheduled")
+        end
+      else
+        add_error(cs, :workorder_template_id, "Template is invalid")
+      end
   end
 
   defp validate_unique_schedule(cs, prefix) do

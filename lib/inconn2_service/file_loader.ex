@@ -155,10 +155,12 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("asset_id", Map.get(record, "Asset Id"))
     |> Map.put("asset_type", Map.get(record, "Asset Type"))
     |> Map.put("holidays", Map.get(record, "Holidays"))
-    |> Map.put("first_occurrence_date", Map.get(record, "First Occurrence Date"))
-    |> Map.put("first_occurrence_time", Map.get(record, "First Occurrence Time"))
-    |> Map.put("next_occurrence_date", Map.get(record, "Next Occurrence Date"))
-    |> Map.put("next_occurrence_time", Map.get(record, "Next Occurrence Time"))
+    |> Map.put("first_occurrence_date", Map.get(record, "Schedule Start Date"))
+    |> Map.put("first_occurrence_time", Map.get(record, "Schedule Start Time"))
+    |> Map.put("workpermit_approval_user_ids", Map.get(record, "Work Permit Approver", []))
+    |> Map.put("workorder_acknowledgement_user_id", Map.get(record, "Work Order Acknowlegement"))
+    |> Map.put("workorder_approval_user_id", Map.get(record, "Work Order Approver"))
+    |> Map.put("loto_checker_user_id", Map.get(record, "LOTO Approver"))
   end
 
   def make_employees(record) do
