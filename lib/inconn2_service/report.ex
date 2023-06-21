@@ -1029,34 +1029,37 @@ defmodule Inconn2Service.Report do
         from(ast in AssetStatusTrack, where: ast.asset_id == ^e.id and ast.asset_type == ^"E" and ast.changed_date_time >= ^naive_from_date and ast.changed_date_time <= ^naive_to_date)
         |> Repo.all(prefix: prefix)
 
-      up_time =
-        case length(asset_status_tracks) do
-          0 ->
-            last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
-            if last_entry != nil and last_entry.status_changed in ["ON", "OFF"] do
-              NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600 |> convert_to_positive() |> convert_man_hours_consumed()
-            else
-              0.0
-            end
+        up_time =
+          Time.diff(get_site_date_time_now(e.site_id, prefix), e.created_on) |> convert_to_positive()
 
-          _ ->
-            last_entry = List.last(asset_status_tracks)
-            compensation_hours =
-              if last_entry.status_changed in ["ON", "OFF"] do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
-              else
-                0.0
-              end
-            sum =
-              Stream.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
-              |> Stream.map(fn ast -> ast.hours end)
-              |> Stream.filter(fn h -> !is_nil(h) end)
-              |> Enum.sum()
+      # up_time =
+      #   case length(asset_status_tracks) do
+      #     0 ->
+      #       last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
+      #       if last_entry != nil and last_entry.status_changed in ["ON", "OFF"] do
+      #         NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600 |> convert_to_positive() |> convert_man_hours_consumed()
+      #       else
+      #         0.0
+      #       end
 
-            sum + compensation_hours * 1.0
-            |> Float.ceil(2)
-            |> convert_man_hours_consumed()
-        end
+      #     _ ->
+      #       last_entry = List.last(asset_status_tracks)
+      #       compensation_hours =
+      #         if last_entry.status_changed in ["ON", "OFF"] do
+      #           NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) / 3600
+      #         else
+      #           0.0
+      #         end
+      #       sum =
+      #         Stream.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON", "OFF"] end)
+      #         |> Stream.map(fn ast -> ast.hours end)
+      #         |> Stream.filter(fn h -> !is_nil(h) end)
+      #         |> Enum.sum()
+
+      #       sum + compensation_hours * 1.0
+      #       |> Float.ceil(2)
+      #       |> convert_man_hours_consumed()
+      #   end
 
 
         utilized_time =
