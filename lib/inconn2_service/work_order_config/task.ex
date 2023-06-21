@@ -43,13 +43,13 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
             end
       "MT" ->
             if (["UOM", "type"] -- Map.keys(config) == []) and config["type"] in ["C","A"] do
-              changeset
+              validate_lengths(changeset, config["min_value"], config["max_value"], "min value and max value")
             else
               add_error(changeset, :config, "Config is invalid")
             end
       "OB" ->
             if (["max_length", "min_length"] -- Map.keys(config) == []) do
-              validate_lengths(changeset, config["min_length"], config["max_length"])
+              validate_lengths(changeset, config["min_length"], config["max_length"], "min length and max length")
             else
               add_error(changeset, :config, "Config is invalid")
             end
@@ -74,7 +74,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
     end
   end
 
-  defp validate_lengths(changeset, min_length, max_length) do
+  defp validate_lengths(changeset, min_length, max_length, msg) do
     if Kernel.is_integer(min_length) and Kernel.is_integer(max_length) do
       if min_length < max_length do
         changeset
@@ -82,7 +82,7 @@ defmodule Inconn2Service.WorkOrderConfig.Task do
         add_error(changeset, :config, "lengths are invalid")
       end
     else
-      add_error(changeset, :config, "lengths are invalid")
+      add_error(changeset, :config, msg <> " should be integer")
     end
   end
 
