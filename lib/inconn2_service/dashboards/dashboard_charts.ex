@@ -178,10 +178,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     }
   end
 
+
   defp get_individual_energy_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_cost_per_unit = change_nil_to_zero(config["energy_cost_per_unit"])
     asset_ids = convert_nil_to_list(params["asset_ids"])
+
+    asset_ids = match_config_non_main_meters(asset_ids, convert_nil_to_list(config["energy_non_main_meters"]))
 
     data_sets =
           Enum.map(asset_ids, fn asset_id ->
@@ -210,6 +213,12 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
       dataSets: data_sets
     }
 
+  end
+
+  defp match_config_non_main_meters(asset_ids, non_main_meters) do
+    Enum.map(asset_ids, fn id ->
+      Enum.find(non_main_meters, %{"id" => id, "iot" => false}, fn x -> x["id"] == id end)
+    end)
   end
 
   defp get_individual_energy_performance_indicator(date, params, prefix) do
