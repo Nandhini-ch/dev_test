@@ -338,14 +338,11 @@ defmodule Inconn2Service.Workorder do
     |> Elixir.Task.await_many(:infinity)
   end
 
-  def create_workorder_schedule(attrs \\ %{}, prefix) do
+   def create_workorder_schedule(attrs \\ %{}, prefix) do
     result = %WorkorderSchedule{}
               |> WorkorderSchedule.changeset(attrs)
-              |> validate_asset_id(prefix)
-              |> validate_unique_schedule(prefix)
-              |> validate_for_future_date(prefix)
-              |> validate_first_occurence_time(prefix)
-              |> calculate_next_occurrence(prefix)
+              |> validate_workorder_template(prefix)
+              |> validate_cs(prefix)
               |> Repo.insert(prefix: prefix)
     case result do
       {:ok, workorder_schedule} ->
@@ -355,6 +352,34 @@ defmodule Inconn2Service.Workorder do
       _ ->
         result
     end
+  end
+
+  defp validate_cs(cs, prefix) do
+    if cs.valid? do
+      cs
+      |> validate_asset_id(prefix)
+      |> validate_unique_schedule(prefix)
+      |> validate_for_future_date(prefix)
+      |> validate_first_occurence_time(prefix)
+      |> calculate_next_occurrence(prefix)
+    else
+      cs
+    end
+  end
+
+  defp validate_workorder_template(cs, prefix) do
+    wot_id = get_field(cs, :workorder_template_id)
+
+    wo_template = get_workorder_template(wot_id, prefix)
+      if(wo_template != nil ) do
+        if (wo_template.scheduled) do
+         cs
+        else
+         add_error(cs, :workorder_template_id, "Template is not scheduled")
+        end
+      else
+        add_error(cs, :workorder_template_id, "Template is invalid")
+      end
   end
 
   defp validate_unique_schedule(cs, prefix) do
@@ -2955,9 +2980,7 @@ defmodule Inconn2Service.Workorder do
     |> Repo.one!(prefix: prefix)
   end
 
-  def check_out_of_validation_status(workorder_task, prefix) do
-    task = WorkOrderConfig.get_task(workorder_task.task_id, prefix)
-
+  def check_out_of_validation_status(task, workorder_task) do
     if task.task_type == "MT" do
       answer = Map.get(workorder_task.response, "answers")
       min_value = Map.get(task.config, "min_value")
@@ -2968,13 +2991,17 @@ defmodule Inconn2Service.Workorder do
     end
   end
 
-  def push_alert_notification_for_out_of_validation(task, existing_asset, updated_asset, site_id, workorder_task, prefix) do
-    if check_out_of_validation_status(workorder_task, prefix) do
-      user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-      escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
+  #asset parameter out of validation
+  def push_alert_notification_for_out_of_validation(workorder_task, prefix) do
+    work_order = get_work_order!(workorder_task.work_order_id, prefix)
+    asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, prefix)
+    task = WorkOrderConfig.get_task(workorder_task.task_id, prefix)
+    if check_out_of_validation_status(task, workorder_task) do
+      user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
+      escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
       parameter_name = task.config["UOM"]
 
-      generate_alert_notification("ASTCB", site_id, [existing_asset.name, parameter_name], [existing_asset.name, parameter_name], [user_maps], escalation_user_maps, prefix)
+      generate_alert_notification("ASTCB", work_order.site_id, [asset.name, parameter_name], [asset.name, parameter_name], [user_maps], escalation_user_maps, prefix)
     end
   end
 
@@ -3124,7 +3151,7 @@ defmodule Inconn2Service.Workorder do
     case result do
         {:ok, workorder_task} ->
               Elixir.Task.start(fn -> raise_ticket_for_failed_task(workorder_task, prefix) end)
-              # Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(task, existing_asset, updated_asset, site_id, workorder_task, prefix)
+              Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(workorder_task, prefix) end)
               auto_update_workorder_status(workorder_task, prefix, user)
         _ ->
               result

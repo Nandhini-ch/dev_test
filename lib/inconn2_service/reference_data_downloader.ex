@@ -150,7 +150,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(tasks, fn r ->
-        fixed_attributes = [r.id, "", r.label, r.task_type, r.master_task_type_id, r.estimated_time, r.config["UOM"], r.config["Category"],
+        fixed_attributes = [r.id, "", r.label, r.task_type, r.master_task_type_id, r.estimated_time, r.config["UOM"], r.config["category"],
         r.config["max_length"], r.config["min_length"], r.config["max_value"],r.config["min_value"], r.config["threshold_value"], r.config["type"]
       ]
         cond do
@@ -204,21 +204,21 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     final_report
   end
 
-  # def download_workorder_schedules(prefix) do
-  #   workorder_schedules = Workorder.list_workorder_schedules(prefix)
+  def download_workorder_schedules(prefix) do
+    workorder_schedules = Workorder.list_workorder_schedules(prefix)
 
-  #   header = [["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "First Occurrence Date", "First Occurrence Time",
-  #            "Next Occurrence Date", "Next Occurrence Time"]]
+    header = [["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "Schedule Start Date", "Schedule Start Time",
+    "Work Permit Approver", "Work Order Acknowlegement", "Work Order Approver", "LOTO Approver"]]
 
-  #   body =
-  #     Enum.map(workorder_schedules, fn r ->
-  #       [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), form_date(r.first_occurrence_date), r.first_occurrence_time,
-  #       form_date(r.next_occurrence_date), r.next_occurrence_time]
-  #     end)
+    body =
+      Enum.map(workorder_schedules, fn r ->
+        [r.id, "", r.workorder_template_id, r.asset_id, r.asset_type, convert_array_of_integers_to_string(r.holidays), form_date(r.first_occurrence_date), r.first_occurrence_time,
+        convert_array_of_integers_to_string(r.workpermit_approval_user_ids), r.workorder_acknowledgement_user_id, r.workorder_approval_user_id, r.loto_checker_user_id]
+      end)
 
-  #   final_report = header ++ body
-  #   final_report
-  # end
+    final_report = header ++ body
+    final_report
+  end
 
   def download_employees(prefix) do
     check = Staff.list_employees(prefix) |> Enum.map(fn e -> Staff.get_role_for_employee(e, prefix) end)
