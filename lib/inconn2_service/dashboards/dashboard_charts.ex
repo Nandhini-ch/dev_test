@@ -422,19 +422,20 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_ppm_chart(params, prefix) do
     cond do
       params["location"] == 0 and params["widget_x_axis"] == "asset_categories" ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["location"] == 0 and params["widget_x_axis"] == "assets" ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "asset_categories" and not is_nil(params["asset_category_ids"])->
-        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_asset_categories(params, :scheduled_wo, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "assets" and not is_nil(params["assets"]) ->
-        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_assets(params, :scheduled_wo, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       true ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
+
     end
   end
 

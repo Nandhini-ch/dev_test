@@ -2751,8 +2751,8 @@ defmodule Inconn2Service.Report do
   end
 
   def ppm_report_query(%{"from_date" => from_date, "to_date" => to_date}, prefix) do
-    query = from w in WorkOrder, where: w.type == "PRV" and w.start_date >= ^from_date or w.completed_date <= ^from_date and w.start_date >= ^to_date or w.completed_date <= ^to_date,
-            join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id,
+    query = from w in WorkOrder, where: w.start_date >= ^from_date or w.completed_date <= ^from_date and w.start_date >= ^to_date or w.completed_date <= ^to_date,
+            join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id and wt.scheduled,
             select: %{
               wo_type: w.type,
               status: w.status,
