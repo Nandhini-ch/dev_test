@@ -225,8 +225,8 @@ defmodule Inconn2Service.DataHandling.SeedData do
 
   end
 
-  def uoms_conversions(prefix) do
-    map = %{"volt" => "V"}
+   def uoms_conversions(prefix, file) do
+    map = load_mappings(file)
     Measurements.list_meter_readings(prefix)
     |> Enum.map(fn x ->
       Measurements.update_meter_reading(x, %{"unit_of_measurement" => map[x.unit_of_measurement]}, prefix)
