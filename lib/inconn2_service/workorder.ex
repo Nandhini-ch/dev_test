@@ -31,6 +31,7 @@ defmodule Inconn2Service.Workorder do
   import Inconn2Service.Util.DeleteManager
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
+  alias Inconn2Service.Assignment
 
 
   def list_workorder_templates(prefix)  do
@@ -913,6 +914,7 @@ defmodule Inconn2Service.Workorder do
 
     Enum.uniq(assigned_work_orders ++ asset_category_workorders)
     |> Enum.filter(fn wo -> wo.is_deactivated != true end)
+    |> Stream.map(fn wo -> allow_workorder_execution_based_on_attendance(wo, user.employee_id, prefix) end)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
@@ -1060,6 +1062,32 @@ defmodule Inconn2Service.Workorder do
 
       _ ->
         result
+    end
+  end
+
+  def allow_workorder_execution_based_on_attendance(work_order, nil, _prefix), do: work_order
+  def allow_workorder_execution_based_on_attendance(work_order, employee_id, prefix) do
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(work_order.site_id, "ATT", prefix)
+    schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, work_order.scheduled_time)
+    begin_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[00:00:00])
+    end_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[23:00:00])
+    mandatory_employee_ids = Map.get(site_config.config, "mandatory_employee_ids", [])
+
+    if employee_id in mandatory_employee_ids do
+      attendance_records = Assignment.list_attendance_for_mandatory_employee(begin_schedule_date_time, end_schedule_date_time, work_order.site_id, employee_id, prefix)
+
+      filter_employees =
+        Enum.filter(attendance_records, fn x ->
+          start_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.start_time)
+          end_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.end_time)
+
+          start_date_time >= schedule_date_time && end_date_time <= schedule_date_time
+        end)
+
+      Map.put(work_order, :allow_execution, length(filter_employees) != 0)
+
+    else
+      Map.put(work_order, :allow_execution, true)
     end
   end
 
@@ -2405,6 +2433,7 @@ defmodule Inconn2Service.Workorder do
         |> Enum.map(fn wot -> add_previous_cumlative_value(wot, wo, prefix) end)
       Map.put_new(wo, :workorder_tasks,  wots)
     end)
+    |> Stream.map(fn wo -> allow_workorder_execution_based_on_attendance(wo, user.employee_id, prefix) end)
     |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
     |> Stream.map(fn wo -> add_remarks_to_work_order(wo) end)
     |> Enum.map(fn wo ->

@@ -58,6 +58,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       remarks: work_order.remarks,
       approver: work_order.approver,
       is_paused: work_order.is_paused,
+      allow_execution: work_order.allow_execution,
       workorder_template_name: work_order.workorder_template.name,
       repeat_every: work_order.workorder_template.repeat_every,
       repeat_unit: work_order.workorder_template.repeat_unit
@@ -221,6 +222,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_deactivated: work_order.is_deactivated,
       deactivated_date_time: work_order.deactivated_date_time,
       overdue: work_order.overdue,
+      allow_execution: work_order.allow_execution,
       pause_resume_times: work_order.pause_resume_times,
       frequency: work_order.frequency,
       is_paused: work_order.is_paused,

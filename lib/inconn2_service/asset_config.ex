@@ -2093,6 +2093,15 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.one(prefix: prefix)
   end
 
+  def get_grace_period_in_time(site_id) do
+    query =
+      from(sc in SiteConfig,
+         where: sc.site_id == ^site_id and sc.type == "ATT",
+          select: sc.config["grace_period_in_minutes"]
+        )
+      Repo.one(query)
+  end
+
   def create_site_config(attrs \\ %{}, prefix) do
     %SiteConfig{}
     |> SiteConfig.changeset(attrs)
