@@ -115,7 +115,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
 
     config = get_site_config_for_dashboards(params["site_id"], prefix)
 
-    assets = Helpers.get_sub_meter_assets(config, "E", prefix)
+    # assets = Helpers.get_sub_meter_assets(config, "E", prefix)
+    assets = config["energy_non_main_meters"]
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_for_assets(&1, assets, prefix) end))
@@ -178,7 +179,6 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     }
   end
 
-
   defp get_individual_energy_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_cost_per_unit = change_nil_to_zero(config["energy_cost_per_unit"])
@@ -201,8 +201,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                 AssetConfig.get_equipment!(asset_id, prefix)
               end
             %{
-              name: asset.name,
               id: asset.id,
+              name: asset.name,
               value: convert_to_ceil_float(energy_consumption * energy_cost_per_unit)
             }
 
@@ -281,7 +281,16 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
+
+            asset =
+              if is_map(asset_id) do
+                AssetConfig.get_equipment!(asset_id["id"], prefix)
+              else
+                AssetConfig.get_equipment!(asset_id, prefix)
+              end
+
             %{
+              id: asset.id,
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
               value: convert_to_ceil_float(water_consumption * water_cost_per_unit)
             }
@@ -330,7 +339,16 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
+
+            asset =
+              if is_map(asset_id) do
+                AssetConfig.get_equipment!(asset_id["id"], prefix)
+              else
+                AssetConfig.get_equipment!(asset_id, prefix)
+              end
+
             %{
+              id: asset.id,
               name: AssetConfig.get_equipment!(asset_id, prefix).name,
               value: convert_to_ceil_float(fuel_consumption * fuel_cost_per_unit)
             }
@@ -347,7 +365,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_top_three_assets(from_date, to_date, site_id, prefix) do
     config = get_site_config_for_dashboards(site_id, prefix)
 
-    energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    energy_meters = config["energy_non_main_meters"]
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(
                               energy_meters,
@@ -364,7 +383,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     data_sets =
           Enum.map(assets, fn asset ->
             energy_consumption = NumericalData.get_energy_consumption_for_asset(
-                                    asset.id,
+                                    asset,
                                     NaiveDateTime.new!(date, ~T[00:00:00]),
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
@@ -422,19 +441,20 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   def get_ppm_chart(params, prefix) do
     cond do
       params["location"] == 0 and params["widget_x_axis"] == "asset_categories" ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["location"] == 0 and params["widget_x_axis"] == "assets" ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "asset_categories" and not is_nil(params["asset_category_ids"])->
-        get_workorder_status_for_asset_categories(params, ["PRV"], "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_asset_categories(params, :scheduled_wo, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       params["widget_x_axis"] == "assets" and not is_nil(params["assets"]) ->
-        get_workorder_status_for_assets(params, ["PRV"], "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_assets(params, :scheduled_wo, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
 
       true ->
-        get_workorder_status_for_site(params, ["PRV"], :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Completed")
+        get_service_and_breakdown_workorder_for_site(params, :scheduled_wo,  :group_by_asset_category, "scheduled/completed", prefix) |> Helpers.get_top_10_data("Open")
+
     end
   end
 

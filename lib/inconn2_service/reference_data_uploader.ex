@@ -397,10 +397,10 @@ defmodule Inconn2Service.ReferenceDataUploader do
   end
 
   def upload_workorder_schedules(content, prefix) do
-    req_fields = ["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays",
-                  "First Occurrence Date", "First Occurrence Time", "Next Occurrence Date", "Next Occurrence Time"]
+    req_fields = ["id", "reference", "Workorder Template Id", "Asset Id", "Asset Type", "Holidays", "Schedule Start Date", "Schedule Start Time",
+     "Work Permit Approver", "Work Order Acknowlegement", "Work Order Approver", "LOTO Approver"]
 
-    special_fields = [{"Holidays", "array_of_integers", []}, {"First Occurrence Date", "date", []}]
+    special_fields = [{"Holidays", "array_of_integers", []}, {"Schedule Start Date", "date", []}, {"Schedule Start Time", "time", []}, {"Work Permit Approver", "array_of_integers", []}]
 
     upload_content(
       content,
@@ -633,7 +633,11 @@ defmodule Inconn2Service.ReferenceDataUploader do
     end
   end
 
-
+  defp remove_invalid_processing_list(records, processing_list) do
+   reference_list = Enum.map(records, fn r  -> r["reference"] end)
+   {invalid_list, valid_list} =  Enum.split_with(processing_list, fn x -> x["parent reference"] not in reference_list end)
+   {Enum.map(invalid_list, fn d -> Map.put(d, "Errors", "invalid reference") end), valid_list}
+ end
 
   defp perform_insert_with_parents(records, param_mapper, context_module, insert_func, prefix) do
     {processing_list, unprocessed_list} = Enum.split_with(records, fn x -> x["Parent Id"] != nil end)
@@ -643,8 +647,8 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
     {processing_list, unprocessed_list} = Enum.split_with(unprocessed_list, fn x -> x["parent reference"] == nil end)
     processed_list = processed_list ++ insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list)
-
-    insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list, unprocessed_list)
+    {invalid_processed, unprocessed_list} = remove_invalid_processing_list(records, unprocessed_list)
+    insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list ++ invalid_processed, unprocessed_list)
   end
 
   defp insert_without_parent_reference(param_mapper, context_module, insert_func, prefix, processing_list) do
@@ -669,7 +673,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   defp insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list, processing_list) do
     list =
-      Enum.reduce(processing_list, [], fn r, acc ->
+      Enum.map(processing_list, fn r ->
                             {ctrl_map, attrs} =
                               Map.split(r, ["id", "active", "reference", "parent reference", "action", "action_valid", "action_error", "db_rec"])
 
@@ -684,28 +688,26 @@ defmodule Inconn2Service.ReferenceDataUploader do
                                 case result do
                                   {:ok, result} ->
                                       r = Map.put(r, "Parent Id", result.parent_id)
-                                   acc ++ [Map.put(r, "id", result.id)]
+                                   Map.put(r, "id", result.id)
                                   {:error, cs} ->
                                     error = get_traverse_error(cs)
                                     r = Map.put(r, "id", 0)
-                                    acc ++ [Map.put(r, "Errors", error)]
+                                    Map.put(r, "Errors", error)
                                 end
-                              else
-                                acc ++ [Map.put(r, "Errors", "invalid reference")]
                             end
                           end)
 
-        {error_list, _processed_list} = Enum.split_with(processed_list ++ list, fn x -> x["Errors"] != nil end)
+        list = Enum.filter(list, fn x -> x != nil end)
+
+        processed_list = processed_list ++ list
+        list_reference = Enum.map(list, fn x -> x["reference"] end)
+        processing_list = Enum.filter(processing_list, fn x -> x["reference"] not in list_reference end)
+
+        if processing_list != [] do
+          insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list, processing_list)
+        else
+             {error_list, _processed_list} = Enum.split_with(processed_list, fn x -> x["Errors"] != nil end)
         error_list
-
-    # list = Enum.filter(list, fn x -> x != nil end)
-
-    # processed_list = processed_list ++ list
-    # list_reference = Enum.map(list, fn x -> x["reference"] end)
-    # processing_list = Enum.filter(processing_list, fn x -> x["reference"] not in list_reference end)
-
-    # if processing_list != [] do
-    #   insert_with_parent_reference(param_mapper, context_module, insert_func, prefix, processed_list, processing_list)
-    # end
+        end
   end
 end

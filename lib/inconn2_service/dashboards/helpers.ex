@@ -72,7 +72,7 @@ defmodule Inconn2Service.Dashboards.Helpers do
   defp get_asset_and_energy_tuple(asset, from_dt, to_dt, prefix) do
     {
       asset,
-      NumericalData.get_energy_consumption_for_asset(asset.id, from_dt, to_dt, prefix)
+      NumericalData.get_energy_consumption_for_asset(asset, from_dt, to_dt, prefix)
       |> change_nil_to_zero()
     }
   end

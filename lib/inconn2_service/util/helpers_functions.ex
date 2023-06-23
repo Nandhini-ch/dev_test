@@ -7,8 +7,9 @@ defmodule Inconn2Service.Util.HelpersFunctions do
   alias Inconn2Service.AssetConfig.{Location, Equipment}
 
   def add_asset_type_and_code_to_asset(asset, asset_type, prefix) do
+    asset = AssetConfig.preload_parent(asset, asset_type, prefix)
     parent_name =
-      case AssetConfig.preload_parent(asset, asset_type, prefix) do
+      case asset.parent do
         nil -> nil
         parent -> parent.name
       end

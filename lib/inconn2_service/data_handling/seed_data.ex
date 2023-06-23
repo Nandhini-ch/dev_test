@@ -1,4 +1,5 @@
 defmodule Inconn2Service.DataHandling.SeedData do
+  alias Inconn2Service.Measurements
   alias Inconn2Service.Repo
   alias Inconn2Service.Workorder.WorkOrder
   alias Inconn2Service.Workorder
@@ -223,4 +224,17 @@ defmodule Inconn2Service.DataHandling.SeedData do
     %{"uom_category" => uom_category, "uom_unit" => uom_unit, "description" => description}
 
   end
+
+   def uoms_conversions(prefix, file) do
+    map = load_mappings(file)
+    Measurements.list_meter_readings(prefix)
+    |> Enum.map(fn x ->
+      Measurements.update_meter_reading(x, %{"unit_of_measurement" => map[x.unit_of_measurement]}, prefix)
+    end)
+  end
+
+  def load_mappings(file) do
+    File.stream!(file) |> CSV.decode!() |> Enum.map(fn [old_uom, new_uom] -> {old_uom, new_uom} end) |> Enum.into(%{})
+  end
+
 end

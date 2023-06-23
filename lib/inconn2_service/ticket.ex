@@ -316,7 +316,7 @@ defmodule Inconn2Service.Ticket do
       {:ok, work_request} ->
         Elixir.Task.start(fn -> create_ticket_in_alert_notification_generator(work_request, prefix) end)
         create_status_track(work_request, prefix)
-        Elixir.Task.start(fn -> push_alert_notification_for_new_ticket(work_request, prefix, work_request.site_id) end)
+        Elixir.Task.start(fn -> push_alert_notification_for_new_ticket(work_request, prefix, work_request.site_id, user) end)
         {:ok, work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])|> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -1009,20 +1009,21 @@ defmodule Inconn2Service.Ticket do
     generate_alert_notification("TNCSC", site_id, [user], [], [], [], prefix)
   end
 
-  def push_alert_notification_for_new_ticket(work_request, prefix, site_id) do
+  def push_alert_notification_for_new_ticket(work_request, prefix, site_id, user) do
     helpdesk_users = group_helpdesk_users_by_workrequest_category_id(work_request.workrequest_category_id, site_id, prefix)
     # workrequest_category = get_workrequest_category!(work_request.workrequest_category_id, prefix)
     date_time = get_site_date_time_now(site_id, prefix)
+    current_user = get_display_name_for_user_id(user.id, prefix)
     work_request_type =
       case work_request.request_type do
         "CO" -> "Complaint"
         "RE" -> "Request"
       end
 
-    requested_user = get_display_name_for_user_id(work_request.requested_user_id, prefix)
+    # requested_user = get_display_name_for_user_id(work_request.requested_user_id, prefix)
     user_maps = Staff.form_user_maps_by_user_ids(helpdesk_users, prefix)
 
-    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, requested_user, date_time], [work_request_type, work_request.id, requested_user, date_time], user_maps, [], prefix)
+    generate_alert_notification("NTGEN", site_id, [work_request_type, work_request.id, current_user, date_time], [work_request_type, work_request.id, current_user, date_time], user_maps, [], prefix)
 
   end
 
@@ -1050,7 +1051,7 @@ defmodule Inconn2Service.Ticket do
     helpdesk_users = group_helpdesk_users_by_workrequest_category_id(workrequest_category_id, site_id, prefix)
     asset = AssetConfig.get_asset_by_asset_id(asset_id, asset_type, prefix)
     date_time = get_site_date_time_now(site_id, prefix)
-    assigned_user = get_display_name_for_user_id(updated_work_request.assigned_user_id, prefix)
+    # assigned_user = get_display_name_for_user_id(updated_work_request.assigned_user_id, prefix)
     current_user = get_display_name_for_user_id(user.id, prefix)
 
     work_request_type =
@@ -1094,14 +1095,14 @@ defmodule Inconn2Service.Ticket do
         workrequest_category = get_workrequest_category!(updated_work_request.workrequest_category_id, prefix)
         user_maps = Staff.form_user_maps_by_user_ids([updated_work_request.assigned_user_id], prefix)
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
-        generate_alert_notification("TCKCN", site_id, [updated_work_request.request_type, updated_work_request.id, assigned_user, date_time], [workrequest_category.name, updated_work_request.id, assigned_user, date_time], user_maps, escalation_user_maps, prefix)
+        generate_alert_notification("TCKCN", site_id, [updated_work_request.request_type, updated_work_request.id, current_user, date_time], [workrequest_category.name, updated_work_request.id, current_user, date_time], user_maps, escalation_user_maps, prefix)
 
       #ticket reopened
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "ROP" ->
         user_ids = [updated_work_request.assigned_user_id, asset.asset_manager_id] ++ helpdesk_users
         user_maps = form_user_maps_by_user_ids(user_ids, prefix)
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
-        generate_alert_notification("TCKRO", site_id, [updated_work_request.id, assigned_user, date_time], [updated_work_request.id, assigned_user, date_time], user_maps,  escalation_user_maps, prefix)
+        generate_alert_notification("TCKRO", site_id, [updated_work_request.id, current_user, date_time], [updated_work_request.id, current_user, date_time], user_maps,  escalation_user_maps, prefix)
 
       #ticket reassigned
       existing_work_request.assigned_user_id != nil && existing_work_request.assigned_user_id != updated_work_request.assigned_user_id ->
@@ -1112,7 +1113,7 @@ defmodule Inconn2Service.Ticket do
         |> AssetConfig.list_users_from_scope(prefix)
         |> Staff.form_user_maps_by_user_ids(prefix)
 
-        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, assigned_user], [updated_work_request.id, "Reassign", assigned_user], user_maps, escalation_user_maps, prefix)
+        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, current_user], [updated_work_request.id, "Reassign", current_user], user_maps, escalation_user_maps, prefix)
 
       true ->
         {:ok, updated_work_request}
