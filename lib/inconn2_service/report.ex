@@ -1030,7 +1030,12 @@ defmodule Inconn2Service.Report do
         |> Repo.all(prefix: prefix)
 
         up_time =
-          Time.diff(get_site_date_time_now(e.site_id, prefix), e.created_on) |> convert_to_positive()
+          case e.created_on do
+            nil ->
+              0
+            created_on ->
+              NaiveDateTime.diff(get_site_date_time_now(e.site_id, prefix), created_on) |> convert_to_positive()
+          end
 
       # up_time =
       #   case length(asset_status_tracks) do
