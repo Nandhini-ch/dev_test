@@ -222,7 +222,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       is_deactivated: work_order.is_deactivated,
       deactivated_date_time: work_order.deactivated_date_time,
       overdue: work_order.overdue,
-      allow_execution: work_order.allow_execution,
+      allow_execution: (if Map.has_key?(work_order, :allow_execution), do: work_order.allow_execution, else: nil),
       pause_resume_times: work_order.pause_resume_times,
       frequency: work_order.frequency,
       is_paused: work_order.is_paused,
