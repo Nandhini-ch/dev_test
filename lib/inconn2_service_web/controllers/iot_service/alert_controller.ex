@@ -18,7 +18,8 @@ defmodule Inconn2ServiceWeb.IotService.AlertController do
   end
 
   def create_work_order(conn, %{"work_order_params" => work_order_params}) do
-    Alert.create_work_order(work_order_params, conn.assigns.sub_domain_prefix)
+    IO.inspect(work_order_params)
+    Alert.create_work_order(work_order_params, conn.assigns.sub_domain_prefix) |> IO.inspect()
     render(conn, "alert.json", data: %{"result" => "success"})
   end
 end
