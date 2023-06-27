@@ -1093,28 +1093,33 @@ defmodule Inconn2Service.Workorder do
   def allow_workorder_execution_based_on_attendance(work_order, nil, _prefix), do: work_order
   def allow_workorder_execution_based_on_attendance(work_order, employee_id, prefix) do
     site_config = AssetConfig.get_site_config_by_site_id_and_type(work_order.site_id, "ATT", prefix)
-    schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, work_order.scheduled_time)
-    begin_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[00:00:00])
-    end_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[23:00:00])
-    mandatory_employee_ids = Map.get(site_config.config, "mandatory_employee_ids", [])
 
-    if employee_id in mandatory_employee_ids do
-      attendance_records = Assignment.list_attendance_for_mandatory_employee(begin_schedule_date_time, end_schedule_date_time, work_order.site_id, employee_id, prefix)
-
-      filter_employees =
-        Enum.filter(attendance_records, fn x ->
-          start_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.start_time)
-          end_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.end_time)
-
-          start_date_time >= schedule_date_time && end_date_time <= schedule_date_time
-        end)
-
-      Map.put(work_order, :allow_execution, length(filter_employees) != 0)
-
+    if site_config == nil do
+      %{}  # Return an empty map when site_config is nil
     else
-      Map.put(work_order, :allow_execution, true)
+      schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, work_order.scheduled_time)
+      begin_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[00:00:00])
+      end_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[23:00:00])
+      mandatory_employee_ids = Map.get(site_config.config, "mandatory_employee_ids", [])
+
+      if employee_id in mandatory_employee_ids do
+        attendance_records = Assignment.list_attendance_for_mandatory_employee(begin_schedule_date_time, end_schedule_date_time, work_order.site_id, employee_id, prefix)
+
+        filter_employees =
+          Enum.filter(attendance_records, fn x ->
+            start_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.start_time)
+            end_date_time = NaiveDateTime.new(work_order.scheduled_date, x.shift.end_time)
+
+            start_date_time >= schedule_date_time && end_date_time <= schedule_date_time
+          end)
+
+        Map.put(work_order, :allow_execution, length(filter_employees) != 0)
+      else
+        Map.put(work_order, :allow_execution, true)
+      end
     end
   end
+
 
   def update_scheduled_end_date_time(work_order, prefix) do
     wt = get_workorder_template!(work_order.workorder_template_id, prefix)
