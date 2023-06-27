@@ -1092,7 +1092,11 @@ defmodule Inconn2Service.Workorder do
 
   def allow_workorder_execution_based_on_attendance(work_order, nil, _prefix), do: work_order
   def allow_workorder_execution_based_on_attendance(work_order, employee_id, prefix) do
-    site_config = AssetConfig.get_site_config_by_site_id_and_type(work_order.site_id, "ATT", prefix)
+    site_config =
+      case AssetConfig.get_site_config_by_site_id_and_type(work_order.site_id, "ATT", prefix) do
+        nil -> %{config: %{}}
+        config -> config
+      end
     schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, work_order.scheduled_time)
     begin_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[00:00:00])
     end_schedule_date_time = NaiveDateTime.new(work_order.scheduled_date, ~T[23:00:00])
