@@ -2088,7 +2088,7 @@ defmodule Inconn2Service.AssetConfig do
     |> Repo.all(prefix: prefix)
   end
 
-  def get_site_config_by_site_id_and_type(site_id, type, prefix) do
+  def get_site_config_by_site_id_and_type(site_id, type, prefix)  when not is_nil(site_id) and not is_nil(type) do
     from(sc in SiteConfig, where: sc.site_id == ^site_id and sc.type == ^type)
     |> Repo.one(prefix: prefix)
   end
