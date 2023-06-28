@@ -17,13 +17,13 @@ defmodule Inconn2Service.Batch.AlertNotificationGenServer do
 
   def handle_info(:alert_notification, _state) do
     IO.puts(DateTime.utc_now)
-    generate_alert_notifications()
+    generate_alert_notifications() |> IO.inspect()
     {:noreply, Process.send_after(self(), :alert_notification, 300000)}
   end
 
   def generate_alert_notifications() do
     dt = DateTime.add(DateTime.utc_now, 60, :second)
     an = from(an in AlertNotificationGenerator, where: an.utc_date_time <= ^dt) |> Repo.all
-    Enum.map(an, fn x -> Prompt.generate_alert_notification_for_assets(x) end)
+    Enum.map(an, fn x -> Prompt.generate_alert_notification_for_assets(x) end) |> IO.inspect()
   end
 end
