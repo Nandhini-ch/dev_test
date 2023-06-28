@@ -1572,9 +1572,9 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   #remove asset
-  def push_alert_notification_for_remove_asset(existing_asset, updated_asset, site_id, prefix) do
+  def push_alert_notification_for_remove_asset(existing_asset, _updated_asset, site_id, prefix) do
     escalation_user_maps = Staff.form_user_maps_by_user_ids([existing_asset.asset_manager_id], prefix)
-      asset_type = get_asset_code_from_asset_struct(updated_asset)
+      asset_type = get_asset_code_from_asset_struct(existing_asset)
       # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
       exist_asset_name =
       if existing_asset.parent_id == nil do
