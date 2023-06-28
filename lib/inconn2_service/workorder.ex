@@ -1506,7 +1506,7 @@ defmodule Inconn2Service.Workorder do
   defp create_workorder_in_alert_notification_generator(work_order, prefix) do
     zone = AssetConfig.get_site!(work_order.site_id, prefix).time_zone
     {:ok, utc} = Common.shift_to_utc(work_order.scheduled_date, work_order.scheduled_time, zone)
-    {:ok, end_utc} = Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
+    {:ok, end_utc} = handle_nil_in_scheduled_date_time(work_order, zone, prefix)
 
     previous_utc = DateTime.add(utc, -600, :second)
     after_utc = DateTime.add(utc, 600, :second)
@@ -1537,6 +1537,21 @@ defmodule Inconn2Service.Workorder do
       |> Enum.map(fn attrs ->
         Common.create_alert_notification_generator(attrs) |> IO.inspect()
       end)
+  end
+
+  defp handle_nil_in_scheduled_date_time(work_order, zone, prefix) do
+    workorder_template = get_workorder_template!(work_order.workorder_template_id, prefix)
+    date_time = DateTime.new(work_order.scheduled_end_date, work_order.scheduled_end_time) |> DateTime.add(workorder_template.estimated_time, :minute)
+    alter_scheduled_end_date = DateTime.to_date(date_time)
+    alter_scheduled_end_time = DateTime.to_time(date_time)
+
+    cond do
+      is_nil(work_order.scheduled_end_date) and is_nil(work_order.scheduled_end_time) ->
+        Common.shift_to_utc(alter_scheduled_end_date, alter_scheduled_end_time, zone)
+
+      !is_nil(work_order.scheduled_end_date) and !is_nil(work_order.scheduled_end_time) ->
+        Common.shift_to_utc(work_order.scheduled_end_date, work_order.scheduled_end_time, zone)
+    end
   end
 
   defp delete_workorder_in_alert_notification_generator(work_order, updated_work_order) do
