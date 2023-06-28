@@ -1574,16 +1574,16 @@ defmodule Inconn2Service.AssetConfig do
   #remove asset
   def push_alert_notification_for_remove_asset(existing_asset, updated_asset, site_id, prefix) do
     escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-    asset_type = get_asset_code_from_asset_struct(updated_asset)
-    # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
-    exist_asset_name =
-    if existing_asset.parent_id == nil do
-      "root"
-    else
-      get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
-    end
+      asset_type = get_asset_code_from_asset_struct(updated_asset)
+      # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+      exist_asset_name =
+      if existing_asset.parent_id == nil do
+        "root"
+      else
+        get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
+      end
 
-    generate_alert_notification("REAST", site_id, ["#{existing_asset.name} removed from #{exist_asset_name}"], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
+      generate_alert_notification("REAST", site_id, [existing_asset.name, exist_asset_name], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
   end
 
   #add new asset
@@ -1623,19 +1623,6 @@ defmodule Inconn2Service.AssetConfig do
           |> Staff.form_user_maps_by_user_ids(prefix)
 
         generate_alert_notification("ASTCB", site_id, [updated_asset.name, date_time], [updated_asset.name, date_time], user_maps, escalation_user_maps, prefix)
-
-      #remove asset
-      escalation_user_maps = Staff.form_user_maps_by_user_ids([updated_asset.asset_manager_id], prefix)
-      asset_type = get_asset_code_from_asset_struct(updated_asset)
-      # exist_asset_name = get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
-      exist_asset_name =
-      if existing_asset.parent_id == nil do
-        "root"
-      else
-        get_asset_by_type(existing_asset.parent_id, asset_type, prefix).name
-      end
-
-      generate_alert_notification("REAST", site_id, [existing_asset.name, exist_asset_name], [existing_asset.name, existing_asset.parent_id], [], escalation_user_maps, prefix)
 
       #asset status to on/off
       existing_asset.status != updated_asset.status && updated_asset.status in ["ON", "OFF"]  ->
