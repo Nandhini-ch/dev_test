@@ -1535,7 +1535,7 @@ defmodule Inconn2Service.Workorder do
         }
       ]
       |> Enum.map(fn attrs ->
-        Common.create_alert_notification_generator(attrs)
+        Common.create_alert_notification_generator(attrs) |> IO.inspect()
       end)
   end
 
