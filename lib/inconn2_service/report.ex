@@ -2693,6 +2693,7 @@ defmodule Inconn2Service.Report do
       "PRV" -> "Scheduled"
       "BRK" ->  "Breakdown"
       "TKT" -> "Ticket"
+      "IOT" -> "IOT"
     end
   end
 
