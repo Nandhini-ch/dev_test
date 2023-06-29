@@ -322,7 +322,7 @@ defmodule Inconn2Service.Prompt do
         "site_id" => site_id,
         "prefix" => prefix
       }
-      |> Common.create_alert_notification_scheduler()
+      |> Common.create_alert_notification_scheduler() |> IO.inspect(label: "escalation scheduler")
     end
   end
 

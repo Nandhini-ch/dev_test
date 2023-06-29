@@ -371,6 +371,7 @@ defmodule Inconn2Service.Common do
     dt = DateTime.add(DateTime.utc_now, 60, :second)
     from(ans in AlertNotificationScheduler, where: ans.escalation_at_date_time <= ^dt)
     |> Repo.all()
+    |> IO.inspect(label: "Alert Escalations")
     |> Enum.map(&Task.async(fn -> check_and_create_alert_escalations(&1) end))
     |> Enum.map(&Task.await/1)
   end
