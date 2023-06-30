@@ -182,8 +182,8 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_individual_energy_cost_for_assets(date, params, prefix) do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
     energy_cost_per_unit = change_nil_to_zero(config["energy_cost_per_unit"])
-    asset_ids = convert_nil_to_list(params["asset_ids"])
-
+    asset_ids = convert_nil_to_list(params["asset_ids"]) |> IO.inspect()
+    IO.inspect(convert_nil_to_list(config["energy_non_main_meters"]))
     asset_ids = match_config_non_main_meters(asset_ids, convert_nil_to_list(config["energy_non_main_meters"])) |> IO.inspect()
 
     data_sets =
