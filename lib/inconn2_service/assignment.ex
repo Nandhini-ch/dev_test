@@ -305,6 +305,7 @@ defmodule Inconn2Service.Assignment do
     from(r in Roster, where: r.employee_id == ^user.employee_id,
       left_join: a in Attendance, on: a.roster_id == r.id,
       select: %{
+        id: a.id,
         latitude: a.latitude,
         longitude: a.longitude,
         site_id: a.site_id,
