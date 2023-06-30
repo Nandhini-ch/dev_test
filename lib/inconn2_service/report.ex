@@ -2758,7 +2758,7 @@ defmodule Inconn2Service.Report do
 
   def ppm_report_query(%{"from_date" => from_date, "to_date" => to_date}, prefix) do
     query = from w in WorkOrder, where: w.start_date >= ^from_date or w.completed_date <= ^from_date and w.start_date >= ^to_date or w.completed_date <= ^to_date,
-            join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id and wt.scheduled,
+            join: wt in WorkorderTemplate, on: wt.id == w.workorder_template_id and wt.scheduled and not wt.audit and not wt.amc,
             select: %{
               wo_type: w.type,
               status: w.status,
@@ -2928,6 +2928,23 @@ defmodule Inconn2Service.Report do
   def generate_qr_code_for_equipments(site_id, prefix) do
     equipments_qr = Inconn2Service.AssetConfig.list_equipments_qr(site_id, prefix)
     "inc_" <> sub_domain = prefix
+
+
+
+    # body =
+    #   Sneeze.render([
+    #     :div,
+    #     %{
+    #       style: style(%{
+    #         "display" => "grid",
+    #         "grid-template-columns" => "auto auto auto",
+    #         "padding" => "30px",
+    #         "gap" => "30px",
+    #         "font-size" => "20px"
+    #       })
+    #     },
+    #     render_img_qr(locations_qr, sub_domain),
+    #   ])
 
     body =
       Sneeze.render([
