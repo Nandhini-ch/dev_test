@@ -2928,6 +2928,23 @@ defmodule Inconn2Service.Report do
     equipments_qr = Inconn2Service.AssetConfig.list_equipments_qr(site_id, prefix)
     "inc_" <> sub_domain = prefix
 
+
+
+    # body =
+    #   Sneeze.render([
+    #     :div,
+    #     %{
+    #       style: style(%{
+    #         "display" => "grid",
+    #         "grid-template-columns" => "auto auto auto",
+    #         "padding" => "30px",
+    #         "gap" => "30px",
+    #         "font-size" => "20px"
+    #       })
+    #     },
+    #     render_img_qr(locations_qr, sub_domain),
+    #   ])
+
     body =
       Sneeze.render([
         :div,

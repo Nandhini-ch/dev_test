@@ -587,4 +587,69 @@ defmodule Inconn2Service.CommonTest do
       assert %Ecto.Changeset{} = Common.change_public_uom(public_uom)
     end
   end
+
+  describe "work_request_close_schedulers" do
+    alias Inconn2Service.Common.WorkRequestCloseScheduler
+
+    @valid_attrs %{prefix: "some prefix", time_zone: "some time_zone", utc_date_time: "2010-04-17T14:00:00Z", work_request_id: 42}
+    @update_attrs %{prefix: "some updated prefix", time_zone: "some updated time_zone", utc_date_time: "2011-05-18T15:01:01Z", work_request_id: 43}
+    @invalid_attrs %{prefix: nil, time_zone: nil, utc_date_time: nil, work_request_id: nil}
+
+    def work_request_close_scheduler_fixture(attrs \\ %{}) do
+      {:ok, work_request_close_scheduler} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Common.create_work_request_close_scheduler()
+
+      work_request_close_scheduler
+    end
+
+    test "list_work_request_close_schedulers/0 returns all work_request_close_schedulers" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert Common.list_work_request_close_schedulers() == [work_request_close_scheduler]
+    end
+
+    test "get_work_request_close_scheduler!/1 returns the work_request_close_scheduler with given id" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert Common.get_work_request_close_scheduler!(work_request_close_scheduler.id) == work_request_close_scheduler
+    end
+
+    test "create_work_request_close_scheduler/1 with valid data creates a work_request_close_scheduler" do
+      assert {:ok, %WorkRequestCloseScheduler{} = work_request_close_scheduler} = Common.create_work_request_close_scheduler(@valid_attrs)
+      assert work_request_close_scheduler.prefix == "some prefix"
+      assert work_request_close_scheduler.time_zone == "some time_zone"
+      assert work_request_close_scheduler.utc_date_time == DateTime.from_naive!(~N[2010-04-17T14:00:00Z], "Etc/UTC")
+      assert work_request_close_scheduler.work_request_id == 42
+    end
+
+    test "create_work_request_close_scheduler/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Common.create_work_request_close_scheduler(@invalid_attrs)
+    end
+
+    test "update_work_request_close_scheduler/2 with valid data updates the work_request_close_scheduler" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert {:ok, %WorkRequestCloseScheduler{} = work_request_close_scheduler} = Common.update_work_request_close_scheduler(work_request_close_scheduler, @update_attrs)
+      assert work_request_close_scheduler.prefix == "some updated prefix"
+      assert work_request_close_scheduler.time_zone == "some updated time_zone"
+      assert work_request_close_scheduler.utc_date_time == DateTime.from_naive!(~N[2011-05-18T15:01:01Z], "Etc/UTC")
+      assert work_request_close_scheduler.work_request_id == 43
+    end
+
+    test "update_work_request_close_scheduler/2 with invalid data returns error changeset" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert {:error, %Ecto.Changeset{}} = Common.update_work_request_close_scheduler(work_request_close_scheduler, @invalid_attrs)
+      assert work_request_close_scheduler == Common.get_work_request_close_scheduler!(work_request_close_scheduler.id)
+    end
+
+    test "delete_work_request_close_scheduler/1 deletes the work_request_close_scheduler" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert {:ok, %WorkRequestCloseScheduler{}} = Common.delete_work_request_close_scheduler(work_request_close_scheduler)
+      assert_raise Ecto.NoResultsError, fn -> Common.get_work_request_close_scheduler!(work_request_close_scheduler.id) end
+    end
+
+    test "change_work_request_close_scheduler/1 returns a work_request_close_scheduler changeset" do
+      work_request_close_scheduler = work_request_close_scheduler_fixture()
+      assert %Ecto.Changeset{} = Common.change_work_request_close_scheduler(work_request_close_scheduler)
+    end
+  end
 end

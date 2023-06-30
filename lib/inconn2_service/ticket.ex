@@ -15,6 +15,7 @@ defmodule Inconn2Service.Ticket do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.Site
   alias Inconn2Service.Common
+  alias Inconn2Service.Common.WorkRequestCloseScheduler
   alias Inconn2Service.Prompt
 
   alias Inconn2Service.Ticket.CategoryHelpdesk
@@ -270,37 +271,13 @@ defmodule Inconn2Service.Ticket do
   defp preload_asset(work_request, _prefix) do
     Map.put(work_request, :asset, nil)
   end
-  @doc """
-  Gets a single work_request.
+  def get_work_request_without_preload!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
 
-  Raises `Ecto.NoResultsError` if the Work request does not exist.
-
-  ## Examples
-
-      iex> get_work_request!(123)
-      %WorkRequest{}
-
-      iex> get_work_request!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_work_request!(id, prefix), do: Repo.get!(WorkRequest, id, prefix: prefix)
                                           |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee])
                                           |> preload_to_approve_users(prefix)
                                           |> preload_asset(prefix)
 
-  @doc """
-  Creates a work_request.
-
-  ## Examples
-
-      iex> create_work_request(%{field: value})
-      {:ok, %WorkRequest{}}
-
-      iex> create_work_request(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_work_request(attrs \\ %{}, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
     created_work_request = %WorkRequest{}
@@ -460,18 +437,7 @@ defmodule Inconn2Service.Ticket do
       cs
     end
   end
-  @doc """
-  Updates a work_request.
 
-  ## Examples
-
-      iex> update_work_request(work_request, %{field: new_value})
-      {:ok, %WorkRequest{}}
-
-      iex> update_work_request(work_request, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_work_request(%WorkRequest{} = work_request, attrs, prefix, user \\ %{id: nil}) do
     payload = read_attachment(attrs)
     # wr_status =  change_work_request(work_request, attrs) |> get_field(:status, nil)
@@ -500,6 +466,39 @@ defmodule Inconn2Service.Ticket do
       _ ->
         result
     end
+  end
+
+  def work_request_close_scheduler(work_request, updated_work_request, prefix) do
+    cond do
+      work_request.status != "CP" && updated_work_request.status == "CP" ->
+        case AssetConfig.get_site_config_by_site_id_and_type(updated_work_request.site_id, "TCK", prefix) do
+          nil -> []
+
+          site_config ->
+            close_time = site_config.config["ticket_close_time_in_minutes"] * 60
+            close_date_time_in_utc = NaiveDateTime.utc_now() |> NaiveDateTime.add(close_time)
+            %{
+              "prefix" => prefix,
+              "utc_date_time" => close_date_time_in_utc,
+              "work_request_id" =>  updated_work_request.id
+            }
+        end
+
+      work_request.status == "CP" && updated_work_request.status in ["ROP", "CS"] ->
+         case Common.get_work_request_close_scheduler(updated_work_request.id, prefix) do
+           nil -> []
+
+          close_scheduler ->
+            Common.delete_work_request_close_scheduler(close_scheduler)
+         end
+      true ->
+        []
+    end
+  end
+
+  def get_and_update_work_request_close_scheduler(work_request_close_scheduler) do
+    get_work_request_without_preload!(work_request_close_scheduler.id, work_request_close_scheduler.prefix)
+    |> update_work_request(%{"status" => "CS"}, work_request_close_scheduler.prefix)
   end
 
   def update_workorder_generated_status(cs) do
@@ -667,31 +666,11 @@ defmodule Inconn2Service.Ticket do
   #     cs
   #   end
   # end
-  @doc """
-  Deletes a work_request.
 
-  ## Examples
-
-      iex> delete_work_request(work_request)
-      {:ok, %WorkRequest{}}
-
-      iex> delete_work_request(work_request)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_work_request(%WorkRequest{} = work_request, prefix) do
     Repo.delete(work_request, prefix: prefix)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking work_request changes.
-
-  ## Examples
-
-      iex> change_work_request(work_request)
-      %Ecto.Changeset{data: %WorkRequest{}}
-
-  """
   def change_work_request(%WorkRequest{} = work_request, attrs \\ %{}) do
     WorkRequest.changeset(work_request, attrs)
   end
