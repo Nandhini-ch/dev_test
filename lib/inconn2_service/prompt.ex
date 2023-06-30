@@ -144,9 +144,9 @@ defmodule Inconn2Service.Prompt do
   def generate_alert_notification_for_assets(alert_notification_generator) do
     case alert_notification_generator.code do
       "WOSDM" ->
-        work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
+        work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix) |> IO.inspect()
         user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
-        generate_alert_notification("WOSDM", work_order.site_id, [work_order.id, work_order.scheduled_time], [],user_maps, [], alert_notification_generator.prefix)
+        generate_alert_notification("WOSDM", work_order.site_id, [work_order.id, work_order.scheduled_time], [],user_maps, [], alert_notification_generator.prefix) |> IO.inspect()
 
       "WOSOD" ->
         work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
@@ -186,6 +186,7 @@ defmodule Inconn2Service.Prompt do
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
         generate_alert_notification("TCKTE", work_request.site_id, [work_request.id, "response tat", date_time], [work_request.id, "response tat", date_time], user_maps, escalation_user_maps, alert_notification_generator.prefix)
     end
+    Common.delete_alert_notification_generator(alert_notification_generator)
   end
 
 
@@ -294,7 +295,8 @@ defmodule Inconn2Service.Prompt do
       is_sms_required: an_reserve.is_sms_required,
       is_email_required: an_reserve.is_email_required,
       is_escalation_required: an_reserve.is_escalation_required,
-      escalation_time_in_minutes: an_reserve.escalation_time_in_minutes
+      escalation_time_in_minutes: an_reserve.escalation_time_in_minutes,
+      priority: "normal"
     }
   end
 

@@ -101,7 +101,7 @@
         "type": "nt",
         "code": "WOASS",
         "sms_code": null,
-        "text_template": "Work order <%= var1 %> asigned at <%= var2 %>",
+        "text_template": "Work order <%= var1 %> assigned at <%= var2 %>",
         "is_sms_required": true,
         "is_email_required": false,
         "is_escalation_required": false,
