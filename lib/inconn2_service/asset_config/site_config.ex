@@ -41,7 +41,7 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
 
       "ATT" ->
         # if Map.keys(config) == ["grace_period_in_minutes", "half_day_work_hours", "preferred_total_work_hours"] do
-        if Map.keys(config) == ["grace_period_in_minutes", "half_day_work_hours"] do
+        if Map.keys(config) == ["grace_period_in_minutes", "half_day_work_hours", "mandatory_employee_ids"] do
           changeset
         else
           add_error(changeset, :config, "config is invalid")

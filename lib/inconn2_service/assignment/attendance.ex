@@ -11,6 +11,7 @@ defmodule Inconn2Service.Assignment.Attendance do
     field :out_time, :naive_datetime
     field :shift_id, :integer
     field :status, :string
+    field :roster_id, :integer
 
     timestamps()
   end
@@ -18,7 +19,7 @@ defmodule Inconn2Service.Assignment.Attendance do
   @doc false
   def changeset(attendance, attrs) do
     attendance
-    |> cast(attrs, [:in_time, :out_time, :latitude, :longitude, :site_id, :employee_id, :shift_id, :status])
+    |> cast(attrs, [:in_time, :out_time, :latitude, :longitude, :site_id, :employee_id, :shift_id, :status, :roster_id])
     |> validate_required([:site_id, :employee_id, :in_time])
     |> validate_inclusion(:status , ["ONTM", "LATE", "HFDY"])
   end

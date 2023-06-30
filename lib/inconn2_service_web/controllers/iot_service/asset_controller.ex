@@ -8,8 +8,12 @@ defmodule Inconn2ServiceWeb.IotService.AssetController do
   end
 
   def add_device_to_asset(conn, %{"asset_id" => asset_id, "asset_type" => asset_type, "device_key" => device_key, "device_id" => device_id, "licensee_prefix" => prefix}) do
-    IO.inspect(conn.query_params, label: "Asset update from IOT params")
-    Asset.add_device_to_asset(asset_type, asset_id, {device_key, device_id}, "inc_" <> prefix) |> IO.inspect()
+    Asset.add_device_to_asset(asset_type, asset_id, {device_key, device_id}, "inc_" <> prefix)
+    render(conn, "success.json", data: "success")
+  end
+
+  def remove_device_from_asset(conn, %{"asset_id" => asset_id, "asset_type" => asset_type, "device_key" => device_key, "device_id" => device_id, "licensee_prefix" => prefix}) do
+    Asset.remove_device_from_asset(asset_type, asset_id, {device_key, device_id}, "inc_" <> prefix)
     render(conn, "success.json", data: "success")
   end
 end

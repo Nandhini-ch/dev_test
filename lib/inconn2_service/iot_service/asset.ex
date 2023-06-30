@@ -16,7 +16,7 @@ defmodule Inconn2Service.IotService.Asset do
     attrs =
       %{
         "is_iot_enabled" => true,
-        "iot_details" => update_iot_details_map(location.iot_details, {device_key, device_id})
+        "iot_details" => update_iot_details_map(location.iot_details, {device_key, device_id}, "add")
         }
     AssetConfig.update_location(location, attrs, prefix)
   end
@@ -26,14 +26,46 @@ defmodule Inconn2Service.IotService.Asset do
     attrs =
       %{
         "is_iot_enabled" => true,
-        "iot_details" => update_iot_details_map(equipment.iot_details, {device_key, device_id})
+        "iot_details" => update_iot_details_map(equipment.iot_details, {device_key, device_id}, "add")
         }
     AssetConfig.update_equipment(equipment, attrs, prefix)
   end
 
-  defp update_iot_details_map(iot_details, {device_key, device_id}) do
+  def remove_device_from_asset("L", asset_id, {device_key, device_id}, prefix) do
+    location = AssetConfig.get_location!(asset_id, prefix)
+    iot_details = update_iot_details_map(location.iot_details, {device_key, device_id}, "remove")
+
+    device_ids = Enum.reduce(iot_details, [], fn {_k, l}, acc -> acc ++ l end)
+    attrs =
+      %{
+        "is_iot_enabled" => device_ids != [],
+        "iot_details" => iot_details
+        }
+    AssetConfig.update_location(location, attrs, prefix)
+  end
+
+  def remove_device_from_asset("E", asset_id, {device_key, device_id}, prefix) do
+    equipment = AssetConfig.get_equipment!(asset_id, prefix)
+    iot_details = update_iot_details_map(equipment.iot_details, {device_key, device_id}, "remove")
+
+    device_ids = Enum.reduce(iot_details, [], fn {_k, l}, acc -> acc ++ l end)
+    attrs =
+      %{
+        "is_iot_enabled" => device_ids != [],
+        "iot_details" => iot_details
+        }
+    AssetConfig.update_equipment(equipment, attrs, prefix)
+  end
+
+  defp update_iot_details_map(iot_details, {device_key, device_id}, "add") do
     iot_details = convert_nil_to_map(iot_details)
     ids = Map.get(iot_details, device_key, [])
     Map.put(iot_details, device_key, Enum.uniq([device_id | ids]))
+  end
+
+  defp update_iot_details_map(iot_details, {device_key, device_id}, "remove") do
+    iot_details = convert_nil_to_map(iot_details)
+    ids = Map.get(iot_details, device_key, [])
+    Map.put(iot_details, device_key, (ids -- [device_id]))
   end
 end

@@ -11,6 +11,7 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Assignment.EmployeeRoster
+  alias Inconn2Service.Assignment.Attendance
   alias Inconn2Service.Staff.Employee
   alias Inconn2Service.{Staff, Assignments}
   alias Inconn2Service.AssetConfig
@@ -18,6 +19,8 @@ defmodule Inconn2Service.Assignment do
   alias Inconn2Service.Settings
   alias Inconn2Service.Settings.Shift
   alias Inconn2Service.Assignment.ManualAttendance
+  alias Inconn2Service.Assignments.{MasterRoster, Roster}
+  alias Inconn2Service.Assignment.Attendance
 
   def list_employee_rosters(prefix) do
     EmployeeRoster
@@ -280,8 +283,6 @@ defmodule Inconn2Service.Assignment do
     EmployeeRoster.changeset(employee_roster, attrs)
   end
 
-  alias Inconn2Service.Assignment.Attendance
-
   def list_attendances(query_params, prefix) do
     query_params = get_date_time_for_query(query_params, prefix)
     from(a in Attendance)
@@ -292,16 +293,60 @@ defmodule Inconn2Service.Assignment do
     |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
   end
 
+  # def list_attendances_for_user(_query_params, user, _prefix) when is_nil(user.employee_id), do: []
+  # def list_attendances_for_user(query_params, user, prefix) when not is_nil(user.employee_id) do
+  #   Map.put(query_params, "employee_id", user.employee_id)
+  #   |> list_attendances_for_employee(prefix)
+  # end
+
+  def list_attendances_for_employee(user, _prefix) when is_nil(user.employee_id), do: []
+  def list_attendances_for_employee(user, prefix) do
+    # query_params = Map.put(query_params, "employee_id", user.employee_id)
+    from(r in Roster, where: r.employee_id == ^user.employee_id,
+      left_join: a in Attendance, on: a.roster_id == r.id,
+      select: %{
+        latitude: a.latitude,
+        longitude: a.longitude,
+        site_id: a.site_id,
+        in_time: a.in_time,
+        out_time: a.out_time,
+        status: a.status,
+        roster_id: r.id,
+        date: r.date,
+        employee_id: r.employee_id,
+        shift_id: r.shift_id,
+        master_roster_id: r.master_roster_id
+      }
+    )
+    |> Repo.all(prefix: prefix)
+    |> Enum.map(fn attendance ->
+      if is_nil(attendance.in_time) do
+        Map.put(attendance, :status, "ASNT")
+      else
+        attendance
+      end
+    end)
+    |> Stream.map(fn attendance -> preload_employee(attendance, prefix) end)
+    |> Stream.map(fn attendance -> preload_shift(attendance, prefix) end)
+    |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
+  end
+
   def list_attendances_for_team(team_id, prefix) do
     employee_ids = Staff.get_employee_ids_of_team(team_id, prefix)
     list_attendances(%{"employee_ids" => employee_ids}, prefix)
   end
 
-  def list_attendances_for_user(_query_params, user, _prefix) when is_nil(user.employee_id), do: []
-  def list_attendances_for_user(query_params, user, prefix) when not is_nil(user.employee_id) do
-    Map.put(query_params, "employee_id", user.employee_id)
-    |> list_attendances(prefix)
+  def list_attendance_for_mandatory_employee(begin_schedule_date_time, end_schedule_date_time, employee_id, site_id, prefix) do
+    query =
+      from a in Attendance,
+        where: a.in_time >= ^begin_schedule_date_time and a.in_time <= ^end_schedule_date_time and
+               a.employee_id == ^employee_id and a.site_id == ^site_id
+
+    query
+    |> Repo.all(prefix: prefix)
+    |> preload_shift(prefix)
   end
+
 
   defp preload_employee(attendance, prefix) do
     employee = Repo.get!(Employee, attendance.employee_id, prefix: prefix)
@@ -385,20 +430,50 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
+  def get_rosters_for_attendance(employee_id, site_id, date, prefix) do
+    from(r in Roster, where: r.employee_id == ^ employee_id and r.date == ^date,
+    join: mr in MasterRoster, on: mr.id == r.master_roster_id, where: mr.site_id == ^site_id,
+    join: s in Shift, on: s.id == r.shift_id,
+    select: %{roster_id: r.id,
+    shift_id: s.id,
+    shift_start: s.start_time,
+    shift_end: s.end_time
+    })
+    |> Repo.all(prefix: prefix)
+  end
+
   defp match_roster_and_fill_shift_id(cs, prefix) do
     employee_id = get_field(cs, :employee_id)
     site_id = get_field(cs, :site_id)
     in_dt = get_field(cs, :in_time)
+    site_config = AssetConfig.get_site_config_by_site_id_and_type(site_id, "ATT", prefix)
+    grace_period = Map.get(site_config.config, "grace_period_for_in_time", 0)
     cond do
       employee_id && site_id && in_dt ->
-          shift_id =
-            Assignments.get_shifts_from_roster_for_attendance(employee_id, site_id, NaiveDateTime.to_date(in_dt), prefix)
-            |> get_matching_shift__id_for_attendance(NaiveDateTime.to_time(in_dt))
+        roster_with_shift = get_rosters_for_attendance(employee_id, site_id, NaiveDateTime.to_date(in_dt), prefix)
 
-          put_change(cs, :shift_id, shift_id)
+        altered_roster_with_shift =
+          Enum.map(roster_with_shift, fn x ->
+            shift_start = x.shift_start
+            altered_time = Time.add(shift_start, -grace_period * 60)
+            Map.put(x, :shift_start, altered_time)
+          end)
 
-      true ->
-          cs
+        filtered_roster_with_shift =
+          Enum.filter(altered_roster_with_shift, fn x ->
+            altered_time = Map.get(x, :shift_start)
+            end_time = Map.get(x, :shift_end)
+            in_time = NaiveDateTime.to_time(in_dt)
+
+            altered_time >= in_time && in_time <= end_time
+          end)
+
+          map = List.first(filtered_roster_with_shift)
+
+          change(cs, %{roster_id: map.roster_id, shift_id: map.shift_id})
+
+    true ->
+        cs
     end
   end
 

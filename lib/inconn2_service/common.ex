@@ -371,15 +371,23 @@ defmodule Inconn2Service.Common do
     dt = DateTime.add(DateTime.utc_now, 60, :second)
     from(ans in AlertNotificationScheduler, where: ans.escalation_at_date_time <= ^dt)
     |> Repo.all()
+    |> IO.inspect(label: "Alert Escalations")
     |> Enum.map(&Task.async(fn -> check_and_create_alert_escalations(&1) end))
     |> Enum.map(&Task.await/1)
   end
 
   defp check_and_create_alert_escalations(escalation_scheduler) do
-    conditions = conditions_for_escalating_alerts(escalation_scheduler)
-    alerts = UserAlertNotification
-              |> where(^conditions)
-              |> Repo.all(prefix: escalation_scheduler.prefix)
+    alerts =
+      from(uan in UserAlertNotification,
+        where: uan.site_id == ^escalation_scheduler.site_id and
+               uan.alert_identifier_date_time == ^escalation_scheduler.alert_identifier_date_time and
+               uan.type == "al" and
+               uan.escalation == false and
+               is_nil(uan.acknowledged_date_time),
+        select: uan
+      )
+      |> Repo.all(prefix: escalation_scheduler.prefix)
+
     case alerts do
       [] ->
         delete_escalation_scheduler(escalation_scheduler)
@@ -387,19 +395,19 @@ defmodule Inconn2Service.Common do
       [alert | _] ->
         Prompt.generate_alert_escalation(alert, escalation_scheduler, escalation_scheduler.prefix)
         delete_escalation_scheduler(escalation_scheduler)
-
     end
   end
 
-  defp conditions_for_escalating_alerts(escalation_scheduler) do
-    [
-      site_id: escalation_scheduler.site_id,
-      alert_identifier_date_time: escalation_scheduler.alert_identifier_date_time,
-      type: "al",
-      escalation: false,
-      acknowledged_date_time: nil
-    ]
-  end
+
+  # defp conditions_for_escalating_alerts(escalation_scheduler) do
+  #   [
+  #     site_id: escalation_scheduler.site_id,
+  #     alert_identifier_date_time: escalation_scheduler.alert_identifier_date_time,
+  #     type: "al",
+  #     escalation: false,
+  #     acknowledged_date_time: nil
+  #   ]
+  # end
 
   defp delete_escalation_scheduler(escalation_scheduler) do
     delete_alert_notification_scheduler(escalation_scheduler)
