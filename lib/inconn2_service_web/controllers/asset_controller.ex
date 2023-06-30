@@ -5,6 +5,7 @@ defmodule Inconn2ServiceWeb.AssetController do
   alias Inconn2Service.AssetConfig
   alias Inconn2Service.AssetConfig.SiteConfig
   alias Inconn2Service.Account
+  Inconn2Service.AssetConfig.DuplicateEntry
   # alias Inconn2ServiceWeb.AssetView
 
   def get_asset_from_qr_code(conn, %{"qr_code" => qr_code}) do
@@ -58,4 +59,9 @@ defmodule Inconn2ServiceWeb.AssetController do
             |> Repo.update(prefix: prefix)
   end
 
+  #duplicate entry
+  def index(conn, %{"table_name" => table_name, "prefix" => prefix}) do
+    duplicate_entries = DuplicateEntry.get_duplicate_values_based_on_table_name(table_name, prefix)
+    render(conn, "index.json", )
+  end
 end
