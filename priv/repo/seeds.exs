@@ -1,7 +1,7 @@
 # Build the tiezone DB only once in production
 alias Inconn2Service.ContractManagement
 alias Inconn2Service.Common
-Common.build_timezone_db()
+# Common.build_timezone_db()
 Inconn2Service.SeedFeatures.seed_features()
 
 alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Staff, ContractManagement}
@@ -151,7 +151,8 @@ si_cf1 = %{
   "type" => "ATT",
   "config" => %{
     "half_day_work_hours" => 210,
-    "grace_period_in_minutes" => 15
+    "grace_period_in_minutes" => 15,
+    "mandatory_employee_ids" => [1, 2]
   }
 }
 
