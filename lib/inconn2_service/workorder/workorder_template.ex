@@ -10,9 +10,9 @@ defmodule Inconn2Service.Workorder.WorkorderTemplate do
     field :asset_type, :string
     field :task_list_id, :integer
     field :estimated_time, :integer
-    field :scheduled, :boolean, default: false
+    field :scheduled, :boolean, default: false # inhouse in frontend
     field :breakdown, :boolean, default: false
-    field :audit, :boolean, default: false
+    field :audit, :boolean, default: false # log in frontend
     field :adhoc, :boolean, default: false
     field :movable, :boolean, default: false
     field :amc, :boolean, default: false

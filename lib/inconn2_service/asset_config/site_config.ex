@@ -23,7 +23,7 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
     site_config
     |> cast(attrs, [:site_id, :config, :type])
     |> validate_required([:site_id, :config, :type])
-    |> validate_inclusion(:type, ["DASH", "ATT"])
+    |> validate_inclusion(:type, ["DASH", "ATT", "TCK"])
     |> validate_config()
     |> assoc_constraint(:site)
   end
@@ -42,6 +42,13 @@ defmodule Inconn2Service.AssetConfig.SiteConfig do
       "ATT" ->
         # if Map.keys(config) == ["grace_period_in_minutes", "half_day_work_hours", "preferred_total_work_hours"] do
         if Map.keys(config) == ["grace_period_in_minutes", "half_day_work_hours", "mandatory_employee_ids"] do
+          changeset
+        else
+          add_error(changeset, :config, "config is invalid")
+        end
+
+      "TCK" ->
+        if Map.keys(config) == ["ticket_close_time_in_minutes"] do
           changeset
         else
           add_error(changeset, :config, "config is invalid")

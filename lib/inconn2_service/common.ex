@@ -529,4 +529,37 @@ defmodule Inconn2Service.Common do
   def change_public_uom(%PublicUom{} = public_uom, attrs \\ %{}) do
     PublicUom.changeset(public_uom, attrs)
   end
+
+  alias Inconn2Service.Common.WorkRequestCloseScheduler
+
+  def list_work_request_close_schedulers do
+    Repo.all(WorkRequestCloseScheduler)
+  end
+
+  def get_work_request_close_scheduler!(id), do: Repo.get!(WorkRequestCloseScheduler, id)
+
+  def create_work_request_close_scheduler(attrs \\ %{}) do
+    %WorkRequestCloseScheduler{}
+    |> WorkRequestCloseScheduler.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_work_request_close_scheduler(work_request_id, prefix) do
+    from(wcs in WorkRequestCloseScheduler, where: wcs.work_request_id == ^work_request_id and wcs.prefix == ^prefix)
+    |> Repo.one()
+  end
+
+  def update_work_request_close_scheduler(%WorkRequestCloseScheduler{} = work_request_close_scheduler, attrs) do
+    work_request_close_scheduler
+    |> WorkRequestCloseScheduler.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_work_request_close_scheduler(%WorkRequestCloseScheduler{} = work_request_close_scheduler) do
+    Repo.delete(work_request_close_scheduler)
+  end
+
+  def change_work_request_close_scheduler(%WorkRequestCloseScheduler{} = work_request_close_scheduler, attrs \\ %{}) do
+    WorkRequestCloseScheduler.changeset(work_request_close_scheduler, attrs)
+  end
 end
