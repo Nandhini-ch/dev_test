@@ -22,7 +22,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       last_name: employee.last_name,
       employment_start_date: employee.employment_start_date,
       employment_end_date: employee.employment_end_date,
-      designation: employee.designation,
+      designation: render_one(employee.designation, DesignationView, "designation.json"),
       email: employee.email,
       employee_id: employee.employee_id,
       landline_no: employee.landline_no,
