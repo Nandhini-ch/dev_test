@@ -192,13 +192,13 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
   def upload_workorder_templates(content, prefix) do
     req_fields = ["id", "reference", "Asset Category Id", "Asset Type", "Name", "Task List Id", "Estimated Time",
-    "Scheduled", "Breakdown", "Audit", "Adhoc", "Amc",  "Repeat Every", "Repeat Unit", "Applicable Start",
+    "Scheduled", "Breakdown", "Audit", "Adhoc", "Amc", "Movement", "Repeat Every", "Repeat Unit", "Applicable Start",
    "Applicable End", "Time Start", "Time End", "Create New", "Max Times", "Work Order Prior Time",
      "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id",
     "Loto Release Check List Id", "Precheck Required","Precheck List Id", "Work Order Approval Required", "Work Order Acknowledgement Required"]
 
     # {"Tasks", "integer_array_tuples_with_index", []},
-    special_fields = [ {"Scheduled", "boolean", []}, {"Breakdown", "boolean", []}, {"Audit", "boolean", []}, {"Adhoc", "boolean", []}, {"Amc", "boolean", []},
+    special_fields = [ {"Scheduled", "boolean", []}, {"Breakdown", "boolean", []}, {"Audit", "boolean", []}, {"Adhoc", "boolean", []}, {"Amc", "boolean", []}, {"Movement", "boolean", []},
     {"Precheck Required", "boolean", []},   {"Work Permit Required", "boolean", []}, {"Loto Required", "boolean", []}, {"Work Order Approval Required", "boolean", []}, {"Work Order Acknowledgement Required", "boolean", []},
                       {"Applicable Start", "date", []}, {"Applicable End", "date", []}, {"Time Start", "time", []}, {"Time End", "time", []}]
 

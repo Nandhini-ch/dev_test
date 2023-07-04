@@ -122,16 +122,21 @@ defmodule Inconn2Service.FileLoader do
 
   def make_workorder_templates(record) do
     %{}
-    |> Map.put("applicable_start", Map.get(record, "Applicable Start"))
+    |> Map.put("adhoc", Map.get(record, "Adhoc"))
+    |> Map.put("amc", Map.get(record, "Adhoc"))
     |> Map.put("applicable_end", Map.get(record, "Applicable End"))
+    |> Map.put("applicable_start", Map.get(record, "Applicable Start"))
     |> Map.put("asset_category_id", Map.get(record, "Asset Category Id"))
     |> Map.put("asset_type", Map.get(record, "Asset Type"))
+    |> Map.put("audit", Map.get(record, "Audit"))
+    |> Map.put("breakdown", Map.get(record, "Breakdown"))
     |> Map.put("create_new", Map.get(record, "Create New"))
     |> Map.put("estimated_time", Map.get(record, "Estimated Time"))
     |> Map.put("loto_lock_check_list_id", Map.get(record, "Loto Lock Check List Id"))
     |> Map.put("loto_release_check_list_id", Map.get(record, "Loto Release Check List Id"))
-    |> Map.put("loto_required", Map.get(record, "Loto Required"))
+    |> Map.put("is_loto_required", Map.get(record, "Loto Required"))
     |> Map.put("max_times", Map.get(record, "Max Times"))
+    |> Map.put("movable", Map.get(record, "Movement"))
     |> Map.put("name", Map.get(record, "Name"))
     |> Map.put("precheck_list_id", Map.get(record, "Precheck List Id"))
     |> Map.put("is_precheck_required", Map.get(record, "Precheck Required"))
@@ -145,7 +150,7 @@ defmodule Inconn2Service.FileLoader do
     |> Map.put("is_workorder_approval_required", Map.get(record, "Work Order Approval Required"))
     |> Map.put("workorder_prior_time", Map.get(record, "Work Order Prior Time"))
     |> Map.put("Workpermit_check_list_id", Map.get(record, "Work Permit Check List Id"))
-    |> Map.put("workpermit_required", Map.get(record, "Work Permit Required"))
+    |> Map.put("is_workpermit_required", Map.get(record, "Work Permit Required"))
     # |> Map.put("tasks", Map.get(record, "Tasks"))
   end
 
@@ -378,29 +383,44 @@ defmodule Inconn2Service.FileLoader do
 
       "date" ->
         new_map =
-          if map[key_name] != "" &&  is_binary(map[key_name]) do
-            [date, month, year] = String.split(map[key_name], "-")
-            {:ok, date} = Date.from_iso8601("#{year}-#{month}-#{date}")
-            Map.put(map, key_name, date)
-          else
-            map
-          end
+            case String.split(map[key_name], "-") do
+              [date, month, year] ->
+                  case Date.from_iso8601("#{year}-#{month}-#{date}") do
+                    {:ok, date} ->
+                       Map.put(map, key_name, date)
+                      _->
+                        map
+                   end
+                _->
+                  map
+             end
         convert_special_keys_to_required_type(tail, new_map)
 
         "time" ->
           new_map =
-            if map[key_name] != "" &&  is_binary(map[key_name]) do
-              [hh, mm, ss] = String.split(map[key_name], ":")
-              {:ok, time} = Time.from_iso8601("#{hh}:#{mm}:#{ss}")
-              Map.put(map, key_name, time)
-            else
-              map
+           case String.split(map[key_name], ":") do
+               [hh, mm, ss] ->
+                 case Time.from_iso8601("#{hh}:#{mm}:#{ss}") do
+                    {:ok, time} ->
+                       Map.put(map, key_name, time)
+                      _ ->
+                        map
+                  end
+                _ ->
+                  map
             end
           convert_special_keys_to_required_type(tail, new_map)
 
       "boolean" ->
-        value = if map[key_name] in ["TRUE", "True", "true"], do: true, else: false
-        new_map = Map.put(map, key_name, value)
+        new_map =
+         case String.downcase(map[key_name]) do
+          "true" ->
+             Map.put(map, key_name, true)
+            "false" ->
+             Map.put(map, key_name, false)
+              _->
+                 map
+         end
         convert_special_keys_to_required_type(tail, new_map)
 
       "map_out_of_existing_options" ->
@@ -424,7 +444,15 @@ defmodule Inconn2Service.FileLoader do
             |> Enum.filter( fn x -> x != "" end)
             |> Enum.map(fn x ->
                 [label, value, raise_ticket] = String.split(x, ":")
-                 r_ticket = if raise_ticket in ["TRUE", "True", "true"], do: true, else: false
+                r_ticket =
+                  case String.downcase(raise_ticket) do
+                   "true" ->
+                       true
+                     "false" ->
+                       false
+                       _->
+                        raise_ticket
+                  end
                 %{"label" => label, "value" => value, "raise_ticket" => r_ticket}
               end)
           # new_map = Map.put(map, "Config", %{"options" => array})
