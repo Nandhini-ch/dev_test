@@ -498,8 +498,10 @@ defmodule Inconn2Service.FileLoader do
   defp string_to_integer(value), do: String.to_integer(value)
 
   def get_records_as_map_for_csv(content, required_fields, array_keys \\ []) do
-    {header, data_lines} = get_header_and_data_for_upload_csv(content)
-
+    {header, data_lines, invalid_list} = get_header_and_data_for_upload_csv(content)
+    if length(invalid_list) > 0 do
+     {:error_list, invalid_list}
+    else
     # header_fields =
     #   String.split(String.trim(header), ",") |> Enum.map(fn fld -> String.trim(fld) end)
 
@@ -524,6 +526,7 @@ defmodule Inconn2Service.FileLoader do
     else
       {:error, ["Invalid Header Fields"]}
     end
+   end
   end
 
   def zip_and_map(header_fields, data_fields) do
@@ -535,8 +538,26 @@ defmodule Inconn2Service.FileLoader do
   end
 
   def get_header_and_data_for_upload_csv(content) do
-    [header | data_lines] = Path.expand(content.path) |> File.stream!() |> CSV.decode() |> Enum.map(fn {:ok, element} -> element end)
-    {header, data_lines}
+  # to find decode error data
+    {elements, error_messages} =
+      Path.expand(content.path)
+      |> File.stream!()
+      |> CSV.decode()
+      |> Enum.reduce({[], []}, fn
+        {:ok, element}, {elements, error_messages} ->
+          {[element | elements], error_messages}
+
+        {:error, message}, {elements, error_messages} ->
+          {elements, [message | error_messages]}
+
+        _, {elements, error_messages} ->
+          {elements, error_messages}
+      end)
+
+    [header | data_lines] = Enum.reverse(elements)
+    {header, data_lines, Enum.reverse(error_messages)}
+    # [header | data_lines] = Path.expand(content.path) |> File.stream!() |> CSV.decode() |> Enum.map(fn {:ok, element} -> element end)
+    # {header, data_lines}
   end
 
   defp validate_header(header_fields, required_fields) do

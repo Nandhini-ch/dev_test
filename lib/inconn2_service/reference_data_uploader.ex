@@ -515,6 +515,7 @@ defmodule Inconn2Service.ReferenceDataUploader do
       case parse_and_choose_records(content, required_fields, special_fields) do
         {:ok, records} -> {:ok, records}
         {:error, err_msgs} -> {:error, err_msgs}
+        {:error_list, invalid_list} -> {:error_list, [["Errors"] ++ required_fields] ++ Enum.map(invalid_list, fn list -> [list] end)}
       end
 
     case validate_result do
@@ -529,6 +530,9 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
       {:error, error_messages} ->
         {:error, error_messages}
+
+        {:error_list, invalid_list} ->
+          {:error_list, invalid_list}
     end
   end
 
@@ -599,6 +603,9 @@ defmodule Inconn2Service.ReferenceDataUploader do
 
       {:error, messages} ->
         {:error, messages}
+
+        {:error_list, invalid_list} ->
+          {:error_list, invalid_list}
     end
   end
 
