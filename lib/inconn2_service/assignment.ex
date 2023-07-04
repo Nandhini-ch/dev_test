@@ -345,10 +345,8 @@ defmodule Inconn2Service.Assignment do
 
     query
     |> Repo.all(prefix: prefix)
-    |> IO.inspect()
-    |> preload_shift(prefix)
+    |> Enum.map(fn attendance -> preload_shift(attendance, prefix) end)
   end
-
 
   defp preload_employee(attendance, prefix) do
     employee = Repo.get!(Employee, attendance.employee_id, prefix: prefix)
