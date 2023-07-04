@@ -249,6 +249,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -258,6 +259,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -266,6 +268,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -300,6 +303,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.preload(:org_unit)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
@@ -314,6 +318,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.preload(:org_unit)
     |> Repo.sort_by_id()
