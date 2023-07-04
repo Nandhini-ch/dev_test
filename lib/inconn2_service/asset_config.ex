@@ -643,6 +643,13 @@ defmodule Inconn2Service.AssetConfig do
 
   alias Inconn2Service.AssetConfig.Location
 
+  def list_locations(prefix) do
+    Location
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.sort_by_id()
+  end
+
   def list_locations(site_id, prefix) do
     Location
     |> Repo.add_active_filter()
