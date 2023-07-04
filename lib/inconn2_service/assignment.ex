@@ -345,6 +345,7 @@ defmodule Inconn2Service.Assignment do
 
     query
     |> Repo.all(prefix: prefix)
+    |> IO.inspect()
     |> preload_shift(prefix)
   end
 
