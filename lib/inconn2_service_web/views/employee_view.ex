@@ -1,7 +1,7 @@
 defmodule Inconn2ServiceWeb.EmployeeView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.RoleView
-  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView, AssetCategoryView}
+  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView, AssetCategoryView, DesignationView}
 
   def render("index.json", %{employees: employees}) do
     %{data: render_many(employees, EmployeeView, "employee.json")}
