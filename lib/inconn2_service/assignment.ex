@@ -305,6 +305,7 @@ defmodule Inconn2Service.Assignment do
     from(r in Roster, where: r.employee_id == ^user.employee_id,
       left_join: a in Attendance, on: a.roster_id == r.id,
       select: %{
+        id: a.id,
         latitude: a.latitude,
         longitude: a.longitude,
         site_id: a.site_id,
@@ -327,8 +328,8 @@ defmodule Inconn2Service.Assignment do
       end
     end)
     |> Stream.map(fn attendance -> preload_employee(attendance, prefix) end)
-    |> Stream.map(fn attendance -> preload_shift(attendance, prefix) end)
-    |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
+    |> Enum.map(fn attendance -> preload_shift(attendance, prefix) end)
+    # |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
   end
 
   def list_attendances_for_team(team_id, prefix) do
