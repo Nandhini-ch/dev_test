@@ -1,7 +1,7 @@
 defmodule Inconn2ServiceWeb.EmployeeView do
   use Inconn2ServiceWeb, :view
   alias Inconn2ServiceWeb.RoleView
-  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView, AssetCategoryView, DesignationView}
+  alias Inconn2ServiceWeb.{EmployeeView, OrgUnitView, AssetCategoryView}
 
   def render("index.json", %{employees: employees}) do
     %{data: render_many(employees, EmployeeView, "employee.json")}
@@ -33,7 +33,7 @@ defmodule Inconn2ServiceWeb.EmployeeView do
       reports_to: render_one(employee.reports_to_employee, EmployeeView, "employee_without_org_unit.json"),
       party_id: employee.party_id,
       skills: (if is_nil(employee.preloaded_skills), do: [], else: render_many(employee.preloaded_skills, AssetCategoryView, "asset_category.json")),
-      designation_id: employee.designation_id,
+      designation_id: render_one(employee.designation, DesignationView, "designation.json"),
       role: render_one(employee.role, RoleView, "role_without_permissions.json"),
       # role_id: employee.role_id
     }
