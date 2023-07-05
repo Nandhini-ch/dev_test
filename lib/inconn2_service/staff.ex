@@ -249,6 +249,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -258,6 +259,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -266,6 +268,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.sort_by_id()
   end
 
@@ -285,6 +288,7 @@ defmodule Inconn2Service.Staff do
       |> Repo.all(prefix: prefix)
       |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
       |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
       |> Repo.preload(:org_unit)
       |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
       |> Repo.sort_by_id()
@@ -299,6 +303,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.preload(:org_unit)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.sort_by_id()
@@ -313,6 +318,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Enum.map(fn e -> get_role_for_employee(e, prefix) end)
     |> Repo.preload(:org_unit)
     |> Repo.sort_by_id()
@@ -360,6 +366,15 @@ defmodule Inconn2Service.Staff do
     Map.put(employee, :preloaded_skills, [])
   end
 
+  defp preload_designation(employee, _prefix) when is_nil(employee.designation_id) do
+    Map.put(employee, :designation, nil)
+  end
+
+  defp preload_designation(employee, prefix) when not is_nil(employee.designation_id) do
+    designation = get_designation!(employee.designation_id, prefix)
+    Map.put(employee, :designation, designation)
+  end
+
   def get_employee_of_user(user, prefix) do
     Repo.get(Employee, user.employee_id, prefix: prefix)
   end
@@ -378,6 +393,7 @@ defmodule Inconn2Service.Staff do
       |> Repo.all(prefix: prefix)
       |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
       |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+      |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
       |> Repo.preload(:org_unit)
     else
       []
@@ -390,6 +406,7 @@ defmodule Inconn2Service.Staff do
     |> Repo.all(prefix: prefix)
     |> Enum.map(fn employee -> preload_employee(employee, prefix) end)
     |> Enum.map(fn employee -> preload_skills(employee, prefix) end)
+    |> Enum.map(fn employee -> preload_designation(employee, prefix) end)
     |> Repo.preload(:org_unit)
   end
 
@@ -401,6 +418,7 @@ defmodule Inconn2Service.Staff do
     Repo.get!(Employee, id, prefix: prefix)
     |> preload_employee(prefix)
     |> preload_skills(prefix)
+    |> preload_designation(prefix)
     |> get_role_for_employee(prefix)
     |> Repo.preload(:org_unit)
     |> Repo.preload(:user)
@@ -431,7 +449,7 @@ defmodule Inconn2Service.Staff do
          {:ok, emp_set} ->
                  case create_employee_user(emp_set, attrs, prefix) do
                    {:ok, _user} ->
-                       {:ok, emp_set |> preload_employee(prefix)  |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+                       {:ok, emp_set |> preload_employee(prefix)  |> get_role_for_employee(prefix) |> preload_skills(prefix) |> preload_designation(prefix) |> Repo.preload(:org_unit)}
 
                    {:error, changeset} ->
                        Repo.delete(emp_set, prefix: prefix)
@@ -449,7 +467,7 @@ defmodule Inconn2Service.Staff do
                       |> Repo.insert(prefix: prefix)
       case employee_set do
         {:ok, emp_set} ->
-            {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> Repo.preload(:org_unit)}
+            {:ok, emp_set |> preload_employee(prefix) |> get_role_for_employee(prefix) |> preload_skills(prefix) |> preload_designation(prefix) |> Repo.preload(:org_unit)}
         _ -> employee_set
       end
     end
@@ -487,8 +505,8 @@ defmodule Inconn2Service.Staff do
     case employee_set do
       {:ok, emp_set} ->
         case update_employee_user(employee.has_login_credentials, has_login_credentials, emp_set, attrs, prefix) do
-          {:ok, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
-          {:deleted, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
+          {:ok, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> preload_designation(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
+          {:deleted, _} -> {:ok, emp_set |> preload_employee(prefix) |> preload_skills(prefix) |> preload_designation(prefix) |> get_role_for_employee(prefix) |> Repo.preload(:org_unit)}
           error -> error
         end
 

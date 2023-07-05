@@ -37,7 +37,6 @@ defmodule Inconn2Service.Staff.Employee do
       :last_name,
       :employment_start_date,
       :employment_end_date,
-      :designation,
       :designation_id,
       :email,
       :employee_id,

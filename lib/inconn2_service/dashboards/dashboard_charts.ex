@@ -36,9 +36,14 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
           end
 
         date_list
-        |> IO.inspect()
-        |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
-        |> Enum.map(&Task.await/1)
+        |> Enum.chunk_every(20)
+        |> Enum.map(fn list ->
+          list
+          |> Stream.map(&Task.async(fn -> get_individual_energy_consumption_data(&1, params, {from_time, to_time}, prefix) end))
+          |> Enum.map(&Task.await/1)
+        end)
+        |> List.flatten()
+
     end
   end
 
@@ -47,8 +52,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
-    |> Enum.map(&Task.async(fn -> get_individual_energy_cost_for_assets(&1, params, prefix) end))
-    |> Enum.map(&Task.await/1)
+    |> Enum.chunk_every(20)
+    |> Enum.map(fn list ->
+      list
+      |> Stream.map(&Task.async(fn -> get_individual_energy_cost_for_assets(&1, params, prefix) end))
+      |> Enum.map(&Task.await/1)
+    end)
+    |> List.flatten()
   end
 
   #Chart no 3
@@ -56,8 +66,13 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
 
     date_list
-    |> Enum.map(&Task.async(fn -> get_individual_energy_performance_indicator(&1, params, prefix) end))
-    |> Enum.map(&Task.await/1)
+    |> Enum.chunk_every(20)
+    |> Enum.map(fn list ->
+      list
+      |> Stream.map(&Task.async(fn -> get_individual_energy_performance_indicator(&1, params, prefix) end))
+      |> Enum.map(&Task.await/1)
+    end)
+    |> List.flatten()
   end
 
   #Chart no 4
