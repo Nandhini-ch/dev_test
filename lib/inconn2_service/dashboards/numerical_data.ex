@@ -252,8 +252,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
 
   def get_service_breakdown_workorder_chart_data_for_site_asset_category(site_id, from_date, to_date, :service_wo, criticality, prefix) do
     from(ac in AssetCategory,
-         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc,
-         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc or wot.scheduled,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn" and wo.type == "MAN",
          select: %{
           asset_category_id: ac.id,
           asset_category_name: ac.name,
@@ -295,8 +295,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   def get_service_breakdown_workorder_chart_data_for_site_asset(site_id, from_date, to_date, asset_type, :service_wo, criticality, prefix) do
     asset_query = get_asset_query_for_site(site_id, asset_type)
     from(from a in asset_query,
-          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
-          join: wot in WorkorderTemplate, where: wot.adhoc,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn" and wo.type == "MAN",
+          join: wot in WorkorderTemplate, where: wot.adhoc or wot.scheduled,
           select: %{
             asset_id: a.id,
             asset_name: a.name,
@@ -339,8 +339,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
 
   def get_service_breakdown_workorder_chart_data_for_asset_categories(site_id, from_date, to_date, asset_category_ids, :service_wo, criticality, prefix) do
     from(ac in AssetCategory, where: ac.id in ^asset_category_ids,
-         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc,
-         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
+         left_join: wot in WorkorderTemplate, on: wot.asset_category_id == ac.id and wot.adhoc or wot.scheduled,
+         left_join: wo in WorkOrder, on: wo.workorder_template_id == wot.id and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn" and wo.type == "MAN",
          select: %{
           asset_category_id: ac.id,
           asset_category_name: ac.name,
@@ -382,8 +382,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   def get_service_breakdown_workorder_chart_data_for_assets(site_id, from_date, to_date, asset_ids, asset_type, :service_wo, criticality, prefix) do
     asset_query = get_asset_query(asset_ids, asset_type)
     from(from a in asset_query,
-          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn",
-          join: wot in WorkorderTemplate, where: wot.adhoc,
+          left_join: wo in WorkOrder, on: wo.asset_id == a.id and wo.asset_type == ^asset_type and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date and wo.site_id == ^site_id and wo.status != "cn" and wo.type == "MAN",
+          join: wot in WorkorderTemplate, where: wot.adhoc or wot.scheduled,
           select: %{
             asset_id: a.id,
             asset_name: a.name,

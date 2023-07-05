@@ -212,7 +212,7 @@ defmodule Inconn2Service.SlaCalculation do
 
     total_count_of_manual_work_orders =
       from(wt in WorkorderTemplate,
-        where: wt.asset_category_id in ^scope_map.asset_category_ids,
+        where: wt.asset_category_id in ^scope_map.asset_category_ids and wt.scheduled or wt.adhoc,
         join: wo in WorkOrder,
         on:
           wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and

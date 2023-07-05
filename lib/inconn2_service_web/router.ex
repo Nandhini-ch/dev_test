@@ -7,8 +7,8 @@ defmodule Inconn2ServiceWeb.Router do
   end
 
   pipeline :authenticate do
-    plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
-    plug(Inconn2ServiceWeb.Plugs.AssignUser)
+    # plug(Inconn2ServiceWeb.Plugs.GuardianAuthPipeline)
+    # plug(Inconn2ServiceWeb.Plugs.AssignUser)
   end
 
   pipeline :authenticate_admin do
