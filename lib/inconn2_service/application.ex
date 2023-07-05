@@ -16,7 +16,7 @@ defmodule Inconn2Service.Application do
       #Start the Workorder GenServer
       Inconn2Service.Batch.WorkorderScheduler,
       #Start the Workrequest close scheduler GenServer
-      Inconn2Service.Batch.WorkRequestCloseGenServer,
+      # Inconn2Service.Batch.WorkRequestCloseGenServer,
       #Start the alert and notification GenServer
       Inconn2Service.Batch.AlertNotificationGenServer,
       #Start the escalation GenServer
