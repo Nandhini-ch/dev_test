@@ -1,9 +1,10 @@
-defmodule Inconn2Service.WorkRequestCloseGenServer do
+defmodule Inconn2Service.Batch.WorkRequestCloseGenServer do
   use GenServer
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Ticket
+  alias Inconn2Service.Batch.WorkRequestCloseGenServer
   alias Inconn2Service.Common.WorkRequestCloseScheduler
 
   def start_link(_args) do
@@ -15,7 +16,6 @@ defmodule Inconn2Service.WorkRequestCloseGenServer do
   end
 
   def handle_info(:schedule, _state) do
-    IO.puts(DateTime.utc_now)
     get_work_request_close_gen_server()
     {:noreply, Process.send_after(self(), :schedule, 120000)}
   end
