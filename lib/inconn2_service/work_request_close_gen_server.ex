@@ -15,7 +15,6 @@ defmodule Inconn2Service.WorkRequestCloseGenServer do
   end
 
   def handle_info(:schedule, _state) do
-    IO.puts(DateTime.utc_now)
     get_work_request_close_gen_server()
     {:noreply, Process.send_after(self(), :schedule, 120000)}
   end
