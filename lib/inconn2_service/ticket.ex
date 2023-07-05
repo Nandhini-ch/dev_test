@@ -461,6 +461,7 @@ defmodule Inconn2Service.Ticket do
         Elixir.Task.start(fn -> push_alert_notification_for_ticket(updated_work_request.asset_id, updated_work_request.asset_type, updated_work_request.workrequest_category_id, work_request, updated_work_request, prefix, updated_work_request.site_id, user) end)
         update_status_track(updated_work_request, prefix)
         Elixir.Task.start(fn -> send_completed_email(work_request, updated_work_request, status_track, prefix) end)
+        Elixir.Task.start(fn -> ticketing_close_scheduler(work_request, updated_work_request, prefix) end)
         {:ok, updated_work_request |> Repo.preload([:workrequest_category, :workrequest_subcategory, :location, :site, requested_user: :employee, assigned_user: :employee], force: true) |> preload_to_approve_users(prefix) |> preload_asset(prefix)}
 
       _ ->
@@ -468,7 +469,7 @@ defmodule Inconn2Service.Ticket do
     end
   end
 
-  def work_request_close_scheduler(work_request, updated_work_request, prefix) do
+  def ticketing_close_scheduler(work_request, updated_work_request, prefix) do
     cond do
       work_request.status != "CP" && updated_work_request.status == "CP" ->
         case AssetConfig.get_site_config_by_site_id_and_type(updated_work_request.site_id, "TCK", prefix) do
@@ -482,6 +483,7 @@ defmodule Inconn2Service.Ticket do
               "utc_date_time" => close_date_time_in_utc,
               "work_request_id" =>  updated_work_request.id
             }
+            |> Common.create_work_request_close_scheduler()
         end
 
       work_request.status == "CP" && updated_work_request.status in ["ROP", "CS"] ->
@@ -491,14 +493,17 @@ defmodule Inconn2Service.Ticket do
           close_scheduler ->
             Common.delete_work_request_close_scheduler(close_scheduler)
          end
+
       true ->
         []
     end
   end
 
   def get_and_update_work_request_close_scheduler(work_request_close_scheduler) do
-    get_work_request_without_preload!(work_request_close_scheduler.id, work_request_close_scheduler.prefix)
+    get_work_request_without_preload!(work_request_close_scheduler.work_request_id, work_request_close_scheduler.prefix)
     |> update_work_request(%{"status" => "CS"}, work_request_close_scheduler.prefix)
+
+    Common.delete_work_request_close_scheduler(work_request_close_scheduler)
   end
 
   def update_workorder_generated_status(cs) do

@@ -154,7 +154,7 @@ defmodule Inconn2Service.SlaCalculation do
       )
       |> Repo.all(prefix: prefix)
 
-    completed_movable_work_order = Enum.count(wo_list, fn wo -> wo.status in "cp" end)
+    completed_movable_work_order = Enum.count(wo_list, fn wo -> wo.status == "cp" end)
 
     calculate_percentage(completed_movable_work_order, Enum.count(wo_list))
   end
@@ -212,7 +212,7 @@ defmodule Inconn2Service.SlaCalculation do
 
     total_count_of_manual_work_orders =
       from(wt in WorkorderTemplate,
-        where: wt.asset_category_id in ^scope_map.asset_category_ids,
+        where: wt.asset_category_id in ^scope_map.asset_category_ids and (wt.scheduled or wt.adhoc),
         join: wo in WorkOrder,
         on:
           wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and

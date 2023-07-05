@@ -92,22 +92,30 @@ defmodule Inconn2Service.Reapportion do
   end
 
   def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
-   user = Staff.get_user!(user.id, prefix)
-   reports_to_user = Staff.get_user_from_employee(user.employee.reports_to, prefix)
-   attrs = Map.merge(attrs, %{"requester_user_id" => user.id, "reports_to_user_id" => reports_to_user.id})
-   result =
-    %ReassignRescheduleRequest{}
-    |> ReassignRescheduleRequest.changeset(attrs)
-    # |> add_reports_to(prefix)
-    |> check_next_occurrence_for_reschedule(prefix)
-    |> Repo.insert(prefix: prefix)
+    user = Staff.get_user!(user.id, prefix)
+    if is_nil(user.employee.reports_to) do
+      reassign_attrs = %{"requester_user_id" => user.id}
+      reschedule_attrs = %{"reschedule_date" => attrs["reschedule_date"], "reschedule_time" => attrs["reschedule_time"]}
+      work_order = Workorder.get_work_order!(attrs["work_order_id"], prefix)
+      case attrs["request_for"] do
+        "REAS" -> Workorder.update_work_order(work_order, reassign_attrs, prefix, user)
+        "RESC" -> Workorder.update_work_order(work_order, reschedule_attrs, prefix, user)
+      end
+    else
+      reports_to_user = Staff.get_user_from_employee(user.employee.reports_to, prefix)
+      attrs = Map.merge(attrs, %{"requester_user_id" => user.id, "reports_to_user_id" => reports_to_user.id})
+      result =
+        %ReassignRescheduleRequest{}
+        |> ReassignRescheduleRequest.changeset(attrs)
+        |> Repo.insert(prefix: prefix)
 
-    case result do
-      {:ok, request} ->
-        {:ok, preload_functions(request, prefix)}
+      case result do
+        {:ok, request} ->
+          {:ok, preload_functions(request, prefix)}
 
-      _->
-        result
+        _ ->
+          result
+      end
     end
   end
 

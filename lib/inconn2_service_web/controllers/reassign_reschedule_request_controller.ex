@@ -3,6 +3,8 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
 
   alias Inconn2Service.Reapportion
   alias Inconn2Service.Reapportion.ReassignRescheduleRequest
+  alias Inconn2Service.Workorder.WorkOrder
+  alias Inconn2ServiceWeb.WorkOrderView
 
   action_fallback Inconn2ServiceWeb.FallbackController
 
@@ -22,11 +24,17 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
   end
 
   def create(conn, %{"reassign_reschedule_request" => reassign_reschedule_request_params}) do
-    with {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} <- Reapportion.create_reassign_reschedule_request(reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", Routes.reassign_reschedule_request_path(conn, :show, reassign_reschedule_request))
-      |> render("show_without_preload.json", reassign_reschedule_request: reassign_reschedule_request)
+    case Reapportion.create_reassign_reschedule_request(reassign_reschedule_request_params, conn.assigns.sub_domain_prefix, conn.assigns.current_user) do
+      {:ok, %ReassignRescheduleRequest{} = reassign_reschedule_request} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", Routes.reassign_reschedule_request_path(conn, :show, reassign_reschedule_request))
+        |> render("show_without_preload.json", reassign_reschedule_request: reassign_reschedule_request)
+
+      {:ok, %WorkOrder{} = work_order} ->
+        conn
+        |> put_view(WorkOrderView)
+        |> render("work_order.json", work_order: work_order)
     end
   end
 
