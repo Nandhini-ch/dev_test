@@ -1,4 +1,4 @@
-defmodule Inconn2Service.WorkRequestCloseGenServer do
+defmodule Inconn2Service.Batch.WorkRequestCloseGenServer do
   use GenServer
   import Ecto.Query, warn: false
   alias Inconn2Service.Repo
