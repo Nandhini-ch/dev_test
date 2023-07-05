@@ -4,6 +4,7 @@ defmodule Inconn2Service.Batch.WorkRequestCloseGenServer do
   alias Inconn2Service.Repo
 
   alias Inconn2Service.Ticket
+  alias Inconn2Service.Batch.WorkRequestCloseGenServer
   alias Inconn2Service.Common.WorkRequestCloseScheduler
 
   def start_link(_args) do
