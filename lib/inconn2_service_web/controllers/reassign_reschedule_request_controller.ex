@@ -35,6 +35,9 @@ defmodule Inconn2ServiceWeb.ReassignRescheduleRequestController do
         conn
         |> put_view(WorkOrderView)
         |> render("work_order.json", work_order: work_order)
+
+      other ->
+        other
     end
   end
 
