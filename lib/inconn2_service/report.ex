@@ -2691,9 +2691,10 @@ defmodule Inconn2Service.Report do
   defp match_workorder_type(type) do
     case type do
       "PRV" -> "Scheduled"
-      "BRK" ->  "Breakdown"
+      "BRK" -> "Breakdown"
       "TKT" -> "Ticket"
       "IOT" -> "IOT"
+      "MAN" -> "Instance"
     end
   end
 
