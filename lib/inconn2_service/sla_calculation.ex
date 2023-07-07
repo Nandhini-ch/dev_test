@@ -174,7 +174,7 @@ defmodule Inconn2Service.SlaCalculation do
       )
       |> Repo.all(prefix: prefix)
 
-    completed_in_work_order = Enum.count(wo_list, fn wo -> wo.status in "cp" end)
+    completed_in_work_order = Enum.count(wo_list, fn wo -> wo.status == "cp" end)
 
     calculate_percentage(completed_in_work_order, Enum.count(wo_list))
   end
