@@ -2878,19 +2878,36 @@ defmodule Inconn2Service.Report do
         :div,
         %{
           style: style(%{
-            "display" => "flex",
-            "flex-direction" => "column",
-            "align-items" => "flex-start"
+            "margin-top" => "50px",
+            "margin-left" => "50px",
+            "margin-right" => "50px",
+            "display" => "grid",
+            "grid-template-columns" => "auto auto auto",
+            "padding" => "30px",
+            "gap" => "30px",
+            "font-size" => "20px"
           })
         },
         render_img_qr(locations_qr, sub_domain),
       ])
+    # body =
+    #   Sneeze.render([
+    #     :div,
+    #     %{
+    #       style: style(%{
+    #         "display" => "flex",
+    #         "flex-direction" => "column",
+    #         "align-items" => "flex-start"
+    #       })
+    #     },
+    #     render_img_qr(locations_qr, sub_domain),
+    #   ])
 
 
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, page_size: "A4", command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string)
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
@@ -2901,25 +2918,44 @@ defmodule Inconn2Service.Report do
 
     body =
       Sneeze.render([
-        [:h2, %{}, "Complaints Qr for locations"],
-        [
-          :div,
-          %{
-            style: style(%{
-              "display" => "flex",
-              "flex-direction" => "column",
-              "align-items" => "flex-start"
-            })
-          },
-          render_img_qr(locations_qr, sub_domain),
-        ]
+        [:h1, %{}, "Complaints Qr for Locations"],
+        :div,
+        %{
+          style: style(%{
+            "margin-top" => "50px",
+            "margin-left" => "50px",
+            "margin-right" => "50px",
+            "display" => "grid",
+            "grid-template-columns" => "auto auto auto",
+            "padding" => "30px",
+            "gap" => "30px",
+            "font-size" => "20px"
+          })
+        },
+        render_img_qr(locations_qr, sub_domain),
       ])
+
+    # body =
+    #   Sneeze.render([
+    #     [:h2, %{}, "Complaints Qr for locations"],
+    #     [
+    #       :div,
+    #       %{
+    #         style: style(%{
+    #           "display" => "flex",
+    #           "flex-direction" => "column",
+    #           "align-items" => "flex-start"
+    #         })
+    #       },
+    #       render_img_qr(locations_qr, sub_domain),
+    #     ]
+    #   ])
 
 
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate!(string, generator: :chrome, command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string)
 
     {:ok, pdf_content} = File.read(filename)
     pdf_content
@@ -2929,35 +2965,36 @@ defmodule Inconn2Service.Report do
     equipments_qr = Inconn2Service.AssetConfig.list_equipments_qr(site_id, prefix)
     "inc_" <> sub_domain = prefix
 
-
+    body =
+      Sneeze.render([
+        :div,
+        %{
+          style: style(%{
+            "margin-top" => "50px",
+            "margin-left" => "50px",
+            "margin-right" => "50px",
+            "display" => "grid",
+            "grid-template-columns" => "auto auto auto",
+            "padding" => "30px",
+            "gap" => "30px",
+            "font-size" => "20px"
+          })
+        },
+        render_img_qr(equipments_qr, sub_domain),
+      ])
 
     # body =
     #   Sneeze.render([
     #     :div,
     #     %{
     #       style: style(%{
-    #         "display" => "grid",
-    #         "grid-template-columns" => "auto auto auto",
-    #         "padding" => "30px",
-    #         "gap" => "30px",
-    #         "font-size" => "20px"
+    #         "display" => "flex",
+    #         "flex-direction" => "column",
+    #         "align-items" => "flex-start"
     #       })
     #     },
-    #     render_img_qr(locations_qr, sub_domain),
+    #     render_img_qr(equipments_qr, sub_domain),
     #   ])
-
-    body =
-      Sneeze.render([
-        :div,
-        %{
-          style: style(%{
-            "display" => "flex",
-            "flex-direction" => "column",
-            "align-items" => "flex-start"
-          })
-        },
-        render_img_qr(equipments_qr, sub_domain),
-      ])
 
     IO.inspect(body)
     string = Sneeze.render([
@@ -2975,24 +3012,43 @@ defmodule Inconn2Service.Report do
     body =
       Sneeze.render([
         [:h1, %{}, "Complaints Qr for Equipments"],
-        [
-          :div,
-          %{
-            style: style(%{
-              "display" => "flex",
-              "flex-direction" => "column",
-              "align-items" => "flex-start"
-            })
+        :div,
+        %{
+          style: style(%{
+            "margin-top" => "50px",
+            "margin-left" => "50px",
+            "margin-right" => "50px",
+            "display" => "grid",
+            "grid-template-columns" => "auto auto auto",
+            "padding" => "30px",
+            "gap" => "30px",
+            "font-size" => "20px"
+          })
         },
         render_img_qr(equipments_qr, sub_domain),
-        ]
       ])
+
+    # body =
+    #   Sneeze.render([
+    #     [:h1, %{}, "Complaints Qr for Equipments"],
+    #     [
+    #       :div,
+    #       %{
+    #         style: style(%{
+    #           "display" => "flex",
+    #           "flex-direction" => "column",
+    #           "align-items" => "flex-start"
+    #         })
+    #     },
+    #     render_img_qr(equipments_qr, sub_domain),
+    #     ]
+    #   ])
 
     IO.inspect(body)
     string = Sneeze.render([
       [:__@raw_html, body]])
 
-    {:ok, filename} = PdfGenerator.generate(string, generator: :chrome, command_prefix: "xvfb-run")
+    {:ok, filename} = PdfGenerator.generate(string)
     {:ok, pdf_content} = File.read(filename)
     pdf_content
   end
