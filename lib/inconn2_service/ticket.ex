@@ -1084,7 +1084,7 @@ defmodule Inconn2Service.Ticket do
       #ticket reopened
       existing_work_request.status != updated_work_request.status and updated_work_request.status == "ROP" ->
         user_ids = [updated_work_request.assigned_user_id, asset.asset_manager_id] ++ helpdesk_users
-        user_maps = form_user_maps_by_user_ids(user_ids, prefix)
+        user_maps = Staff.form_user_maps_by_user_ids(user_ids, prefix)
         escalation_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], prefix)
         generate_alert_notification("TCKRO", site_id, [updated_work_request.id, current_user, date_time], [updated_work_request.id, current_user, date_time], user_maps,  escalation_user_maps, prefix)
 
