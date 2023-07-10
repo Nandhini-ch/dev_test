@@ -190,17 +190,18 @@ defmodule Inconn2Service.SlaCalculation do
         on: wo.workorder_template_id == wt.id,
         where:
           wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and
-            ^to_date >= wo.scheduled_end_date,
+            ^to_date >= wo.scheduled_end_date and not is_nil(wo.scheduled_end_date) and not is_nil(wo.scheduled_end_time)
+            and not is_nil(wo.completed_date)and not is_nil(wo.completed_time),
         select: wo
       )
       |> Repo.all(prefix: prefix)
 
     completed_within_due_time =
       Enum.count(wo_list, fn wo ->
-        NaiveDateTime.compare(
-          NaiveDateTime.new!(wo.completed_date, wo.completed_time),
-          NaiveDateTime.new!(wo.scheduled_end_date, wo.scheduled_end_time)
-        ) != :gt
+          NaiveDateTime.compare(
+            NaiveDateTime.new!(wo.completed_date, wo.completed_time),
+            NaiveDateTime.new!(wo.scheduled_end_date, wo.scheduled_end_time)
+          ) != :gt
       end)
 
     calculate_percentage(completed_within_due_time, Enum.count(wo_list))
@@ -241,17 +242,18 @@ defmodule Inconn2Service.SlaCalculation do
         join: wo in WorkOrder,
         on:
           wo.site_id in ^scope_map.site_ids and ^from_date <= wo.scheduled_end_date and
-            ^to_date >= wo.scheduled_end_date,
+            ^to_date >= wo.scheduled_end_date and not is_nil(wo.scheduled_end_date) and not is_nil(wo.scheduled_end_time)
+            and not is_nil(wo.completed_date)and not is_nil(wo.completed_time),
         select: wo
       )
       |> Repo.all(prefix: prefix)
 
     count_of_instances_executed_within_scheduled_date =
       Enum.count(total_count_of_amc_wo, fn wo ->
-        NaiveDateTime.compare(
-          NaiveDateTime.new!(wo.completed_date, wo.completed_time),
-          NaiveDateTime.new!(wo.scheduled_end_date, wo.scheduled_end_time)
-        ) != :gt
+          NaiveDateTime.compare(
+            NaiveDateTime.new!(wo.completed_date, wo.completed_time),
+            NaiveDateTime.new!(wo.scheduled_end_date, wo.scheduled_end_time)
+          ) != :gt
       end)
 
     calculate_percentage(

@@ -36,6 +36,11 @@ defmodule Inconn2Service.Report do
 
   def work_order_execution_report(prefix, query_params) do
     query_params = rectify_query_params(query_params)
+
+    query_params =
+      query_params
+      |> Map.put("asset_ids", AssetConfig.get_loc_and_eqp_subtree_ids(query_params["asset_id"], query_params["asset_type"], prefix))
+
     filters = filter_data(query_params, prefix)
     main_query = from(wo in WorkOrder)
 
@@ -46,6 +51,12 @@ defmodule Inconn2Service.Report do
 
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
+
+        {"asset_ids", []}, main_query ->
+          main_query
+
+        {"asset_ids", asset_ids}, main_query ->
+          from q in main_query, where: q.asset_id in ^asset_ids and q.asset_type == ^query_params["asset_type"]
 
         {"asset_id", asset_id}, main_query ->
           from q in main_query,
