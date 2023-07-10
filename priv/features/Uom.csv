@@ -25,3 +25,6 @@ Flowmeter,cusec/min,Cubic feet per sec / Minute
 Flowmeter,Cusec/hr,Cubic feet per sec / Hour
 Time,Hr,Hour
 Percentage,%,value
+Measurement,kg/m³,Specific gravity
+Measurement,lm/ m^2,Lumens
+Measurement,ohms,Electrical resistance	

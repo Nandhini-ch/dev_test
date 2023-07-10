@@ -6,6 +6,7 @@ defmodule Inconn2Service.Reapportion do
 
   alias Inconn2Service.Staff
   alias Inconn2Service.Workorder
+  alias Inconn2Service.Reapportion
   alias Inconn2Service.Reapportion.ReassignRescheduleRequest
 
   # @spec list_reassign_reschedule_requests(any) :: any
@@ -93,6 +94,7 @@ defmodule Inconn2Service.Reapportion do
 
   def create_reassign_reschedule_request(attrs \\ %{}, prefix, user) do
     user = Staff.get_user!(user.id, prefix)
+
     if is_nil(user.employee.reports_to) do
       reassign_attrs = %{"requester_user_id" => user.id}
       reschedule_attrs = %{"reschedule_date" => attrs["reschedule_date"], "reschedule_time" => attrs["reschedule_time"]}
@@ -103,10 +105,12 @@ defmodule Inconn2Service.Reapportion do
       end
     else
       reports_to_user = Staff.get_user_from_employee(user.employee.reports_to, prefix)
+      work_order = Workorder.get_work_order!(attrs["work_order_id"], prefix)
       attrs = Map.merge(attrs, %{"requester_user_id" => user.id, "reports_to_user_id" => reports_to_user.id})
       result =
         %ReassignRescheduleRequest{}
         |> ReassignRescheduleRequest.changeset(attrs)
+        |> restrict_reassign_reschedule_request(work_order.id, user.id, prefix)
         |> Repo.insert(prefix: prefix)
 
       case result do
@@ -117,6 +121,12 @@ defmodule Inconn2Service.Reapportion do
           result
       end
     end
+  end
+
+  def restrict_reassign_reschedule_request(cs, work_order_id, requester_user_id, prefix) do
+    filter_data = from(rrr in ReassignRescheduleRequest, where: rrr.work_order_id == ^work_order_id and rrr.requester_user_id == ^requester_user_id and rrr.status == "PD")
+            |> Repo.all(prefix: prefix)
+    if length(filter_data) == 0, do: cs, else: add_error(cs, :status, "Cannot create Reassign/Reschedule Request more than once")
   end
 
   defp check_next_occurrence_for_reschedule(cs, prefix) do

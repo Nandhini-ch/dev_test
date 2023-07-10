@@ -186,7 +186,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     workorder_templates = Workorder.list_workorder_templates(prefix)
 
     header = [["id", "reference", "Asset Category Id", "Asset Type", "Name", "Task List Id", "Estimated Time",
-    "Scheduled", "Breakdown", "Audit", "Adhoc", "Amc",  "Repeat Every", "Repeat Unit", "Applicable Start",
+    "Scheduled", "Breakdown", "Audit", "Adhoc", "Amc", "Movement", "Repeat Every", "Repeat Unit", "Applicable Start",
    "Applicable End", "Time Start", "Time End", "Create New", "Max Times", "Work Order Prior Time",
      "Work Permit Required", "Work Permit Check List Id", "Loto Required", "Loto Lock Check List Id",
     "Loto Release Check List Id", "Precheck Required","Precheck List Id", "Work Order Approval Required", "Work Order Acknowledgement Required"]]
@@ -194,7 +194,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
     body =
       Enum.map(workorder_templates, fn r ->
         [r.id, "", r.asset_category_id, r.asset_type, r.name, r.task_list_id, r.estimated_time,
-        r.scheduled, r.breakdown, r.audit, r.adhoc, r.amc,
+        r.scheduled, r.breakdown, r.audit, r.adhoc, r.amc, r.movable,
         r.repeat_every, r.repeat_unit, form_date(r.applicable_start), form_date(r.applicable_end), r.time_start, r.time_end, r.create_new, r.max_times,
         r.workorder_prior_time, r.is_workpermit_required, r.workpermit_check_list_id,  r.is_loto_required,  r.loto_lock_check_list_id,
         r.loto_release_check_list_id,  r.is_precheck_required, r.precheck_list_id,  r.is_workorder_approval_required, r.is_workorder_acknowledgement_required]

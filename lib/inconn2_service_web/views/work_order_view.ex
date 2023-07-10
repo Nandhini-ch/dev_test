@@ -59,6 +59,7 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       approver: work_order.approver,
       is_paused: work_order.is_paused,
       allow_execution: work_order.allow_execution,
+      priority: work_order.priority,
       workorder_template_name: work_order.workorder_template.name,
       repeat_every: work_order.workorder_template.repeat_every,
       repeat_unit: work_order.workorder_template.repeat_unit
@@ -106,7 +107,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       pause_resume_times: work_order.pause_resume_times,
       remarks: work_order.remarks,
       approver: work_order.approver,
-      is_paused: work_order.is_paused}
+      is_paused: work_order.is_paused,
+      priority: work_order.priority}
   end
 
 
@@ -163,7 +165,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       # workorder_schedule: render_one(work_order.workorder_schedule, WorkorderScheduleView, "workorder_schedule_mobile.json"),
       work_request_id: work_order.work_request_id,
       pause_resume_times: work_order.pause_resume_times,
-      is_paused: work_order.is_paused
+      is_paused: work_order.is_paused,
+      priority: work_order.priority
       # workpermit_checks: render_many(work_order.workpermit_checks, WorkorderCheckView, "workorder_check.json"),
       # is_workorder_approval_required: work_order.is_workorder_approval_required,
       # workorder_approval_user_id: work_order.workorder_approval_user_id,
@@ -226,7 +229,8 @@ defmodule Inconn2ServiceWeb.WorkOrderView do
       pause_resume_times: work_order.pause_resume_times,
       frequency: work_order.frequency,
       is_paused: work_order.is_paused,
-      approver: work_order.approver}
+      approver: work_order.approver,
+      priority: work_order.priority}
   end
 
   def render("asset.json", %{asset: asset, asset_type: asset_type}) do

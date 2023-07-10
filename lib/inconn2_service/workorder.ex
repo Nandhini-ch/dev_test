@@ -32,6 +32,7 @@ defmodule Inconn2Service.Workorder do
   # import Inconn2Service.Util.IndexQueries
   # import Inconn2Service.Util.HelpersFunctions
   alias Inconn2Service.Assignment
+  alias Inconn2Service.Reapportion.ReassignRescheduleRequest
 
 
   def list_workorder_templates(prefix)  do
@@ -1008,7 +1009,24 @@ defmodule Inconn2Service.Workorder do
   end
 
   def get_work_orders_submitted_for_approval(user, prefix) do
+    workorder_list =
     (from wo in WorkOrder, where: wo.user_id == ^user.id and wo.status in ["woap", "wpp", "ltlp", "ltrp", "ackp"] and not wo.is_deactivated)
+    |> Repo.all(prefix: prefix)
+    |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
+    |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
+    |> Enum.map(fn work_order -> get_work_order_with_asset(work_order, prefix) end)
+
+    workorder_list ++ get_reassign_reschedule_work_orders_submitted_for_approval(user, prefix)
+  end
+
+  def get_reassign_reschedule_work_orders_submitted_for_approval(user, prefix) do
+    query =
+      from wo in WorkOrder,
+      join: rr in ReassignRescheduleRequest, on: rr.work_order_id == wo.id,
+      where: rr.requester_user_id == ^user.id,
+      select: wo
+
+    query
     |> Repo.all(prefix: prefix)
     |> Stream.map(fn wo -> preload_work_order_template_repeat_unit(wo, prefix) end)
     |> Stream.map(fn wo -> put_approval_user(wo, wo.status, prefix) end)
@@ -2549,7 +2567,8 @@ defmodule Inconn2Service.Workorder do
         workpermit_obtained_from_user_ids: wo.workpermit_obtained_from_user_ids,
         is_workpermit_required: wo.is_workpermit_required,
         pause_resume_times: wo.pause_resume_times,
-        is_paused: wo.is_paused
+        is_paused: wo.is_paused,
+        priority: wo.priority
       }
   end
 
