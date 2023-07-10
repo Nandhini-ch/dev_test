@@ -15,5 +15,6 @@ defmodule Inconn2Service.Staff.Designation do
     |> cast(attrs, [:name, :description, :active])
     |> validate_required([:name])
     |> unique_constraint([:name])
+    |> unique_constraint(:unique_designations, [name: :unique_designations, message: "Designation name already exists"])
   end
 end

@@ -57,5 +57,4 @@ defmodule Inconn2ServiceWeb.AssetController do
             |> SiteConfig.changeset(%{"type" => "DASH"})
             |> Repo.update(prefix: prefix)
   end
-
 end

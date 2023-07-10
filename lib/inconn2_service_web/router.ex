@@ -34,6 +34,7 @@ defmodule Inconn2ServiceWeb.Router do
     resources "/iot_meterings", IotMeteringController, only: [:create, :show]
 
     get "/manage_data_discrepancy_site_config", AssetController, :manage_data_discrepancy
+    get "/duplicate_entries", DuplicateEntryController, :download_duplicate_values
 
     get "/populate_timezone", AlertNotificationReserveController, :populate_timezones
     get "/populate_alerts", AlertNotificationReserveController, :populate_alerts

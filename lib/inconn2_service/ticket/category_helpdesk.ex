@@ -19,5 +19,9 @@ defmodule Inconn2Service.Ticket.CategoryHelpdesk do
     |> assoc_constraint(:user)
     |> assoc_constraint(:site)
     |> assoc_constraint(:workrequest_category)
+    |> unique_constraint(:site_id)
+    |> unique_constraint(:user_id)
+    |> unique_constraint(:workrequest_category_id)
+    |> unique_constraint(:unique_category_helpdesks, [name: :unique_category_helpdesks, message: "Category Helpdesk is already exists"])
   end
 end

@@ -208,17 +208,17 @@ defmodule Inconn2Service.Workorder do
     # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
   end
 
-  def push_alert_notification_for_workorder_template(updated_template, prefix, "new", _user) do
+  # def push_alert_notification_for_workorder_template(updated_template, prefix, "new", _user) do
     # description = ~s(New Workorder Template #{updated_template.name} added for #{AssetConfig.get_asset_category(updated_template.asset_category_id, prefix).name})
     # create_notification_for_workorder_template("WTNW", description, updated_template, prefix)
     # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
-  end
+  # end
 
-  def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted", user) do
-    # description = ~s(Workorder Template #{updated_template.name} deleted  by #{get_employee_name_from_current_user(user)})
-    # create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
-    # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
-  end
+  # def push_alert_notification_for_workorder_template(updated_template, prefix, "deleted", user) do
+  #   # description = ~s(Workorder Template #{updated_template.name} deleted  by #{get_employee_name_from_current_user(user)})
+  #   # create_notification_for_workorder_template("WTDT", description, updated_template, prefix)
+  #   # generate_alert_notification("WOTMO", site_id, [updated_work_order.id, date_time], [], user_maps, [], prefix)
+  # end
 
   def create_notification_for_workorder_template(alert_code, description, updated_template, prefix) do
     alert = Common.get_alert_by_code(alert_code)

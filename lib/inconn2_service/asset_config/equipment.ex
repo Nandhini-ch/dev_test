@@ -50,7 +50,7 @@ defmodule Inconn2Service.AssetConfig.Equipment do
     |> assoc_constraint(:asset_category)
     |> assoc_constraint(:location)
     |> unique_constraint(:equipment_code)
-
+    |> unique_constraint(:unique_equipments, [name: :unique_equipments, message: "Equipment code already exists"])
   end
 
 
