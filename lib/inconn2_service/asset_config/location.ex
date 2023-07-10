@@ -34,5 +34,6 @@ defmodule Inconn2Service.AssetConfig.Location do
     |> assoc_constraint(:site)
     |> assoc_constraint(:asset_category)
     |> unique_constraint(:location_code)
+    |> unique_constraint(:unique_locations, [name: :unique_locations, message: "Location code already exists"])
   end
 end
