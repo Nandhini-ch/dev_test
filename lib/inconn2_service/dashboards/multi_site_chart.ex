@@ -44,10 +44,7 @@ defmodule Inconn2Service.Dashboards.MultiSiteChart do
 
   defp add_and_form_multi_site_widget(individual_widgets, widget_code) do
     [one_widget | _] = individual_widgets
-    data =
-      individual_widgets
-      |> Enum.map(fn widget -> widget.chart_data end)
-      |> Enum.sum()
+    data = multi_site_widgets_calculations(individual_widgets, widget_code)
 
     multi_site_widget =
       %{
@@ -61,6 +58,21 @@ defmodule Inconn2Service.Dashboards.MultiSiteChart do
       }
 
     [multi_site_widget | individual_widgets]
+  end
+
+  defp multi_site_widgets_calculations(individual_widgets, widget_code) when widget_code in ["SHFCV", "PPMPL"] do
+    numerator =
+      individual_widgets
+      |> Enum.map(fn widget -> widget.chart_data end)
+      |> Enum.sum()
+
+    numerator / (length(individual_widgets))
+  end
+
+  defp multi_site_widgets_calculations(individual_widgets, _widget_code) do
+    individual_widgets
+    |> Enum.map(fn widget -> widget.chart_data end)
+    |> Enum.sum()
   end
 
 end
