@@ -1440,7 +1440,15 @@ defmodule Inconn2Service.Report do
   end
 
   def next_date("Y", _repeat_every, date) do
-    Date.new!(date.year + 1, date.month, date.day)
+    next_date_helper(date, 1)
+    # Date.new!(date.year + 1, date.month, date.day)
+  end
+
+  defp next_date_helper(date, count) do
+    case Date.new(date.year + count, date.month, date.day) do
+      {:ok, valid_date} -> valid_date
+      :error -> next_date_helper(date, count + 1)
+    end
   end
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do
