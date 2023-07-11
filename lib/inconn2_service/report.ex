@@ -2930,7 +2930,7 @@ defmodule Inconn2Service.Report do
 
     body =
       Sneeze.render([
-        [:h1, %{}, "Complaints Qr for Locations"],
+        [:h1, %{style: style(%{"text-align" => "center"})}, "Complaints Qr for Locations"],
         :div,
         %{
           style: style(%{
@@ -2944,7 +2944,7 @@ defmodule Inconn2Service.Report do
             "font-size" => "20px"
           })
         },
-        render_img_qr(locations_qr, sub_domain),
+        render_tck_img_qr(locations_qr, sub_domain),
       ])
 
     # body =
@@ -3023,7 +3023,7 @@ defmodule Inconn2Service.Report do
 
     body =
       Sneeze.render([
-        [:h1, %{}, "Complaints Qr for Equipments"],
+        [:h1, %{style: style(%{"text-align" => "center"})}, "Complaints Qr for Equipments"],
         :div,
         %{
           style: style(%{
@@ -3037,7 +3037,7 @@ defmodule Inconn2Service.Report do
             "font-size" => "20px"
           })
         },
-        render_img_qr(equipments_qr, sub_domain),
+        render_tck_img_qr(equipments_qr, sub_domain),
       ])
 
     # body =
@@ -3086,6 +3086,32 @@ defmodule Inconn2Service.Report do
         ],
         [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"],
         [:h3, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_code}"]
+      ]
+
+    end)
+  end
+
+  def render_tck_img_qr(qr_list, sub_domain) do
+    Enum.map(qr_list, fn x ->
+
+      [
+        :div,
+        %{
+          style: style(%{"display" => "inline-block", "padding" => "10px", "text-align" => "center"})
+        },
+        [
+          :img,
+          %{
+            src: "#{get_backend_url(sub_domain)}#{x.asset_qr_url}",
+            style: style(%{
+              "height" => "200px",
+              "width" => "200px"
+            })
+          },
+        ],
+        [:h4, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "To raise a complaint, Scan The Qr"],
+        [:p, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_name}"],
+        [:p, %{style: style(%{"text-align" => "center", "width" => "250px"})}, "#{x.asset_code}"]
       ]
 
     end)
