@@ -21,7 +21,7 @@ defmodule Inconn2Service.Batch.WorkRequestCloseGenServer do
   end
 
   def get_work_request_close_gen_server() do
-    dt = DateTime.add(DateTime.utc_now, 300, :second)
+    dt = DateTime.add(DateTime.utc_now, 120, :second)
     w = from(w in WorkRequestCloseScheduler, where: w.utc_date_time <= ^dt) |> Repo.all
     Enum.map(w, fn x -> Ticket.get_and_update_work_request_close_scheduler(x) end)
   end
