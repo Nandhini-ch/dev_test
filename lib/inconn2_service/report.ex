@@ -421,14 +421,12 @@ defmodule Inconn2Service.Report do
 
     result =
       Enum.map(work_orders_with_asset, fn wo ->
-        asset_type = get_asset_type_from_workorder_template(wo, prefix)
+        # asset_type = get_asset_type_from_workorder_template(wo, prefix)
         {asset_name, asset_code} =
-          case asset_type do
-            "E" ->
-              {wo.asset.name, wo.asset.equipment_code}
-
-            "L" ->
-              {wo.asset.name, wo.asset.location_code}
+          if Map.has_key?(wo.asset, :equipment_code) do
+            {wo.asset.name, wo.asset.equipment_code}
+          else
+            {wo.asset.name, wo.asset.location_code}
           end
 
         name =
