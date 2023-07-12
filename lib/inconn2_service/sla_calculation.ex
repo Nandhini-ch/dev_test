@@ -329,7 +329,7 @@ defmodule Inconn2Service.SlaCalculation do
       select: t
     )
     |> Repo.all(prefix: prefix)
-    |> Enum.count(fn x -> x.total_stock - x.quantity == 0 end)
+    |> Enum.count(fn x -> change_nil_to_zero(x.total_stock) - change_nil_to_zero(x.quantity) == 0 end)
   end
 
   # 13 Shift coverage
@@ -485,8 +485,8 @@ defmodule Inconn2Service.SlaCalculation do
       |> Repo.all(prefix: prefix)
 
     count_of_tickets_assigned_status_within_time =
-      Enum.filter(ticket_list, fn wr -> wr.response_tat != nil end)
-      |> Enum.count(fn map -> map.response_tat <= map.response_tat end)
+      Enum.filter(ticket_list, fn map -> map.wr.response_tat != nil end)
+      |> Enum.count(fn map -> map.wr.response_tat <= map.wrs.response_tat end)
 
     calculate_percentage(count_of_tickets_assigned_status_within_time, Enum.count(ticket_list))
   end
@@ -515,8 +515,8 @@ defmodule Inconn2Service.SlaCalculation do
       |> Repo.all(prefix: prefix)
 
     count_of_tickets_closed_status_within_time =
-      Enum.filter(ticket_list, fn wr -> wr.resolution_tat != nil end)
-      |> Enum.count(fn map -> map.resolution_tat <= map.resolution_tat end)
+      Enum.filter(ticket_list, fn map -> map.wr.resolution_tat != nil end)
+      |> Enum.count(fn map -> map.wr.resolution_tat <= map.wrs.resolution_tat end)
 
     calculate_percentage(count_of_tickets_closed_status_within_time, Enum.count(ticket_list))
   end
