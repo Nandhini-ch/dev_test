@@ -42,8 +42,8 @@ defmodule Inconn2Service.Settings.Shift do
     |> validate_date_order
     |> validate_applicable_days
     |> validate_code()
-    |> unique_constraint([:code])
-    |> unique_constraint(:unique_shifts, [name: :unique_shifts, message: "Shift code already exists"])
+    # |> unique_constraint([:code])
+    # |> unique_constraint(:unique_shifts, [name: :unique_shifts, message: "Shift code already exists"])
     |> assoc_constraint(:site)
   end
 

@@ -44,7 +44,7 @@ defmodule Inconn2Service.AssetConfig.Site do
     |> cast_embed(:address)
     |> cast_embed(:contact)
     |> assoc_constraint(:party)
-    |> unique_constraint(:site_code)
-    |> unique_constraint(:unique_sites, [name: :unique_sites, message: "Site code already exists"])
+    # |> unique_constraint(:site_code)
+    # |> unique_constraint(:unique_sites, [name: :unique_sites, message: "Site code already exists"])
   end
 end
