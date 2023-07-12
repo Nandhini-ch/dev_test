@@ -21,7 +21,7 @@ defmodule Inconn2Service.Inventory.UOM do
     |> cast(attrs, [:name, :symbol, :uom_type, :active])
     |> validate_required([:name, :symbol])
     |> validate_inclusion(:uom_type, ["physical", "cost"])
-    |> unique_constraint(:name)
-    |> unique_constraint(:unique_uoms, [name: :unique_uoms, message: "UOM name already exists"])
+    # |> unique_constraint(:name)
+    # |> unique_constraint(:unique_uoms, [name: :unique_uoms, message: "UOM name already exists"])
   end
 end
