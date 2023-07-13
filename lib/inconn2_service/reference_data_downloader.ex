@@ -50,7 +50,7 @@ defmodule Inconn2Service.ReferenceDataDownloader do
 
     body =
       Enum.map(asset_categories, fn r ->
-        [r.id,"", r.name, r.asset_type, r.parent_id, ""]
+        [r.id,"", r.name, r.asset_type, List.last(r.path), ""]
       end)
 
     final_report = header ++ body

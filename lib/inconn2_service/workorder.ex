@@ -73,12 +73,18 @@ defmodule Inconn2Service.Workorder do
 
   defp update_asset_type(cs, prefix) do
     asset_category_id = get_field(cs, :asset_category_id)
-    asset_category = Repo.get(AssetCategory, asset_category_id, prefix: prefix)
-    if asset_category != nil do
-      asset_type = asset_category.asset_type
-      case asset_type do
-        "L" -> change(cs, asset_type: "L")
-        "E" -> change(cs, asset_type: "E")
+
+    if asset_category_id != nil do
+      asset_category = Repo.get(AssetCategory, asset_category_id, prefix: prefix)
+
+      if asset_category != nil do
+        asset_type = asset_category.asset_type
+        case asset_type do
+          "L" -> change(cs, asset_type: "L")
+          "E" -> change(cs, asset_type: "E")
+        end
+      else
+        cs
       end
     else
       cs
