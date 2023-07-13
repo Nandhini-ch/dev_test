@@ -447,7 +447,7 @@ defmodule Inconn2Service.Assignment do
     site_id = get_field(cs, :site_id)
     in_dt = get_field(cs, :in_time)
     site_config = AssetConfig.get_site_config_by_site_id_and_type(site_id, "ATT", prefix)
-    grace_period = Map.get(site_config.config, "grace_period_for_in_time", 0)
+    grace_period = Map.get(site_config.config, "grace_period_in_minutes", 0)
     cond do
       employee_id && site_id && in_dt ->
         roster_with_shift = get_rosters_for_attendance(employee_id, site_id, NaiveDateTime.to_date(in_dt), prefix)
@@ -519,7 +519,7 @@ defmodule Inconn2Service.Assignment do
   defp calculate_and_update_attendance_status(attendance, prefix) do
     site_config = AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix)
     shift = Settings.get_shift!(attendance.shift_id, prefix)
-    grace_period = Map.get(site_config.config, "grace_period_for_in_time", 0)
+    grace_period = Map.get(site_config.config, "grace_period_in_minutes", 0)
     half_day_hours = Map.get(site_config.config, "half_day_work_hours", 0)
     worked_hours = NaiveDateTime.diff(attendance.in_time, attendance.out_time) * 3600
 
@@ -721,7 +721,7 @@ defmodule Inconn2Service.Assignment do
       worked_hrs <= attendance_config.config["half_day_work_hours"] ->
         "AB"
 
-      (Time.diff(manual_attendance.in_time, shift.start_time) / 60) > attendance_config.config["grace_period_for_in_time"] ->
+      (Time.diff(manual_attendance.in_time, shift.start_time) / 60) > attendance_config.config["grace_period_in_minutes"] ->
         "LT"
 
       true ->
