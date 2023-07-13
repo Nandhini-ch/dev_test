@@ -3,6 +3,8 @@ defmodule Inconn2Service.Workorder do
   import Ecto.Changeset
   import Inconn2Service.Util.HelpersFunctions
   import Inconn2Service.Prompt
+  import Inconn2Service.Util.IndexQueries
+
   alias Ecto.Multi
   alias Inconn2Service.Repo
   alias Inconn2Service.Assignments
@@ -35,8 +37,9 @@ defmodule Inconn2Service.Workorder do
   alias Inconn2Service.Reapportion.ReassignRescheduleRequest
 
 
-  def list_workorder_templates(prefix)  do
+  def list_workorder_templates(params, prefix)  do
     WorkorderTemplate
+    |> workorder_template_query(params)
     |> Repo.add_active_filter()
     |> Repo.all(prefix: prefix)
   end

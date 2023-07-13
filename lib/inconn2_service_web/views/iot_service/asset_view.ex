@@ -16,6 +16,7 @@ defmodule Inconn2ServiceWeb.IotService.AssetView do
       asset_name: asset.name,
       asset_code: asset.asset_code,
       asset_status: asset.status,
+      asset_category_id: asset.asset_category_id,
       parent_name: asset.parent_name
     }
   end
