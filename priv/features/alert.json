@@ -331,7 +331,7 @@
         "type": "al",
         "code": "TCKRR",
         "sms_code": "TCKRS",
-        "text_template": "Ticket <%= var1 %> recheduled / reassigned by <%= var2 %>",
+        "text_template": "Ticket <%= var1 %> <%= var2 %> by <%= var3 %>",
         "is_sms_required": true,
         "is_email_required": false,
         "is_escalation_required": true,
