@@ -1097,7 +1097,7 @@ defmodule Inconn2Service.Ticket do
         |> AssetConfig.list_users_from_scope(prefix)
         |> Staff.form_user_maps_by_user_ids(prefix)
 
-        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, current_user], [updated_work_request.id, "Reassign", current_user], user_maps, escalation_user_maps, prefix)
+        generate_alert_notification("TCKRR", site_id, [updated_work_request.id, updated_work_request.request_type, current_user], [updated_work_request.id, "Reassign", current_user], user_maps, escalation_user_maps, prefix)
 
       true ->
         {:ok, updated_work_request}
