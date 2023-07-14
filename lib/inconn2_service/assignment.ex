@@ -468,7 +468,7 @@ defmodule Inconn2Service.Assignment do
             altered_time >= in_time && in_time <= end_time
           end)
 
-          map = List.first(filtered_roster_with_shift)
+          map = List.first(filtered_roster_with_shift, %{roster_id: nil, shift_id: nil})
 
           change(cs, %{roster_id: map.roster_id, shift_id: map.shift_id})
 
