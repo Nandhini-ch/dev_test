@@ -543,7 +543,7 @@ defmodule Inconn2Service.Assignment do
   end
 
   defp calculate_and_update_attendance_status(attendance, _prefix) do
-    attendance
+    {:ok, attendance}
   end
 
   def delete_attendance(%Attendance{} = attendance, prefix) do
