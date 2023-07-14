@@ -516,7 +516,7 @@ defmodule Inconn2Service.Assignment do
     end
   end
 
-  defp calculate_and_update_attendance_status(attendance, prefix) do
+  defp calculate_and_update_attendance_status(attendance, prefix) when not is_nil(attendance.shift_id) and not is_nil(attendance.in_time) and not is_nil(attendance.out_time) do
     site_config = AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix)
     shift = Settings.get_shift!(attendance.shift_id, prefix)
     grace_period = Map.get(site_config.config, "grace_period_in_minutes", 0)
@@ -540,6 +540,10 @@ defmodule Inconn2Service.Assignment do
     |> Attendance.changeset(%{"status" => status})
     |> Repo.update(prefix: prefix)
 
+  end
+
+  defp calculate_and_update_attendance_status(attendance, _prefix) do
+    attendance
   end
 
   def delete_attendance(%Attendance{} = attendance, prefix) do
