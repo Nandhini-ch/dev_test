@@ -102,12 +102,22 @@ defmodule Inconn2Service.Common do
     ]
   end
 
+  defp until_utc_has_max(ps) do
+    filtered_list =
+      Enum.filter(ps, fn p -> p.until.utc == :max end)
+      |> Enum.take(1)
+
+    if length(filtered_list) == 0 do
+      [List.last(ps)]
+    else
+      filtered_list
+    end
+  end
+
   defp calculate_utc_offset(zone) do
     {:ok, pl} = Tzdata.periods(zone)
 
-    [period_selected | []] =
-      Enum.filter(pl, fn p -> p.until.utc == :max end)
-      |> Enum.take(1)
+    [period_selected | []] = until_utc_has_max(pl)
 
     utc_offset = Map.get(period_selected, :utc_off)
 
