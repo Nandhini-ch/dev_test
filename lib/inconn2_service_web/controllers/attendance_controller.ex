@@ -11,8 +11,8 @@ defmodule Inconn2ServiceWeb.AttendanceController do
     render(conn, "index.json", attendances: attendances)
   end
 
-  def index_for_user(conn, _params) do
-    attendances = Assignment.list_attendances_for_employee(conn.assigns.current_user, conn.assigns.sub_domain_prefix)
+  def index_for_user(conn, %{"from_date" => from_date, "to_date" => to_date}) do
+    attendances = Assignment.list_attendances_for_employee(conn.assigns.current_user, from_date, to_date, conn.assigns.sub_domain_prefix)
     render(conn, "attendance.json", attendances: attendances)
   end
 
@@ -22,6 +22,7 @@ defmodule Inconn2ServiceWeb.AttendanceController do
   end
 
   def create(conn, %{"attendance" => attendance_params, "in_out" => in_out}) do
+    IO.inspect(%{"attendance" => attendance_params, "in_out" => in_out})
     with {:ok, %Attendance{} = attendance} <- Assignment.mark_facial_attendance(attendance_params, in_out, conn.assigns.current_user, conn.assigns.sub_domain_prefix) do
       conn
       |> put_status(:created)
