@@ -60,7 +60,7 @@ defmodule Inconn2Service.Dashboards.MultiSiteChart do
     [multi_site_widget | individual_widgets]
   end
 
-  defp multi_site_widgets_calculations(individual_widgets, widget_code) when widget_code in ["SHFCV", "PPMPL"] do
+  defp multi_site_widgets_calculations(individual_widgets, widget_code) when widget_code in ["SHFCV", "PPMCW"] do
     numerator =
       individual_widgets
       |> Enum.map(fn widget -> widget.chart_data end)
