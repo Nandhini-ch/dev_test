@@ -421,7 +421,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     from_dt = NaiveDateTime.add(to_dt, -86400)
 
     # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
-    energy_meters = config["energy_non_main_meters"]
+    energy_meters = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
 
@@ -435,7 +435,7 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     from_dt = NaiveDateTime.add(to_dt, -86400)
 
     # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
-    energy_meters = config["energy_non_main_meters"]
+    energy_meters = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
 
