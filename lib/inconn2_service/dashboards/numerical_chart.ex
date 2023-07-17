@@ -427,7 +427,18 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     [Enum.at(asset_and_energy_list, 0), Enum.at(asset_and_energy_list, 1), Enum.at(asset_and_energy_list, 2)]
     |> Stream.filter(&(not is_nil(&1)))
-    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: convert_to_ceil_float(value)} end)
+    |> Enum.map(fn {asset, value} ->
+
+        asset =
+          if is_map(asset) do
+            AssetConfig.get_equipment!(asset["id"], prefix)
+          else
+            AssetConfig.get_equipment!(asset, prefix)
+          end
+
+      %{name: asset.name, val: convert_to_ceil_float(value)}
+
+    end)
   end
 
   def get_energy_of_sub_meters_for_24_hours(site_id, config, prefix) do
@@ -441,7 +452,18 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
 
     asset_and_energy_list
     |> Stream.filter(&(not is_nil(&1)))
-    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: convert_to_ceil_float(value)} end)
+    |> Enum.map(fn {asset, value} ->
+
+        asset =
+          if is_map(asset) do
+            AssetConfig.get_equipment!(asset["id"], prefix)
+          else
+            AssetConfig.get_equipment!(asset, prefix)
+          end
+
+      %{name: asset.name, val: convert_to_ceil_float(value)}
+
+    end)
   end
 
   def get_segr_for_24_hours(site_id, config, prefix) do
