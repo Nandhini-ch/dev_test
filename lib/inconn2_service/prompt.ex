@@ -152,10 +152,10 @@ defmodule Inconn2Service.Prompt do
         work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)
         asset = AssetConfig.get_asset_by_type(work_order.asset_id, work_order.asset_type, alert_notification_generator.prefix)
         user_maps = Staff.form_user_maps_by_user_ids([work_order.user_id], alert_notification_generator.prefix)
-        date_time = get_site_date_now(work_order.site_id, alert_notification_generator.prefix)
+        # date_time = get_site_date_now(work_order.site_id, alert_notification_generator.prefix)
         escalated_user_maps = Staff.form_user_maps_by_user_ids([asset.asset_manager_id], alert_notification_generator.prefix)
 
-        generate_alert_notification("WOSOD", work_order.site_id, [work_order.id, work_order.scheduled_time], [work_order.id, date_time], user_maps, escalated_user_maps, alert_notification_generator.prefix)
+        generate_alert_notification("WOSOD", work_order.site_id, [work_order.id, work_order.scheduled_time], [work_order.id, work_order.scheduled_time], user_maps, escalated_user_maps, alert_notification_generator.prefix)
 
       "WONCS" ->
         work_order = Workorder.get_work_order!(alert_notification_generator.reference_id, alert_notification_generator.prefix)

@@ -299,11 +299,13 @@ defmodule Inconn2Service.Assignment do
   #   |> list_attendances_for_employee(prefix)
   # end
 
-  def list_attendances_for_employee(user, _prefix) when is_nil(user.employee_id), do: []
-  def list_attendances_for_employee(user, prefix) do
+  def list_attendances_for_employee(user, _from_date, _to_date, _prefix) when is_nil(user.employee_id), do: []
+  def list_attendances_for_employee(user, from_date, to_date, prefix) do
     # query_params = Map.put(query_params, "employee_id", user.employee_id)
+    modify_from_date = NaiveDateTime.new!(from_date, ~T[00:00:00])
+    modify_to_date = NaiveDateTime.new!(to_date, ~T[23:59:59])
     from(r in Roster, where: r.employee_id == ^user.employee_id,
-      left_join: a in Attendance, on: a.roster_id == r.id,
+      left_join: a in Attendance, on: a.roster_id == r.id, where: a.in_time >= ^modify_from_date and r.in_time <= ^modify_to_date,
       select: %{
         id: a.id,
         latitude: a.latitude,
