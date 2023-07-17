@@ -299,13 +299,49 @@ defmodule Inconn2Service.Assignment do
   #   |> list_attendances_for_employee(prefix)
   # end
 
-  def list_attendances_for_employee(user, _from_date, _to_date, _prefix) when is_nil(user.employee_id), do: []
-  def list_attendances_for_employee(user, from_date, to_date, prefix) do
+  def list_attendances_for_employee(user, _params, _prefix) when is_nil(user.employee_id), do: []
+  def list_attendances_for_employee(user, params, prefix) do
+    if not is_nil(params["from_date"]) and not is_nil(params["to_date"]) do
+       # query_params = Map.put(query_params, "employee_id", user.employee_id)
+       modify_from_date = NaiveDateTime.new!(params["from_date"], ~T[00:00:00])
+       modify_to_date = NaiveDateTime.new!(params["to_date"], ~T[23:59:59])
+       from(r in Roster, where: r.employee_id == ^user.employee_id,
+         left_join: a in Attendance, on: a.roster_id == r.id, where: a.in_time >= ^modify_from_date and r.in_time <= ^modify_to_date,
+         select: %{
+           id: a.id,
+           latitude: a.latitude,
+           longitude: a.longitude,
+           site_id: a.site_id,
+           in_time: a.in_time,
+           out_time: a.out_time,
+           status: a.status,
+           roster_id: r.id,
+           date: r.date,
+           employee_id: r.employee_id,
+           shift_id: r.shift_id,
+           master_roster_id: r.master_roster_id
+         }
+       )
+       |> Repo.all(prefix: prefix)
+       |> Enum.map(fn attendance ->
+         if is_nil(attendance.in_time) do
+           Map.put(attendance, :status, "ASNT")
+         else
+           attendance
+         end
+       end)
+       |> Stream.map(fn attendance -> preload_employee(attendance, prefix) end)
+       |> Enum.map(fn attendance -> preload_shift(attendance, prefix) end)
+       # |> Enum.sort_by(&(&1.in_time), NaiveDateTime)
+    else
+      list_attendances_for_employee(user, prefix)
+    end
+  end
+
+  defp list_attendances_for_employee(user, prefix) do
     # query_params = Map.put(query_params, "employee_id", user.employee_id)
-    modify_from_date = NaiveDateTime.new!(from_date, ~T[00:00:00])
-    modify_to_date = NaiveDateTime.new!(to_date, ~T[23:59:59])
     from(r in Roster, where: r.employee_id == ^user.employee_id,
-      left_join: a in Attendance, on: a.roster_id == r.id, where: a.in_time >= ^modify_from_date and r.in_time <= ^modify_to_date,
+      left_join: a in Attendance, on: a.roster_id == r.id,
       select: %{
         id: a.id,
         latitude: a.latitude,

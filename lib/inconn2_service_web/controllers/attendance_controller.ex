@@ -11,8 +11,8 @@ defmodule Inconn2ServiceWeb.AttendanceController do
     render(conn, "index.json", attendances: attendances)
   end
 
-  def index_for_user(conn, %{"from_date" => from_date, "to_date" => to_date}) do
-    attendances = Assignment.list_attendances_for_employee(conn.assigns.current_user, from_date, to_date, conn.assigns.sub_domain_prefix)
+  def index_for_user(conn, params) do
+    attendances = Assignment.list_attendances_for_employee(conn.assigns.current_user, params, conn.assigns.sub_domain_prefix)
     render(conn, "attendance.json", attendances: attendances)
   end
 
