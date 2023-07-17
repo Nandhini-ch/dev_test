@@ -62,7 +62,7 @@ defmodule Inconn2Service.Staff.Employee do
       :party_id
     ])
     |> unique_constraint(:employee_id)
-    |> unique_constraint(:email)
+    # |> unique_constraint(:email)
     |> validate_login()
     |> validate_format(:email, ~r/@/)
     |> assoc_constraint(:org_unit)

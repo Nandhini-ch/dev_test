@@ -33,7 +33,7 @@ defmodule Inconn2Service.Staff.User do
     #  |> validate_confirmation(:password,
     #   message: "does not match password" )
     |> unique_constraint(:username)
-    |> unique_constraint(:email)
+    # |> unique_constraint(:email)
     |> hash_password()
     |> assoc_constraint(:party)
     |> assoc_constraint(:employee)
