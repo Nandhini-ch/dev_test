@@ -304,9 +304,9 @@ defmodule Inconn2Service.Assignment do
     if not is_nil(params["from_date"]) and not is_nil(params["to_date"]) do
        # query_params = Map.put(query_params, "employee_id", user.employee_id)
        modify_from_date = NaiveDateTime.from_iso8601!(params["from_date"] <> " 00:00:00")
-       modify_to_date = NaiveDateTime.from_iso8601!(params["to_date"] <> " 23:59:59")
+       modify_to_date = NaiveDateTime.from_iso8601!(params["to_date"] <> "  23:59:59")
        from(r in Roster, where: r.employee_id == ^user.employee_id,
-         left_join: a in Attendance, on: a.roster_id == r.id, where: a.in_time >= ^modify_from_date and r.in_time <= ^modify_to_date,
+         left_join: a in Attendance, on: a.roster_id == r.id, where: a.in_time >= ^modify_from_date and a.in_time <= ^modify_to_date,
          select: %{
            id: a.id,
            latitude: a.latitude,
