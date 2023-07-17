@@ -1,4 +1,6 @@
 defmodule Inconn2Service.Report do
+  use Timex
+
   import Ecto.Query, warn: false
   import Inconn2Service.Util.HelpersFunctions
 
@@ -1428,27 +1430,15 @@ defmodule Inconn2Service.Report do
   end
 
   def next_date("W", repeat_every, date) do
-    date |> Date.add(repeat_every *  7)
+    Timex.shift(date, weeks: repeat_every)
   end
 
   def next_date("M", repeat_every, date) do
-    new_month =  date.month + repeat_every
-    cond do
-      new_month > 12 -> Date.new!(date.year + 1, new_month - 12, date.day)
-      true -> Date.new!(date.year, new_month, date.day)
-    end
+    Timex.shift(date, months: repeat_every)
   end
 
-  def next_date("Y", _repeat_every, date) do
-    next_date_helper(date, 1)
-    # Date.new!(date.year + 1, date.month, date.day)
-  end
-
-  defp next_date_helper(date, count) do
-    case Date.new(date.year + count, date.month, date.day) do
-      {:ok, valid_date} -> valid_date
-      :error -> next_date_helper(date, count + 1)
-    end
+  def next_date("Y", repeat_every, date) do
+    Timex.shift(date, years: repeat_every)
   end
 
   def get_schedule_for_asset(asset_id, asset_type, prefix) do

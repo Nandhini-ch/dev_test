@@ -9,7 +9,7 @@ defmodule Inconn2ServiceWeb.WorkorderTemplateController do
   def index(conn, _params) do
     case Map.get(conn.query_params, "asset_type", nil) do
       nil ->
-        workorder_templates = Workorder.list_workorder_templates(conn.assigns.sub_domain_prefix)
+        workorder_templates = Workorder.list_workorder_templates(conn.query_params, conn.assigns.sub_domain_prefix)
         render(conn, "index.json", workorder_templates: workorder_templates)
       asset_type ->
         workorder_templates = Workorder.list_workorder_templates_by_asset_type(asset_type, conn.assigns.sub_domain_prefix)
