@@ -70,14 +70,8 @@ defmodule Inconn2Service.Dashboards.Helpers do
   end
 
   defp get_asset_and_energy_tuple(asset, from_dt, to_dt, prefix) do
-    asset_struct =
-      if is_map(asset) do
-        AssetConfig.get_equipment!(asset["id"], prefix)
-      else
-        AssetConfig.get_equipment!(asset, prefix)
-      end
     {
-      asset_struct,
+      asset,
       NumericalData.get_energy_consumption_for_asset(asset, from_dt, to_dt, prefix)
       |> change_nil_to_zero()
     }
