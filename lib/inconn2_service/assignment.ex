@@ -446,7 +446,11 @@ defmodule Inconn2Service.Assignment do
     employee_id = get_field(cs, :employee_id)
     site_id = get_field(cs, :site_id)
     in_dt = get_field(cs, :in_time)
-    site_config = AssetConfig.get_site_config_by_site_id_and_type(site_id, "ATT", prefix)
+    site_config =
+      case AssetConfig.get_site_config_by_site_id_and_type(site_id, "ATT", prefix) do
+        nil -> %{config: %{}}
+        config -> config
+      end
     grace_period = Map.get(site_config.config, "grace_period_in_minutes", 0)
     cond do
       employee_id && site_id && in_dt ->
@@ -517,7 +521,11 @@ defmodule Inconn2Service.Assignment do
   end
 
   defp calculate_and_update_attendance_status(attendance, prefix) when not is_nil(attendance.shift_id) and not is_nil(attendance.in_time) and not is_nil(attendance.out_time) do
-    site_config = AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix)
+    site_config =
+      case AssetConfig.get_site_config_by_site_id_and_type(attendance.site_id, "ATT", prefix) do
+        nil -> %{config: %{}}
+        config -> config
+      end
     shift = Settings.get_shift!(attendance.shift_id, prefix)
     grace_period = Map.get(site_config.config, "grace_period_in_minutes", 0)
     half_day_hours = Map.get(site_config.config, "half_day_work_hours", 0)
