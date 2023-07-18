@@ -1,4 +1,5 @@
 defmodule Inconn2Service.Util.HelpersFunctions do
+  use Timex
 
   import Ecto.Query, warn: false
   alias Inconn2Service.Staff
@@ -413,6 +414,11 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
     EEx.eval_string(message_template, key_value)
 
+    end
+
+  def formatted_date(date) do
+    Date.from_iso8601!(date)
+    |> Timex.format!("{0D}-{0M}-{YYYY}")
   end
 
   def get_display_name_for_user_id(nil, _prefix), do: ""
