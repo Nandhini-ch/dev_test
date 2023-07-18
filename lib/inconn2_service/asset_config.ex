@@ -2083,17 +2083,8 @@ defmodule Inconn2Service.AssetConfig do
   end
 
   def get_site_config_by_site_id_and_type(site_id, type, prefix) do
-    site_config =
-      from(sc in SiteConfig, where: sc.site_id == ^site_id and sc.type == ^type)
-      |> Repo.one(prefix: prefix)
-
-    case site_config do
-      nil ->
-        %{config: %{}}
-
-      _ ->
-        site_config
-    end
+    from(sc in SiteConfig, where: sc.site_id == ^site_id and sc.type == ^type)
+    |> Repo.one(prefix: prefix)
   end
 
   def get_grace_period_in_time(site_id) do

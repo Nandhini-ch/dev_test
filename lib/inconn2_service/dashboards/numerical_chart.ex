@@ -420,26 +420,50 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
 
-    energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    energy_meters = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
 
     [Enum.at(asset_and_energy_list, 0), Enum.at(asset_and_energy_list, 1), Enum.at(asset_and_energy_list, 2)]
     |> Stream.filter(&(not is_nil(&1)))
-    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: convert_to_ceil_float(value)} end)
+    |> Enum.map(fn {asset, value} ->
+
+        asset =
+          if is_map(asset) do
+            AssetConfig.get_equipment!(asset["id"], prefix)
+          else
+            AssetConfig.get_equipment!(asset, prefix)
+          end
+
+      %{name: asset.name, val: convert_to_ceil_float(value)}
+
+    end)
   end
 
   def get_energy_of_sub_meters_for_24_hours(site_id, config, prefix) do
     to_dt = get_site_date_time_now(site_id, prefix)
     from_dt = NaiveDateTime.add(to_dt, -86400)
 
-    energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
+    energy_meters = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(energy_meters, from_dt, to_dt, prefix)
 
     asset_and_energy_list
     |> Stream.filter(&(not is_nil(&1)))
-    |> Enum.map(fn {asset, value} -> %{name: asset.name, val: convert_to_ceil_float(value)} end)
+    |> Enum.map(fn {asset, value} ->
+
+        asset =
+          if is_map(asset) do
+            AssetConfig.get_equipment!(asset["id"], prefix)
+          else
+            AssetConfig.get_equipment!(asset, prefix)
+          end
+
+      %{name: asset.name, val: convert_to_ceil_float(value)}
+
+    end)
   end
 
   def get_segr_for_24_hours(site_id, config, prefix) do

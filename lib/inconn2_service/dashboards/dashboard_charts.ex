@@ -131,7 +131,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     config = get_site_config_for_dashboards(params["site_id"], prefix)
 
     # assets = Helpers.get_sub_meter_assets(config, "E", prefix)
-    assets = config["energy_non_main_meters"]
+    assets = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     date_list
     |> Enum.map(&Task.async(fn -> get_individual_energy_consumption_for_assets(&1, assets, prefix) end))
@@ -385,7 +385,7 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
     config = get_site_config_for_dashboards(site_id, prefix)
 
     # energy_meters = Helpers.get_sub_meter_assets(config, "E", prefix)
-    energy_meters = config["energy_non_main_meters"]
+    energy_meters = config["energy_non_main_meters"] |> convert_nil_to_list()
 
     asset_and_energy_list = Helpers.get_assets_and_energy_list(
                               energy_meters,
@@ -407,7 +407,16 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
                                     NaiveDateTime.new!(date, ~T[23:59:59]),
                                     prefix)
                                   |> change_nil_to_zero()
+
+            asset =
+              if is_map(asset) do
+                AssetConfig.get_equipment!(asset["id"], prefix)
+              else
+                AssetConfig.get_equipment!(asset, prefix)
+              end
+
             %{
+              id: asset.id,
               name: asset.name,
               value: convert_to_ceil_float(energy_consumption)
             }

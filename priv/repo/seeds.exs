@@ -1,7 +1,7 @@
 # Build the tiezone DB only once in production
 alias Inconn2Service.ContractManagement
 alias Inconn2Service.Common
-# Common.build_timezone_db()
+Common.build_timezone_db()
 Inconn2Service.SeedFeatures.seed_features()
 
 alias Inconn2Service.{Account, AssetConfig, WorkOrderConfig, CheckListConfig, Staff, ContractManagement}
