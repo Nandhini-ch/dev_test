@@ -1036,17 +1036,19 @@ defmodule Inconn2Service.Report do
     IO.inspect(naive_to_date)
 
     Enum.map(equipments, fn e ->
+      site_dt = get_site_date_time_now(e.site_id, prefix)
       asset_status_tracks =
         from(ast in AssetStatusTrack, where: ast.asset_id == ^e.id and ast.asset_type == ^"E" and ast.changed_date_time >= ^naive_from_date and ast.changed_date_time <= ^naive_to_date)
         |> Repo.all(prefix: prefix)
+        |> update_last_entry_in_asset_status_track(site_dt)
 
-        up_time =
-          case e.created_on do
-            nil ->
-              0
-            created_on ->
-              NaiveDateTime.diff(get_site_date_time_now(e.site_id, prefix), created_on) |> convert_to_positive()
-          end
+      # up_time =
+      #   case e.created_on do
+      #     nil ->
+      #       0
+      #     created_on ->
+      #       NaiveDateTime.diff(get_site_date_time_now(e.site_id, prefix), created_on) |> convert_to_positive()
+      #   end
 
       # up_time =
       #   case length(asset_status_tracks) do
@@ -1078,46 +1080,48 @@ defmodule Inconn2Service.Report do
       #   end
 
 
-        utilized_time =
-          case length(asset_status_tracks) do
-            0 ->
-              # IO.inspect("-----------wqe4342")
-              last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
-              if last_entry != nil and last_entry.status_changed == "ON" do
-                NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_to_positive() |> convert_man_hours_consumed()
-                0.0
-              end
+        # utilized_time =
+        #   case length(asset_status_tracks) do
+        #     0 ->
+        #       # IO.inspect("-----------wqe4342")
+        #       last_entry = get_last_entry_previous(e.id, "E", naive_from_date, prefix)
+        #       if last_entry != nil and last_entry.status_changed == "ON" do
+        #         NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_to_positive() |> convert_man_hours_consumed()
+        #         0.0
+        #       end
 
-            _ ->
-              last_entry = List.last(asset_status_tracks)
-              compensation_hours =
-                if last_entry.status_changed in ["ON", "OFF"] do
-                  IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
-                  NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_to_positive()
-                else
-                  # IO.inspect("213123")
-                  0.0
-                end
-              sum =
-                Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
-                |> Enum.map(fn ast -> ast.hours end)
-                |> Stream.filter(fn h -> !is_nil(h) end)
-                |> Enum.sum()
+        #     _ ->
+        #       last_entry = List.last(asset_status_tracks)
+        #       compensation_hours =
+        #         if last_entry.status_changed in ["ON", "OFF"] do
+        #           IO.inspect(NaiveDateTime.diff(last_entry.changed_date_time, NaiveDateTime.new!(to_date, Time.new!(0,0,0))) / 3600)
+        #           NaiveDateTime.diff(NaiveDateTime.new!(to_date, Time.new!(0,0,0)), last_entry.changed_date_time) |> convert_to_positive()
+        #         else
+        #           # IO.inspect("213123")
+        #           0.0
+        #         end
+        #       sum =
+        #         Enum.filter(asset_status_tracks, fn ast -> ast.status_changed in ["ON"] end)
+        #         |> Enum.map(fn ast -> ast.hours end)
+        #         |> Stream.filter(fn h -> !is_nil(h) end)
+        #         |> Enum.sum()
 
-              sum + compensation_hours * 1.0
-              |> Float.ceil(2)
-              |> convert_man_hours_consumed()
-          end
+        #       sum + compensation_hours * 1.0
+        #       |> Float.ceil(2)
+        #       |> convert_man_hours_consumed()
+        #   end
 
-      # up_time =
-      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON", "OFF"] end)
-      #   |> Enum.map(fn ast -> ast.hours end)
-      #   |> Enum.sum()
+      up_time =
+        Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON"] end)
+        |> Enum.map(fn ast -> ast.hours end)
+        |> Enum.sum()
+        |> convert_to_hours_and_minutes()
 
-      # utilized_time =
-      #   Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON"] end)
-      #   |> Enum.map(fn ast -> ast.hours end)
-      #   |> Enum.sum()
+      utilized_time =
+        Enum.filter(asset_status_tracks, fn ast -> ast.status in ["ON", "OFF"] end)
+        |> Enum.map(fn ast -> ast.hours end)
+        |> Enum.sum()
+        |> convert_to_hours_and_minutes()
 
       ppm_work_orders =
         (from wo in WorkOrder, where: wo.asset_id == ^e.id and wo.asset_type == ^"E" and wo.scheduled_date >= ^from_date and wo.scheduled_date <= ^to_date)
@@ -1148,6 +1152,22 @@ defmodule Inconn2Service.Report do
         utilized_time: utilized_time,
         ppm_completion_percentage: Float.ceil(completion_percentage, 2) |> to_string |> Kernel.<>("%")
       }
+    end)
+  end
+
+  defp update_last_entry_in_asset_status_track(status_track_list, site_dt) do
+    last_struct =
+      status_track_list
+      |> Enum.sort_by(&(&1.id))
+      |> List.last()
+
+    Enum.map(status_track_list, fn x ->
+      if x.id == last_struct.id do
+        dt = NaiveDateTime.diff(site_dt, x.changed_date_time) / 3600
+        Map.put(x, :hours, dt)
+      else
+        x
+      end
     end)
   end
 

@@ -2373,14 +2373,14 @@ defmodule Inconn2Service.Workorder do
     |> put_asset_for_flutter_template(prefix)
   end
 
-  def raise_ticket_for_failed_task(workorder_task, prefix) do
+  def raise_ticket_for_failed_task(workorder_task, user, prefix) do
     task = WorkOrderConfig.get_task!(workorder_task.task_id, prefix)
     if task.task_type in ["IO", "IM"] do
       answer = workorder_task.response["answers"]
       options = task.config["options"]
       filtered_value = Enum.filter(options, fn x -> x["value"] == answer end) |> List.first()
       if filtered_value["raise_ticket"] && filtered_value["workrequest_category_id"] && filtered_value["workrequest_subcategory_id"] do
-        raise_ticket(workorder_task, task, filtered_value, prefix)
+        raise_ticket(workorder_task, task, filtered_value, user, prefix)
       end
     else
       []
@@ -2414,7 +2414,7 @@ defmodule Inconn2Service.Workorder do
       end
   end
 
-  defp raise_ticket(workorder_task, task, filtered_value, prefix) do
+  defp raise_ticket(workorder_task, task, filtered_value, user, prefix) do
     wo = get_work_order!(workorder_task.work_order_id, prefix)
     dt = get_site_date_time_now(wo.site_id, prefix)
     %{
@@ -2425,7 +2425,8 @@ defmodule Inconn2Service.Workorder do
       "description" => task.label,
       "workrequest_subcategory_id" => filtered_value["workrequest_subcategory_id"],
       "request_type" => "CO",
-      "raised_date_time" => dt
+      "raised_date_time" => dt,
+      "requested_user_id" => user.id
     }
     |> Ticket.create_work_request(prefix)
   end
@@ -2449,7 +2450,6 @@ defmodule Inconn2Service.Workorder do
   end
 
   def workorder_mobile_flutter(user, prefix) do
-
     employee =
       case user.employee_id do
         nil ->
@@ -3224,7 +3224,7 @@ defmodule Inconn2Service.Workorder do
             |> Repo.update(prefix: prefix)
     case result do
         {:ok, workorder_task} ->
-              Elixir.Task.start(fn -> raise_ticket_for_failed_task(workorder_task, prefix) end)
+              Elixir.Task.start(fn -> raise_ticket_for_failed_task(workorder_task, user, prefix) end)
               Elixir.Task.start(fn -> push_alert_notification_for_out_of_validation(workorder_task, prefix) end)
               auto_update_workorder_status(workorder_task, prefix, user)
         _ ->
