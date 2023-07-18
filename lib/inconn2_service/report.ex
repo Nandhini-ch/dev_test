@@ -942,7 +942,7 @@ defmodule Inconn2Service.Report do
 
     {from_date, to_date} = get_dates_for_query(query_params["from_date"], query_params["to_date"], query_params["site_id"], prefix)
 
-    report_headers = ["Asset Name", "Asset Code", "Asset Category", "Asset Type", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion Percentage"]
+    report_headers = ["Asset Name", "Asset Code", "Asset Category", "Asset Type", "Status", "Criticality", "Up Time", "Utilized Time", "PPM Completion %"]
 
     filters = filter_data(query_params, prefix)
 
@@ -1308,7 +1308,7 @@ defmodule Inconn2Service.Report do
         criticality: (if l.criticality <= 2, do: "Critical", else: "Not Critical"),
         up_time: up_time,
         utilized_time: utilized_time,
-        ppm_completion_percentage: Float.ceil(completion_percentage, 2)
+        ppm_completion_percentage: Float.ceil(completion_percentage, 2) |> to_string |> Kernel.<>("%")
       }
     end)
   end
