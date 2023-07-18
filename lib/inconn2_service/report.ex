@@ -51,6 +51,9 @@ defmodule Inconn2Service.Report do
         {"site_id", site_id}, main_query ->
           from q in main_query, where: q.site_id == ^site_id
 
+        {"location_id", location_id}, main_query ->
+          from q in main_query, where: q.location_id == ^location_id
+
         {"asset_type", asset_type}, main_query ->
           from q in main_query, where: q.asset_type == ^asset_type
 
@@ -1940,18 +1943,37 @@ defmodule Inconn2Service.Report do
             },
             "#{report_title}"
           ],
-            [
-              :h2,
-              if filters.licensee != nil do
-                "#{filters.licensee.company_name}"
-              end
-            ],
-            [
-              :h2,
-              if filters.site != nil do
-                "Site: #{filters.site.name}"
-              end
-            ],
+          [
+            :h2,
+            if filters.licensee != nil do
+              "#{filters.licensee.company_name}"
+            end
+          ],
+          [
+            :h2,
+            if filters.site != nil do
+              "Site: #{filters.site.name}"
+            end
+          ],
+          [
+            :h2,
+            if filters.location != nil do
+              "Location: #{filters.location.name}"
+            end
+          ],
+
+          [
+            :h2,
+            if filters.work_order_status != nil do
+              "Status: #{filters.work_order_status}"
+            end
+          ],
+          [
+            :h2,
+            if filters.asset_categories != nil do
+              "Asset Categories: #{filters.asset_categories.name}"
+            end
+          ],
             [
               :div,
               %{style: style(%{"font-size" => "20px"})},
@@ -1959,14 +1981,14 @@ defmodule Inconn2Service.Report do
                 :div,
                 %{style: style(%{"float" => "left", "font-size" => "20px"})},
                 if filters.from_date != nil do
-                  "From Date: #{filters.from_date}"
+                  "From Date: #{formatted_date(filters.from_date)}"
                 end,
               ],
               [
                 :div,
                 %{style: style(%{"float" => "right", "font-size" => "20px"})},
                 if filters.to_date != nil do
-                  "To Date: #{filters.to_date}"
+                  "To Date: #{formatted_date(filters.to_date)}"
                 end
               ]
             ],
@@ -2715,6 +2737,13 @@ defmodule Inconn2Service.Report do
               nil
             end
 
+    location =
+          if query_params["location_id"] != nil do
+            AssetConfig.get_location!(query_params["location_id"], prefix)
+          else
+            nil
+          end
+
     asset =
             if query_params["asset_id"] != nil and query_params["asset_type"] != nil do
               case query_params["asset_type"] do
@@ -2734,6 +2763,13 @@ defmodule Inconn2Service.Report do
               nil
             end
 
+    asset_categories =
+      if query_params["asset_category_id"] != nil do
+        AssetConfig.get_asset_category!(query_params["asset_category_id"], prefix)
+      else
+        nil
+      end
+
     user =
             if query_params["user_id"] != nil do
               Staff.get_user!(query_params["user_id"], prefix)
@@ -2747,6 +2783,8 @@ defmodule Inconn2Service.Report do
     %{
       licensee: licensee,
       site: site,
+      location: location,
+      asset_categories: asset_categories,
       asset: asset,
       work_order_status: work_order_status,
       user: user,
