@@ -680,6 +680,13 @@ defmodule Inconn2Service.Ticket do
     WorkRequest.changeset(work_request, attrs)
   end
 
+  def list_category_helpdesks(prefix) do
+    CategoryHelpdesk
+    |> Repo.add_active_filter()
+    |> Repo.all(prefix: prefix)
+    |> Repo.preload([:site, workrequest_category: :workrequest_subcategories, user: :employee])
+    |> Repo.sort_by_id()
+  end
 
   def list_category_helpdesks(_query_params, prefix) do
     CategoryHelpdesk
