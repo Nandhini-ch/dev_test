@@ -68,8 +68,8 @@ defmodule Inconn2Service.Staff.Employee do
     |> assoc_constraint(:org_unit)
     |> assoc_constraint(:party)
     |> assoc_constraint(:employee)
-    # |> unique_constraint([:employee_id])
-    # |> unique_constraint(:unique_employees, [name: :unique_employees, message: "employee Id already exists"])
+    |> unique_constraint(:unique_employee_id, [name: :unique_employee_id, message: "employee Id already exists"])
+    |> unique_constraint(:unique_employee_email, [name: :unique_employee_email, message: "E-mail already exists"])
   end
 
   defp validate_login(cs) do

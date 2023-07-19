@@ -37,6 +37,8 @@ defmodule Inconn2Service.Staff.User do
     |> hash_password()
     |> assoc_constraint(:party)
     |> assoc_constraint(:employee)
+    |> unique_constraint(:unique_users_username, [name: :unique_users_username, message: "Username already exists"])
+    |> unique_constraint(:unique_users_email, [name: :unique_users_email, message: "E-mail already exists"])
   end
 
   def changeset_update(user, attrs) do
