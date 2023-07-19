@@ -21,6 +21,21 @@ defmodule Inconn2Service.IotService.ApiCalls do
     get_request(@base_url <> "/energy_meter_reading", params)
   end
 
+  def get_emr_data_readings(asset_id, asset_type, from_dt, to_dt, parameter, prefix) do
+    "inc_" <> sub_domain = prefix
+    params =
+      %{
+        "asset_id" => asset_id,
+        "asset_type" => asset_type,
+        "from_dt" => from_dt,
+        "to_dt" => to_dt,
+        "licensee_prefix" => sub_domain,
+        "parameter" => parameter
+      }
+
+    get_request(@base_url <> "/get_emr_data_readings", params)
+  end
+
   defp get_request(url, params) do
     headers = ["Accept": "Application/json; Charset=utf-8"]
     {:ok, response} = HTTPoison.get(url, headers, [params: params])

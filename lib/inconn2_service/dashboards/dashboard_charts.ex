@@ -1074,4 +1074,22 @@ defmodule Inconn2Service.Dashboards.DashboardCharts do
   defp get_asset(asset_id, "E", prefix), do: AssetConfig.get_equipment!(asset_id, prefix)
   defp get_asset(asset_id, "L", prefix), do: AssetConfig.get_location!(asset_id, prefix)
 
+
+  def get_watt_total(params, prefix) do
+    # date_list = form_date_list_from_iso(params["from_date"], params["to_date"], params["site_id"], prefix)
+    from_dt = params["from_date"] <> " 00:00:00"
+    to_dt = params["to_date"] <> " 23:59:59"
+
+    config = get_site_config_for_dashboards(params["site_id"], prefix)
+    asset_ids = configuration_for_energy_main_meters(config["energy_main_meters"]) |> convert_nil_to_list()
+
+    Enum.map(asset_ids, fn asset_id ->
+      asset = AssetConfig.get_equipment!(asset_id, prefix)
+      %{
+        label: asset.name,
+        dataSets: NumericalData.get_emr_data_readings_for_iot_asset(asset_id, from_dt, to_dt, "watts_total", prefix)
+      }
+    end)
+
+  end
 end

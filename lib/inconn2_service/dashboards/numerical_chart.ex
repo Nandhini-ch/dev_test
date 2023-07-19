@@ -749,4 +749,16 @@ defmodule Inconn2Service.Dashboards.NumericalChart do
   def get_chart_type("COSMN", 2), do: 4
   def get_chart_type(_, _), do: 1
 
+  # def get_watts_total(site_id, config, prefix) do
+  #   energy_main_meters = convert_nil_to_list(config["energy_main_meters"])
+  #   asset_ids = configuration_for_energy_main_meters(energy_main_meters)
+  #   to_dt = get_site_date_time_now(site_id, prefix)
+  #   from_dt = NaiveDateTime.add(to_dt, -86400)
+
+  #   Enum.map()
+
+  # end
+
+  # 1X1 - Chart
+
 end

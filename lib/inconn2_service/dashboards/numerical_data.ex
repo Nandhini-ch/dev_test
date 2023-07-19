@@ -715,4 +715,8 @@ defmodule Inconn2Service.Dashboards.NumericalData do
   def get_energy_consumption_of_iot_asset(asset_id, from_dt, to_dt, prefix) do
     ApiCalls.get_energy_consumption_for_asset(asset_id, "E", from_dt, to_dt, prefix)
   end
+
+  def get_emr_data_readings_for_iot_asset(asset_id, from_dt, to_dt, parameter, prefix) do
+    ApiCalls.get_emr_data_readings(asset_id, "E", from_dt, to_dt, parameter, prefix)
+  end
 end

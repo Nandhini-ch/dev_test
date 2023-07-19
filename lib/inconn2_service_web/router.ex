@@ -517,6 +517,11 @@ defmodule Inconn2ServiceWeb.Router do
     post "/dashboards/inventory_breach_data", DashboardsController, :get_inventory_breach_chart
     post "/dashboards/work_order_cost", DashboardsController, :get_work_order_cost
 
+
+    # EMR-Data_Readings- Dashboards
+    post "/dashboards/watts_total", DashboardsController, :get_emr_data_readings_for_iot_asset
+
+
     post "/update_entries", ReferenceUpdateController, :update_table
     resources "/saved_dashboard_filters", SavedDashboardFilterController, except: [:new, :edit]
 

@@ -429,4 +429,12 @@ defmodule Inconn2Service.Util.HelpersFunctions do
 
   def get_asset_code_from_asset_struct(%Location{} = _location), do: "L"
   def get_asset_code_from_asset_struct(%Equipment{} = _equipment), do: "E"
+
+  def configuration_for_energy_main_meters(array_of_map) do
+    if Enum.all?(array_of_map, &(is_map(&1)))  do
+      Enum.filter(array_of_map, fn x -> x["iot"] == true end) |> Enum.map(fn x -> x["id"] end)
+    else
+      []
+    end
+  end
 end

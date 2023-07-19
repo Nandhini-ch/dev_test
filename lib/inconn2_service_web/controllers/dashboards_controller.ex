@@ -145,4 +145,11 @@ defmodule Inconn2ServiceWeb.DashboardsController do
     data = DashboardCharts.get_work_order_cost_data(params, conn.assigns.sub_domain_prefix)
     render(conn, "detailed_charts.json", data: data)
   end
+
+  # get EMR data Readings-Dashboards
+
+  def get_emr_data_readings_for_iot_asset(conn, params) do
+    data = DashboardCharts.get_watt_total(params, conn.assigns.sub_domain_prefix)
+    render(conn, "detailed_charts.json", data: data)
+  end
 end
