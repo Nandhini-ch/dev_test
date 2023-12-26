@@ -20,11 +20,7 @@ jobs:
       - name: Install Required Packages
         run: sudo apt-get -y install build-essential libncurses5 openssl libssl-dev
 
-      - name: Set up Elixir
-        uses: actions/setup-elixir@v1
-        with:
-          elixir-version: '1.12'
-          otp-version: '24.0'  # Replace with the desired OTP version
+
 
       - name: Install Erlang
         run: sudo apt-get -y install esl-erlang
