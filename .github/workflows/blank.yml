@@ -36,7 +36,10 @@ jobs:
           echo test, and deploy your project.
 
       - name: Install Dependencies
-        run: mix deps.get --only prod
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get --only prod
 
       - name: Compile
         run: MIX_ENV=prod mix compile
