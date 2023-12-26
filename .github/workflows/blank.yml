@@ -17,11 +17,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Install Elixir Dependencies
+        run: sudo apt-get -y install build-essential
+
       - name: Set up Elixir
         uses: actions/setup-elixir@v1
         with:
           elixir-version: '1.12'
           otp-version: '24.0'  # Replace with the desired OTP version
+
+      - name: Print Elixir and Erlang Versions
+        run: |
+          elixir --version
+          erl --version
 
       - name: Install Erlang
         run: sudo apt-get -y install esl-erlang
@@ -44,6 +52,12 @@ jobs:
           mix local.hex --force
           mix local.rebar --force
 
+      - name: Install Specific Mix Version
+        run: mix local.mix --force
+
+      - name: Print PATH
+        run: echo "PATH=$PATH"
+
       - name: Install Dependencies
         run: mix deps.get --only prod
 
@@ -56,13 +70,5 @@ jobs:
       - name: Generate Release
         run: mix phx.gen.release
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Upload Release
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-phoenix-release
-          path: _build/prod/rel/my_app
+      - name: Debug Environment
+        run: env
