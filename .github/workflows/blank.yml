@@ -17,32 +17,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Install Required Packages
+        run: sudo apt-get -y install build-essential libncurses5
+
       - name: Set up Elixir
         uses: actions/setup-elixir@v1
         with:
           elixir-version: '1.12'
           otp-version: '24.0'  # Replace with the desired OTP version
 
-      - name: Install Erlang
-        run: sudo apt-get -y install esl-erlang
-
-      - name: Update System Packages
-        run: sudo apt-get update && sudo apt-get upgrade -y
-
-      - name: Cache Dependencies
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.hex
-            deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-
+      - name: Print Elixir and Erlang Versions
+        run: |
+          elixir --version
+          erl --version
 
       - name: Install Hex and Rebar
         run: |
           mix local.hex --force
           mix local.rebar --force
+
+      - name: Install Specific Mix Version
+        run: mix local.mix --force
+
+      - name: Print PATH
+        run: echo "PATH=$PATH"
 
       - name: Install Dependencies
         run: mix deps.get --only prod
@@ -55,6 +53,9 @@ jobs:
 
       - name: Generate Release
         run: mix phx.gen.release
+
+      - name: Debug Environment
+        run: env
 
   release:
     needs: build
