@@ -1,45 +1,50 @@
-# This is a basic workflow to help you get started with Actions
+name: CI/CD for Phoenix Project
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "stagging_server" ]
+    branches:
+      - stagging_server
   pull_request:
-    branches: [ "stagging_server" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches:
+      - stagging_server
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Set up Elixir
+        uses: actions/setup-elixir@v1
+        with:
+          elixir-version: '1.12'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - name: Install Erlang
+        run: sudo apt-get -y install esl-erlang
 
-      - name: Install Dependencies
+      - name: Update System Packages
+        run: sudo apt-get update && sudo apt-get upgrade -y
+
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.hex
+            deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - name: Install Hex and Rebar
         run: |
           mix local.hex --force
           mix local.rebar --force
-          mix deps.get --only prod
+
+      - name: Install Dependencies
+        run: mix deps.get --only prod
 
       - name: Compile
         run: MIX_ENV=prod mix compile
@@ -49,3 +54,16 @@ jobs:
 
       - name: Generate Release
         run: mix phx.gen.release
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Upload Release
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-phoenix-release
+          path: _build/prod/rel/my_app
+
+  # Add additional jobs for deployment, testing, etc. if needed
