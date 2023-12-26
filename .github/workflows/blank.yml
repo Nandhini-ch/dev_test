@@ -1,0 +1,79 @@
+name: CI/CD for Phoenix Project
+
+on:
+  push:
+    branches:
+      - stagging_server
+  pull_request:
+    branches:
+      - stagging_server
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Required Packages
+        run: sudo apt-get -y install build-essential libncurses5 openssl libssl-dev
+
+
+
+      - name: Install Erlang
+        run: sudo apt-get -y install esl-erlang
+
+      - name: Update System Packages
+        run: sudo apt-get update && sudo apt-get upgrade -y
+
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.hex
+            deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - name: Install Hex and Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+
+      - name: Install Specific Mix Version
+        run: mix local.mix --force
+
+      - name: Print PATH
+        run: echo "PATH=$PATH"
+
+      - name: Set up OpenSSL Library
+        run: sudo apt-get -y install libssl1.0.0
+
+      - name: Install Dependencies
+        run: mix deps.get --only prod
+
+      - name: Compile
+        run: MIX_ENV=prod mix compile
+
+      - name: Compile Assets
+        run: MIX_ENV=prod mix assets.deploy
+
+      - name: Generate Release
+        run: mix phx.gen.release
+
+      - name: Debug Environment
+        run: env
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Upload Release
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-phoenix-release
+          path: _build/prod/rel/my_app
