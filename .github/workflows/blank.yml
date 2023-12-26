@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-elixir@v1
         with:
           elixir-version: '1.12'
+          otp-version: '24.0'  # Replace with the desired OTP version
 
       - name: Install Erlang
         run: sudo apt-get -y install esl-erlang
@@ -65,5 +66,3 @@ jobs:
         with:
           name: my-phoenix-release
           path: _build/prod/rel/my_app
-
-  # Add additional jobs for deployment, testing, etc. if needed
