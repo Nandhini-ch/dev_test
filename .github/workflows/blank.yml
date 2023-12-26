@@ -17,6 +17,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Install Elixir Dependencies
+        run: sudo apt-get -y install build-essential
+
       - name: Set up Elixir
         uses: actions/setup-elixir@v1
         with:
@@ -55,14 +58,3 @@ jobs:
 
       - name: Generate Release
         run: mix phx.gen.release
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Upload Release
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-phoenix-release
-          path: _build/prod/rel/my_app
